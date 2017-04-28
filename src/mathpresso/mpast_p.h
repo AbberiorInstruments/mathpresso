@@ -10,7 +10,9 @@
 
 // [Dependencies]
 #include "./mphash_p.h"
+
 #include <iostream>
+#include <complex>
 
 namespace mathpresso {
 
@@ -864,6 +866,7 @@ struct AstVar : public AstNode {
   AstSymbol* _symbol;
 };
 
+
 // ============================================================================
 // [mathpresso::AstImm]
 // ============================================================================
@@ -892,6 +895,66 @@ struct AstImm : public AstNode {
 
   double _value;
 };
+
+// ============================================================================
+// [mathpresso::AstVarComplex]
+// ============================================================================
+
+struct AstVarComplex : public AstNode {
+	MATHPRESSO_NO_COPY(AstVarComplex)
+
+	// --------------------------------------------------------------------------
+	// [Construction / Destruction]
+	// --------------------------------------------------------------------------
+
+	MATHPRESSO_INLINE AstVarComplex(AstBuilder* ast)
+	: AstNode(ast, kAstNodeVarDouble),
+	_symbol(NULL) {}
+
+	// --------------------------------------------------------------------------
+	// [Accessors]
+	// --------------------------------------------------------------------------
+
+	MATHPRESSO_INLINE AstSymbol* getSymbol() const { return _symbol; }
+	MATHPRESSO_INLINE void setSymbol(AstSymbol* symbol) { _symbol = symbol; }
+
+	// --------------------------------------------------------------------------
+	// [Members]
+	// --------------------------------------------------------------------------
+
+	AstSymbol* _symbol;
+};
+
+
+// ============================================================================
+// [mathpresso::AstImmComplex]
+// ============================================================================
+
+struct AstImmComplex : public AstNode {
+	MATHPRESSO_NO_COPY(AstImmComplex)
+
+	// --------------------------------------------------------------------------
+	// [Construction / Destruction]
+	// --------------------------------------------------------------------------
+
+	MATHPRESSO_INLINE AstImmComplex(AstBuilder* ast, std::complex<double> value = (0.0, 0.0))
+	: AstNode(ast, kAstNodeImm),
+	_value(value) {}
+
+	// --------------------------------------------------------------------------
+	// [Accessors]
+	// --------------------------------------------------------------------------
+
+	MATHPRESSO_INLINE std::complex<double> getValue() const { return _value; }
+	MATHPRESSO_INLINE void setValue(double value) { _value = value; }
+
+	// --------------------------------------------------------------------------
+	// [Members]
+	// --------------------------------------------------------------------------
+
+	std::complex<double> _value;
+};
+
 
 // ============================================================================
 // [mathpresso::AstUnaryOp]

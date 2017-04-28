@@ -383,6 +383,21 @@ _Repeat1:
         break;
       }
 
+	  // Parse a complex number.
+	  case kTokenComplex: {
+		  AstImmComplex* zNode = _ast->newNode<AstImmComplex>();
+		  MATHPRESSO_NULLCHECK(zNode);
+
+		  zNode->setPosition(token.getPosAsUInt());
+		  zNode->_value = token.value_c;
+
+		  if (unary == NULL)
+			  tNode = zNode;
+		  else
+			  unary->setChild(zNode);
+		  break;
+	  }
+
       // Parse expression terminators - ',', ':', ';' or ')'.
       case kTokenComma:
       case kTokenColon:

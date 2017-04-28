@@ -11,6 +11,7 @@
 // [Dependencies]
 #include "./mathpresso_p.h"
 #include "./mpstrtod_p.h"
+#include <complex>
 
 namespace mathpresso {
 
@@ -26,6 +27,7 @@ enum TokenType {
 
   kTokenSymbol,       // <symbol>
   kTokenNumber,       // <number>
+  kTokenComplex,	  // <complex number>, written in brackets: [re, im];
 
   kTokenVar,          // 'var' keyword
   kTokenReserved,     // reserved keyword
@@ -109,6 +111,7 @@ struct Token {
     position = 0;
     length = 0;
     value = 0.0;
+	value_c = std::complex<double>(0, 0);
     token = kTokenInvalid;
   }
 
@@ -146,6 +149,8 @@ struct Token {
 
   //! Token value (if the token is a number).
   double value;
+
+  std::complex<double> value_c;
 };
 
 // ============================================================================
