@@ -39,7 +39,8 @@ static const AstNodeSize mpAstNodeSize[] = {
   ROW(kAstNodeProgram  , sizeof(AstProgram)  ),
   ROW(kAstNodeBlock    , sizeof(AstBlock)    ),
   ROW(kAstNodeVarDecl  , sizeof(AstVarDecl)  ),
-  ROW(kAstNodeVar      , sizeof(AstVar)      ),
+  ROW(kAstNodeVarDouble      , sizeof(AstVar)      ),
+  ROW(kAstNodeVarComplex	, sizeof(AstVar) ),
   ROW(kAstNodeImm      , sizeof(AstImm)      ),
   ROW(kAstNodeUnaryOp  , sizeof(AstUnaryOp)  ),
   ROW(kAstNodeBinaryOp , sizeof(AstBinaryOp) ),
@@ -133,7 +134,7 @@ void AstBuilder::deleteNode(AstNode* node) {
     case kAstNodeProgram  : static_cast<AstProgram*  >(node)->destroy(this); break;
     case kAstNodeBlock    : static_cast<AstBlock*    >(node)->destroy(this); break;
     case kAstNodeVarDecl  : static_cast<AstVarDecl*  >(node)->destroy(this); break;
-    case kAstNodeVar      : static_cast<AstVar*      >(node)->destroy(this); break;
+    case kAstNodeVarDouble      : static_cast<AstVar*      >(node)->destroy(this); break;
     case kAstNodeImm      : static_cast<AstImm*      >(node)->destroy(this); break;
     case kAstNodeUnaryOp  : static_cast<AstUnaryOp*  >(node)->destroy(this); break;
     case kAstNodeBinaryOp : static_cast<AstBinaryOp* >(node)->destroy(this); break;
@@ -409,7 +410,7 @@ Error AstVisitor::onNode(AstNode* node) {
     case kAstNodeProgram  : return onProgram  (static_cast<AstProgram*  >(node));
     case kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
     case kAstNodeVarDecl  : return onVarDecl  (static_cast<AstVarDecl*  >(node));
-    case kAstNodeVar      : return onVar      (static_cast<AstVar*      >(node));
+    case kAstNodeVarDouble      : return onVar      (static_cast<AstVar*      >(node));
     case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
     case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
     case kAstNodeBinaryOp : return onBinaryOp (static_cast<AstBinaryOp* >(node));

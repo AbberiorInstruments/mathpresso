@@ -444,6 +444,8 @@ struct TestApp {
         failed = true;
     }
 
+	system("pause");
+
     return failed ? 1 : 0;
   }
 
@@ -453,6 +455,7 @@ struct TestApp {
 
   int argc;
   char** argv;
+  
 };
 
 // ============================================================================

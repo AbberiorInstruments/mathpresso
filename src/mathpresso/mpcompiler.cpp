@@ -282,7 +282,7 @@ JitVar JitCompiler::onNode(AstNode* node) {
   switch (node->getNodeType()) {
     case kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
     case kAstNodeVarDecl  : return onVarDecl  (static_cast<AstVarDecl*  >(node));
-    case kAstNodeVar      : return onVar      (static_cast<AstVar*      >(node));
+    case kAstNodeVarDouble      : return onVar      (static_cast<AstVar*      >(node));
     case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
     case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
     case kAstNodeBinaryOp : return onBinaryOp (static_cast<AstBinaryOp* >(node));
@@ -481,7 +481,7 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
   // Compile assignment.
   if (op == kOpAssign) {
     AstVar* varNode = reinterpret_cast<AstVar*>(left);
-    MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVar);
+    MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVarDouble);
 
     AstSymbol* sym = varNode->getSymbol();
     uint32_t slotId = sym->getVarSlotId();
@@ -497,8 +497,8 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 
   // Handle the case that the operands are the same variable.
   JitVar vl, vr;
-  if (left->getNodeType() == kAstNodeVar &&
-      right->getNodeType() == kAstNodeVar &&
+  if (left->getNodeType() == kAstNodeVarDouble &&
+      right->getNodeType() == kAstNodeVarDouble &&
       static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol()) {
     vl = vr = writableVar(onNode(node->getLeft()));
   }

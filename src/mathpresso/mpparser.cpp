@@ -466,7 +466,7 @@ _Unary: {
         op = kOpAssign;
 
         // Check whether the assignment is valid.
-        if (tNode->getNodeType() != kAstNodeVar)
+        if (tNode->getNodeType() != kAstNodeVarDouble)
           MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
 
         AstSymbol* sym = static_cast<AstVar*>(tNode)->getSymbol();

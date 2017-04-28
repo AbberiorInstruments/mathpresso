@@ -10,6 +10,7 @@
 
 // [Dependencies]
 #include "./mphash_p.h"
+#include <iostream>
 
 namespace mathpresso {
 
@@ -119,8 +120,10 @@ enum AstNodeType {
 
   //! Node is `AstVarDecl`.
   kAstNodeVarDecl,
-  //! Node is `AstVar`.
-  kAstNodeVar,
+  //! Node is `AstVar` of type double.
+  kAstNodeVarDouble,
+  //! Node is `AstVar` of type std::complex<double>.
+  kAstNodeVarComplex,
   //! Node is `AstImm`.
   kAstNodeImm,
 
@@ -261,7 +264,7 @@ struct AstSymbol : public HashNode {
       _symbolFlags(scopeType == kAstScopeGlobal ? (int)kAstSymbolIsGlobal : 0),
       _value(),
       _usedCount(0),
-      _writeCount(0) {}
+	  _writeCount(0) {}
 
   // --------------------------------------------------------------------------
   // [Accessors]
@@ -568,7 +571,7 @@ struct AstNode {
   //! Get node type.
   MATHPRESSO_INLINE uint32_t getNodeType() const { return _nodeType; }
   //! Get whether the node is `AstVar`.
-  MATHPRESSO_INLINE bool isVar() const { return _nodeType == kAstNodeVar; }
+  MATHPRESSO_INLINE bool isVar() const { return _nodeType == kAstNodeVarDouble; }
   //! Get whether the node is `AstImm`.
   MATHPRESSO_INLINE bool isImm() const { return _nodeType == kAstNodeImm; }
 
@@ -844,7 +847,7 @@ struct AstVar : public AstNode {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstVar(AstBuilder* ast)
-    : AstNode(ast, kAstNodeVar),
+    : AstNode(ast, kAstNodeVarDouble),
       _symbol(NULL) {}
 
   // --------------------------------------------------------------------------
@@ -920,7 +923,7 @@ struct AstBinaryOp : public AstBinary {
     : AstBinary(ast, kAstNodeBinaryOp) { setOp(op); }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
-    if (mpOpInfo[getOp()].isAssignment() && hasLeft()) {
+	if (mpOpInfo[getOp()].isAssignment() && hasLeft()) {
       AstVar* var = static_cast<AstVar*>(getLeft());
       AstSymbol* sym = var->getSymbol();
 
