@@ -1,5 +1,11 @@
-include(CMakePackageConfigHelpers)
+include( CMakePackageConfigHelpers )
 include( CMakeParseArguments )
+include( BpcTargetPaths.cmake )
+
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT OR NOT CMAKE_INSTALL_PREFIX)
+    set (CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}-install/" CACHE PATH "CMake install Directory" FORCE )
+endif()
+set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo CACHE TYPE INTERNAL FORCE )
 
 function( BpcInstallPackage )
 	
@@ -63,7 +69,7 @@ function( BpcInstallPackage )
 		VERSION ${PACKAGE_VERSION}
 		COMPATIBILITY ${PACKAGE_COMPATIBILITY}
 	)
-
+			
 	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${package}-config-version.cmake" 
 		DESTINATION ${CONF_DESTINATION} )
 
@@ -75,6 +81,28 @@ function( BpcInstallPackage )
 	
 	foreach( config ${CMAKE_CONFIGURATION_TYPES} )
 		string( TOUPPER ${config} CONFIG )
+		
+		foreach( target ${PACKAGE_TARGETS} )
+			get_target_property( type ${target} TYPE )
+			
+			if( type STREQUAL EXECUTABLE OR type STREQUAL SHARED_LIBRARY OR type STREQUAL MODULE_LIBRARY )
+				set( IS_RUNTIME_TARGET TRUE )
+			else()
+				set( IS_RUNTIME_TARGET FALSE )
+			endif()
+		
+			# message( "TARGET: ${target} is RTT?: ${IS_RUNTIME_TARGET}" )
+			
+			if ( IS_RUNTIME_TARGET AND MSVC )
+				bpc_get_symbol_dir( ${target}  ${config} sydir )
+				bpc_get_symbol_name( ${target} ${config} syname )
+
+				install( PROGRAMS "${sydir}/${syname}"
+					DESTINATION "${INST_DESTINATION}/bin/${config}"
+					CONFIGURATIONS ${config} )
+			endif()
+		endforeach()
+	
 		install( TARGETS ${PACKAGE_TARGETS} EXPORT ${package}.${config} CONFIGURATIONS ${config} 
 			RUNTIME DESTINATION ${INST_DESTINATION}/bin/${config}
 			LIBRARY DESTINATION ${INST_DESTINATION}/bin/${config}
