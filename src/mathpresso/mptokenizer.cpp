@@ -11,6 +11,7 @@
 #include "./mpeval_p.h"
 #include "./mphash_p.h"
 #include "./mptokenizer_p.h"
+#include <iostream>
 
 namespace mathpresso {
 
@@ -30,6 +31,9 @@ enum TokenChar {
   // Digit-Hex.
   kTokenChar0xA, kTokenChar0xB, kTokenChar0xC, kTokenChar0xD,
   kTokenChar0xE, kTokenChar0xF,
+  
+  // imaginary
+  kTokenCharImg,
 
   // Non-Hex ASCII [A-Z] Letter and Underscore [_].
   kTokenCharSym,
@@ -87,7 +91,7 @@ static const uint8_t mpCharClass[] = {
   C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 080-087 PQRSTUVW |
   C(Sym), C(Sym), C(Sym), C(LBr), C(Inv), C(RBr), C(Xor), C(Sym), // 088-095 XYZ[\]^_ | Unassigned: \.
   C(Inv), C(0xA), C(0xB), C(0xC), C(0xD), C(0xE), C(0xF), C(Sym), // 096-103 `abcdefg | Unassigned: `.
-  C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 104-111 hijklmno |
+  C(Sym), C(Img), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 104-111 hijklmno |
   C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 112-119 pqrstuvw |
   C(Sym), C(Sym), C(Sym), C(LCu), C(Or ), C(RCu), C(Neg), C(Inv), // 120-127 xyz{|}~  |
   C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 128-135 ........ | Extended.
@@ -156,6 +160,8 @@ uint32_t Tokenizer::next(Token* token) {
   // Skip parsing if the next token is already done, caused by `peek()`.
   uint32_t c = _token.token;
   uint32_t hVal;
+
+  //std::cout << "test";
 
   if (c != kTokenInvalid) {
     *token = _token;
@@ -294,9 +300,11 @@ _Repeat:
         safe = false;
     }
 
-    // Error if there is an alpha-numeric character right next to the number.
-    if (p != pEnd && mpCharClass[p[0]] <= kTokenCharSym)
+    // Error if there is an alpha-numeric character right next to the number and not 'i'.
+    if (p != pEnd && mpCharClass[p[0]] <= kTokenCharSym && mpCharClass[p[0]] != kTokenCharImg)
       goto _Invalid;
+
+
 
     // Limit a range of safe values from Xe-15 to Xe15.
     safe = safe && exponent >= -kPow10TableSize && exponent <= kPow10TableSize;
@@ -322,6 +330,15 @@ _Repeat:
       if (buf != tmp)
         ::free(buf);
     }
+
+	// return an complex number
+	if (mpCharClass[p[0]] == kTokenCharImg) {
+		p++;
+		//std::cout << "imaginary";
+		token->value_c = std::complex<double>(0, val);
+		token->setData((size_t)(pToken - pStart), len + 1, 0, kTokenComplex);
+		return kTokenComplex;
+	}
 
     token->value = val;
     token->setData((size_t)(pToken - pStart), len, 0, kTokenNumber);

@@ -27,7 +27,7 @@ enum TokenType {
 
   kTokenSymbol,       // <symbol>
   kTokenNumber,       // <number>
-  kTokenComplex,	  // <complex number>, written in brackets: [re, im];
+  kTokenComplex,	  // <complex number>, written as a+bi
 
   kTokenVar,          // 'var' keyword
   kTokenReserved,     // reserved keyword
