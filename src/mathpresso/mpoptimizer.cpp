@@ -89,6 +89,10 @@ Error AstOptimizer::onImm(AstImm* node) {
   return kErrorOk;
 }
 
+Error AstOptimizer::onImmComp(AstImmComplex* node) {
+	return kErrorOk;
+}
+
 Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
   const OpInfo& op = OpInfo::get(node->getOp());
 
