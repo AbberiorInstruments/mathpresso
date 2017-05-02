@@ -111,7 +111,6 @@ struct Token {
     position = 0;
     length = 0;
     value = 0.0;
-	value_c = std::complex<double>(0, 0);
     token = kTokenInvalid;
   }
 
@@ -147,10 +146,10 @@ struct Token {
   //! Token type.
   uint32_t token;
 
-  //! Token value (if the token is a number).
+  //! Token value (if the token is a number). If token = kTokenComplex this 
+  // should be interpreted as the imaginary part of a complex number.
   double value;
 
-  std::complex<double> value_c;
 };
 
 // ============================================================================

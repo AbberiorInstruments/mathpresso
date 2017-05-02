@@ -303,12 +303,23 @@ _Repeat:
     // Error if there is an alpha-numeric character right next to the number and not 'i'.
     if (p != pEnd && mpCharClass[p[0]] <= kTokenCharSym && mpCharClass[p[0]] != kTokenCharImg)
       goto _Invalid;
-
-
+	
 
     // Limit a range of safe values from Xe-15 to Xe15.
     safe = safe && exponent >= -kPow10TableSize && exponent <= kPow10TableSize;
     size_t len = (size_t)(p - pToken);
+
+	// check whether there is a cmplex number or not and set the output accordingly.
+	uint32_t tokenType;
+	if (mpCharClass[p[0]] == kTokenCharImg) {
+		p++;
+		len++;
+		tokenType = kTokenComplex;
+	}
+	else {
+		tokenType = kTokenNumber;
+	}
+
 
     if (safe) {
       if (exponent != 0)
@@ -330,21 +341,12 @@ _Repeat:
       if (buf != tmp)
         ::free(buf);
     }
-
-	// return an complex number
-	if (mpCharClass[p[0]] == kTokenCharImg) {
-		p++;
-		//std::cout << "imaginary";
-		token->value_c = std::complex<double>(0, val);
-		token->setData((size_t)(pToken - pStart), len + 1, 0, kTokenComplex);
-		return kTokenComplex;
-	}
-
+	
     token->value = val;
-    token->setData((size_t)(pToken - pStart), len, 0, kTokenNumber);
+    token->setData((size_t)(pToken - pStart), len, 0, tokenType);
 
     _p = reinterpret_cast<const char*>(p);
-    return kTokenNumber;
+    return tokenType;
   }
 
   // --------------------------------------------------------------------------
