@@ -154,7 +154,9 @@ struct MATHPRESSO_NOAPI JitCompiler {
   JitVar onBlock(AstBlock* node);
   JitVar onVarDecl(AstVarDecl* node);
   JitVar onVar(AstVar* node);
+  JitVar onVarComp(AstVarComplex* node);
   JitVar onImm(AstImm* node);
+  JitVar onImmComp(AstImmComplex * node);
   JitVar onUnaryOp(AstUnaryOp* node);
   JitVar onBinaryOp(AstBinaryOp* node);
   JitVar onCall(AstCall* node);
@@ -166,8 +168,10 @@ struct MATHPRESSO_NOAPI JitCompiler {
   // Constants.
   void prepareConstPool();
   JitVar getConstantU64(uint64_t value);
+  JitVar getConstantU64Compl(uint64_t * value);
   JitVar getConstantU64AsPD(uint64_t value);
   JitVar getConstantD64(double value);
+  JitVar getConstantD64Compl(std::complex<double> value);
   JitVar getConstantD64AsPD(double value);
 
   // Members.
@@ -282,9 +286,10 @@ JitVar JitCompiler::onNode(AstNode* node) {
   switch (node->getNodeType()) {
     case kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
     case kAstNodeVarDecl  : return onVarDecl  (static_cast<AstVarDecl*  >(node));
-    case kAstNodeVarDouble      : return onVar      (static_cast<AstVar*      >(node));
-    case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
-    case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
+    case kAstNodeVarDouble: return onVar      (static_cast<AstVar*      >(node));
+	case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
+	case kAstNodeImmComplex: return onImmComp(static_cast<AstImmComplex*>(node));
+	case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
     case kAstNodeBinaryOp : return onBinaryOp (static_cast<AstBinaryOp* >(node));
     case kAstNodeCall     : return onCall     (static_cast<AstCall*     >(node));
 
@@ -341,8 +346,35 @@ JitVar JitCompiler::onVar(AstVar* node) {
   return result;
 }
 
+//! NOT SAFE, never tested
+JitVar JitCompiler::onVarComp(AstVarComplex* node) {
+	AstSymbol* sym = node->getSymbol();
+	uint32_t slotId = sym->getVarSlotId();
+
+	JitVar result = varSlots[slotId];
+	if (result.isNone()) {
+		if (sym->isGlobal()) {
+			result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAG_RO);
+			varSlots[slotId] = result;
+			if (sym->getWriteCount() > 0)
+				result = copyVar(result, JitVar::FLAG_NONE);
+		}
+		else {
+			result = getConstantD64(mpGetNan());
+			varSlots[slotId] = result;
+		}
+	}
+
+	return result;
+}
+
 JitVar JitCompiler::onImm(AstImm* node) {
   return getConstantD64(node->getValue());
+}
+
+// Prolems with Complex 
+JitVar JitCompiler::onImmComp(AstImmComplex* node) {
+	return getConstantD64Compl(node->getValue());
 }
 
 JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
@@ -806,6 +838,16 @@ JitVar JitCompiler::getConstantU64(uint64_t value) {
   return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
 }
 
+JitVar JitCompiler::getConstantU64Compl(uint64_t* value) {
+	prepareConstPool();
+
+	size_t offset;
+	if (constPool.add(value, 2 * sizeof(uint64_t), offset) != kErrorOk)
+		return JitVar();
+
+	return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
+}
+
 JitVar JitCompiler::getConstantU64AsPD(uint64_t value) {
   prepareConstPool();
 
@@ -821,6 +863,12 @@ JitVar JitCompiler::getConstantD64(double value) {
   DoubleBits bits;
   bits.d = value;
   return getConstantU64(bits.u);
+}
+
+JitVar JitCompiler::getConstantD64Compl(std::complex<double> value) {
+	DoubleBitsComp bits;
+	bits.fromDoubleComplex(value);
+	return getConstantU64(bits.u[0]);
 }
 
 JitVar JitCompiler::getConstantD64AsPD(double value) {

@@ -389,7 +389,7 @@ _Repeat1:
 		  MATHPRESSO_NULLCHECK(zNode);
 
 		  zNode->setPosition(token.getPosAsUInt());
-		  zNode->_value = std::complex<double>(0, token.value);
+		  zNode->_value = std::complex<double>(0.0, token.value);
 
 		  if (unary == NULL)
 			  tNode = zNode;

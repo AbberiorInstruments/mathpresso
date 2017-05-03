@@ -85,11 +85,19 @@ Error AstOptimizer::onVar(AstVar* node) {
   return kErrorOk;
 }
 
+Error AstOptimizer::onVarComp(AstVarComplex* node) {
+	node->getParent()->addNodeFlags(kAstComplex);
+	node->addNodeFlags(kAstComplex);
+	return kErrorOk;
+}
+
 Error AstOptimizer::onImm(AstImm* node) {
   return kErrorOk;
 }
 
 Error AstOptimizer::onImmComp(AstImmComplex* node) {
+	node->getParent()->addNodeFlags(kAstComplex);
+	node->addNodeFlags(kAstComplex);
 	return kErrorOk;
 }
 
@@ -181,80 +189,118 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
   bool lIsImm = left->isImm();
   bool rIsImm = right->isImm();
 
-  // If both nodes are values it's easy, just fold them into a single one.
-  if (lIsImm && rIsImm) {
-    AstImm* lNode = static_cast<AstImm*>(left);
-    AstImm* rNode = static_cast<AstImm*>(right);
+  if (!(node->hasNodeFlag(kAstComplex))) {
+	// If both nodes are values it's easy, just fold them into a single one.
+	  if (lIsImm && rIsImm) {
+		  AstImm* lNode = static_cast<AstImm*>(left);
+		  AstImm* rNode = static_cast<AstImm*>(right);
 
-    double lVal = lNode->getValue();
-    double rVal = rNode->getValue();
-    double result = 0.0;
+		  double lVal = lNode->getValue();
+		  double rVal = rNode->getValue();
+		  double result = 0.0;
 
-    switch (node->getOp()) {
-      case kOpEq      : result = lVal == rVal; break;
-      case kOpNe      : result = lVal != rVal; break;
-      case kOpLt      : result = lVal < rVal; break;
-      case kOpLe      : result = lVal <= rVal; break;
-      case kOpGt      : result = lVal > rVal; break;
-      case kOpGe      : result = lVal >= rVal; break;
-      case kOpAdd     : result = lVal + rVal; break;
-      case kOpSub     : result = lVal - rVal; break;
-      case kOpMul     : result = lVal * rVal; break;
-      case kOpDiv     : result = lVal / rVal; break;
-      case kOpMod     : result = mpMod(lVal, rVal); break;
-      case kOpAvg     : result = mpAvg(lVal, rVal); break;
-      case kOpMin     : result = mpMin(lVal, rVal); break;
-      case kOpMax     : result = mpMax(lVal, rVal); break;
-      case kOpPow     : result = mpPow(lVal, rVal); break;
-      case kOpAtan2   : result = mpAtan2(lVal, rVal); break;
-      case kOpHypot   : result = mpHypot(lVal, rVal); break;
-      case kOpCopySign: result = mpCopySign(lVal, rVal); break;
+		  switch (node->getOp()) {
+		  case kOpEq: result = lVal == rVal; break;
+		  case kOpNe: result = lVal != rVal; break;
+		  case kOpLt: result = lVal < rVal; break;
+		  case kOpLe: result = lVal <= rVal; break;
+		  case kOpGt: result = lVal > rVal; break;
+		  case kOpGe: result = lVal >= rVal; break;
+		  case kOpAdd: result = lVal + rVal; break;
+		  case kOpSub: result = lVal - rVal; break;
+		  case kOpMul: result = lVal * rVal; break;
+		  case kOpDiv: result = lVal / rVal; break;
+		  case kOpMod: result = mpMod(lVal, rVal); break;
+		  case kOpAvg: result = mpAvg(lVal, rVal); break;
+		  case kOpMin: result = mpMin(lVal, rVal); break;
+		  case kOpMax: result = mpMax(lVal, rVal); break;
+		  case kOpPow: result = mpPow(lVal, rVal); break;
+		  case kOpAtan2: result = mpAtan2(lVal, rVal); break;
+		  case kOpHypot: result = mpHypot(lVal, rVal); break;
+		  case kOpCopySign: result = mpCopySign(lVal, rVal); break;
 
-      default:
-        return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-          "Invalid binary operation '%s'.", op.name);
-    }
+		  default:
+			  return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+				  "Invalid binary operation '%s'.", op.name);
+		  }
 
-    lNode->setValue(result);
-    node->unlinkLeft();
-    node->getParent()->replaceNode(node, lNode);
+		  lNode->setValue(result);
+		  node->unlinkLeft();
+		  node->getParent()->replaceNode(node, lNode);
 
-    _ast->deleteNode(node);
+		  _ast->deleteNode(node);
+	  }
+	  // There is still a little optimization opportunity.
+	  else if (lIsImm) {
+		  AstImm* lNode = static_cast<AstImm*>(left);
+		  double val = lNode->getValue();
+
+		  if ((val == 0.0 && (op.flags & kOpFlagNopIfLZero)) ||
+			  (val == 1.0 && (op.flags & kOpFlagNopIfLOne))) {
+			  node->unlinkRight();
+			  node->getParent()->replaceNode(node, right);
+
+			  _ast->deleteNode(node);
+		  }
+	  }
+	  else if (rIsImm) {
+		  AstImm* rNode = static_cast<AstImm*>(right);
+		  double val = rNode->getValue();
+
+		  // Evaluate an assignment.
+		  if (op.isAssignment() && left->isVar()) {
+			  AstSymbol* sym = static_cast<AstVar*>(left)->getSymbol();
+			  if (op.type == kOpAssign || sym->isAssigned()) {
+				  sym->setValue(val);
+				  sym->setAssigned();
+			  }
+		  }
+		  else {
+			  if ((val == 0.0 && (op.flags & kOpFlagNopIfRZero)) ||
+				  (val == 1.0 && (op.flags & kOpFlagNopIfROne))) {
+				  node->unlinkLeft();
+				  node->getParent()->replaceNode(node, left);
+
+				  _ast->deleteNode(node);
+			  }
+		  }
+	  }
   }
-  // There is still a little optimization opportunity.
-  else if (lIsImm) {
-    AstImm* lNode = static_cast<AstImm*>(left);
-    double val = lNode->getValue();
+  else {
+	  node->getParent()->addNodeFlags(kAstComplex);
 
-    if ((val == 0.0 && (op.flags & kOpFlagNopIfLZero)) ||
-        (val == 1.0 && (op.flags & kOpFlagNopIfLOne))) {
-      node->unlinkRight();
-      node->getParent()->replaceNode(node, right);
+	  // if we have to calculate in complex, and one of the operands is an immediate, it should be converted to complex.
+	  if (left->isImm()) {
+		  AstImm* lNode = static_cast<AstImm*>(left);
+		  AstImmComplex* newNode = lNode->getAst()->newNode<AstImmComplex>(std::complex<double>(lNode->getValue(), 0.0));
+		  newNode->setNodeFlags(kAstComplex);
+		  node->replaceNode(lNode, newNode);
+		  _ast->deleteNode(lNode);
+		  left = node->getLeft();
+	  }
+	  else if (right->isImm()) {
+		  AstImm* rNode = static_cast<AstImm*>(right);
+		  AstImmComplex* newNode = rNode->getAst()->newNode<AstImmComplex>(std::complex<double>(rNode->getValue(), 0.0));
+		  newNode->setNodeFlags(kAstComplex);
+		  node->replaceNode(rNode, newNode);
+		  _ast->deleteNode(rNode);
+		  right = node->getRight();
+	  }
 
-      _ast->deleteNode(node);
-    }
-  }
-  else if (rIsImm) {
-    AstImm* rNode = static_cast<AstImm*>(right);
-    double val = rNode->getValue();
+	  // adition for immediate complex values.
+	  if (node->getOp() == kOpAdd && left->isComplex() && right->isComplex()) {
+		  AstImmComplex* lNode = static_cast<AstImmComplex*>(left);
+		  AstImmComplex* rNode = static_cast<AstImmComplex*>(right);
+		  std::complex<double> valR = rNode->getValue();
+		  std::complex<double> valL = lNode->getValue();
+		  std::complex<double> result = std::complex<double>(valL.real() + valR.real(), valL.imag() + valR.imag());
 
-    // Evaluate an assignment.
-    if (op.isAssignment() && left->isVar()) {
-      AstSymbol* sym = static_cast<AstVar*>(left)->getSymbol();
-      if (op.type == kOpAssign || sym->isAssigned()) {
-        sym->setValue(val);
-        sym->setAssigned();
-      }
-    }
-    else {
-      if ((val == 0.0 && (op.flags & kOpFlagNopIfRZero)) ||
-          (val == 1.0 && (op.flags & kOpFlagNopIfROne))) {
-        node->unlinkLeft();
-        node->getParent()->replaceNode(node, left);
+		  rNode->setValue(result);
+		  node->unlinkRight();
+		  node->getParent()->replaceNode(node, rNode);
 
-        _ast->deleteNode(node);
-      }
-    }
+		  _ast->deleteNode(node);
+	  }
   }
 
   return kErrorOk;

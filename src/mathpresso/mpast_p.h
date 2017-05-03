@@ -128,6 +128,8 @@ enum AstNodeType {
   kAstNodeVarComplex,
   //! Node is `AstImm`.
   kAstNodeImm,
+  //! Node is `AstImm` of type std::complex<double>.
+  kAstNodeImmComplex,
 
   // --------------------------------------------------------------------------
   // [Op]
@@ -149,7 +151,8 @@ enum AstNodeType {
 //!
 //! `AstNode` flags.
 enum AstNodeFlags {
-  kAstNodeHasSideEffect = 0x01
+  kAstNodeHasSideEffect = 0x01,
+  kAstComplex = 0x02
 };
 
 // ============================================================================
@@ -576,6 +579,8 @@ struct AstNode {
   MATHPRESSO_INLINE bool isVar() const { return _nodeType == kAstNodeVarDouble; }
   //! Get whether the node is `AstImm`.
   MATHPRESSO_INLINE bool isImm() const { return _nodeType == kAstNodeImm; }
+  //! Get whether the node ist `AstImmComplex`.
+  MATHPRESSO_INLINE bool isComplex() const { return _nodeType == kAstNodeImmComplex; }
 
   //! Get whether the node has flag `flag`.
   MATHPRESSO_INLINE bool hasNodeFlag(uint32_t flag) const { return (static_cast<uint32_t>(_nodeFlags) & flag) != 0; }
@@ -602,6 +607,8 @@ struct AstNode {
   MATHPRESSO_INLINE void setPosition(uint32_t position) { _position = position; }
   //! Reset source code position of the node.
   MATHPRESSO_INLINE void resetPosition() { _position = ~static_cast<uint32_t>(0); }
+
+  MATHPRESSO_INLINE void setComplex(bool isComplex) {}
 
   // --------------------------------------------------------------------------
   // [Children]
@@ -908,7 +915,7 @@ struct AstVarComplex : public AstNode {
 	// --------------------------------------------------------------------------
 
 	MATHPRESSO_INLINE AstVarComplex(AstBuilder* ast)
-	: AstNode(ast, kAstNodeVarDouble),
+	: AstNode(ast, kAstNodeVarComplex),
 	_symbol(NULL) {}
 
 	// --------------------------------------------------------------------------
@@ -936,23 +943,37 @@ struct AstImmComplex : public AstNode {
 	// --------------------------------------------------------------------------
 	// [Construction / Destruction]
 	// --------------------------------------------------------------------------
-
-	MATHPRESSO_INLINE AstImmComplex(AstBuilder* ast, std::complex<double> value = (0.0, 0.0))
-	: AstNode(ast, kAstNodeImm),
+#define MP_AST_COMPLEX_ENABLE
+#ifndef MP_AST_COMPLEX_ENABLE
+	MATHPRESSO_INLINE AstImmComplex(AstBuilder* ast, double value = 0.0)
+	: AstNode(ast, kAstNodeImmComplex),
 	_value(value) {}
+#else
+	MATHPRESSO_INLINE AstImmComplex(AstBuilder* ast, std::complex<double> value = (0.0, 0.0))
+	: AstNode(ast, kAstNodeImmComplex),
+	_value(value) {}
+#endif 
+		
 
 	// --------------------------------------------------------------------------
 	// [Accessors]
 	// --------------------------------------------------------------------------
-
-	MATHPRESSO_INLINE std::complex<double> getValue() const { return _value; }
+#ifndef MP_AST_COMPLEX_ENABLE
+	MATHPRESSO_INLINE double getValue() const { return _value; }
 	MATHPRESSO_INLINE void setValue(double value) { _value = value; }
-
+#else
+	MATHPRESSO_INLINE std::complex<double> getValue() const { return _value; }
+	MATHPRESSO_INLINE void setValue(std::complex<double> value) { _value = value; }
+#endif
 	// --------------------------------------------------------------------------
 	// [Members]
 	// --------------------------------------------------------------------------
 
+#ifndef MP_AST_COMPLEX_ENABLE
+	double _value;
+#else
 	std::complex<double> _value;
+#endif
 };
 
 
@@ -1055,7 +1076,9 @@ struct AstVisitor {
   virtual Error onBlock(AstBlock* node) = 0;
   virtual Error onVarDecl(AstVarDecl* node) = 0;
   virtual Error onVar(AstVar* node) = 0;
+  virtual Error onVarComp(AstVarComplex* node) = 0;
   virtual Error onImm(AstImm* node) = 0;
+  virtual Error onImmComp(AstImmComplex* node) = 0;
   virtual Error onUnaryOp(AstUnaryOp* node) = 0;
   virtual Error onBinaryOp(AstBinaryOp* node) = 0;
   virtual Error onCall(AstCall* node) = 0;

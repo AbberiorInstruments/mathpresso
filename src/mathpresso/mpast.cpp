@@ -40,8 +40,9 @@ static const AstNodeSize mpAstNodeSize[] = {
   ROW(kAstNodeBlock    , sizeof(AstBlock)    ),
   ROW(kAstNodeVarDecl  , sizeof(AstVarDecl)  ),
   ROW(kAstNodeVarDouble      , sizeof(AstVar)      ),
-  ROW(kAstNodeVarComplex	, sizeof(AstVar) ),
+  ROW(kAstNodeVarComplex	, sizeof(AstVarComplex) ),
   ROW(kAstNodeImm      , sizeof(AstImm)      ),
+  ROW(kAstNodeImmComplex , sizeof(AstImmComplex)),
   ROW(kAstNodeUnaryOp  , sizeof(AstUnaryOp)  ),
   ROW(kAstNodeBinaryOp , sizeof(AstBinaryOp) ),
   ROW(kAstNodeCall     , sizeof(AstCall)     )
@@ -134,7 +135,7 @@ void AstBuilder::deleteNode(AstNode* node) {
     case kAstNodeProgram  : static_cast<AstProgram*  >(node)->destroy(this); break;
     case kAstNodeBlock    : static_cast<AstBlock*    >(node)->destroy(this); break;
     case kAstNodeVarDecl  : static_cast<AstVarDecl*  >(node)->destroy(this); break;
-    case kAstNodeVarDouble      : static_cast<AstVar*      >(node)->destroy(this); break;
+    case kAstNodeVarDouble: static_cast<AstVar*      >(node)->destroy(this); break;
 	case kAstNodeVarComplex: static_cast<AstVarComplex*>(node)->destroy(this); break;
     case kAstNodeImm      : static_cast<AstImm*      >(node)->destroy(this); break;
     case kAstNodeUnaryOp  : static_cast<AstUnaryOp*  >(node)->destroy(this); break;
@@ -345,6 +346,7 @@ static Error mpBlockNodeGrow(AstBlock* self) {
   return kErrorOk;
 }
 
+// Tell the AST, we want to add a node, so it can allocate memory if necessary
 Error AstBlock::willAdd() {
   // Grow if needed.
   if (_length == _capacity)
@@ -411,10 +413,11 @@ Error AstVisitor::onNode(AstNode* node) {
     case kAstNodeProgram  : return onProgram  (static_cast<AstProgram*  >(node));
     case kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
     case kAstNodeVarDecl  : return onVarDecl  (static_cast<AstVarDecl*  >(node));
-    case kAstNodeVarDouble      : return onVar      (static_cast<AstVar*>(node));
-	//case kAstNodeVarComplex: return onVarComp(static_cast<AstVarComplex*>(node));
+    case kAstNodeVarDouble: return onVar      (static_cast<AstVar*      >(node));
+	case kAstNodeVarComplex: return onVarComp (static_cast<AstVarComplex*>(node));
 	case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
-    case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
+	case kAstNodeImmComplex: return onImmComp(static_cast<AstImmComplex*>(node));
+	case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
     case kAstNodeBinaryOp : return onBinaryOp (static_cast<AstBinaryOp* >(node));
     case kAstNodeCall     : return onCall     (static_cast<AstCall*     >(node));
 
@@ -475,7 +478,7 @@ Error AstDump::onImm(AstImm* node) {
 }
 
 Error AstDump::onImmComp(AstImmComplex* node) {
-	return info("%f * i", node->_value);
+	return info("%f + %f i", node->_value.real(), node->_value.imag());
 }
 
 Error AstDump::onUnaryOp(AstUnaryOp* node) {
