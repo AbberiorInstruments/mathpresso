@@ -871,8 +871,9 @@ JitVar JitCompiler::getConstantD64(double value) {
 
 JitVar JitCompiler::getConstantD64Compl(std::complex<double> value) {
 	DoubleBitsComp bits;
-	bits.fromDoubleComplex(value);
-	return getConstantU64(bits.u[0]);
+	bits.d[0] = value.real();
+	bits.d[1] = value.imag();
+	return getConstantU64Compl(bits.u);
 }
 
 JitVar JitCompiler::getConstantD64AsPD(double value) {

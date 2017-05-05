@@ -57,7 +57,12 @@ union DoubleBitsComp {
 
 	static MATHPRESSO_INLINE DoubleBitsComp fromDouble(double val0, double val1) { DoubleBitsComp u; u.d[0] = val0; u.d[1] = val1; return u; }
 	static MATHPRESSO_INLINE DoubleBitsComp fromUInt64(uint64_t val0, uint64_t val1) { DoubleBitsComp u; u.u[0] = val0; u.u[1] = val1; return u; }
-	static MATHPRESSO_INLINE DoubleBitsComp fromDoubleComplex(std::complex<double> val) { DoubleBitsComp u; u.d[0] = val.real(); u.d[1] = val.imag(); return u; }
+	static MATHPRESSO_INLINE DoubleBitsComp fromDoubleComplex(std::complex<double> val) { 
+		DoubleBitsComp u; 
+		u.d[0] = val.real(); 
+		u.d[1] = val.imag(); 
+		return u; 
+	}
 
 	MATHPRESSO_INLINE bool isNan() const { 
 		return (((hi0 & 0x7FF00000U)) == 0x7FF00000U && ((hi0 & 0x000FFFFFU) | lo0) != 0x00000000U) 
