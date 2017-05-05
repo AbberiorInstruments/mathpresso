@@ -243,8 +243,11 @@ JitVar JitCompiler::registerVar(const JitVar& other) {
     return other;
 }
 
+//! Compiles an AstBlock into asambler.
+//! NOTE: use beginFunction() before and endFunction() after calling this.
 void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots) {
-  if (numSlots != 0) {
+	// Create Definitions for the Variables and add them as JitVar
+	if (numSlots != 0) {
     varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
     if (varSlots == NULL) return;
 
@@ -252,7 +255,7 @@ void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots
       varSlots[i] = JitVar();
   }
 
-  // Result of the function or NaN.
+  // Result of the function or NaN. Here the AST is compiled.
   JitVar result = onBlock(node);
 
   // Write altered global variables.
@@ -278,6 +281,7 @@ void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots
     var = registerVar(result).getXmm();
   cc->movsd(x86::ptr(resultAddress), var);
 
+  // Release the Space allocated for the variables
   if (numSlots != 0)
     heap->release(varSlots, sizeof(JitVar) * numSlots);
 }
@@ -360,7 +364,7 @@ JitVar JitCompiler::onVarComp(AstVarComplex* node) {
 				result = copyVar(result, JitVar::FLAG_NONE);
 		}
 		else {
-			result = getConstantD64(mpGetNan());
+			result = getConstantD64Compl(mpGetNan());
 			varSlots[slotId] = result;
 		}
 	}
@@ -372,7 +376,7 @@ JitVar JitCompiler::onImm(AstImm* node) {
   return getConstantD64(node->getValue());
 }
 
-// Prolems with Complex 
+ 
 JitVar JitCompiler::onImmComp(AstImmComplex* node) {
 	return getConstantD64Compl(node->getValue());
 }

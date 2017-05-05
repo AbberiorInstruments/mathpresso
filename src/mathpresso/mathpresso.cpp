@@ -475,6 +475,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 
   reset();
   _func = fn;
+  _isComplex = ast._programNode->hasNodeFlag(kAstComplex);
 
   return kErrorOk;
 }

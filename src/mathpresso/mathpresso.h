@@ -9,6 +9,7 @@
 #define _MATHPRESSO_H
 
 #include <stdlib.h>
+#include <complex>
 
 #if !defined(_MSC_VER)
 #include <stdint.h>
@@ -331,12 +332,21 @@ struct Expression {
     return result;
   }
 
+  MATHPRESSO_INLINE void evaluate_c(void* data, std::complex<double> &ret) const {
+	  double result[2];
+	  _func(result, data);
+	  ret = std::complex<double>(result[0], result[1]);
+  }
+
   // --------------------------------------------------------------------------
   // [Members]
   // --------------------------------------------------------------------------
 
   //! Compiled function.
   CompiledFunc _func;
+
+  //! True, if the result of the function could be a complex number
+  bool _isComplex = false;
 };
 
 // ============================================================================
