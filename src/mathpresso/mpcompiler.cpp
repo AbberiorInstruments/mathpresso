@@ -142,13 +142,21 @@ struct MATHPRESSO_NOAPI JitCompiler {
   void beginFunction();
   void endFunction();
 
+  // Function generator - complex.
+  void beginFunctionComp();
+
   // Variable Management.
   JitVar copyVar(const JitVar& other, uint32_t flags);
   JitVar writableVar(const JitVar& other);
   JitVar registerVar(const JitVar& other);
 
+  JitVar copyVarComp(const JitVar & other, uint32_t flags);
+  JitVar writableVarComp(const JitVar & other);
+  JitVar registerVarComp(const JitVar & other);
+
   // Compiler.
   void compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots);
+  void compileComp(AstBlock * node, AstScope * rootScope, uint32_t numSlots);
 
   JitVar onNode(AstNode* node);
   JitVar onBlock(AstBlock* node);
@@ -167,6 +175,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
 
   // Constants.
   void prepareConstPool();
+  void prepareConstPoolComp();
   JitVar getConstantU64(uint64_t value);
   JitVar getConstantU64Compl(uint64_t * value);
   JitVar getConstantU64AsPD(uint64_t value);
@@ -215,6 +224,19 @@ void JitCompiler::beginFunction() {
   functionBody = cc->getCursor();
 }
 
+void JitCompiler::beginFunctionComp() {
+	cc->addFunc(FuncSignature2<void, double*, double*>(CallConv::kIdHostCDecl));
+
+	resultAddress = cc->newIntPtr("pResult");
+	variablesAddress = cc->newIntPtr("pVariables");
+	constPtr = cc->newIntPtr("pConst");
+
+	cc->setArg(0, resultAddress);
+	cc->setArg(1, variablesAddress);
+
+	functionBody = cc->getCursor();
+}
+
 void JitCompiler::endFunction() {
   cc->endFunc();
 
@@ -243,12 +265,33 @@ JitVar JitCompiler::registerVar(const JitVar& other) {
     return other;
 }
 
+JitVar JitCompiler::copyVarComp(const JitVar& other, uint32_t flags) {
+	JitVar v(cc->newXmmSd(), flags);
+	cc->emit(other.isXmm() ? X86Inst::kIdMovapd : X86Inst::kIdMovapd,
+		v.getXmm(), other.getOperand());
+	return v;
+}
+
+JitVar JitCompiler::writableVarComp(const JitVar& other) {
+	if (other.isMem() || other.isRO())
+		return copyVarComp(other, other.flags & ~JitVar::FLAG_RO);
+	else
+		return other;
+}
+
+JitVar JitCompiler::registerVarComp(const JitVar& other) {
+	if (other.isMem())
+		return copyVarComp(other, other.flags);
+	else
+		return other;
+}
+
 //! Compiles an AstBlock into asambler.
 //! NOTE: use beginFunction() before and endFunction() after calling this.
 void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots) {
 	// Create Definitions for the Variables and add them as JitVar
-	if (numSlots != 0) {
-    varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
+  if (numSlots != 0) {
+	varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
     if (varSlots == NULL) return;
 
     for (uint32_t i = 0; i < numSlots; i++)
@@ -281,9 +324,54 @@ void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots
     var = registerVar(result).getXmm();
   cc->movsd(x86::ptr(resultAddress), var);
 
+
   // Release the Space allocated for the variables
   if (numSlots != 0)
     heap->release(varSlots, sizeof(JitVar) * numSlots);
+}
+
+//! Compiles an AstBlock into asambler.
+//! NOTE: use beginFunction() before and endFunction() after calling this.
+void JitCompiler::compileComp(AstBlock* node, AstScope* rootScope, uint32_t numSlots) {
+	// Create Definitions for the Variables and add them as JitVar
+	if (numSlots != 0) {
+		varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
+		if (varSlots == NULL) return;
+
+		for (uint32_t i = 0; i < numSlots; i++)
+			varSlots[i] = JitVar();
+	}
+
+	// Result of the function or NaN. Here the AST is compiled.
+	JitVar result = onBlock(node);
+
+	// Write altered global variables.
+	{
+		AstSymbolHashIterator it(rootScope->getSymbols());
+		while (it.has()) {
+			AstSymbol* sym = it.get();
+			if (sym->isGlobal() && sym->isAltered()) {
+				JitVar v = varSlots[sym->getVarSlotId()];
+				cc->emit(X86Inst::kIdMovapd,
+					x86::ptr(variablesAddress, sym->getVarOffset()), registerVarComp(v).getXmm());
+			}
+
+			it.next();
+		}
+	}
+
+	// Return NaN if no result is given.
+	X86Xmm var;
+	if (result.isNone())
+		var = registerVarComp(getConstantD64Compl(mpGetNan())).getXmm();
+	else
+		var = registerVarComp(result).getXmm();
+	cc->movupd(x86::ptr(resultAddress), var);
+
+
+	// Release the Space allocated for the variables
+	if (numSlots != 0)
+		heap->release(varSlots, sizeof(JitVar) * numSlots);
 }
 
 JitVar JitCompiler::onNode(AstNode* node) {
@@ -832,6 +920,16 @@ void JitCompiler::prepareConstPool() {
   }
 }
 
+void JitCompiler::prepareConstPoolComp() {
+	if (!constLabel.isValid()) {
+		constLabel = cc->newLabel();
+
+		CBNode* prev = cc->setCursor(functionBody);
+		cc->lea(constPtr, x86::ptr(constLabel));
+		if (prev != functionBody) cc->setCursor(prev);
+	}
+}
+
 JitVar JitCompiler::getConstantU64(uint64_t value) {
   prepareConstPool();
 
@@ -843,7 +941,7 @@ JitVar JitCompiler::getConstantU64(uint64_t value) {
 }
 
 JitVar JitCompiler::getConstantU64Compl(uint64_t* value) {
-	prepareConstPool();
+	prepareConstPoolComp();
 
 	size_t offset;
 	if (constPool.add(value, 2 * sizeof(uint64_t), offset) != kErrorOk)
@@ -913,6 +1011,39 @@ CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log
     log->log(OutputLog::kMessageAsm, 0, 0, logger.getString(), logger._stringBuilder.getLength());
 
   return fn;
+}
+
+CompiledFuncComp mpCompileFunctionComp(AstBuilder* ast, uint32_t options, OutputLog* log) {
+	StringLogger logger;
+
+	CodeHolder code;
+	code.init((jitGlobal.runtime.getCodeInfo()));
+
+	X86Compiler c(&code);
+	bool debugAsm = log != NULL && (options & kOptionDebugAsm) != 0;
+
+	if (debugAsm) {
+		logger.addOptions(Logger::kOptionBinaryForm|Logger::kOptionImmExtended);
+		code.setLogger(&logger);
+	}
+
+	JitCompiler jitCompiler(ast->getHeap(), &c);
+	if ((options & kOptionDisableSSE4_1) != 0)
+		jitCompiler.enableSSE4_1 = false;
+
+	jitCompiler.beginFunction();
+	jitCompiler.compileComp(ast->getProgramNode(), ast->getRootScope(), ast->_numSlots);
+	jitCompiler.endFunction();
+
+	c.finalize();
+
+	CompiledFuncComp fn;
+	jitGlobal.runtime.add(&fn, &code);
+
+	if (debugAsm)
+		log->log(OutputLog::kMessageAsm, 0, 0, logger.getString(), logger._stringBuilder.getLength());
+
+	return fn;
 }
 
 void mpFreeFunction(void* fn) {

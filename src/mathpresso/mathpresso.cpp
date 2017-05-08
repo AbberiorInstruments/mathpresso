@@ -137,6 +137,11 @@ static void mpDummyFunc(double* result, void*) {
   *result = mpGetNan();
 }
 
+static void mpDummyFuncComp(double result[2], void*) {
+	result[0] = mpGetNan();
+	result[1] = mpGetNan();
+}
+
 // ============================================================================
 // [mathpresso::ContextInternalImpl]
 // ============================================================================
@@ -426,58 +431,67 @@ Expression::~Expression() { reset(); }
 // ============================================================================
 
 Error Expression::compile(const Context& ctx, const char* body, unsigned int options, OutputLog* log) {
-  // Init options first.
-  options &= _kOptionsMask;
+	// Init options first.
+	options &= _kOptionsMask;
 
-  if (log != NULL)
-    options |= kInternalOptionLog;
-  else
-    options &= ~(kOptionVerbose | kOptionDebugAst | kOptionDebugAsm);
+	if (log != NULL)
+		options |= kInternalOptionLog;
+	else
+		options &= ~(kOptionVerbose | kOptionDebugAst | kOptionDebugAsm);
 
-  Zone zone(32768 - Zone::kZoneOverhead);
-  ZoneHeap heap(&zone);
-  StringBuilderTmp<512> sbTmp;
+	Zone zone(32768 - Zone::kZoneOverhead);
+	ZoneHeap heap(&zone);
+	StringBuilderTmp<512> sbTmp;
 
-  // Initialize AST.
-  AstBuilder ast(&heap);
-  MATHPRESSO_PROPAGATE(ast.initProgramScope());
+	// Initialize AST.
+	AstBuilder ast(&heap);
+	MATHPRESSO_PROPAGATE(ast.initProgramScope());
 
-  ContextImpl* d = ctx._d;
-  if (d != &mpContextNull)
-    ast.getRootScope()->shadowContextScope(&static_cast<ContextInternalImpl*>(d)->_scope);
+	ContextImpl* d = ctx._d;
+	if (d != &mpContextNull)
+		ast.getRootScope()->shadowContextScope(&static_cast<ContextInternalImpl*>(d)->_scope);
 
-  // Setup basic data structures used during parsing and compilation.
-  size_t len = ::strlen(body);
-  ErrorReporter errorReporter(body, len, options, log);
+	// Setup basic data structures used during parsing and compilation.
+	size_t len = ::strlen(body);
+	ErrorReporter errorReporter(body, len, options, log);
 
-  // Parse the expression into AST.
-  { MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len).parseProgram(ast.getProgramNode())); }
+	// Parse the expression into AST.
+	{ MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len).parseProgram(ast.getProgramNode())); }
 
-  if (options & kOptionDebugAst) {
-    ast.dump(sbTmp);
-    log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
-    sbTmp.clear();
-  }
+	if (options & kOptionDebugAst) {
+		ast.dump(sbTmp);
+		log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
+		sbTmp.clear();
+	}
 
-  // Perform basic optimizations at AST level.
-  { MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter).onProgram(ast.getProgramNode())); }
+	// Perform basic optimizations at AST level.
+	{ MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter).onProgram(ast.getProgramNode())); }
 
-  if (options & kOptionDebugAst) {
-    ast.dump(sbTmp);
-    log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
-    sbTmp.clear();
-  }
+	if (options & kOptionDebugAst) {
+		ast.dump(sbTmp);
+		log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
+		sbTmp.clear();
+	}
 
-  // Compile the function to machine code.
-  CompiledFunc fn = mpCompileFunction(&ast, options, log);
-  if (fn == NULL)
-    return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
+	// Compile the function to machine code.
+	CompiledFunc fn = mpCompileFunction(&ast, options, log);
+	if (fn == NULL)
+		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
 
-  reset();
-  _func = fn;
-  _isComplex = ast._programNode->hasNodeFlag(kAstComplex);
+	reset();
+	_func = fn;
 
-  return kErrorOk;
+	_isComplex = ast._programNode->hasNodeFlag(kAstComplex);
+
+	if (_isComplex) {
+		// Compile the function with complex returns to machine code.
+		CompiledFuncComp fnc = mpCompileFunctionComp(&ast, options, log);
+		if (fn == NULL)
+			return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
+
+		_funcComp = fnc;
+	}
+	return kErrorOk;
 }
 
 bool Expression::isCompiled() const {
@@ -489,6 +503,10 @@ void Expression::reset() {
   if (_func != mpDummyFunc) {
     mpFreeFunction((void*)_func);
     _func = mpDummyFunc;
+  }
+  if (_funcComp != mpDummyFuncComp) {
+	  mpFreeFunction((void*)_funcComp);
+	  _funcComp = mpDummyFuncComp;
   }
 }
 
