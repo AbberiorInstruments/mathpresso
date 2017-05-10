@@ -252,6 +252,8 @@ enum OpType {
   kOpHypot,             // hypot(a, b)
   kOpCopySign,          // copysign(a, b)
 
+  //kOpAddC,
+
   //! \internal
   //!
   //! Count of operators.

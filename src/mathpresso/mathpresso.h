@@ -116,6 +116,8 @@ typedef double (*Arg6Func)(double, double, double, double, double, double);
 typedef double (*Arg7Func)(double, double, double, double, double, double, double);
 typedef double (*Arg8Func)(double, double, double, double, double, double, double, double);
 
+typedef std::complex<double>(*Arg2FuncC)(std::complex<double>, std::complex<double>);
+
 // ============================================================================
 // [mathpresso::ErrorCode]
 // ============================================================================
@@ -270,8 +272,10 @@ struct Context {
 
   //! Add constant to this context.
   MATHPRESSO_API Error addConstant(const char* name, double value);
+  MATHPRESSO_API Error addConstantComp(const char * name, std::complex<double> value);
   //! Add variable to this context.
   MATHPRESSO_API Error addVariable(const char* name, int offset, unsigned int flags = kVariableRW);
+  MATHPRESSO_API Error addVariableComp(const char * name, int offset, unsigned int flags = kVariableRW);
   //! Add function to this context.
   MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags);
 
@@ -333,6 +337,11 @@ struct Expression {
     return result;
   }
 
+  //! Evaluates expression with variable substitutions.
+  //!
+  //! This function cannot cope with complex variables, if they are not aligned to
+  //! 16 byte boundaries. Use 'alignas(16)' to force the alignement.
+  //! It is not necessary to align &ret, but it might be an little bit faster.
   MATHPRESSO_INLINE void evaluateComp(void* data, std::complex<double> &ret) const {
 	  double result[2];
 	  _funcComp(result, data);

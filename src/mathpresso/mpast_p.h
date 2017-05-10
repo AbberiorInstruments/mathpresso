@@ -93,7 +93,11 @@ enum AstSymbolFlags {
   //!
   //! Currently only useful for global variables so the JIT compiler can
   //! perform write operation at the end of the generated function.
-  kAstSymbolIsAltered = 0x0010
+  kAstSymbolIsAltered = 0x0010,
+
+
+  //! The variable is a complex value.
+  kAstSymbolIsComplex = 0x0020
 };
 
 // ============================================================================
@@ -253,23 +257,24 @@ struct AstBuilder {
 // ============================================================================
 
 struct AstSymbol : public HashNode {
-  MATHPRESSO_NO_COPY(AstSymbol)
+	MATHPRESSO_NO_COPY(AstSymbol)
 
-  // --------------------------------------------------------------------------
-  // [Construction / Destruction]
-  // --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE AstSymbol(const char* name, uint32_t length, uint32_t hVal, uint32_t symbolType, uint32_t scopeType)
-    : HashNode(hVal),
-      _length(length),
-      _name(name),
-      _node(NULL),
-      _symbolType(static_cast<uint8_t>(symbolType)),
-      _opType(kOpNone),
-      _symbolFlags(scopeType == kAstScopeGlobal ? (int)kAstSymbolIsGlobal : 0),
-      _value(),
-      _usedCount(0),
-	  _writeCount(0) {}
+		MATHPRESSO_INLINE AstSymbol(const char* name, uint32_t length, uint32_t hVal, uint32_t symbolType, uint32_t scopeType)
+		: HashNode(hVal),
+		_length(length),
+		_name(name),
+		_node(NULL),
+		_symbolType(static_cast<uint8_t>(symbolType)),
+		_opType(kOpNone),
+		_symbolFlags(scopeType == kAstScopeGlobal ? (int)kAstSymbolIsGlobal : 0),
+		_value(),
+		_valueComp(),
+		_usedCount(0),
+		_writeCount(0) {}
 
   // --------------------------------------------------------------------------
   // [Accessors]
@@ -361,8 +366,10 @@ struct AstSymbol : public HashNode {
 
   //! Get the constant value, see `isAssigned()`.
   MATHPRESSO_INLINE double getValue() const { return _value; }
+  MATHPRESSO_INLINE std::complex<double> getValueComp() const { return _valueComp; }
   //! Set `_isAssigned` to true and `_value` to `value`.
   MATHPRESSO_INLINE void setValue(double value) { _value = value; setAssigned(); }
+  MATHPRESSO_INLINE void setValueComp(std::complex<double> value) { _valueComp = value; setAssigned(); }
 
   MATHPRESSO_INLINE uint32_t getUsedCount() const { return _usedCount; }
   MATHPRESSO_INLINE uint32_t getReadCount() const { return _usedCount - _writeCount; }
@@ -407,6 +414,15 @@ struct AstSymbol : public HashNode {
       //! The current value of the symbol (in case the symbol is an immediate).
       double _value;
     };
+
+	struct {
+		//! Variable slot id.
+		uint32_t _varSlotId;
+		//! Variable offset in data structure (in case the symbol is a global variable).
+		int32_t _varOffset;
+		//! The current value of the symbol (in case the symbol is an immediate).
+		std::complex<double> _valueComp;
+	};
 
     struct {
       //! Function pointer (in case the symbol is a function).

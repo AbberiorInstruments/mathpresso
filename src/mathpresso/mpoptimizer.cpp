@@ -74,20 +74,51 @@ Error AstOptimizer::onVarDecl(AstVarDecl* node) {
   return kErrorOk;
 }
 
+Error AstOptimizer::onVarDeclComp(AstVarDecl* node) {
+	AstSymbol* sym = node->getSymbol();
+	node->addNodeFlags(kAstComplex);
+
+	if (node->hasChild()) {
+		MATHPRESSO_PROPAGATE(onNode(node->getChild()));
+		AstNode* child = node->getChild();
+
+		if (child->isComplex())
+			sym->setValueComp(static_cast<AstImmComplex*>(child)->getValue());
+	}
+
+	return kErrorOk;
+}
+
 Error AstOptimizer::onVar(AstVar* node) {
   AstSymbol* sym = node->getSymbol();
 
-  if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
-    AstImm* imm = _ast->newNode<AstImm>(sym->getValue());
-    _ast->deleteNode(node->getParent()->replaceNode(node, imm));
-  }
+  if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
+	  node->addNodeFlags(kAstComplex);
 
+	  if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
+		  AstImmComplex* imm = _ast->newNode<AstImmComplex>(sym->getValue());
+		  _ast->deleteNode(node->getParent()->replaceNode(node, imm));
+	  }
+  }
+  else {
+
+	  if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
+		  AstImm* imm = _ast->newNode<AstImm>(sym->getValue());
+		  _ast->deleteNode(node->getParent()->replaceNode(node, imm));
+	  }
+  }
   return kErrorOk;
 }
 
 Error AstOptimizer::onVarComp(AstVarComplex* node) {
 	node->getParent()->addNodeFlags(kAstComplex);
 	node->addNodeFlags(kAstComplex);
+
+	AstSymbol* sym = node->getSymbol();
+	if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
+		AstImmComplex* imm = _ast->newNode<AstImmComplex>(sym->getValue());
+		_ast->deleteNode(node->getParent()->replaceNode(node, imm));
+	}
 	return kErrorOk;
 }
 
@@ -103,6 +134,8 @@ Error AstOptimizer::onImmComp(AstImmComplex* node) {
 
 Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
   const OpInfo& op = OpInfo::get(node->getOp());
+
+
 
   MATHPRESSO_PROPAGATE(onNode(node->getChild()));
   AstNode* child = node->getChild();
@@ -173,6 +206,10 @@ Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
 
 Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
   const OpInfo& op = OpInfo::get(node->getOp());
+
+  if (node->hasNodeFlag(kAstComplex) && !node->getParent()) {
+	  node->getParent()->addNodeFlags(kAstComplex);
+  }
 
   AstNode* left = node->getLeft();
   AstNode* right = node->getRight();

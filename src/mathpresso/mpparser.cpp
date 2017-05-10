@@ -333,28 +333,35 @@ _Repeat1:
         uint32_t symType = sym->getSymbolType();
         AstNode* zNode;
 
-        if (symType == kAstSymbolVariable) {
-          if (!sym->isDeclared())
-            MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName());
+		if (symType == kAstSymbolVariable) {
+			if (!sym->isDeclared())
+				MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName());
 
-          // Put symbol to shadow scope if it's global. This is done lazily and
-          // only once per symbol when it's referenced.
-          if (symScope->isGlobal()) {
-            sym = _ast->shadowSymbol(sym);
-            MATHPRESSO_NULLCHECK(sym);
+			// Put symbol to shadow scope if it's global. This is done lazily and
+			// only once per symbol when it's referenced.
+			if (symScope->isGlobal()) {
+				sym = _ast->shadowSymbol(sym);
+				MATHPRESSO_NULLCHECK(sym);
 
-            sym->setVarSlotId(_ast->newSlotId());
-            symScope = _ast->getRootScope();
-            symScope->putSymbol(sym);
-          }
+				sym->setVarSlotId(_ast->newSlotId());
+				symScope = _ast->getRootScope();
+				symScope->putSymbol(sym);
+			}
 
-          zNode = _ast->newNode<AstVar>();
-          MATHPRESSO_NULLCHECK(zNode);
-          static_cast<AstVar*>(zNode)->setSymbol(sym);
+			if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
+				zNode = _ast->newNode<AstVarComplex>();
+				MATHPRESSO_NULLCHECK(zNode);
+				static_cast<AstVarComplex*>(zNode)->setSymbol(sym);
+			}
+			else {
+				zNode = _ast->newNode<AstVar>();
+				MATHPRESSO_NULLCHECK(zNode);
+				static_cast<AstVar*>(zNode)->setSymbol(sym);
+			}
 
-          zNode->setPosition(token.getPosAsUInt());
-          sym->incUsedCount();
-        }
+			zNode->setPosition(token.getPosAsUInt());
+			sym->incUsedCount();
+		}
         else {
           // Will be parsed by `parseCall()` again.
           _tokenizer.set(&token);

@@ -69,6 +69,8 @@ struct JitUtils {
       case kOpHypot    : return (void*)(Arg2Func)hypot;
       case kOpCopySign : return (void*)(Arg2Func)mpCopySign;
 
+	  //case kOpAddC     : return (void*)(Arg2FuncC)mpAddC;
+
       default:
         MATHPRESSO_ASSERT_NOT_REACHED();
         return NULL;
@@ -172,6 +174,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
   // Helpers.
   void inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op);
   void inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn);
+  void inlineCallComp(const X86Xmm & dst, const X86Xmm * args, uint32_t count, void * fn);
 
   // Constants.
   void prepareConstPool();
@@ -198,6 +201,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
   ConstPool constPool;
 
   bool enableSSE4_1;
+  bool compileComplex = false;
 };
 
 JitCompiler::JitCompiler(ZoneHeap* heap, X86Compiler* cc)
@@ -224,6 +228,8 @@ void JitCompiler::beginFunction() {
   functionBody = cc->getCursor();
 }
 
+
+//! not neccessary, but for completenes.
 void JitCompiler::beginFunctionComp() {
 	cc->addFunc(FuncSignature2<void, double*, double*>(CallConv::kIdHostCDecl));
 
@@ -267,8 +273,7 @@ JitVar JitCompiler::registerVar(const JitVar& other) {
 
 JitVar JitCompiler::copyVarComp(const JitVar& other, uint32_t flags) {
 	JitVar v(cc->newXmmSd(), flags);
-	cc->emit(other.isXmm() ? X86Inst::kIdMovapd : X86Inst::kIdMovapd,
-		v.getXmm(), other.getOperand());
+	cc->emit(X86Inst::kIdMovapd, v.getXmm(), other.getOperand());
 	return v;
 }
 
@@ -379,6 +384,7 @@ JitVar JitCompiler::onNode(AstNode* node) {
     case kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
     case kAstNodeVarDecl  : return onVarDecl  (static_cast<AstVarDecl*  >(node));
     case kAstNodeVarDouble: return onVar      (static_cast<AstVar*      >(node));
+	case kAstNodeVarComplex: return onVarComp(static_cast<AstVarComplex*>(node));
 	case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
 	case kAstNodeImmComplex: return onImmComp(static_cast<AstImmComplex*>(node));
 	case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
@@ -449,7 +455,7 @@ JitVar JitCompiler::onVarComp(AstVarComplex* node) {
 			result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAG_RO);
 			varSlots[slotId] = result;
 			if (sym->getWriteCount() > 0)
-				result = copyVar(result, JitVar::FLAG_NONE);
+				result = copyVarComp(result, JitVar::FLAG_NONE);
 		}
 		else {
 			result = getConstantD64Compl(mpGetNan());
@@ -461,7 +467,7 @@ JitVar JitCompiler::onVarComp(AstVarComplex* node) {
 }
 
 JitVar JitCompiler::onImm(AstImm* node) {
-  return getConstantD64(node->getValue());
+	return getConstantD64(node->getValue());
 }
 
  
@@ -597,47 +603,80 @@ JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
 }
 
 JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
-  uint32_t op = node->getOp();
+	uint32_t op = node->getOp();
 
-  AstNode* left  = node->getLeft();
-  AstNode* right = node->getRight();
+	AstNode* left = node->getLeft();
+	AstNode* right = node->getRight();
 
-  // Compile assignment.
-  if (op == kOpAssign) {
-    AstVar* varNode = reinterpret_cast<AstVar*>(left);
-    MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVarDouble);
 
-    AstSymbol* sym = varNode->getSymbol();
-    uint32_t slotId = sym->getVarSlotId();
 
-    JitVar result = onNode(right);
-    result.setRO();
+	// Compile assignment.
+	if (op == kOpAssign) {
+		AstVar* varNode = reinterpret_cast<AstVar*>(left);
+		if (varNode->hasNodeFlag(kAstComplex)) {
+			MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVarComplex);
+		}
+		else {
+			MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVarDouble);
 
-    sym->setAltered();
-    varSlots[slotId] = result;
+			AstSymbol* sym = varNode->getSymbol();
+			uint32_t slotId = sym->getVarSlotId();
 
-    return result;
-  }
+			JitVar result = onNode(right);
+			result.setRO();
 
-  // Handle the case that the operands are the same variable.
-  JitVar vl, vr;
-  if (left->getNodeType() == kAstNodeVarDouble &&
-      right->getNodeType() == kAstNodeVarDouble &&
-      static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol()) {
-    vl = vr = writableVar(onNode(node->getLeft()));
-  }
-  else {
-    vl = onNode(node->getLeft());
-    vr = onNode(node->getRight());
+			sym->setAltered();
+			varSlots[slotId] = result;
+			return result;
+		}
+	}
 
-    // Commutativity.
-    if (op == kOpAdd || op == kOpMul || op == kOpAvg || op == kOpMin || op == kOpMax) {
-      if (vl.isRO() && !vr.isRO())
-        vl.swapWith(vr);
-    }
+	// Handle the case that the operands are the same variable.
+	
+	JitVar vl, vr;
 
-    vl = writableVar(vl);
-  }
+	if (node->hasNodeFlag(kAstComplex) && op == kOpAdd) {
+		if (left->getNodeType() == kAstNodeVarComplex &&
+			right->getNodeType() == kAstNodeVarComplex &&
+			static_cast<AstVarComplex*>(left)->getSymbol() == static_cast<AstVarComplex*>(right)->getSymbol()) {
+			vl = vr = writableVarComp(onNode(node->getLeft()));
+		}
+		else {
+			vl = onNode(node->getLeft());
+			vr = onNode(node->getRight());
+			if (vl.isRO() && !vr.isRO())
+				vl.swapWith(vr);
+
+			vl = writableVarComp(vl);
+		}
+		//cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
+		//return vl;
+
+		X86Xmm result = cc->newXmmSd();
+		X86Xmm args[2] = { registerVar(vl).getXmm(), registerVar(vr).getXmm() };
+		inlineCall(result, args, 2, (void*)(Arg2FuncC)mpAddC);
+
+		return JitVar(result, JitVar::FLAG_NONE);
+	}
+
+	if (left->getNodeType() == kAstNodeVarDouble &&
+		right->getNodeType() == kAstNodeVarDouble &&
+		static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol()) {
+		vl = vr = writableVar(onNode(node->getLeft()));
+	}
+	else {
+		vl = onNode(node->getLeft());
+		vr = onNode(node->getRight());
+
+		// Commutativity.
+		if (op == kOpAdd || op == kOpMul || op == kOpAvg || op == kOpMin || op == kOpMax) {
+			if (vl.isRO() && !vr.isRO())
+				vl.swapWith(vr);
+		}
+
+		vl = writableVar(vl);
+
+	}
 
   uint32_t inst = 0;
   int predicate = 0;
@@ -910,6 +949,24 @@ void JitCompiler::inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t cou
     ctx->setArg(static_cast<uint32_t>(i), args[i]);
 }
 
+void JitCompiler::inlineCallComp(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn) {
+	uint32_t i;
+
+	// Use function builder to build a function prototype.
+	FuncSignatureX signature;
+	signature.setRetT<TypeId::Vec128>();
+
+	for (i = 0; i < count; i++)
+		signature.addArgT<double*>();
+
+	// Create the function call.
+	CCFuncCall* ctx = cc->call((uint64_t)fn, signature);
+	ctx->setRet(0, dst);
+
+	for (i = 0; i < count; i++)
+		ctx->setArg(static_cast<uint32_t>(i), args[i]);
+}
+
 void JitCompiler::prepareConstPool() {
   if (!constLabel.isValid()) {
     constLabel = cc->newLabel();
@@ -1030,6 +1087,8 @@ CompiledFuncComp mpCompileFunctionComp(AstBuilder* ast, uint32_t options, Output
 	JitCompiler jitCompiler(ast->getHeap(), &c);
 	if ((options & kOptionDisableSSE4_1) != 0)
 		jitCompiler.enableSSE4_1 = false;
+
+	jitCompiler.compileComplex = true;
 
 	jitCompiler.beginFunction();
 	jitCompiler.compileComp(ast->getProgramNode(), ast->getRootScope(), ast->_numSlots);

@@ -374,6 +374,18 @@ Error Context::addConstant(const char* name, double value) {
   return kErrorOk;
 }
 
+Error Context::addConstantComp(const char* name, std::complex<double> value) {
+	ContextInternalImpl* d;
+
+	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
+	MATHPRESSO_ADD_SYMBOL(name, kAstSymbolVariable);
+
+	sym->setValueComp(value);
+	sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsReadOnly | kAstSymbolIsAssigned | kAstSymbolIsComplex);
+
+	return kErrorOk;
+}
+
 Error Context::addVariable(const char* name, int offset, unsigned int flags) {
   ContextInternalImpl* d;
 
@@ -388,6 +400,26 @@ Error Context::addVariable(const char* name, int offset, unsigned int flags) {
     sym->setSymbolFlag(kAstSymbolIsReadOnly);
 
   return kErrorOk;
+}
+
+//! Adds a complex variable to the Context.
+//
+//! WARNING: If the values are not alinged to 16 byte-boundarys, there will be errors with
+//! SSE-instructions. Use of alignas(16) is mandatory!
+Error Context::addVariableComp(const char* name, int offset, unsigned int flags) {
+	ContextInternalImpl* d;
+
+	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
+	MATHPRESSO_ADD_SYMBOL(name, kAstSymbolVariable);
+
+	sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsComplex);
+	sym->setVarSlotId(kInvalidSlot);
+	sym->setVarOffset(offset);
+
+	if (flags & kVariableRO)
+		sym->setSymbolFlag(kAstSymbolIsReadOnly);
+
+	return kErrorOk;
 }
 
 Error Context::addFunction(const char* name, void* fn, unsigned int flags) {
@@ -483,14 +515,14 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 
 	_isComplex = ast._programNode->hasNodeFlag(kAstComplex);
 
-	if (_isComplex) {
+	//if (_isComplex) {
 		// Compile the function with complex returns to machine code.
 		CompiledFuncComp fnc = mpCompileFunctionComp(&ast, options, log);
 		if (fn == NULL)
 			return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
 
 		_funcComp = fnc;
-	}
+	//}
 	return kErrorOk;
 }
 

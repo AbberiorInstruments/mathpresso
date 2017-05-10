@@ -457,7 +457,7 @@ Error AstDump::onBlock(AstBlock* node) {
 Error AstDump::onVarDecl(AstVarDecl* node) {
   AstSymbol* sym = node->getSymbol();
 
-  nest("%s [VarDecl]", sym ? sym->getName() : static_cast<const char*>(NULL));
+  nest("%s [VarDecl%s]", sym ? sym->getName() : static_cast<const char*>(NULL), (node->hasNodeFlag(kAstComplex)? ", comp":""));
   if (node->hasChild())
     MATHPRESSO_PROPAGATE(onNode(node->getChild()));
   return denest();
@@ -482,14 +482,14 @@ Error AstDump::onImmComp(AstImmComplex* node) {
 }
 
 Error AstDump::onUnaryOp(AstUnaryOp* node) {
-  nest("%s [Unary]", OpInfo::get(node->getOp()).name);
+  nest("%s [Unary%s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? ", comp" : "");
   if (node->hasChild())
     MATHPRESSO_PROPAGATE(onNode(node->getChild()));
   return denest();
 }
 
 Error AstDump::onBinaryOp(AstBinaryOp* node) {
-  nest("%s [Binary]", OpInfo::get(node->getOp()).name);
+  nest("%s [Binary%s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? ", comp" : "");
   if (node->hasLeft())
     MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
   if (node->hasRight())
@@ -500,7 +500,7 @@ Error AstDump::onBinaryOp(AstBinaryOp* node) {
 Error AstDump::onCall(AstCall* node) {
   AstSymbol* sym = node->getSymbol();
 
-  nest("%s()", sym ? sym->getName() : static_cast<const char*>(NULL));
+  nest("%s()%s", sym ? sym->getName() : static_cast<const char*>(NULL), node->hasNodeFlag(kAstComplex) ? ", comp" : "");
   onBlock(node);
   return denest();
 }
