@@ -93,12 +93,9 @@ Error AstOptimizer::onVar(AstVar* node) {
   AstSymbol* sym = node->getSymbol();
 
   if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
-	  node->addNodeFlags(kAstComplex);
-
-	  if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
-		  AstImmComplex* imm = _ast->newNode<AstImmComplex>(sym->getValue());
-		  _ast->deleteNode(node->getParent()->replaceNode(node, imm));
-	  }
+	  AstVarComplex* comp = _ast->newNode<AstVarComplex>();
+	  _ast->deleteNode(node->getParent()->replaceNode(node, comp));
+	  return onVarComp(comp);
   }
   else {
 
@@ -116,7 +113,7 @@ Error AstOptimizer::onVarComp(AstVarComplex* node) {
 
 	AstSymbol* sym = node->getSymbol();
 	if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
-		AstImmComplex* imm = _ast->newNode<AstImmComplex>(sym->getValue());
+		AstImmComplex* imm = _ast->newNode<AstImmComplex>(sym->getValueComp());
 		_ast->deleteNode(node->getParent()->replaceNode(node, imm));
 	}
 	return kErrorOk;

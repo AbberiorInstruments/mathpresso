@@ -116,7 +116,7 @@ typedef double (*Arg6Func)(double, double, double, double, double, double);
 typedef double (*Arg7Func)(double, double, double, double, double, double, double);
 typedef double (*Arg8Func)(double, double, double, double, double, double, double, double);
 
-typedef std::complex<double>(*Arg2FuncC)(std::complex<double>, std::complex<double>);
+typedef std::complex<double> (*Arg2FuncC)(std::complex<double>, std::complex<double>);
 
 // ============================================================================
 // [mathpresso::ErrorCode]

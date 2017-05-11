@@ -11,6 +11,7 @@
 // [Dependencies]
 #include "./mathpresso_p.h"
 #include <complex>
+#include <iostream>
 
 namespace mathpresso {
 
@@ -122,6 +123,7 @@ namespace mathpresso {
 		bits.hi |= DoubleBits::fromDouble(y).hi & 0x80000000U;
 		return bits.d;
 	}
+	
 
 	static MATHPRESSO_INLINE double mpAvg(double x, double y) { return (x + y) * 0.5; }
 	static MATHPRESSO_INLINE double mpMod(double x, double y) { return fmod(x, y); }
@@ -155,8 +157,13 @@ namespace mathpresso {
 	// Complex functions:
 	//complexe funktionen geben komplexe ergebnisse zurück, also 2 double
 
-	static MATHPRESSO_INLINE std::complex<double> mpAddC(std::complex<double> x, std::complex<double> y) {return x+y;}
-
+	static MATHPRESSO_INLINE void mpAddC(std::complex<double> x[2]) {
+		//std::cout << "arg1: " << x[1] << " [" << &x[1] << "]\n";
+		//std::cout << "arg2: " << x[2] << " [" << &x[2] << "]\n";
+		x[0] = x[1] + x[2];
+		//std::cout << "ret:  " << x[0] << " [" << &x[0] << "]\n";
+		
+	}
 } // mathpresso namespace
 
 #endif // _MATHPRESSO_MPEVAL_P_H

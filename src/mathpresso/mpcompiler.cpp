@@ -272,7 +272,7 @@ JitVar JitCompiler::registerVar(const JitVar& other) {
 }
 
 JitVar JitCompiler::copyVarComp(const JitVar& other, uint32_t flags) {
-	JitVar v(cc->newXmmSd(), flags);
+	JitVar v(cc->newXmmPd(), flags);
 	cc->emit(X86Inst::kIdMovapd, v.getXmm(), other.getOperand());
 	return v;
 }
@@ -649,12 +649,16 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 
 			vl = writableVarComp(vl);
 		}
-		//cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
-		//return vl;
 
-		X86Xmm result = cc->newXmmSd();
-		X86Xmm args[2] = { registerVar(vl).getXmm(), registerVar(vr).getXmm() };
-		inlineCall(result, args, 2, (void*)(Arg2FuncC)mpAddC);
+		// uncomment to use direct assembler, otherwise a functioncall is emited.
+		/*
+		cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
+		return vl;
+		*/
+		X86Xmm result = cc->newXmmPd();
+
+		X86Xmm args[2] = { registerVarComp(vl).getXmm() , registerVarComp(vr).getXmm() };
+		inlineCallComp(result, args, 2, (void*)(Arg2FuncC)mpAddC);
 
 		return JitVar(result, JitVar::FLAG_NONE);
 	}
@@ -949,22 +953,45 @@ void JitCompiler::inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t cou
     ctx->setArg(static_cast<uint32_t>(i), args[i]);
 }
 
-void JitCompiler::inlineCallComp(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn) {
-	uint32_t i;
+//! Calls a function with complex arguments and complex returns.
+//! 
+//! WARNING: im not shure wether asmJit correctly handles the call of the function, 
+//! there is a solution within the code, but it is unsafe and more a hack.
+//! If anybody has a better solution, id be happy to hear about it.
+void JitCompiler::inlineCallComp(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
+	size_t i;
 
+	size_t length = (count + 1) * 16;
+
+	// copy the data to Memory.
+	X86Mem stack = cc->newStack(length, 16, "arguments");
+	X86Gp ind = cc->newGpd();
+	cc->lea(ind, stack);
+	for (i = 0; i < count; i++) {
+		stack.addOffset(16);
+		cc->movapd(stack, args[i]);
+	}
+	stack.resetOffset();
+
+
+	// This is not a good solution to the problem.
+	if (CallConv::kIdHost == CallConv::kIdX86Win64) {
+		cc->lea(x86::rcx, stack);
+	}
+	
 	// Use function builder to build a function prototype.
 	FuncSignatureX signature;
-	signature.setRetT<TypeId::Vec128>();
-
-	for (i = 0; i < count; i++)
-		signature.addArgT<double*>();
+	signature.setRetT<void>();
+	signature.addArgT<TypeId::UIntPtr>();
 
 	// Create the function call.
 	CCFuncCall* ctx = cc->call((uint64_t)fn, signature);
-	ctx->setRet(0, dst);
+	//ctx->setRet(0, ind);
+	cc->movapd(dst, stack);
+	
 
-	for (i = 0; i < count; i++)
-		ctx->setArg(static_cast<uint32_t>(i), args[i]);
+	ctx->setArg(static_cast<uint32_t>(0), ind);
+	
 }
 
 void JitCompiler::prepareConstPool() {

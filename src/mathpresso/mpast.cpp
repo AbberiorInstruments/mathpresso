@@ -104,7 +104,12 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
     case kAstSymbolVariable: {
       sym->_varSlotId = other->_varSlotId;
       sym->_varOffset = other->_varOffset;
-      sym->_value = other->_value;
+	  if (sym->hasSymbolFlag(kAstComplex)) {
+		  sym->_valueComp = other->_valueComp;
+	  }
+	  else {
+		  sym->_value = other->_value;
+	  }
       break;
     }
 
@@ -474,11 +479,11 @@ Error AstDump::onVarComp(AstVarComplex* node) {
 }
 
 Error AstDump::onImm(AstImm* node) {
-	return info("%f", node->_value);
+	return info("%lf", node->_value);
 }
 
 Error AstDump::onImmComp(AstImmComplex* node) {
-	return info("%f + %f i", node->_value.real(), node->_value.imag());
+	return info("%lf + %lf i", node->_value.real(), node->_value.imag());
 }
 
 Error AstDump::onUnaryOp(AstUnaryOp* node) {
