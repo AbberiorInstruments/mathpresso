@@ -651,10 +651,10 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 		}
 
 		// uncomment to use direct assembler, otherwise a functioncall is emited.
-		/*
-		cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
-		return vl;
-		*/
+		
+		//cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
+		//return vl;
+		
 		X86Xmm result = cc->newXmmPd();
 
 		X86Xmm args[2] = { registerVarComp(vl).getXmm() , registerVarComp(vr).getXmm() };
@@ -965,7 +965,7 @@ void JitCompiler::inlineCallComp(const X86Xmm& dst, const X86Xmm* args, const ui
 
 	// copy the data to Memory.
 	X86Mem stack = cc->newStack(length, 16, "arguments");
-	X86Gp ind = cc->newGpd();
+	X86Gp ind = cc->newUIntPtr();
 	cc->lea(ind, stack);
 	for (i = 0; i < count; i++) {
 		stack.addOffset(16);
@@ -973,25 +973,34 @@ void JitCompiler::inlineCallComp(const X86Xmm& dst, const X86Xmm* args, const ui
 	}
 	stack.resetOffset();
 
+	X86Gp _ptr = cc->newUIntPtr();
 
 	// This is not a good solution to the problem.
 	if (CallConv::kIdHost == CallConv::kIdX86Win64) {
-		cc->lea(x86::rcx, stack);
+		X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t) fn);
+		cc->mov(_ptr, function);
+		cc->lea(x86::rdx, stack); // brute force load stack-address.... there must be a better way
 	}
-	
+	else {
+		X86Mem function = cc->newUInt32Const(kAstScopeGlobal, (uint32_t) fn);
+		cc->mov(_ptr, function);
+	}
+
+
 	// Use function builder to build a function prototype.
 	FuncSignatureX signature;
 	signature.setRetT<void>();
 	signature.addArgT<TypeId::UIntPtr>();
+	signature.addArgT<TypeId::UIntPtr>();
 
 	// Create the function call.
-	CCFuncCall* ctx = cc->call((uint64_t)fn, signature);
-	//ctx->setRet(0, ind);
-	cc->movapd(dst, stack);
+	CCFuncCall* ctx = cc->call((uint64_t)mpWrapComplex2, signature);
 	
-
+	// Move the data to the correct registers?!?!?!?!?!?
 	ctx->setArg(static_cast<uint32_t>(0), ind);
+	ctx->setArg(static_cast<uint32_t>(0), _ptr);
 	
+	cc->movapd(dst, stack);
 }
 
 void JitCompiler::prepareConstPool() {

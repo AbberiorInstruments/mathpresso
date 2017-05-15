@@ -157,13 +157,18 @@ namespace mathpresso {
 	// Complex functions:
 	//complexe funktionen geben komplexe ergebnisse zurück, also 2 double
 
-	static MATHPRESSO_INLINE void mpAddC(std::complex<double> x[2]) {
-		//std::cout << "arg1: " << x[1] << " [" << &x[1] << "]\n";
-		//std::cout << "arg2: " << x[2] << " [" << &x[2] << "]\n";
-		x[0] = x[1] + x[2];
-		//std::cout << "ret:  " << x[0] << " [" << &x[0] << "]\n";
-		
+	static MATHPRESSO_INLINE std::complex<double> mpAddC(std::complex<double> x, std::complex<double> y) {
+		return x + y;
 	}
+
+	//! Used to call a cpp-function from within the assembler.
+	//! the result can be read from data at index 0, arguments are at index 1 and 2.
+	//! Eventually there is a better way, but unless i understand the way Functions are called within asmjit, i cannot provide one.
+	static MATHPRESSO_INLINE void mpWrapComplex2(std::complex<double>(*ptr)(std::complex<double>, std::complex<double>), std::complex<double>* data) {
+		data[0] = ptr(data[1], data[2]);
+	}
+
+
 } // mathpresso namespace
 
 #endif // _MATHPRESSO_MPEVAL_P_H
