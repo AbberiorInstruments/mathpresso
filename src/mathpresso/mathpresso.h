@@ -9,6 +9,7 @@
 #define _MATHPRESSO_H
 
 #include <stdlib.h>
+#include <iostream>
 #include <complex>
 
 #if !defined(_MSC_VER)
@@ -272,14 +273,13 @@ struct Context {
 
   //! Add constant to this context.
   MATHPRESSO_API Error addConstant(const char* name, double value);
-  MATHPRESSO_API Error addConstantComp(const char * name, std::complex<double> value);
+  MATHPRESSO_API Error addConstantComplex(const char * name, std::complex<double> value);
   //! Add variable to this context.
   MATHPRESSO_API Error addVariable(const char* name, int offset, unsigned int flags = kVariableRW);
-  MATHPRESSO_API Error addVariableComp(const char * name, int offset, unsigned int flags = kVariableRW);
+  MATHPRESSO_API Error addVariableComplex(const char * name, int offset, unsigned int flags = kVariableRW);
   //! Add function to this context.
   MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags);
-
-  MATHPRESSO_API Error addFunctionComp(const char * name, void * fn, unsigned int flags);
+  MATHPRESSO_API Error addFunctionComplex(const char * name, void * fn, unsigned int flags);
 
   //! Delete symbol from this context.
   MATHPRESSO_API Error delSymbol(const char* name);
@@ -327,6 +327,9 @@ struct Expression {
   //! Get whether the `Expression` contains a valid compiled expression.
   MATHPRESSO_API bool isCompiled() const;
 
+  //! Get whether the  `expression` can returns a Complex result
+  MATHPRESSO_API bool isComplex() const { return _isComplex; }
+
   //! Reset the expression.
   MATHPRESSO_API void reset();
 
@@ -334,9 +337,13 @@ struct Expression {
   //!
   //! Returns the result of the evaluated expression, NaN otherwise.
   MATHPRESSO_INLINE double evaluate(void* data) const {
-    double result;
-    _func(&result, data);
-    return result;
+	  if (_isComplex) {
+		  std::cerr << "there is no noncomplex result.";
+		  throw;
+	  }
+	  double result;
+	  _func(&result, data);
+	  return result;
   }
 
   //! Evaluates expression with variable substitutions.
@@ -344,11 +351,11 @@ struct Expression {
   //! This function cannot cope with complex variables, if they are not aligned to
   //! 16 byte boundaries. Use 'alignas(16)' to force the alignement.
   //! It is not necessary to align &ret, but it might be an little bit faster.
-  MATHPRESSO_INLINE int evaluateComp(void* data, std::complex<double> &ret) const {
-	  double result[2];
-	  _funcComp(result, data);
-	  ret = std::complex<double>(result[0], result[1]);
-	  return kErrorOk;
+  MATHPRESSO_INLINE std::complex<double> evaluateComplex(void* data) const {
+	   double result[2];
+	  _funcComplex(result, data);
+	  return std::complex<double>(result[0], result[1]);
+
   }
 
   // --------------------------------------------------------------------------
@@ -357,7 +364,7 @@ struct Expression {
 
   //! Compiled function.
   CompiledFunc _func;
-  CompiledFuncComp _funcComp;
+  CompiledFuncComp _funcComplex;
 
   //! True, if the result of the function could be a complex number
   bool _isComplex = false;

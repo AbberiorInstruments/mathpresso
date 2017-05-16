@@ -1128,7 +1128,7 @@ CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log
   return fn;
 }
 
-CompiledFuncComp mpCompileFunctionComp(AstBuilder* ast, uint32_t options, OutputLog* log) {
+CompiledFuncComp mpCompileFunctionComplex(AstBuilder* ast, uint32_t options, OutputLog* log) {
 	StringLogger logger;
 
 	CodeHolder code;

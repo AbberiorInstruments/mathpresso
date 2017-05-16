@@ -14,7 +14,7 @@
 namespace mathpresso {
 
 	MATHPRESSO_NOAPI CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log);
-	MATHPRESSO_NOAPI CompiledFuncComp mpCompileFunctionComp(AstBuilder* ast, uint32_t options, OutputLog* log);
+	MATHPRESSO_NOAPI CompiledFuncComp mpCompileFunctionComplex(AstBuilder* ast, uint32_t options, OutputLog* log);
 	MATHPRESSO_NOAPI void mpFreeFunction(void* fn);
 
 } // mathpresso namespace

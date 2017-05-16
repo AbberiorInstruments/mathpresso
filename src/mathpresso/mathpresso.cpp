@@ -374,7 +374,7 @@ Error Context::addConstant(const char* name, double value) {
   return kErrorOk;
 }
 
-Error Context::addConstantComp(const char* name, std::complex<double> value) {
+Error Context::addConstantComplex(const char* name, std::complex<double> value) {
 	ContextInternalImpl* d;
 
 	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
@@ -406,7 +406,7 @@ Error Context::addVariable(const char* name, int offset, unsigned int flags) {
 //
 //! WARNING: If the values are not alinged to 16 byte-boundarys, there will be errors with
 //! SSE-instructions. Use of alignas(16) is mandatory!
-Error Context::addVariableComp(const char* name, int offset, unsigned int flags) {
+Error Context::addVariableComplex(const char* name, int offset, unsigned int flags) {
 	ContextInternalImpl* d;
 
 	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
@@ -436,7 +436,7 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags) {
   return kErrorOk;
 }
 
-Error Context::addFunctionComp(const char* name, void* fn, unsigned int flags) {
+Error Context::addFunctionComplex(const char* name, void* fn, unsigned int flags) {
 	ContextInternalImpl* d;
 
 	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
@@ -519,30 +519,30 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 		log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
 		sbTmp.clear();
 	}
-
-	// Compile the function to machine code.
-	CompiledFunc fn = mpCompileFunction(&ast, options, log);
-	if (fn == NULL)
-		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
-
-	reset();
-	_func = fn;
-
+	
 	_isComplex = ast._programNode->hasNodeFlag(kAstComplex);
 
-	//if (_isComplex) {
-		// Compile the function with complex returns to machine code.
-		CompiledFuncComp fnc = mpCompileFunctionComp(&ast, options, log);
+	// Compile the function to machine code.
+	reset();
+
+	if (!_isComplex) {
+		CompiledFunc fn = mpCompileFunction(&ast, options, log);
 		if (fn == NULL)
 			return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
+		_func = fn;
+	}
 
-		_funcComp = fnc;
-	//}
+	CompiledFuncComp fnc = mpCompileFunctionComplex(&ast, options, log);
+	if (fnc == NULL)
+		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
+
+	_funcComplex = fnc;
+
 	return kErrorOk;
 }
 
 bool Expression::isCompiled() const {
-  return _func != mpDummyFunc;
+  return _funcComplex != mpDummyFuncComp;
 }
 
 void Expression::reset() {
@@ -551,9 +551,9 @@ void Expression::reset() {
     mpFreeFunction((void*)_func);
     _func = mpDummyFunc;
   }
-  if (_funcComp != mpDummyFuncComp) {
-	  mpFreeFunction((void*)_funcComp);
-	  _funcComp = mpDummyFuncComp;
+  if (_funcComplex != mpDummyFuncComp) {
+	  mpFreeFunction((void*)_funcComplex);
+	  _funcComplex = mpDummyFuncComp;
   }
 }
 
