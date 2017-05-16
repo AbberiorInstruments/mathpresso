@@ -152,21 +152,22 @@ struct MATHPRESSO_NOAPI JitCompiler {
   JitVar writableVar(const JitVar& other);
   JitVar registerVar(const JitVar& other);
 
-  JitVar copyVarComp(const JitVar & other, uint32_t flags);
-  JitVar writableVarComp(const JitVar & other);
-  JitVar registerVarComp(const JitVar & other);
+  JitVar copyVarComplex(const JitVar & other, uint32_t flags);
+  JitVar writableVarComplex(const JitVar & other);
+  JitVar registerVarComplex(const JitVar & other);
+  JitVar registerVarAsComplex(const JitVar & other);
 
   // Compiler.
   void compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots);
-  void compileComp(AstBlock * node, AstScope * rootScope, uint32_t numSlots);
+  void compileComplex(AstBlock * node, AstScope * rootScope, uint32_t numSlots);
 
   JitVar onNode(AstNode* node);
   JitVar onBlock(AstBlock* node);
   JitVar onVarDecl(AstVarDecl* node);
   JitVar onVar(AstVar* node);
-  JitVar onVarComp(AstVarComplex* node);
+  JitVar onVarComplex(AstVarComplex* node);
   JitVar onImm(AstImm* node);
-  JitVar onImmComp(AstImmComplex * node);
+  JitVar onImmComplex(AstImmComplex * node);
   JitVar onUnaryOp(AstUnaryOp* node);
   JitVar onBinaryOp(AstBinaryOp* node);
   JitVar onCall(AstCall* node);
@@ -175,7 +176,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
   // Helpers.
   void inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op);
   void inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn);
-  void inlineCallComp(const X86Xmm & dst, const X86Xmm * args, uint32_t count, void * fn);
+  void inlineCallComplex(const X86Xmm & dst, const X86Xmm * args, uint32_t count, void * fn);
 
   // Constants.
   void prepareConstPool();
@@ -202,7 +203,6 @@ struct MATHPRESSO_NOAPI JitCompiler {
   ConstPool constPool;
 
   bool enableSSE4_1;
-  bool compileComplex = false;
 };
 
 JitCompiler::JitCompiler(ZoneHeap* heap, X86Compiler* cc)
@@ -217,16 +217,16 @@ JitCompiler::JitCompiler(ZoneHeap* heap, X86Compiler* cc)
 JitCompiler::~JitCompiler() {}
 
 void JitCompiler::beginFunction() {
-  cc->addFunc(FuncSignature2<void, double*, double*>(CallConv::kIdHostCDecl));
+	cc->addFunc(FuncSignature2<void, double*, double*>(CallConv::kIdHostCDecl));
 
-  resultAddress = cc->newIntPtr("pResult");
-  variablesAddress = cc->newIntPtr("pVariables");
-  constPtr = cc->newIntPtr("pConst");
+	resultAddress = cc->newIntPtr("pResult");
+	variablesAddress = cc->newIntPtr("pVariables");
+	constPtr = cc->newIntPtr("pConst");
 
-  cc->setArg(0, resultAddress);
-  cc->setArg(1, variablesAddress);
+	cc->setArg(0, resultAddress);
+	cc->setArg(1, variablesAddress);
 
-  functionBody = cc->getCursor();
+	functionBody = cc->getCursor();
 }
 
 
@@ -272,24 +272,30 @@ JitVar JitCompiler::registerVar(const JitVar& other) {
     return other;
 }
 
-JitVar JitCompiler::copyVarComp(const JitVar& other, uint32_t flags) {
+JitVar JitCompiler::copyVarComplex(const JitVar& other, uint32_t flags) {
 	JitVar v(cc->newXmmPd(), flags);
 	cc->emit(X86Inst::kIdMovapd, v.getXmm(), other.getOperand());
 	return v;
 }
 
-JitVar JitCompiler::writableVarComp(const JitVar& other) {
+JitVar JitCompiler::writableVarComplex(const JitVar& other) {
 	if (other.isMem() || other.isRO())
-		return copyVarComp(other, other.flags & ~JitVar::FLAG_RO);
+		return copyVarComplex(other, other.flags & ~JitVar::FLAG_RO);
 	else
 		return other;
 }
 
-JitVar JitCompiler::registerVarComp(const JitVar& other) {
+JitVar JitCompiler::registerVarComplex(const JitVar& other) {
 	if (other.isMem())
-		return copyVarComp(other, other.flags);
+		return copyVarComplex(other, other.flags);
 	else
 		return other;
+}
+
+JitVar JitCompiler::registerVarAsComplex(const JitVar& other) {
+	JitVar v(cc->newXmmPd(), other.flags);
+	cc->emit(X86Inst::kIdMovlpd, v.getXmm(), other.getOperand());
+	return v;
 }
 
 //! Compiles an AstBlock into asambler.
@@ -338,7 +344,7 @@ void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots
 
 //! Compiles an AstBlock into asambler.
 //! NOTE: use beginFunction() before and endFunction() after calling this.
-void JitCompiler::compileComp(AstBlock* node, AstScope* rootScope, uint32_t numSlots) {
+void JitCompiler::compileComplex(AstBlock* node, AstScope* rootScope, uint32_t numSlots) {
 	// Create Definitions for the Variables and add them as JitVar
 	if (numSlots != 0) {
 		varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
@@ -359,7 +365,7 @@ void JitCompiler::compileComp(AstBlock* node, AstScope* rootScope, uint32_t numS
 			if (sym->isGlobal() && sym->isAltered()) {
 				JitVar v = varSlots[sym->getVarSlotId()];
 				cc->emit(X86Inst::kIdMovapd,
-					x86::ptr(variablesAddress, sym->getVarOffset()), registerVarComp(v).getXmm());
+					x86::ptr(variablesAddress, sym->getVarOffset()), registerVarComplex(v).getXmm());
 			}
 
 			it.next();
@@ -369,9 +375,9 @@ void JitCompiler::compileComp(AstBlock* node, AstScope* rootScope, uint32_t numS
 	// Return NaN if no result is given.
 	X86Xmm var;
 	if (result.isNone())
-		var = registerVarComp(getConstantD64Compl(mpGetNan())).getXmm();
+		var = registerVarComplex(getConstantD64Compl(mpGetNan())).getXmm();
 	else
-		var = registerVarComp(result).getXmm();
+		var = registerVarComplex(result).getXmm();
 	cc->movupd(x86::ptr(resultAddress), var);
 
 
@@ -385,9 +391,9 @@ JitVar JitCompiler::onNode(AstNode* node) {
     case kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
     case kAstNodeVarDecl  : return onVarDecl  (static_cast<AstVarDecl*  >(node));
     case kAstNodeVarDouble: return onVar      (static_cast<AstVar*      >(node));
-	case kAstNodeVarComplex: return onVarComp(static_cast<AstVarComplex*>(node));
+	case kAstNodeVarComplex: return onVarComplex(static_cast<AstVarComplex*>(node));
 	case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
-	case kAstNodeImmComplex: return onImmComp(static_cast<AstImmComplex*>(node));
+	case kAstNodeImmComplex: return onImmComplex(static_cast<AstImmComplex*>(node));
 	case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
     case kAstNodeBinaryOp : return onBinaryOp (static_cast<AstBinaryOp* >(node));
     case kAstNodeCall     : return onCall     (static_cast<AstCall*     >(node));
@@ -445,9 +451,9 @@ JitVar JitCompiler::onVar(AstVar* node) {
   return result;
 }
 
-//! NOT SAFE, never tested
-JitVar JitCompiler::onVarComp(AstVarComplex* node) {
+JitVar JitCompiler::onVarComplex(AstVarComplex* node) {
 	AstSymbol* sym = node->getSymbol();
+	node->addNodeFlags(kAstComplex);
 	uint32_t slotId = sym->getVarSlotId();
 
 	JitVar result = varSlots[slotId];
@@ -456,7 +462,7 @@ JitVar JitCompiler::onVarComp(AstVarComplex* node) {
 			result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAG_RO);
 			varSlots[slotId] = result;
 			if (sym->getWriteCount() > 0)
-				result = copyVarComp(result, JitVar::FLAG_NONE);
+				result = copyVarComplex(result, JitVar::FLAG_NONE);
 		}
 		else {
 			result = getConstantD64Compl(mpGetNan());
@@ -471,8 +477,8 @@ JitVar JitCompiler::onImm(AstImm* node) {
 	return getConstantD64(node->getValue());
 }
 
- 
-JitVar JitCompiler::onImmComp(AstImmComplex* node) {
+JitVar JitCompiler::onImmComplex(AstImmComplex* node) {
+	node->addNodeFlags(kAstComplex);
 	return getConstantD64Compl(node->getValue());
 }
 
@@ -600,7 +606,7 @@ JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
   X86Xmm args[1] = { registerVar(var).getXmm() };
 
   if (node->hasNodeFlag(kAstComplex)) {
-	  inlineCallComp(result, args, 1, JitUtils::getFuncByOp(op));
+	  inlineCallComplex(result, args, 1, JitUtils::getFuncByOp(op));
   }
   else {
 	  inlineCall(result, args, 1, JitUtils::getFuncByOp(op));
@@ -644,29 +650,32 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 	if (node->hasNodeFlag(kAstComplex) && op == kOpAdd) {
 		if (left->getNodeType() == kAstNodeVarComplex &&
 			right->getNodeType() == kAstNodeVarComplex &&
-			static_cast<AstVarComplex*>(left)->getSymbol() == static_cast<AstVarComplex*>(right)->getSymbol()) {
-			vl = vr = writableVarComp(onNode(node->getLeft()));
+			static_cast<AstVarComplex*>(left)->getSymbol() == static_cast<AstVarComplex*>(right)->getSymbol()) 
+		{
+			vl = vr = writableVarComplex(onNode(left));
 		}
 		else {
-			vl = onNode(node->getLeft());
-			vr = onNode(node->getRight());
+			vl = onNode(left);
+			vr = onNode(right);
+			if (!left->isComplex())
+				vl = registerVarAsComplex(vl);
+			if (!right->isComplex())
+				vr = registerVarAsComplex(vr);
 			if (vl.isRO() && !vr.isRO())
 				vl.swapWith(vr);
 
-			vl = writableVarComp(vl);
+			vl = writableVarComplex(vl);
 		}
 
 		// uncomment to use direct assembler, otherwise a functioncall is emited.
 		
-		//cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
-		//return vl;
+		cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
+		return vl;
 		
-		X86Xmm result = cc->newXmmPd();
-
-		X86Xmm args[2] = { registerVarComp(vl).getXmm() , registerVarComp(vr).getXmm() };
-		inlineCallComp(result, args, 2, (void*)(Arg2FuncC)mpAddC);
-
-		return JitVar(result, JitVar::FLAG_NONE);
+		//X86Xmm result = cc->newXmmPd();
+		//X86Xmm args[2] = { registerVarComplex(vl).getXmm() , registerVarComplex(vr).getXmm() };
+		//inlineCallComplex(result, args, 2, (void*)(Arg2FuncC)mpAddC);
+		//return JitVar(result, JitVar::FLAG_NONE);
 	}
 
 	if (left->getNodeType() == kAstNodeVarDouble &&
@@ -763,7 +772,7 @@ emitInst: {
   X86Xmm result = cc->newXmmSd();
   X86Xmm args[2] = { registerVar(vl).getXmm(), registerVar(vr).getXmm() };
   if (node->hasNodeFlag(kAstComplex)) {
-	  inlineCallComp(result, args, 2, JitUtils::getFuncByOp(op));
+	  inlineCallComplex(result, args, 2, JitUtils::getFuncByOp(op));
   }else {
 	  inlineCall(result, args, 2, JitUtils::getFuncByOp(op));
   }
@@ -794,10 +803,15 @@ JitVar JitCompiler::onCallComp(AstCall* node) {
 	X86Xmm result = cc->newXmmPd();
 	X86Xmm args[8];
 
-	for (i = 0; i < count; i++)
-		args[i] = registerVarComp(onNode(node->getAt(i))).getXmm();
-
-	inlineCallComp(result, args, count, sym->getFuncPtr());
+	for (i = 0; i < count; i++) {
+		if (node->getAt(i)->hasNodeFlag(kAstComplex)) {
+			args[i] = registerVarComplex(onNode(node->getAt(i))).getXmm();
+		}
+		else {
+			args[i] = registerVarAsComplex(onNode(node->getAt(i))).getXmm();
+		}
+	}
+	inlineCallComplex(result, args, count, sym->getFuncPtr());
 	return JitVar(result, JitVar::FLAG_NONE);
 }
 
@@ -980,7 +994,7 @@ void JitCompiler::inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t cou
 }
 
 //! Calls a function with complex arguments and complex returns.
-void JitCompiler::inlineCallComp(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
+void JitCompiler::inlineCallComplex(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
 	size_t i;
 
 	uint32_t length = (count + 1) * 16;
@@ -1146,10 +1160,8 @@ CompiledFuncComp mpCompileFunctionComplex(AstBuilder* ast, uint32_t options, Out
 	if ((options & kOptionDisableSSE4_1) != 0)
 		jitCompiler.enableSSE4_1 = false;
 
-	jitCompiler.compileComplex = true;
-
 	jitCompiler.beginFunction();
-	jitCompiler.compileComp(ast->getProgramNode(), ast->getRootScope(), ast->_numSlots);
+	jitCompiler.compileComplex(ast->getProgramNode(), ast->getRootScope(), ast->_numSlots);
 	jitCompiler.endFunction();
 
 	c.finalize();

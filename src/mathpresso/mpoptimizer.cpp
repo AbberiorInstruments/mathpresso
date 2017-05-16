@@ -312,7 +312,7 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 		  _ast->deleteNode(lNode);
 		  left = node->getLeft();
 	  }
-	  else if (right->isImm()) {
+	  if (right->isImm()) {
 		  AstImm* rNode = static_cast<AstImm*>(right);
 		  AstImmComplex* newNode = rNode->getAst()->newNode<AstImmComplex>(std::complex<double>(rNode->getValue(), 0.0));
 		  newNode->setNodeFlags(kAstComplex);
@@ -322,7 +322,7 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 	  }
 
 	  // adition for immediate complex values.
-	  if (node->getOp() == kOpAdd && left->isComplex() && right->isComplex()) {
+	  if (node->getOp() == kOpAdd && left->isComplex() && right->isComplex() && left->isImm() && right->isImm()) {
 		  AstImmComplex* lNode = static_cast<AstImmComplex*>(left);
 		  AstImmComplex* rNode = static_cast<AstImmComplex*>(right);
 		  std::complex<double> valR = rNode->getValue();
@@ -347,6 +347,16 @@ Error AstOptimizer::onCall(AstCall* node) {
   if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
 	  node->addNodeFlags(kAstComplex);
 	  node->getParent()->addNodeFlags(kAstComplex);
+	  for (i = 0; i < count; i++) {
+		  AstNode *tmp = node->getAt(i);
+		  tmp->addNodeFlags(kAstComplex);
+		  if (tmp->isImm()) {
+			  AstImmComplex* newNode = tmp->getAst()->newNode<AstImmComplex>(std::complex<double>(((AstImm*)tmp)->getValue(), 0.0));
+			  newNode->setNodeFlags(kAstComplex);
+			  node->replaceNode(tmp, newNode);
+			  _ast->deleteNode(tmp);
+		  }
+	  }
   }
 
   bool allConst = true;
