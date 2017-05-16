@@ -344,10 +344,11 @@ struct Expression {
   //! This function cannot cope with complex variables, if they are not aligned to
   //! 16 byte boundaries. Use 'alignas(16)' to force the alignement.
   //! It is not necessary to align &ret, but it might be an little bit faster.
-  MATHPRESSO_INLINE void evaluateComp(void* data, std::complex<double> &ret) const {
+  MATHPRESSO_INLINE int evaluateComp(void* data, std::complex<double> &ret) const {
 	  double result[2];
 	  _funcComp(result, data);
 	  ret = std::complex<double>(result[0], result[1]);
+	  return kErrorOk;
   }
 
   // --------------------------------------------------------------------------

@@ -157,8 +157,8 @@ namespace mathpresso {
 	// Complex functions:
 	//complexe funktionen geben komplexe ergebnisse zurück, also 2 double
 
-	static MATHPRESSO_INLINE std::complex<double> mpAddC(std::complex<double> x, std::complex<double> y) {
-		return x + y;
+	static MATHPRESSO_INLINE std::complex<double> mpAddC(std::complex<double> *x) {
+		return x[0] + x[1];
 	}
 
 	//! Used to call a cpp-function from within the assembler.
