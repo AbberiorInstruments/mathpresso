@@ -436,6 +436,21 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags) {
   return kErrorOk;
 }
 
+Error Context::addFunctionComp(const char* name, void* fn, unsigned int flags) {
+	ContextInternalImpl* d;
+
+	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
+	MATHPRESSO_ADD_SYMBOL(name, kAstSymbolFunction);
+
+	sym->setSymbolFlag(kAstSymbolIsDeclared);
+	sym->setSymbolFlag(kAstSymbolIsComplex);
+	sym->setFuncPtr(fn);
+	// TODO: Other function flags.
+	sym->setFuncArgs(flags & _kFunctionArgMask);
+
+	return kErrorOk;
+}
+
 Error Context::delSymbol(const char* name) {
   ContextInternalImpl* d;
   MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));

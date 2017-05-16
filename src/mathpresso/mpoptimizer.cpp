@@ -132,6 +132,10 @@ Error AstOptimizer::onImmComp(AstImmComplex* node) {
 Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
   const OpInfo& op = OpInfo::get(node->getOp());
 
+  if (node->hasNodeFlag(kAstComplex)) {
+	  node->getParent()->addNodeFlags(kAstComplex);
+  }
+
 
 
   MATHPRESSO_PROPAGATE(onNode(node->getChild()));
@@ -203,10 +207,6 @@ Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
 
 Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
   const OpInfo& op = OpInfo::get(node->getOp());
-
-  if (node->hasNodeFlag(kAstComplex) && !node->getParent()) {
-	  node->getParent()->addNodeFlags(kAstComplex);
-  }
 
   AstNode* left = node->getLeft();
   AstNode* right = node->getRight();
@@ -343,6 +343,11 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 Error AstOptimizer::onCall(AstCall* node) {
   AstSymbol* sym = node->getSymbol();
   uint32_t i, count = node->getLength();
+
+  if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
+	  node->addNodeFlags(kAstComplex);
+	  node->getParent()->addNodeFlags(kAstComplex);
+  }
 
   bool allConst = true;
   for (i = 0; i < count; i++) {

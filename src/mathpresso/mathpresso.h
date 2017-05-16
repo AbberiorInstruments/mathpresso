@@ -279,6 +279,8 @@ struct Context {
   //! Add function to this context.
   MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags);
 
+  MATHPRESSO_API Error addFunctionComp(const char * name, void * fn, unsigned int flags);
+
   //! Delete symbol from this context.
   MATHPRESSO_API Error delSymbol(const char* name);
 

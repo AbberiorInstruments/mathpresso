@@ -170,6 +170,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
   JitVar onUnaryOp(AstUnaryOp* node);
   JitVar onBinaryOp(AstBinaryOp* node);
   JitVar onCall(AstCall* node);
+  JitVar onCallComp(AstCall * node);
 
   // Helpers.
   void inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op);
@@ -597,8 +598,13 @@ JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
   // No inline implementation -> function call.
   X86Xmm result = cc->newXmmSd();
   X86Xmm args[1] = { registerVar(var).getXmm() };
-  inlineCall(result, args, 1, JitUtils::getFuncByOp(op));
 
+  if (node->hasNodeFlag(kAstComplex)) {
+	  inlineCallComp(result, args, 1, JitUtils::getFuncByOp(op));
+  }
+  else {
+	  inlineCall(result, args, 1, JitUtils::getFuncByOp(op));
+  }
   return JitVar(result, JitVar::FLAG_NONE);
 }
 
@@ -756,23 +762,43 @@ emitInst: {
   // No inline implementation -> function call.
   X86Xmm result = cc->newXmmSd();
   X86Xmm args[2] = { registerVar(vl).getXmm(), registerVar(vr).getXmm() };
-  inlineCall(result, args, 2, JitUtils::getFuncByOp(op));
-
+  if (node->hasNodeFlag(kAstComplex)) {
+	  inlineCallComp(result, args, 2, JitUtils::getFuncByOp(op));
+  }else {
+	  inlineCall(result, args, 2, JitUtils::getFuncByOp(op));
+  }
   return JitVar(result, JitVar::FLAG_NONE);
 }
 
 JitVar JitCompiler::onCall(AstCall* node) {
-  uint32_t i, count = node->getLength();
-  AstSymbol* sym = node->getSymbol();
+	if (node->hasNodeFlag(kAstComplex)) {
+		return onCallComp(node);
+	}
+	uint32_t i, count = node->getLength();
+	AstSymbol* sym = node->getSymbol();
 
-  X86Xmm result = cc->newXmmSd();
-  X86Xmm args[8];
+	X86Xmm result = cc->newXmmSd();
+	X86Xmm args[8];
 
-  for (i = 0; i < count; i++)
-    args[i] = registerVar(onNode(node->getAt(i))).getXmm();
+	for (i = 0; i < count; i++)
+		args[i] = registerVar(onNode(node->getAt(i))).getXmm();
 
-  inlineCall(result, args, count, sym->getFuncPtr());
-  return JitVar(result, JitVar::FLAG_NONE);
+	inlineCall(result, args, count, sym->getFuncPtr());
+	return JitVar(result, JitVar::FLAG_NONE);
+}
+
+JitVar JitCompiler::onCallComp(AstCall* node) {
+	uint32_t i, count = node->getLength();
+	AstSymbol* sym = node->getSymbol();
+
+	X86Xmm result = cc->newXmmPd();
+	X86Xmm args[8];
+
+	for (i = 0; i < count; i++)
+		args[i] = registerVarComp(onNode(node->getAt(i))).getXmm();
+
+	inlineCallComp(result, args, count, sym->getFuncPtr());
+	return JitVar(result, JitVar::FLAG_NONE);
 }
 
 void JitCompiler::inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op) {
@@ -954,20 +980,18 @@ void JitCompiler::inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t cou
 }
 
 //! Calls a function with complex arguments and complex returns.
-//! 
-//! WARNING: im not shure wether asmJit correctly handles the call of the function, 
-//! there is a solution within the code, but it is unsafe and more a hack.
-//! If anybody has a better solution, id be happy to hear about it.
 void JitCompiler::inlineCallComp(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
 	size_t i;
 
-	size_t length = (count + 1) * 16;
+	uint32_t length = (count + 1) * 16;
 
 	// copy the data to Memory.
 	X86Mem stack = cc->newStack(length, 16, "arguments");
 	X86Gp ind = cc->newUIntPtr();
 	cc->lea(ind, stack);
-	for (i = 0; i < count; i++) {
+
+	for (i = 0; i < count; i++) 
+	{
 		stack.addOffset(16);
 		cc->movapd(stack, args[i]);
 	}
@@ -975,14 +999,12 @@ void JitCompiler::inlineCallComp(const X86Xmm& dst, const X86Xmm* args, const ui
 
 	X86Gp _ptr = cc->newUIntPtr();
 
-	// This is not a good solution to the problem.
 	if (CallConv::kIdHost == CallConv::kIdX86Win64) {
 		X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t) fn);
 		cc->mov(_ptr, function);
-		cc->lea(x86::rdx, stack); // brute force load stack-address.... there must be a better way
 	}
 	else {
-		X86Mem function = cc->newUInt32Const(kAstScopeGlobal, (uint32_t) fn);
+		X86Mem function = cc->newUInt32Const(kAstScopeGlobal, uint32_t((uint64_t) fn));
 		cc->mov(_ptr, function);
 	}
 
@@ -993,12 +1015,12 @@ void JitCompiler::inlineCallComp(const X86Xmm& dst, const X86Xmm* args, const ui
 	signature.addArgT<TypeId::UIntPtr>();
 	signature.addArgT<TypeId::UIntPtr>();
 
+	CCFuncCall* ctx;
 	// Create the function call.
-	CCFuncCall* ctx = cc->call((uint64_t)mpWrapComplex2, signature);
-	
-	// Move the data to the correct registers?!?!?!?!?!?
-	ctx->setArg(static_cast<uint32_t>(0), ind);
-	ctx->setArg(static_cast<uint32_t>(0), _ptr);
+	ctx = cc->call((uint64_t)mpWrapComplex, signature); 
+
+	ctx->setArg(0, _ptr);
+	ctx->setArg(1, ind);
 	
 	cc->movapd(dst, stack);
 }

@@ -162,12 +162,11 @@ namespace mathpresso {
 	}
 
 	//! Used to call a cpp-function from within the assembler.
-	//! the result can be read from data at index 0, arguments are at index 1 and 2.
+	//! the result can be read from data at index 0, arguments are at index 1, 2, ...
 	//! Eventually there is a better way, but unless i understand the way Functions are called within asmjit, i cannot provide one.
-	static MATHPRESSO_INLINE void mpWrapComplex2(std::complex<double>(*ptr)(std::complex<double>, std::complex<double>), std::complex<double>* data) {
-		data[0] = ptr(data[1], data[2]);
+	static MATHPRESSO_INLINE void mpWrapComplex(std::complex<double>(*ptr)(std::complex<double> *), std::complex<double>* data) {
+		data[0] = ptr(data + 1);
 	}
-
 
 } // mathpresso namespace
 
