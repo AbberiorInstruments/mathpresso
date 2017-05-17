@@ -182,7 +182,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
   void prepareConstPool();
   void prepareConstPoolComp();
   JitVar getConstantU64(uint64_t value);
-  JitVar getConstantU64Compl(uint64_t * value);
+  JitVar getConstantU64Compl(uint64_t real, uint64_t imag);
   JitVar getConstantU64AsPD(uint64_t value);
   JitVar getConstantD64(double value);
   JitVar getConstantD64Compl(std::complex<double> value);
@@ -294,6 +294,7 @@ JitVar JitCompiler::registerVarComplex(const JitVar& other) {
 
 JitVar JitCompiler::registerVarAsComplex(const JitVar& other) {
 	JitVar v(cc->newXmmPd(), other.flags);
+	cc->pxor(v.getXmm(), v.getXmm());
 	cc->emit(X86Inst::kIdMovlpd, v.getXmm(), other.getOperand());
 	return v;
 }
@@ -647,7 +648,7 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 	
 	JitVar vl, vr;
 
-	if (node->hasNodeFlag(kAstComplex) && op == kOpAdd) {
+	if (node->hasNodeFlag(kAstComplex) && ( op == kOpAdd || op == kOpMul)) {
 		if (left->getNodeType() == kAstNodeVarComplex &&
 			right->getNodeType() == kAstNodeVarComplex &&
 			static_cast<AstVarComplex*>(left)->getSymbol() == static_cast<AstVarComplex*>(right)->getSymbol()) 
@@ -667,15 +668,32 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 			vl = writableVarComplex(vl);
 		}
 
-		// uncomment to use direct assembler, otherwise a functioncall is emited.
+
+		if (op == kOpAdd) {
+			cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
+			return vl;
+		}
+		else {
+			JitVar ret(cc->newXmmPd(), JitVar::FLAG_NONE);
+
+			// this is optimisable.......
+			if (vr.getOperand() == vl.getOperand()) {
+				vr = copyVarComplex(vl, JitVar::FLAG_NONE);
+			}
+			else {
+				vr = writableVarComplex(vr);
+			}
+			
+			// this shouldnt be optimisable:
+			cc->movapd(ret.getXmm(), vl.getXmm());
+			cc->mulpd(ret.getXmm(), vr.getXmm());
+			cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
+			cc->pxor(vr.getXmm(), getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000)).getMem());
+			cc->mulpd(vl.getXmm(), vr.getXmm());
+			cc->hsubpd(ret.getXmm(), vl.getXmm());
+			return ret;
+		}
 		
-		cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
-		return vl;
-		
-		//X86Xmm result = cc->newXmmPd();
-		//X86Xmm args[2] = { registerVarComplex(vl).getXmm() , registerVarComplex(vr).getXmm() };
-		//inlineCallComplex(result, args, 2, (void*)(Arg2FuncC)mpAddC);
-		//return JitVar(result, JitVar::FLAG_NONE);
 	}
 
 	if (left->getNodeType() == kAstNodeVarDouble &&
@@ -1069,9 +1087,10 @@ JitVar JitCompiler::getConstantU64(uint64_t value) {
   return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
 }
 
-JitVar JitCompiler::getConstantU64Compl(uint64_t* value) {
+JitVar JitCompiler::getConstantU64Compl(uint64_t real, uint64_t imag) {
 	prepareConstPoolComp();
 
+	uint64_t value[2] = { real, imag };
 	size_t offset;
 	if (constPool.add(value, 2 * sizeof(uint64_t), offset) != kErrorOk)
 		return JitVar();
@@ -1100,7 +1119,7 @@ JitVar JitCompiler::getConstantD64Compl(std::complex<double> value) {
 	DoubleBitsComp bits;
 	bits.d[0] = value.real();
 	bits.d[1] = value.imag();
-	return getConstantU64Compl(bits.u);
+	return getConstantU64Compl(bits.u[0], bits.u[1]);
 }
 
 JitVar JitCompiler::getConstantD64AsPD(double value) {
