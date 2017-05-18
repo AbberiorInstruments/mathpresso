@@ -143,6 +143,8 @@ enum AstNodeType {
   kAstNodeUnaryOp,
   //! Node is `AstBinaryOp`.
   kAstNodeBinaryOp,
+  //! Node is `AstTernaryOp`.
+  kAstNodeTernaryOp,
   //! Node is `AstCall`.
   kAstNodeCall
 };
@@ -810,6 +812,39 @@ struct AstBinary : public AstNode {
   MATHPRESSO_AST_CHILD(1, AstNode, Right, _right);
 };
 
+
+// ============================================================================
+// [mathpresso::AstTernary]
+// ============================================================================
+
+struct AstTernary : public AstNode {
+	MATHPRESSO_NO_COPY(AstTernary)
+
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
+
+		MATHPRESSO_INLINE AstTernary(AstBuilder* ast, uint32_t nodeType)
+		: AstNode(ast, nodeType, &_condition, 3),
+		_condition(NULL),
+		_left(NULL),
+		_right(NULL) {}
+
+	// --------------------------------------------------------------------------
+	// [Accessors]
+	// --------------------------------------------------------------------------
+
+	MATHPRESSO_INLINE AstNode** getChildren() const { return (AstNode**)&_condition; }
+
+	// --------------------------------------------------------------------------
+	// [Members]
+	// --------------------------------------------------------------------------
+
+	MATHPRESSO_AST_CHILD(0, AstNode, Condition, _condition);
+	MATHPRESSO_AST_CHILD(1, AstNode, Left, _left);
+	MATHPRESSO_AST_CHILD(2, AstNode, Right, _right);
+};
+
 // ============================================================================
 // [mathpresso::AstProgram]
 // ============================================================================
@@ -1018,6 +1053,23 @@ struct AstBinaryOp : public AstBinary {
         sym->decWriteCount();
     }
   }
+};
+
+// ============================================================================
+// [mathpresso::AstTernaryOp]
+// ============================================================================
+
+struct AstTernaryOp : public AstTernary {
+	MATHPRESSO_NO_COPY(AstTernaryOp)
+
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
+
+		MATHPRESSO_INLINE AstTernaryOp(AstBuilder* ast, uint32_t op)
+		: AstTernary(ast, kAstNodeTernaryOp) {
+		setOp(op);
+	}
 };
 
 // ============================================================================

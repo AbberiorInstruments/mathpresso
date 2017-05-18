@@ -45,6 +45,7 @@ static const AstNodeSize mpAstNodeSize[] = {
   ROW(kAstNodeImmComplex , sizeof(AstImmComplex)),
   ROW(kAstNodeUnaryOp  , sizeof(AstUnaryOp)  ),
   ROW(kAstNodeBinaryOp , sizeof(AstBinaryOp) ),
+  ROW(kAstNodeTernaryOp , sizeof(AstTernaryOp)),
   ROW(kAstNodeCall     , sizeof(AstCall)     )
 };
 #undef ROW

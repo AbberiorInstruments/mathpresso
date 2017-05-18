@@ -154,7 +154,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
 
   JitVar copyVarComplex(const JitVar & other, uint32_t flags);
   JitVar writableVarComplex(const JitVar & other);
-  JitVar registerVarComplex(const JitVar & other);
+  JitVar registerVarComplex(const JitVar & other, bool otherIsComplex = true);
   JitVar registerVarAsComplex(const JitVar & other);
 
   // Compiler.
@@ -203,6 +203,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
   ConstPool constPool;
 
   bool enableSSE4_1;
+  bool complex = false;
 };
 
 JitCompiler::JitCompiler(ZoneHeap* heap, X86Compiler* cc)
@@ -274,6 +275,7 @@ JitVar JitCompiler::registerVar(const JitVar& other) {
 
 JitVar JitCompiler::copyVarComplex(const JitVar& other, uint32_t flags) {
 	JitVar v(cc->newXmmPd(), flags);
+	
 	cc->emit(X86Inst::kIdMovapd, v.getXmm(), other.getOperand());
 	return v;
 }
@@ -285,7 +287,10 @@ JitVar JitCompiler::writableVarComplex(const JitVar& other) {
 		return other;
 }
 
-JitVar JitCompiler::registerVarComplex(const JitVar& other) {
+JitVar JitCompiler::registerVarComplex(const JitVar& other, bool otherIsComplex) {
+	if (!otherIsComplex) {
+		return registerVarAsComplex(other);
+	}
 	if (other.isMem())
 		return copyVarComplex(other, other.flags);
 	else
@@ -378,7 +383,7 @@ void JitCompiler::compileComplex(AstBlock* node, AstScope* rootScope, uint32_t n
 	if (result.isNone())
 		var = registerVarComplex(getConstantD64Compl(mpGetNan())).getXmm();
 	else
-		var = registerVarComplex(result).getXmm();
+		var = registerVarComplex(result, node->hasNodeFlag(kAstComplex)).getXmm();
 	cc->movupd(x86::ptr(resultAddress), var);
 
 
@@ -822,12 +827,7 @@ JitVar JitCompiler::onCallComp(AstCall* node) {
 	X86Xmm args[8];
 
 	for (i = 0; i < count; i++) {
-		if (node->getAt(i)->hasNodeFlag(kAstComplex)) {
-			args[i] = registerVarComplex(onNode(node->getAt(i))).getXmm();
-		}
-		else {
-			args[i] = registerVarAsComplex(onNode(node->getAt(i))).getXmm();
-		}
+		args[i] = registerVarComplex(onNode(node->getAt(i)), node->getAt(i)->hasNodeFlag(kAstComplex)).getXmm();
 	}
 	inlineCallComplex(result, args, count, sym->getFuncPtr());
 	return JitVar(result, JitVar::FLAG_NONE);
