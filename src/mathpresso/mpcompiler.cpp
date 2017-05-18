@@ -300,7 +300,12 @@ JitVar JitCompiler::registerVarComplex(const JitVar& other, bool otherIsComplex)
 JitVar JitCompiler::registerVarAsComplex(const JitVar& other) {
 	JitVar v(cc->newXmmPd(), other.flags);
 	cc->pxor(v.getXmm(), v.getXmm());
-	cc->emit(X86Inst::kIdMovlpd, v.getXmm(), other.getOperand());
+	if (other.isMem()) {
+		cc->movlpd(v.getXmm(), other.getMem());
+	}
+	else {
+		cc->movsd(v.getXmm(), other.getXmm());
+	}
 	return v;
 }
 
