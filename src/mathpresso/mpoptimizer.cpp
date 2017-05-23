@@ -214,6 +214,11 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 	if (op.isAssignment())
 		left->addNodeFlags(kAstNodeHasSideEffect);
 
+	if (node->getOp() == kOpColon) {
+		return _errorReporter->onError(kErrorInvalidSyntax, node->getPosition(),
+			"Invalid Operator ':' found. No '?' to complete the ternary expression.");
+	}
+
 	if (node->getOp() == kOpQMark) {
 
 		AstBinaryOp* lastColon = node;
@@ -224,6 +229,12 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 		while (lastColon->getRight()->getOp() == kOpColon) {
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 		} 
+
+		if (lastColon->getOp() != kOpColon) {
+			return _errorReporter->onError(kErrorInvalidSyntax, node->getPosition(),
+				"Invalid ternary operation. Expected a ':', found '%s' instead.", OpInfo::get(lastColon->getOp()).name);
+		}
+
 
 		AstNode* branchCondition = node->getLeft();
 		AstNode* branchLeft = lastColon->getLeft();
@@ -317,6 +328,7 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 			case kOpAtan2: result = mpAtan2(lVal, rVal); break;
 			case kOpHypot: result = mpHypot(lVal, rVal); break;
 			case kOpCopySign: result = mpCopySign(lVal, rVal); break;
+				
 
 			default:
 				return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
