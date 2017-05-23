@@ -40,6 +40,7 @@ struct AstOptimizer : public AstVisitor {
   virtual Error onImmComp(AstImmComplex * node);
   virtual Error onUnaryOp(AstUnaryOp* node);
   virtual Error onBinaryOp(AstBinaryOp* node);
+  virtual Error onTernaryOp(AstTernaryOp * node);
   virtual Error onCall(AstCall* node);
 
   // --------------------------------------------------------------------------

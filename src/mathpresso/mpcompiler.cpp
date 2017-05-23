@@ -170,6 +170,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
   JitVar onImmComplex(AstImmComplex * node);
   JitVar onUnaryOp(AstUnaryOp* node);
   JitVar onBinaryOp(AstBinaryOp* node);
+  JitVar onTernaryOp(AstTernaryOp * node);
   JitVar onCall(AstCall* node);
   JitVar onCallComp(AstCall * node);
 
@@ -407,6 +408,7 @@ JitVar JitCompiler::onNode(AstNode* node) {
 	case kAstNodeImmComplex: return onImmComplex(static_cast<AstImmComplex*>(node));
 	case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
     case kAstNodeBinaryOp : return onBinaryOp (static_cast<AstBinaryOp* >(node));
+	case kAstNodeTernaryOp: return onTernaryOp(static_cast<AstTernaryOp*>(node));
     case kAstNodeCall     : return onCall     (static_cast<AstCall*     >(node));
 
     default:
@@ -805,6 +807,77 @@ emitInst: {
 	  inlineCall(result, args, 2, JitUtils::getFuncByOp(op));
   }
   return JitVar(result, JitVar::FLAG_NONE);
+}
+
+
+//! how to handle complex/noncomplex results?
+JitVar JitCompiler::onTernaryOp(AstTernaryOp* node) {
+	Label lblElse = cc->newLabel();
+	Label lblEnd = cc->newLabel();
+	bool resIsComplex = false;
+	JitVar erg;
+	AstNode* left = node->getLeft();
+	AstNode* right = node->getRight();
+	AstNode* condition = node->getCondition();
+
+	JitVar ret = onNode(condition);
+	if (condition->hasNodeFlag(kAstComplex)) {
+		node->setNodeFlags(!kAstComplex);
+
+		if (enableSSE4_1) 
+			cc->ptest(ret.getXmm(), ret.getXmm());
+		else {
+			X86Gp cmp = cc->newGpd();
+			cc->movd(cmp, ret.getXmm());
+			cc->test(cmp, cmp);
+		}
+	}
+	else {
+		if (enableSSE4_1)
+			cc->ptest(ret.getXmm(), ret.getXmm());
+		else {
+			X86Gp cmp = cc->newGpd();
+			cc->movd(cmp, ret.getXmm());
+			cc->test(cmp, cmp);
+		}
+	}
+
+	cc->jz(lblElse);
+
+	X86Xmm regErg = cc->newXmmPd();
+	JitVar ergLeft = onNode(left);
+	if (left->hasNodeFlag(kAstComplex)) {
+		node->addNodeFlags(kAstComplex);
+		node->getParent()->addNodeFlags(kAstComplex);
+	}
+	if (left->getNodeType() == kAstNodeImmComplex || left->getNodeType() == kAstNodeVarComplex) {
+		cc->movupd(regErg, ergLeft.getXmm());
+	}
+	else if (left->getNodeType() == kAstNodeImm || left->getNodeType() == kAstNodeVarDouble) {
+		cc->xorpd(regErg, regErg);
+		cc->movsd(regErg, ergLeft.getXmm());
+	}
+
+	cc->jmp(lblEnd);
+	cc->bind(lblElse);
+
+	JitVar ergRight = onNode(right);
+	if (right->hasNodeFlag(kAstComplex)) {
+		node->addNodeFlags(kAstComplex);
+		node->getParent()->addNodeFlags(kAstComplex);
+	}
+	if (right->getNodeType() == kAstNodeImmComplex || right->getNodeType() == kAstNodeVarComplex) {
+		cc->movupd(regErg, ergRight.getXmm());
+	}
+	else if (right->getNodeType() == kAstNodeImm || right->getNodeType() == kAstNodeVarDouble) {
+		cc->xorpd(regErg, regErg);
+		cc->movsd(regErg, ergRight.getXmm());
+	} 
+
+	cc->bind(lblEnd);
+
+
+	return copyVarComplex(JitVar(regErg, JitVar::FLAG_NONE), JitVar::FLAG_NONE);
 }
 
 JitVar JitCompiler::onCall(AstCall* node) {

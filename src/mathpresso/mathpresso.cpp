@@ -38,8 +38,7 @@ namespace mathpresso {
     0, \
     static_cast<uint32_t>( \
       flags | (assignment != 0 ? kOpFlagAssign : 0) \
-            | (params     == 1 ? kOpFlagUnary : \
-               params     == 2 ? kOpFlagBinary : 0) \
+            | (params     == 1 ? kOpFlagUnary : (params == 2 ? kOpFlagBinary : (params == 3 ? kOpFlagTernary : 0))) \
             | (intrinsic  == 1 ? kOpFlagIntrinsic : 0)), \
     name \
   }
@@ -97,7 +96,9 @@ const OpInfo mpOpInfo[kOpCount] = {
   ROW(Pow          , Pow      , 2, 0, 0, 1, LTR |                    F(NopIfROne)    , "pow"      ),
   ROW(Atan2        , Atan2    , 2, 0, 0, 1, LTR | F(Trigonometric)                   , "atan2"    ),
   ROW(Hypot        , Hypot    , 2, 0, 0, 1, LTR | F(Trigonometric)                   , "hypot"    ),
-  ROW(CopySign     , CopySign , 2, 0, 0, 1, LTR | 0                                  , "copysign" )
+  ROW(CopySign     , CopySign , 2, 0, 0, 1, LTR | 0                                  , "copysign" ),
+  ROW(QMark        , QMark    , 3,15, 0, 0, RTL | 0									 , "?"		  ),
+  ROW(Colon        , Colon    , 3,15, 0, 0, RTL | 0									 , ":"        )
 };
 #undef F
 #undef RTL

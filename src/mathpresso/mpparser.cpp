@@ -90,6 +90,11 @@ Error Parser::parseStatement(AstBlock* block, uint32_t flags) {
     _tokenizer.consume();
     return kErrorOk;
   }
+  
+  if (uToken == kTokenColon) {
+	  _tokenizer.consume();
+	  return kErrorOk;
+  }
 
   // Parse a nested block.
   if (uToken == kTokenLCurl) {
@@ -124,6 +129,11 @@ Error Parser::parseStatement(AstBlock* block, uint32_t flags) {
   if (uToken == kTokenSemicolon) {
     _tokenizer.consume();
     return kErrorOk;
+  }
+
+  if (uToken == kTokenColon) {
+	  _tokenizer.consume();
+	  return kErrorOk;
   }
 
   if (uToken == kTokenEnd)
@@ -302,6 +312,8 @@ Error Parser::parseExpression(AstNode** pNode, bool isNested) {
   // just started and there is no binary operator yet. Once the first binary
   // operator has been parsed `oNode` will be set accordingly.
   AstBinaryOp* oNode = NULL;
+  // The current ternary Operator node.
+  AstTernaryOp* nNode = NULL;
 
   // Currently parsed node.
   AstNode* tNode = NULL;
@@ -405,9 +417,8 @@ _Repeat1:
 		  break;
 	  }
 
-      // Parse expression terminators - ',', ':', ';' or ')'.
+      // Parse expression terminators - ',', ';' or ')'.
       case kTokenComma:
-      case kTokenColon:
       case kTokenSemicolon:
       case kTokenRParen: {
         MATHPRESSO_PARSER_ERROR(token, "Expected an expression.");
@@ -463,9 +474,8 @@ _Unary: {
 
 // _Repeat2:
     switch (_tokenizer.next(&token)) {
-      // Parse the expression terminators - ',', ':', ';', ')' or EOI.
+      // Parse the expression terminators - ',', ';', ')' or EOI.
       case kTokenComma:
-      case kTokenColon:
       case kTokenSemicolon:
       case kTokenRParen:
       case kTokenEnd: {
@@ -502,6 +512,7 @@ _Unary: {
         goto _Binary;
       }
 
+
       case kTokenEq          : op = kOpEq          ; goto _Binary;
       case kTokenNe          : op = kOpNe          ; goto _Binary;
       case kTokenGt          : op = kOpGt          ; goto _Binary;
@@ -513,6 +524,8 @@ _Unary: {
       case kTokenMul         : op = kOpMul         ; goto _Binary;
       case kTokenDiv         : op = kOpDiv         ; goto _Binary;
       case kTokenMod         : op = kOpMod         ; goto _Binary;
+	  case kTokenQMark       : op = kOpQMark       ; goto _Binary;
+	  case kTokenColon       : op = kOpColon       ; goto _Binary;
 _Binary: {
         AstBinaryOp* zNode = _ast->newNode<AstBinaryOp>(op);
         MATHPRESSO_NULLCHECK(zNode);
@@ -596,6 +609,8 @@ _Binary: {
           break;
         }
       }
+
+	 
 
       default: {
         MATHPRESSO_PARSER_ERROR(token, "Unexpected token.");

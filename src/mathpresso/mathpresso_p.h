@@ -251,6 +251,9 @@ enum OpType {
   kOpAtan2,             // atan2(a, b)
   kOpHypot,             // hypot(a, b)
   kOpCopySign,          // copysign(a, b)
+  
+  kOpQMark,			    // b ? a : b
+  kOpColon,
 
   //kOpAddC,
 
@@ -277,6 +280,9 @@ enum OpFlags {
 
   //! The operator does an assignment to a variable.
   kOpFlagAssign        = 0x00000010,
+
+  //! The operator 3 parameters (ternary node).
+  kOpFlagTernary	   = 0x00000020,
 
   //! The operator performs an arithmetic operation.
   kOpFlagArithmetic    = 0x00000100,

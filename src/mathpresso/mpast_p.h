@@ -1136,6 +1136,7 @@ struct AstVisitor {
   virtual Error onImmComp(AstImmComplex* node) = 0;
   virtual Error onUnaryOp(AstUnaryOp* node) = 0;
   virtual Error onBinaryOp(AstBinaryOp* node) = 0;
+  virtual Error onTernaryOp(AstTernaryOp* node) = 0;
   virtual Error onCall(AstCall* node) = 0;
 
   // --------------------------------------------------------------------------
@@ -1171,6 +1172,7 @@ struct AstDump : public AstVisitor {
   virtual Error onImmComp(AstImmComplex * node);
   virtual Error onUnaryOp(AstUnaryOp* node);
   virtual Error onBinaryOp(AstBinaryOp* node);
+  virtual Error onTernaryOp(AstTernaryOp * node);
   virtual Error onCall(AstCall* node);
 
   // --------------------------------------------------------------------------
