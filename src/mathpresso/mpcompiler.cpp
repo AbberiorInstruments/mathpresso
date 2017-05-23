@@ -814,7 +814,6 @@ emitInst: {
 JitVar JitCompiler::onTernaryOp(AstTernaryOp* node) {
 	Label lblElse = cc->newLabel();
 	Label lblEnd = cc->newLabel();
-	bool resIsComplex = false;
 	JitVar erg;
 	AstNode* left = node->getLeft();
 	AstNode* right = node->getRight();
@@ -822,7 +821,7 @@ JitVar JitCompiler::onTernaryOp(AstTernaryOp* node) {
 
 	JitVar ret = onNode(condition);
 	if (condition->hasNodeFlag(kAstComplex)) {
-		node->setNodeFlags(!kAstComplex);
+		node->removeNodeFlags(kAstComplex);
 
 		if (enableSSE4_1) 
 			cc->ptest(ret.getXmm(), ret.getXmm());

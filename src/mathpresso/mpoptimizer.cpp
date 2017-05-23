@@ -421,17 +421,17 @@ Error AstOptimizer::onTernaryOp(AstTernaryOp* node) {
 	MATHPRESSO_PROPAGATE(onNode(node->getCondition()));
 	AstNode* branchCond = node->getCondition();
 	if (branchCond->isImm()) {
-		bool isTrue;
+		bool conditionIsTrue;
 		if (branchCond->isComplex()) {
-			isTrue = static_cast<AstImmComplex*>(branchCond)->getValue() != std::complex<double>(0,0);
+			conditionIsTrue = static_cast<AstImmComplex*>(branchCond)->getValue() != std::complex<double>(0,0);
 		}
 		else {
-			isTrue = static_cast<AstImm*>(branchCond)->getValue() != 0;
+			conditionIsTrue = static_cast<AstImm*>(branchCond)->getValue() != 0;
 		}
 
-		AstNode* newNode = node->getAst()->newNode<AstNode>(isTrue ? node->getLeft()->getNodeType() : node->getRight()->getNodeType());
-		
-		if (isTrue) {
+		AstNode* newNode;
+
+		if (conditionIsTrue) {
 			newNode = node->getLeft();
 			node->setLeft(NULL);
 		} else{
@@ -449,6 +449,7 @@ Error AstOptimizer::onTernaryOp(AstTernaryOp* node) {
 
 	}
 	else {
+		node->removeNodeFlags(kAstComplex);
 		MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
 		MATHPRESSO_PROPAGATE(onNode(node->getRight()));
 	}

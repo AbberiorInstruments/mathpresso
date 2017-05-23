@@ -608,6 +608,8 @@ struct AstNode {
   MATHPRESSO_INLINE void setNodeFlags(uint32_t flags) { _nodeFlags = static_cast<uint8_t>(flags); }
   //! Add node flags.
   MATHPRESSO_INLINE void addNodeFlags(uint32_t flags) { _nodeFlags |= static_cast<uint8_t>(flags); }
+  //! remove a flag.
+  MATHPRESSO_INLINE void removeNodeFlags(uint32_t flags) { _nodeFlags &= ~static_cast<uint8_t>(flags); }
 
   //! Get node size (in bytes).
   MATHPRESSO_INLINE uint32_t getNodeSize() const { return _nodeSize; }
