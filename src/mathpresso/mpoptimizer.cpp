@@ -185,13 +185,28 @@ Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
         return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
           "Invalid unary operation '%s'.", op.name);
     }
-
-    child->setValue(value);
+	child->setValue(value);
 
     node->unlinkChild();
     node->getParent()->replaceNode(node, child);
 
     _ast->deleteNode(node);
+  } 
+  else if (child->isImmComplex()) {
+	  AstImmComplex * child = static_cast<AstImmComplex*> (node->getChild());
+	  std::complex<double> value = child->getValue();
+	  switch (node->getOp()) {
+	  case kOpReal: value = mpGetReal(&value); break;
+	  default:
+		  return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+			  "Invalid unary operation with complex parameters and real result '%s'.", op.name);
+	  }
+	  child->setValue(value);
+
+	  node->unlinkChild();
+	  node->getParent()->replaceNode(node, child);
+
+	  _ast->deleteNode(node);
   }
   else if (child->getNodeType() == kAstNodeUnaryOp && node->getOp() == child->getOp()) {
     // Simplify `-(-(x))` -> `x`.
@@ -399,12 +414,10 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 		}
 
 		// adition for immediate complex values.
-		if (node->getOp() == kOpAdd && left->isComplex() && right->isComplex() && left->isImm() && right->isImm()) {
+		if (node->getOp() == kOpAdd && left->isImmComplex() && right->isImmComplex()) {
 			AstImmComplex* lNode = static_cast<AstImmComplex*>(left);
 			AstImmComplex* rNode = static_cast<AstImmComplex*>(right);
-			std::complex<double> valR = rNode->getValue();
-			std::complex<double> valL = lNode->getValue();
-			std::complex<double> result = std::complex<double>(valL.real() + valR.real(), valL.imag() + valR.imag());
+			std::complex<double> result = rNode->getValue() + lNode->getValue();
 
 			rNode->setValue(result);
 			node->unlinkRight();
@@ -466,20 +479,24 @@ Error AstOptimizer::onCall(AstCall* node) {
 	  node->getParent()->addNodeFlags(kAstComplex);
 	  for (i = 0; i < count; i++) {
 		  AstNode *tmp = node->getAt(i);
-		  tmp->addNodeFlags(kAstComplex);
 		  if (tmp->isImm()) {
 			  AstImmComplex* newNode = tmp->getAst()->newNode<AstImmComplex>(std::complex<double>(((AstImm*)tmp)->getValue(), 0.0));
 			  newNode->setNodeFlags(kAstComplex);
 			  node->replaceNode(tmp, newNode);
 			  _ast->deleteNode(tmp);
 		  }
+		  else {
+			  tmp->addNodeFlags(kAstComplex);
+		  }
 	  }
   }
 
   bool allConst = true;
+  bool allConstComplex = true;;
   for (i = 0; i < count; i++) {
     MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
     allConst &= node->getAt(i)->isImm();
+	allConstComplex &= node->getAt(i)->isImmComplex();
   }
 
   if (allConst && count <= 8) {
@@ -505,6 +522,16 @@ Error AstOptimizer::onCall(AstCall* node) {
     AstNode* replacement = _ast->newNode<AstImm>(result);
     node->getParent()->replaceNode(node, replacement);
     _ast->deleteNode(node);
+  }
+  else if (allConstComplex && count < 9) {
+	  std::complex<double> argsdouble[9];
+	  for (i = 0; i < count; i++) {
+		  argsdouble[i] = static_cast<AstImmComplex*>(node->getChildren()[i])->getValue();
+	  }
+	  std::complex<double> result = ((argFuncC)sym->getFuncPtr())(argsdouble);
+	  AstNode* replacement = _ast->newNode<AstImmComplex>(result);
+	  node->getParent()->replaceNode(node, replacement);
+	  _ast->deleteNode(node);
   }
 
   return kErrorOk;

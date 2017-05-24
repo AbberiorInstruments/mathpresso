@@ -97,6 +97,8 @@ const OpInfo mpOpInfo[kOpCount] = {
   ROW(Atan2        , Atan2    , 2, 0, 0, 1, LTR | F(Trigonometric)                   , "atan2"    ),
   ROW(Hypot        , Hypot    , 2, 0, 0, 1, LTR | F(Trigonometric)                   , "hypot"    ),
   ROW(CopySign     , CopySign , 2, 0, 0, 1, LTR | 0                                  , "copysign" ),
+  ROW(Real         , Real     , 1, 0, 0, 1, LTR | 0                                  , "getReal"  ),
+  ROW(Imag	       , Imag     , 1, 0, 0, 1, LTR | 0                                  , "getImag"  ),
   ROW(QMark        , QMark    , 3,15, 0, 0, RTL | 0									 , "?"		  ),
   ROW(Colon        , Colon    , 3,15, 0, 0, RTL | 0									 , ":"        )
 };

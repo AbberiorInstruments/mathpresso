@@ -68,7 +68,7 @@ struct JitUtils {
       case kOpAtan2    : return (void*)(Arg2Func)atan2;
       case kOpHypot    : return (void*)(Arg2Func)hypot;
       case kOpCopySign : return (void*)(Arg2Func)mpCopySign;
-
+	  case kOpReal     : return (void*)(argFuncCtoD)mpGetReal;
 	  //case kOpAddC     : return (void*)(Arg2FuncC)mpAddC;
 
       default:
@@ -174,9 +174,12 @@ struct MATHPRESSO_NOAPI JitCompiler {
   JitVar onCall(AstCall* node);
   JitVar onCallComp(AstCall * node);
 
+  
   // Helpers.
-  void inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op);
+  void inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool isComplex);
+  void inlieCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool paramsAreComplex);
   void inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn);
+  void inlineCallCRetD(const X86Xmm & dst, const X86Xmm * args, const uint32_t count, void * fn);
   void inlineCallComplex(const X86Xmm & dst, const X86Xmm * args, uint32_t count, void * fn);
 
   // Constants.
@@ -277,7 +280,7 @@ JitVar JitCompiler::registerVar(const JitVar& other) {
 JitVar JitCompiler::copyVarComplex(const JitVar& other, uint32_t flags) {
 	JitVar v(cc->newXmmPd(), flags);
 	
-	cc->emit(X86Inst::kIdMovapd, v.getXmm(), other.getOperand());
+	cc->emit(X86Inst::kIdMovupd, v.getXmm(), other.getOperand());
 	return v;
 }
 
@@ -554,7 +557,7 @@ JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
     case kOpFloor:
     case kOpCeil: {
       var = writableVar(var);
-      inlineRound(var.getXmm(), var.getXmm(), op);
+      inlineRound(var.getXmm(), var.getXmm(), op, node->hasNodeFlag(kAstComplex));
       return var;
     }
 
@@ -589,7 +592,7 @@ JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
       }
       else {
         // Pure SSE2 `frac()`, uses the same rounding trick as `floor()`.
-        inlineRound(tmp, var.getXmm(), kOpFloor);
+        inlineRound(tmp, var.getXmm(), kOpFloor, node->hasNodeFlag(kAstComplex));
         cc->subsd(var.getXmm(), tmp);
         return var;
       }
@@ -615,15 +618,24 @@ JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
   }
 
   // No inline implementation -> function call.
-  X86Xmm result = cc->newXmmSd();
-  X86Xmm args[1] = { registerVar(var).getXmm() };
-
+  X86Xmm result;
+  X86Xmm args[1];
   if (node->hasNodeFlag(kAstComplex)) {
-	  inlineCallComplex(result, args, 1, JitUtils::getFuncByOp(op));
+	  result = cc->newXmmPd();
+	  args[0] = registerVarComplex(var).getXmm();
   }
   else {
-	  inlineCall(result, args, 1, JitUtils::getFuncByOp(op));
+	  result = cc->newXmmSd();
+	  args[0] = registerVar(var).getXmm();
   }
+
+  //if (node->hasNodeFlag(kAstComplex)) {
+	//  inlineCallComplex(result, args, 1, JitUtils::getFuncByOp(op));
+  //}
+  //else {
+	//  inlineCall(result, args, 1, JitUtils::getFuncByOp(op));
+  //}
+  inlieCallAbstract(result, args, 1, op, node->hasNodeFlag(kAstComplex));
   return JitVar(result, JitVar::FLAG_NONE);
 }
 
@@ -681,6 +693,9 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 		}
 
 
+		if (vr.getOperand().isMem()) {
+			vr = copyVarComplex(vr, JitVar::FLAG_NONE);
+		}
 		if (op == kOpAdd) {
 			cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
 			return vl;
@@ -770,7 +785,7 @@ emitInst: {
 
       cc->movsd(result, vl.getXmm());
       cc->divsd(vl.getXmm(), vr.getXmm());
-      inlineRound(vl.getXmm(), vl.getXmm(), kOpTrunc);
+      inlineRound(vl.getXmm(), vl.getXmm(), kOpTrunc, node->hasNodeFlag(kAstComplex));
       cc->mulsd(vl.getXmm(), vr.getXmm());
       cc->subsd(result, vl.getXmm());
 
@@ -799,13 +814,26 @@ emitInst: {
   }
 
   // No inline implementation -> function call.
-  X86Xmm result = cc->newXmmSd();
-  X86Xmm args[2] = { registerVar(vl).getXmm(), registerVar(vr).getXmm() };
+  X86Xmm result; 
+  X86Xmm args[2];
   if (node->hasNodeFlag(kAstComplex)) {
-	  inlineCallComplex(result, args, 2, JitUtils::getFuncByOp(op));
-  }else {
-	  inlineCall(result, args, 2, JitUtils::getFuncByOp(op));
+	  result = cc->newXmmPd();
+	  args[0] = registerVarComplex(vl).getXmm();
+	  args[1] = registerVarComplex(vr).getXmm();
   }
+  else {
+	  result = cc->newXmmSd();
+	  args[0] = registerVar(vl).getXmm();
+	  args[1] = registerVar(vr).getXmm();
+  }
+  //X86Xmm args[2] = { registerVar(vl).getXmm(), registerVar(vr).getXmm() };
+  //if (node->hasNodeFlag(kAstComplex)) {
+	//  inlineCallComplex(result, args, 2, JitUtils::getFuncByOp(op));
+  //}else {
+	//  inlineCall(result, args, 2, JitUtils::getFuncByOp(op));
+  //}
+  inlieCallAbstract(result, args, 2, op, node->hasNodeFlag(kAstComplex));
+
   return JitVar(result, JitVar::FLAG_NONE);
 }
 
@@ -900,17 +928,22 @@ JitVar JitCompiler::onCallComp(AstCall* node) {
 	uint32_t i, count = node->getLength();
 	AstSymbol* sym = node->getSymbol();
 
+	node->addNodeFlags(kAstComplex);
 	X86Xmm result = cc->newXmmPd();
 	X86Xmm args[8];
 
 	for (i = 0; i < count; i++) {
 		args[i] = registerVarComplex(onNode(node->getAt(i)), node->getAt(i)->hasNodeFlag(kAstComplex)).getXmm();
 	}
-	inlineCallComplex(result, args, count, sym->getFuncPtr());
+	if (sym->getName() =="getReal" || sym->getName() ==  "getImag")
+		inlineCallCRetD(result, args, count, sym->getFuncPtr());
+	else
+		inlineCallComplex(result, args, count, sym->getFuncPtr());
+
 	return JitVar(result, JitVar::FLAG_NONE);
 }
 
-void JitCompiler::inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op) {
+void JitCompiler::inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool isComplex) {
   // SSE4.1 implementation is easy except `round()`, which is not `roundeven()`.
   if (enableSSE4_1) {
     if (op == kOpRound) {
@@ -1067,7 +1100,20 @@ void JitCompiler::inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op)
     return;
   }
 
-  inlineCall(dst, &src, 1, (void*)(Arg1Func)mpRound);
+  //inlineCall(dst, &src, 1, (void*)(Arg1Func)mpRound);
+  inlieCallAbstract(dst, &src, 2, op, isComplex);
+}
+
+void JitCompiler::inlieCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool paramsAreComplex) {
+	if (paramsAreComplex) {
+		if (op == kOpReal)
+			inlineCallCRetD(dst, args, count, JitUtils::getFuncByOp(op));
+		else
+			inlineCallComplex(dst, args, count, JitUtils::getFuncByOp(op));
+	}
+	else {
+		inlineCall(dst, args, count, JitUtils::getFuncByOp(op));
+	}
 }
 
 void JitCompiler::inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn) {
@@ -1088,21 +1134,21 @@ void JitCompiler::inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t cou
     ctx->setArg(static_cast<uint32_t>(i), args[i]);
 }
 
-//! Calls a function with complex arguments and complex returns.
-void JitCompiler::inlineCallComplex(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
+//! Calls a function with complex arguments and noncomplex returns.
+void JitCompiler::inlineCallCRetD(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
 	size_t i;
 
-	uint32_t length = (count + 1) * 16;
+	uint32_t length = count * 16;
 
 	// copy the data to Memory.
-	X86Mem stack = cc->newStack(length, 16, "arguments");
+	X86Mem stack = cc->newStack(length, 16);
 	X86Gp ind = cc->newUIntPtr();
 	cc->lea(ind, stack);
 
 	for (i = 0; i < count; i++) 
 	{
-		stack.addOffset(16);
 		cc->movapd(stack, args[i]);
+		stack.addOffset(16);
 	}
 	stack.resetOffset();
 
@@ -1120,17 +1166,63 @@ void JitCompiler::inlineCallComplex(const X86Xmm& dst, const X86Xmm* args, const
 
 	// Use function builder to build a function prototype.
 	FuncSignatureX signature;
+	signature.setRetT<double>();
+	signature.addArgT<TypeId::UIntPtr>(); // functionpointer
+	signature.addArgT<TypeId::UIntPtr>(); // data
+
+	CCFuncCall* ctx;
+	// Create the function call.
+	ctx = cc->call((uint64_t)mpWrapComplexD, signature); 
+
+	ctx->setRet(0, dst);
+	ctx->setArg(0, _ptr);
+	ctx->setArg(1, ind);
+	
+	//cc->movapd(dst, stack);
+}
+
+void JitCompiler::inlineCallComplex(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
+	size_t i;
+
+	uint32_t length = (count + 1) * 16;
+
+	// copy the data to Memory.
+	X86Mem stack = cc->newStack(length, 16);
+	X86Gp ind = cc->newUIntPtr();
+	cc->lea(ind, stack);
+
+	for (i = 0; i < count; i++)
+	{
+		stack.addOffset(16);
+		cc->movapd(stack, args[i]);
+	}
+	stack.resetOffset();
+
+	X86Gp _ptr = cc->newUIntPtr();
+
+	if (CallConv::kIdHost == CallConv::kIdX86Win64) {
+		X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t)fn);
+		cc->mov(_ptr, function);
+	}
+	else {
+		X86Mem function = cc->newUInt32Const(kAstScopeGlobal, uint32_t((uint64_t)fn));
+		cc->mov(_ptr, function);
+	}
+
+
+	// Use function builder to build a function prototype.
+	FuncSignatureX signature;
 	signature.setRetT<void>();
 	signature.addArgT<TypeId::UIntPtr>();
 	signature.addArgT<TypeId::UIntPtr>();
 
 	CCFuncCall* ctx;
 	// Create the function call.
-	ctx = cc->call((uint64_t)mpWrapComplex, signature); 
+	ctx = cc->call((uint64_t)mpWrapComplex, signature);
 
 	ctx->setArg(0, _ptr);
 	ctx->setArg(1, ind);
-	
+
 	cc->movapd(dst, stack);
 }
 

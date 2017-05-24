@@ -167,6 +167,10 @@ namespace mathpresso {
 	static MATHPRESSO_INLINE void mpWrapComplex(std::complex<double>(*ptr)(std::complex<double> *), std::complex<double>* data) {
 		data[0] = ptr(data + 1);
 	}
+	static MATHPRESSO_INLINE double mpWrapComplexD(double(*ptr)(std::complex<double> *), std::complex<double>* data) {
+		return ptr(data);
+	}
+	static MATHPRESSO_INLINE double mpGetReal(std::complex<double> *arg) { return arg->real(); }
 
 } // mathpresso namespace
 

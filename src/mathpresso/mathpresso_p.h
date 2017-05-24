@@ -251,6 +251,9 @@ enum OpType {
   kOpAtan2,             // atan2(a, b)
   kOpHypot,             // hypot(a, b)
   kOpCopySign,          // copysign(a, b)
+
+  kOpReal,				// getReal(std::complex<double>)
+  kOpImag,				// getImag(std::complex<double>)
   
   kOpQMark,			    // b ? a : b
   kOpColon,

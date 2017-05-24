@@ -597,6 +597,7 @@ struct AstNode {
   MATHPRESSO_INLINE bool isVar() const { return _nodeType == kAstNodeVarDouble; }
   //! Get whether the node is `AstImm`.
   MATHPRESSO_INLINE bool isImm() const { return _nodeType == kAstNodeImm; }
+  MATHPRESSO_INLINE bool isImmComplex() const { return _nodeType == kAstNodeImmComplex; }
   //! Get whether the node wraps around a complex Value.
   MATHPRESSO_INLINE bool isComplex() const { return hasNodeFlag(kAstComplex); }
 
