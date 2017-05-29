@@ -121,6 +121,10 @@ typedef std::complex<double> (*argFuncC)(std::complex<double>*);
 
 typedef double (*argFuncCtoD)(std::complex<double>*);
 
+typedef std::complex<double>(*arg1FuncToC)(double);
+typedef std::complex<double>(*arg2FuncToC)(double, double);
+typedef std::complex<double>(*arg3FuncToC)(double, double, double);
+
 // ============================================================================
 // [mathpresso::ErrorCode]
 // ============================================================================
@@ -280,8 +284,8 @@ struct Context {
   MATHPRESSO_API Error addVariable(const char* name, int offset, unsigned int flags = kVariableRW);
   MATHPRESSO_API Error addVariableComplex(const char * name, int offset, unsigned int flags = kVariableRW);
   //! Add function to this context.
-  MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags);
-  MATHPRESSO_API Error addFunctionComplex(const char * name, void * fn, unsigned int flags);
+  MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags, bool returnsComplex = false);
+  MATHPRESSO_API Error addFunctionComplex(const char * name, void * fn, unsigned int flags, bool returnsComplex = true);
 
   //! Delete symbol from this context.
   MATHPRESSO_API Error delSymbol(const char* name);

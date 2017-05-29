@@ -196,7 +196,8 @@ Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
 	  AstImmComplex * child = static_cast<AstImmComplex*> (node->getChild());
 	  std::complex<double> value = child->getValue();
 	  switch (node->getOp()) {
-	  case kOpReal: value = mpGetReal(&value); break;
+	  case kOpReal: value = mpGetReal(&value); node->getParent()->removeNodeFlags(kAstComplex); break;
+	  case kOpImag: value = mpGetImag(&value); node->getParent()->removeNodeFlags(kAstComplex); break;
 	  default:
 		  return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 			  "Invalid unary operation with complex parameters and real result '%s'.", op.name);
@@ -476,7 +477,10 @@ Error AstOptimizer::onCall(AstCall* node) {
 
   if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
 	  node->addNodeFlags(kAstComplex);
-	  node->getParent()->addNodeFlags(kAstComplex);
+	  
+	  if (sym->hasSymbolFlag(kAstSymbolReturnsComplex))
+		  node->getParent()->addNodeFlags(kAstComplex);
+
 	  for (i = 0; i < count; i++) {
 		  AstNode *tmp = node->getAt(i);
 		  if (tmp->isImm()) {
@@ -524,13 +528,20 @@ Error AstOptimizer::onCall(AstCall* node) {
     _ast->deleteNode(node);
   }
   else if (allConstComplex && count < 9) {
-	  std::complex<double> argsdouble[9];
+	  std::complex<double> argsComplex[9];
 	  for (i = 0; i < count; i++) {
-		  argsdouble[i] = static_cast<AstImmComplex*>(node->getChildren()[i])->getValue();
+		  argsComplex[i] = static_cast<AstImmComplex*>(node->getChildren()[i])->getValue();
 	  }
-	  std::complex<double> result = ((argFuncC)sym->getFuncPtr())(argsdouble);
-	  AstNode* replacement = _ast->newNode<AstImmComplex>(result);
-	  node->getParent()->replaceNode(node, replacement);
+	  if (sym->hasSymbolFlag(kAstSymbolReturnsComplex)) {
+		  std::complex<double> result = ((argFuncC)sym->getFuncPtr())(argsComplex);
+		  AstNode* replacement = _ast->newNode<AstImmComplex>(result);
+		  node->getParent()->replaceNode(node, replacement);
+	  }
+	  else {
+		  double result = ((argFuncCtoD)sym->getFuncPtr())(argsComplex);
+		  AstNode* replacement = _ast->newNode<AstImm>(result);
+		  node->getParent()->replaceNode(node, replacement);
+	  }
 	  _ast->deleteNode(node);
   }
 

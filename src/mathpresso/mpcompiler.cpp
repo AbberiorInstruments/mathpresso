@@ -69,6 +69,7 @@ struct JitUtils {
       case kOpHypot    : return (void*)(Arg2Func)hypot;
       case kOpCopySign : return (void*)(Arg2Func)mpCopySign;
 	  case kOpReal     : return (void*)(argFuncCtoD)mpGetReal;
+	  case kOpImag	   : return (void*)(argFuncCtoD)mpGetImag;
 	  //case kOpAddC     : return (void*)(Arg2FuncC)mpAddC;
 
       default:
@@ -935,10 +936,10 @@ JitVar JitCompiler::onCallComp(AstCall* node) {
 	for (i = 0; i < count; i++) {
 		args[i] = registerVarComplex(onNode(node->getAt(i)), node->getAt(i)->hasNodeFlag(kAstComplex)).getXmm();
 	}
-	if (sym->getName() =="getReal" || sym->getName() ==  "getImag")
-		inlineCallCRetD(result, args, count, sym->getFuncPtr());
-	else
+	if (sym->hasSymbolFlag(kAstSymbolReturnsComplex))
 		inlineCallComplex(result, args, count, sym->getFuncPtr());
+	else
+		inlineCallCRetD(result, args, count, sym->getFuncPtr());
 
 	return JitVar(result, JitVar::FLAG_NONE);
 }

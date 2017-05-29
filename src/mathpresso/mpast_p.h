@@ -89,6 +89,7 @@ enum AstSymbolFlags {
   //! The symbol (variable) is read-only.
   kAstSymbolIsReadOnly = 0x0008,
 
+
   //! The variable has been altered (written), at least once.
   //!
   //! Currently only useful for global variables so the JIT compiler can
@@ -97,7 +98,10 @@ enum AstSymbolFlags {
 
 
   //! The variable is a complex value.
-  kAstSymbolIsComplex = 0x0020
+  kAstSymbolIsComplex = 0x0020,
+
+  // The symbol returns a complex value
+  kAstSymbolReturnsComplex = 0x00040
 };
 
 // ============================================================================

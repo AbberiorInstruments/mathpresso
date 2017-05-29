@@ -172,6 +172,8 @@ namespace mathpresso {
 	}
 	static MATHPRESSO_INLINE double mpGetReal(std::complex<double> *arg) { return arg->real(); }
 
+	static MATHPRESSO_INLINE double mpGetImag(std::complex<double> *arg) { return arg->real(); }
+
 } // mathpresso namespace
 
 #endif // _MATHPRESSO_MPEVAL_P_H
