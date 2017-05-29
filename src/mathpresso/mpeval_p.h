@@ -157,9 +157,6 @@ namespace mathpresso {
 	// Complex functions:
 	//complexe funktionen geben komplexe ergebnisse zurück, also 2 double
 
-	static MATHPRESSO_INLINE std::complex<double> mpAddC(std::complex<double> *x) {
-		return x[0] + x[1];
-	}
 
 	//! Used to call a cpp-function from within the assembler.
 	//! the result can be read from data at index 0, arguments are at index 1, 2, ...
@@ -169,10 +166,15 @@ namespace mathpresso {
 	}
 	static MATHPRESSO_INLINE double mpWrapComplexD(double(*ptr)(std::complex<double> *), std::complex<double>* data) {
 		return ptr(data);
+	}	
+	static MATHPRESSO_INLINE void mpWrapDoubleC(std::complex<double>(*ptr)(double *), std::complex<double>* ret, double* data) {
+		*ret = ptr(data);
 	}
+	
 	static MATHPRESSO_INLINE double mpGetReal(std::complex<double> *arg) { return arg->real(); }
+	static MATHPRESSO_INLINE double mpGetImag(std::complex<double> *arg) { return arg->imag(); }
 
-	static MATHPRESSO_INLINE double mpGetImag(std::complex<double> *arg) { return arg->real(); }
+	static MATHPRESSO_INLINE std::complex<double> mpSqrtC(double *arg) { return sqrt(std::complex<double>(*arg, 0)); }
 
 } // mathpresso namespace
 

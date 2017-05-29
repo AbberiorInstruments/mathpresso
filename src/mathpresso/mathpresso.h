@@ -117,13 +117,12 @@ typedef double (*Arg6Func)(double, double, double, double, double, double);
 typedef double (*Arg7Func)(double, double, double, double, double, double, double);
 typedef double (*Arg8Func)(double, double, double, double, double, double, double, double);
 
-typedef std::complex<double> (*argFuncC)(std::complex<double>*);
+typedef std::complex<double> (*ArgFuncC)(std::complex<double>*);
 
-typedef double (*argFuncCtoD)(std::complex<double>*);
+typedef double (*ArgFuncCtoD)(std::complex<double>*);
 
-typedef std::complex<double>(*arg1FuncToC)(double);
-typedef std::complex<double>(*arg2FuncToC)(double, double);
-typedef std::complex<double>(*arg3FuncToC)(double, double, double);
+typedef std::complex<double>(*ArgFuncDtoC)(double*);
+
 
 // ============================================================================
 // [mathpresso::ErrorCode]
@@ -350,7 +349,7 @@ struct Expression {
 	  double result;
 	  _func(&result, data);
 	  return result;
-  }
+   }
 
   //! Evaluates expression with variable substitutions.
   //!

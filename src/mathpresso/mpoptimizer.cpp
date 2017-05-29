@@ -132,64 +132,79 @@ Error AstOptimizer::onImmComp(AstImmComplex* node) {
 Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
   const OpInfo& op = OpInfo::get(node->getOp());
 
-  if (node->hasNodeFlag(kAstComplex)) {
+  if (node->hasNodeFlag(kAstComplex)|| op.returnsComplex()) {
 	  node->getParent()->addNodeFlags(kAstComplex);
   }
 
-
-
   MATHPRESSO_PROPAGATE(onNode(node->getChild()));
   AstNode* child = node->getChild();
+  if (child->hasNodeFlag(kAstComplex) && !node->hasNodeFlag(kAstComplex)) {
+	  return _errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
+		  "Operator '%s' wnats a noncomplex Parameter, but gets a complex one.", op.name);
+  }
 
   if (child->isImm()) {
-    AstImm* child = static_cast<AstImm*>(node->getChild());
-    double value = child->getValue();
 
-    switch (node->getOp()) {
-      case kOpNeg      : value = -value; break;
-      case kOpNot      : value = (value == 0); break;
+	  if (!op.returnsComplex()) {
+		  AstImm* child = static_cast<AstImm*>(node->getChild());
+		  double value = child->getValue();
 
-      case kOpIsNan    : value = mpIsNan(value); break;
-      case kOpIsInf    : value = mpIsInf(value); break;
-      case kOpIsFinite : value = mpIsFinite(value); break;
-      case kOpSignBit  : value = mpSignBit(value); break;
 
-      case kOpRound    : value = mpRound(value); break;
-      case kOpRoundEven: value = mpRoundEven(value); break;
-      case kOpTrunc    : value = mpTrunc(value); break;
-      case kOpFloor    : value = mpFloor(value); break;
-      case kOpCeil     : value = mpCeil(value); break;
 
-      case kOpAbs      : value = mpAbs(value); break;
-      case kOpExp      : value = mpExp(value); break;
-      case kOpLog      : value = mpLog(value); break;
-      case kOpLog2     : value = mpLog2(value); break;
-      case kOpLog10    : value = mpLog10(value); break;
-      case kOpSqrt     : value = mpSqrt(value); break;
-      case kOpFrac     : value = mpFrac(value); break;
-      case kOpRecip    : value = mpRecip(value); break;
+		  switch (node->getOp()) {
+		  case kOpNeg: value = -value; break;
+		  case kOpNot: value = (value == 0); break;
 
-      case kOpSin      : value = mpSin(value); break;
-      case kOpCos      : value = mpCos(value); break;
-      case kOpTan      : value = mpTan(value); break;
+		  case kOpIsNan: value = mpIsNan(value); break;
+		  case kOpIsInf: value = mpIsInf(value); break;
+		  case kOpIsFinite: value = mpIsFinite(value); break;
+		  case kOpSignBit: value = mpSignBit(value); break;
 
-      case kOpSinh     : value = mpSinh(value); break;
-      case kOpCosh     : value = mpCosh(value); break;
-      case kOpTanh     : value = mpTanh(value); break;
+		  case kOpRound: value = mpRound(value); break;
+		  case kOpRoundEven: value = mpRoundEven(value); break;
+		  case kOpTrunc: value = mpTrunc(value); break;
+		  case kOpFloor: value = mpFloor(value); break;
+		  case kOpCeil: value = mpCeil(value); break;
 
-      case kOpAsin     : value = mpAsin(value); break;
-      case kOpAcos     : value = mpAcos(value); break;
-      case kOpAtan     : value = mpAtan(value); break;
+		  case kOpAbs: value = mpAbs(value); break;
+		  case kOpExp: value = mpExp(value); break;
+		  case kOpLog: value = mpLog(value); break;
+		  case kOpLog2: value = mpLog2(value); break;
+		  case kOpLog10: value = mpLog10(value); break;
+		  case kOpSqrt: value = mpSqrt(value); break;
+		  case kOpFrac: value = mpFrac(value); break;
+		  case kOpRecip: value = mpRecip(value); break;
 
-      default:
-        return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-          "Invalid unary operation '%s'.", op.name);
-    }
-	child->setValue(value);
+		  case kOpSin: value = mpSin(value); break;
+		  case kOpCos: value = mpCos(value); break;
+		  case kOpTan: value = mpTan(value); break;
 
-    node->unlinkChild();
-    node->getParent()->replaceNode(node, child);
+		  case kOpSinh: value = mpSinh(value); break;
+		  case kOpCosh: value = mpCosh(value); break;
+		  case kOpTanh: value = mpTanh(value); break;
 
+		  case kOpAsin: value = mpAsin(value); break;
+		  case kOpAcos: value = mpAcos(value); break;
+		  case kOpAtan: value = mpAtan(value); break;
+
+		  default:
+			  return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+				  "Invalid unary operation '%s'.", op.name);
+		  }
+		  child->setValue(value);
+
+		  node->unlinkChild();
+		  node->getParent()->replaceNode(node, child);
+	  }
+	  else {
+		  double operand = static_cast<AstImm*>(node->getChild())->getValue();
+		  std::complex<double> value(0, 0);
+		  switch (node->getOp()) {
+		  case kOpSqrtC: value = mpSqrtC(&operand);
+		  }
+		  AstImmComplex* replacement = _ast->newNode<AstImmComplex>(value);
+		  node->getParent()->replaceNode(node, replacement);
+	  }
     _ast->deleteNode(node);
   } 
   else if (child->isImmComplex()) {
@@ -200,7 +215,7 @@ Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
 	  case kOpImag: value = mpGetImag(&value); node->getParent()->removeNodeFlags(kAstComplex); break;
 	  default:
 		  return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-			  "Invalid unary operation with complex parameters and real result '%s'.", op.name);
+			  "Invalid unary operation with complex parameters '%s'.", op.name);
 	  }
 	  child->setValue(value);
 
@@ -316,6 +331,10 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 	bool rIsImm = right->isImm();
 
 	if (!(node->hasNodeFlag(kAstComplex))) {
+		if (left->hasNodeFlag(kAstComplex) || right->hasNodeFlag(kAstComplex))
+			return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+				"Expect noncomplex parameters for operation '%s'.", op.name);
+
 		// If both nodes are values it's easy, just fold them into a single one.
 		if (lIsImm && rIsImm) {
 			AstImm* lNode = static_cast<AstImm*>(left);
@@ -478,9 +497,6 @@ Error AstOptimizer::onCall(AstCall* node) {
   if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
 	  node->addNodeFlags(kAstComplex);
 	  
-	  if (sym->hasSymbolFlag(kAstSymbolReturnsComplex))
-		  node->getParent()->addNodeFlags(kAstComplex);
-
 	  for (i = 0; i < count; i++) {
 		  AstNode *tmp = node->getAt(i);
 		  if (tmp->isImm()) {
@@ -493,7 +509,11 @@ Error AstOptimizer::onCall(AstCall* node) {
 			  tmp->addNodeFlags(kAstComplex);
 		  }
 	  }
-  }
+  } 
+
+  if (sym->hasSymbolFlag(kAstSymbolReturnsComplex))
+	  node->getParent()->addNodeFlags(kAstComplex);
+
 
   bool allConst = true;
   bool allConstComplex = true;;
@@ -507,24 +527,35 @@ Error AstOptimizer::onCall(AstCall* node) {
     AstImm** args = reinterpret_cast<AstImm**>(node->getChildren());
 
     void* fn = sym->getFuncPtr();
-    double result = 0.0;
-
+	if (!sym->hasSymbolFlag(kAstSymbolReturnsComplex)) {
+		double result = 0.0;
 #define ARG(n) args[n]->getValue()
-    switch (count) {
-      case 0: result = ((Arg0Func)fn)(); break;
-      case 1: result = ((Arg1Func)fn)(ARG(0)); break;
-      case 2: result = ((Arg2Func)fn)(ARG(0), ARG(1)); break;
-      case 3: result = ((Arg3Func)fn)(ARG(0), ARG(1), ARG(2)); break;
-      case 4: result = ((Arg4Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3)); break;
-      case 5: result = ((Arg5Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4)); break;
-      case 6: result = ((Arg6Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5)); break;
-      case 7: result = ((Arg7Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5), ARG(6)); break;
-      case 8: result = ((Arg8Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5), ARG(6), ARG(7)); break;
-    }
+		switch (count) {
+		case 0: result = ((Arg0Func)fn)(); break;
+		case 1: result = ((Arg1Func)fn)(ARG(0)); break;
+		case 2: result = ((Arg2Func)fn)(ARG(0), ARG(1)); break;
+		case 3: result = ((Arg3Func)fn)(ARG(0), ARG(1), ARG(2)); break;
+		case 4: result = ((Arg4Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3)); break;
+		case 5: result = ((Arg5Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4)); break;
+		case 6: result = ((Arg6Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5)); break;
+		case 7: result = ((Arg7Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5), ARG(6)); break;
+		case 8: result = ((Arg8Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5), ARG(6), ARG(7)); break;
+		}
 #undef ARG
 
-    AstNode* replacement = _ast->newNode<AstImm>(result);
-    node->getParent()->replaceNode(node, replacement);
+		AstNode* replacement = _ast->newNode<AstImm>(result);
+		node->getParent()->replaceNode(node, replacement);
+	}
+	else  if (count <= 3) {
+		double argsDouble[9];
+		for (i = 0; i < count; i++) {
+			argsDouble[i] = static_cast<AstImm*>(node->getChildren()[i])->getValue();
+		}
+		std::complex<double> result(0.0,0.0);
+		result = ((ArgFuncDtoC)sym->getFuncPtr())(argsDouble);
+		AstNode* replacement = _ast->newNode<AstImmComplex>(result);
+		node->getParent()->replaceNode(node, replacement);
+	}
     _ast->deleteNode(node);
   }
   else if (allConstComplex && count < 9) {
@@ -533,12 +564,12 @@ Error AstOptimizer::onCall(AstCall* node) {
 		  argsComplex[i] = static_cast<AstImmComplex*>(node->getChildren()[i])->getValue();
 	  }
 	  if (sym->hasSymbolFlag(kAstSymbolReturnsComplex)) {
-		  std::complex<double> result = ((argFuncC)sym->getFuncPtr())(argsComplex);
+		  std::complex<double> result = ((ArgFuncC)sym->getFuncPtr())(argsComplex);
 		  AstNode* replacement = _ast->newNode<AstImmComplex>(result);
 		  node->getParent()->replaceNode(node, replacement);
 	  }
 	  else {
-		  double result = ((argFuncCtoD)sym->getFuncPtr())(argsComplex);
+		  double result = ((ArgFuncCtoD)sym->getFuncPtr())(argsComplex);
 		  AstNode* replacement = _ast->newNode<AstImm>(result);
 		  node->getParent()->replaceNode(node, replacement);
 	  }

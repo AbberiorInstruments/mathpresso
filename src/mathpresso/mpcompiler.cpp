@@ -68,9 +68,10 @@ struct JitUtils {
       case kOpAtan2    : return (void*)(Arg2Func)atan2;
       case kOpHypot    : return (void*)(Arg2Func)hypot;
       case kOpCopySign : return (void*)(Arg2Func)mpCopySign;
-	  case kOpReal     : return (void*)(argFuncCtoD)mpGetReal;
-	  case kOpImag	   : return (void*)(argFuncCtoD)mpGetImag;
-	  //case kOpAddC     : return (void*)(Arg2FuncC)mpAddC;
+	  case kOpReal     : return (void*)(ArgFuncCtoD)mpGetReal;
+	  case kOpImag	   : return (void*)(ArgFuncCtoD)mpGetImag;
+	  case kOpSqrtC    : return (void*)(ArgFuncDtoC)mpSqrtC;
+		  //case kOpAddC     : return (void*)(Arg2FuncC)mpAddC;
 
       default:
         MATHPRESSO_ASSERT_NOT_REACHED();
@@ -180,6 +181,7 @@ struct MATHPRESSO_NOAPI JitCompiler {
   void inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool isComplex);
   void inlieCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool paramsAreComplex);
   void inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn);
+  void inlineCallDRetC(const X86Xmm & dst, const X86Xmm * args, uint32_t count, void * fn);
   void inlineCallCRetD(const X86Xmm & dst, const X86Xmm * args, const uint32_t count, void * fn);
   void inlineCallComplex(const X86Xmm & dst, const X86Xmm * args, uint32_t count, void * fn);
 
@@ -630,12 +632,7 @@ JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
 	  args[0] = registerVar(var).getXmm();
   }
 
-  //if (node->hasNodeFlag(kAstComplex)) {
-	//  inlineCallComplex(result, args, 1, JitUtils::getFuncByOp(op));
-  //}
-  //else {
-	//  inlineCall(result, args, 1, JitUtils::getFuncByOp(op));
-  //}
+
   inlieCallAbstract(result, args, 1, op, node->hasNodeFlag(kAstComplex));
   return JitVar(result, JitVar::FLAG_NONE);
 }
@@ -827,12 +824,7 @@ emitInst: {
 	  args[0] = registerVar(vl).getXmm();
 	  args[1] = registerVar(vr).getXmm();
   }
-  //X86Xmm args[2] = { registerVar(vl).getXmm(), registerVar(vr).getXmm() };
-  //if (node->hasNodeFlag(kAstComplex)) {
-	//  inlineCallComplex(result, args, 2, JitUtils::getFuncByOp(op));
-  //}else {
-	//  inlineCall(result, args, 2, JitUtils::getFuncByOp(op));
-  //}
+
   inlieCallAbstract(result, args, 2, op, node->hasNodeFlag(kAstComplex));
 
   return JitVar(result, JitVar::FLAG_NONE);
@@ -915,13 +907,19 @@ JitVar JitCompiler::onCall(AstCall* node) {
 	uint32_t i, count = node->getLength();
 	AstSymbol* sym = node->getSymbol();
 
-	X86Xmm result = cc->newXmmSd();
+	X86Xmm result = sym->hasSymbolFlag(kAstSymbolReturnsComplex) ? cc->newXmmPd() : cc->newXmmSd();
 	X86Xmm args[8];
 
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		args[i] = registerVar(onNode(node->getAt(i))).getXmm();
+	}
+	if (sym->hasSymbolFlag(kAstSymbolReturnsComplex)) {
 
-	inlineCall(result, args, count, sym->getFuncPtr());
+	}
+	if (sym->hasSymbolFlag(kAstSymbolReturnsComplex))
+		inlineCallDRetC(result, args, count, sym->getFuncPtr());
+	else 
+		inlineCall(result, args, count, sym->getFuncPtr());
 	return JitVar(result, JitVar::FLAG_NONE);
 }
 
@@ -929,8 +927,7 @@ JitVar JitCompiler::onCallComp(AstCall* node) {
 	uint32_t i, count = node->getLength();
 	AstSymbol* sym = node->getSymbol();
 
-	node->addNodeFlags(kAstComplex);
-	X86Xmm result = cc->newXmmPd();
+	X86Xmm result = sym->hasSymbolFlag(kAstSymbolReturnsComplex)? cc->newXmmPd(): cc->newXmmSd();
 	X86Xmm args[8];
 
 	for (i = 0; i < count; i++) {
@@ -1107,13 +1104,17 @@ void JitCompiler::inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op,
 
 void JitCompiler::inlieCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool paramsAreComplex) {
 	if (paramsAreComplex) {
-		if (op == kOpReal)
-			inlineCallCRetD(dst, args, count, JitUtils::getFuncByOp(op));
-		else
+		if (OpInfo::get(op).returnsComplex())
 			inlineCallComplex(dst, args, count, JitUtils::getFuncByOp(op));
+		else
+			inlineCallCRetD(dst, args, count, JitUtils::getFuncByOp(op));
 	}
 	else {
-		inlineCall(dst, args, count, JitUtils::getFuncByOp(op));
+		if (OpInfo::get(op).returnsComplex())
+			inlineCallDRetC(dst, args, count, JitUtils::getFuncByOp(op));
+		else
+			inlineCall(dst, args, count, JitUtils::getFuncByOp(op));
+			
 	}
 }
 
@@ -1133,6 +1134,59 @@ void JitCompiler::inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t cou
 
   for (i = 0; i < count; i++)
     ctx->setArg(static_cast<uint32_t>(i), args[i]);
+}
+
+void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn) {
+	size_t i;
+
+	uint32_t length = count * sizeof(double);
+
+	// copy the params to Memory.
+	X86Mem stack = cc->newStack(length, sizeof(double));
+	X86Gp dataPointerReg = cc->newUIntPtr();
+	cc->lea(dataPointerReg, stack);
+
+	// allocate Memory for the return
+	X86Mem ret = cc->newStack(16, 16);
+	X86Gp retReg = cc->newUIntPtr();
+	cc->lea(retReg, ret);
+
+	for (i = 0; i < count; i++)
+	{
+		cc->movsd(stack, args[i]);
+		stack.addOffset(sizeof(double));
+	}
+	stack.resetOffset();
+
+
+	X86Gp _ptr = cc->newUIntPtr();
+
+	if (CallConv::kIdHost == CallConv::kIdX86Win64) {
+		X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t)fn);
+		cc->mov(_ptr, function);
+	}
+	else {
+		X86Mem function = cc->newUInt32Const(kAstScopeGlobal, uint32_t((uint64_t)fn));
+		cc->mov(_ptr, function);
+	}
+
+
+	// Use function builder to build a function prototype.
+	FuncSignatureX signature;
+	signature.setRetT<void>();
+	signature.addArgT<TypeId::UIntPtr>(); // functionpointer
+	signature.addArgT<TypeId::UIntPtr>(); // pointer to the return
+	signature.addArgT<double>(); // params
+
+	CCFuncCall* ctx;
+	// Create the function call.
+	ctx = cc->call((uint64_t)mpWrapDoubleC, signature);
+
+	ctx->setArg(0, _ptr);
+	ctx->setArg(1, retReg);
+	ctx->setArg(2, dataPointerReg);
+
+	cc->movapd(dst, ret);
 }
 
 //! Calls a function with complex arguments and noncomplex returns.
