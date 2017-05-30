@@ -129,21 +129,24 @@ Error AstOptimizer::onImmComp(AstImmComplex* node) {
 	return kErrorOk;
 }
 
-Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
+Error AstOptimizer::onUnaryOp(AstUnaryOp* node) 
+{
   const OpInfo& op = OpInfo::get(node->getOp());
 
-  if (node->hasNodeFlag(kAstComplex)|| op.returnsComplex()) {
+  if (node->hasNodeFlag(kAstComplex)|| op.returnsComplex()) 
+  {
 	  node->getParent()->addNodeFlags(kAstComplex);
   }
 
   MATHPRESSO_PROPAGATE(onNode(node->getChild()));
   AstNode* child = node->getChild();
-  if (child->hasNodeFlag(kAstComplex) && !node->hasNodeFlag(kAstComplex)) {
-	  return _errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
-		  "Operator '%s' wnats a noncomplex Parameter, but gets a complex one.", op.name);
-  }
+  //if (child->hasNodeFlag(kAstComplex) && !node->hasNodeFlag(kAstComplex)) {
+//	  return _errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
+//		  "Operator '%s' wnats a noncomplex Parameter, but gets a complex one.", op.name);
+  //}
 
-  if (child->isImm()) {
+  if (child->isImm()) 
+  {
 
 	  if (!op.returnsComplex()) {
 		  AstImm* child = static_cast<AstImm*>(node->getChild());
@@ -200,7 +203,10 @@ Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
 		  double operand = static_cast<AstImm*>(node->getChild())->getValue();
 		  std::complex<double> value(0, 0);
 		  switch (node->getOp()) {
-		  case kOpSqrtC: value = mpSqrtC(&operand);
+		  case kOpSqrtC: value = mpSqrtC(&operand); break;
+		  default:
+			  return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+				  "invalid unary operation '%s'.", op.name);
 		  }
 		  AstImmComplex* replacement = _ast->newNode<AstImmComplex>(value);
 		  node->getParent()->replaceNode(node, replacement);
@@ -226,7 +232,7 @@ Error AstOptimizer::onUnaryOp(AstUnaryOp* node) {
   }
   else if (child->getNodeType() == kAstNodeUnaryOp && node->getOp() == child->getOp()) {
     // Simplify `-(-(x))` -> `x`.
-    if (node->getOp() == kOpNeg) {
+    if (node->getOp() == kOpNeg || node->getOp() == kOpConjug) {
       AstNode* childOfChild = static_cast<AstUnaryOp*>(child)->unlinkChild();
       node->getParent()->replaceNode(node, childOfChild);
       _ast->deleteNode(node);
@@ -271,6 +277,10 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 		AstNode* branchLeft = lastColon->getLeft();
 		AstNode* branchRight = lastColon->getRight();
 
+		if (!OpInfo::get(branchCondition->getOp()).isCondition()) {
+			return _errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
+				"Not a condition.");
+		}
 		// remove branchCondition from the ast
 		node->setLeft(NULL);
 		branchCondition->_parent = NULL;
@@ -414,6 +424,15 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 	}
 	else {
 		node->getParent()->addNodeFlags(kAstComplex);
+		if (node->getOp() == kOpDiv) {
+			AstUnaryOp* conj = _ast->newNode<AstUnaryOp>(kOpConjug);
+			conj->addNodeFlags(kAstComplex);
+			node->unlinkRight();
+			conj->setChild(right);
+			node->setRight(conj);
+			node->setOp(kOpMul);
+			right = node->getRight();
+		}
 
 		// if we have to calculate in complex, and one of the operands is an immediate, it should be converted to complex.
 		if (left->isImm()) {
@@ -434,10 +453,15 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 		}
 
 		// adition for immediate complex values.
-		if (node->getOp() == kOpAdd && left->isImmComplex() && right->isImmComplex()) {
+		if ((node->getOp() == kOpAdd || node->getOp() == kOpMul ) && left->isImmComplex() && right->isImmComplex()) {
 			AstImmComplex* lNode = static_cast<AstImmComplex*>(left);
 			AstImmComplex* rNode = static_cast<AstImmComplex*>(right);
-			std::complex<double> result = rNode->getValue() + lNode->getValue();
+
+			std::complex<double> result;
+			switch (node->getOp()) {
+			case kOpAdd: result = rNode->getValue() + lNode->getValue(); break;
+			case kOpMul: result = rNode->getValue() * lNode->getValue(); break;
+			}
 
 			rNode->setValue(result);
 			node->unlinkRight();
@@ -445,6 +469,7 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 
 			_ast->deleteNode(node);
 		}
+
 	}
 
 	return kErrorOk;

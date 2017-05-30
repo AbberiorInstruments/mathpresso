@@ -343,8 +343,7 @@ struct Expression {
   //! Returns the result of the evaluated expression, NaN otherwise.
   MATHPRESSO_INLINE double evaluate(void* data) const {
 	  if (_isComplex) {
-		  std::cerr << "there is no noncomplex result.";
-		  throw;
+		  return NAN;
 	  }
 	  double result;
 	  _func(&result, data);

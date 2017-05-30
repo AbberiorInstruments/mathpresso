@@ -618,7 +618,14 @@ JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
     case kOpAcos:
     case kOpAtan:
       break;
+	case kOpConjug:
+		JitVar result = registerVarComplex(var, node->getChild()->isComplex());
+
+		node->getParent()->addNodeFlags(kAstComplex);
+		cc->pxor(result.getXmm(), getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000)).getMem());
+		return result;
   }
+
 
   // No inline implementation -> function call.
   X86Xmm result;
@@ -913,9 +920,7 @@ JitVar JitCompiler::onCall(AstCall* node) {
 	for (i = 0; i < count; i++) {
 		args[i] = registerVar(onNode(node->getAt(i))).getXmm();
 	}
-	if (sym->hasSymbolFlag(kAstSymbolReturnsComplex)) {
-
-	}
+	
 	if (sym->hasSymbolFlag(kAstSymbolReturnsComplex))
 		inlineCallDRetC(result, args, count, sym->getFuncPtr());
 	else 
