@@ -17,7 +17,7 @@ endif()
 # =============================================================================
 
 set(MATHPRESSO_DIR         "${CMAKE_CURRENT_LIST_DIR}"   CACHE PATH "Location of 'mathpresso'")
-set(ASMJIT_DIR             "${MATHPRESSO_DIR}/../../asmjit-0.0/asmjit" CACHE PATH "Location of 'asmjit'")
+set(ASMJIT_DIR             "${MATHPRESSO_DIR}/../asmjit" CACHE PATH "Location of 'asmjit'")
 
 set(MATHPRESSO_EMBED       FALSE               CACHE BOOLEAN "Embed 'mathpresso' library (no targets)")
 set(MATHPRESSO_STATIC      ${MATHPRESSO_EMBED} CACHE BOOLEAN "Build 'mathpresso' library as static")
