@@ -1176,7 +1176,7 @@ void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, uint32_
 	signature.setRetT<void>();
 	signature.addArgT<TypeId::UIntPtr>(); // functionpointer
 	signature.addArgT<TypeId::UIntPtr>(); // pointer to the return
-	signature.addArgT<double>(); // params
+	signature.addArgT<TypeId::UIntPtr>(); // params
 
 	CCFuncCall* ctx;
 	// Create the function call.
