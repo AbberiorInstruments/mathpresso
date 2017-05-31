@@ -620,8 +620,6 @@ JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
       break;
 	case kOpConjug:
 		JitVar result = registerVarComplex(var, node->getChild()->isComplex());
-
-		node->getParent()->addNodeFlags(kAstComplex);
 		cc->pxor(result.getXmm(), getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000)).getMem());
 		return result;
   }
@@ -677,7 +675,7 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 	
 	JitVar vl, vr;
 
-	if (node->hasNodeFlag(kAstComplex) && ( op == kOpAdd || op == kOpMul)) {
+	if (node->hasNodeFlag(kAstComplex) && ( op == kOpAdd || op == kOpMul || op == kOpDiv)) {
 		if (left->getNodeType() == kAstNodeVarComplex &&
 			right->getNodeType() == kAstNodeVarComplex &&
 			static_cast<AstVarComplex*>(left)->getSymbol() == static_cast<AstVarComplex*>(right)->getSymbol()) 
@@ -691,7 +689,7 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 				vl = registerVarAsComplex(vl);
 			if (!right->isComplex())
 				vr = registerVarAsComplex(vr);
-			if (vl.isRO() && !vr.isRO())
+			if (vl.isRO() && !vr.isRO() && op != kOpDiv)
 				vl.swapWith(vr);
 
 			vl = writableVarComplex(vl);
@@ -715,14 +713,33 @@ JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
 			else {
 				vr = writableVarComplex(vr);
 			}
+			JitVar negateImag = getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000));
 			
 			// this shouldnt be optimisable:
-			cc->movapd(ret.getXmm(), vl.getXmm());
-			cc->mulpd(ret.getXmm(), vr.getXmm());
-			cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
-			cc->pxor(vr.getXmm(), getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000)).getMem());
-			cc->mulpd(vl.getXmm(), vr.getXmm());
-			cc->hsubpd(ret.getXmm(), vl.getXmm());
+			if (op == kOpMul) {
+				cc->movapd(ret.getXmm(), vl.getXmm());
+				cc->mulpd(ret.getXmm(), vr.getXmm());
+				cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
+				cc->pxor(vr.getXmm(), negateImag.getMem());
+				cc->mulpd(vl.getXmm(), vr.getXmm());
+				cc->hsubpd(ret.getXmm(), vl.getXmm());
+			}
+			else {
+				
+				cc->pxor(vr.getXmm(), negateImag.getMem());
+								
+				cc->movapd(ret.getXmm(), vl.getXmm());
+				cc->mulpd(ret.getXmm(), vr.getXmm());
+				cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
+				cc->pxor(vr.getXmm(), negateImag.getMem());
+				cc->mulpd(vl.getXmm(), vr.getXmm());
+				cc->hsubpd(ret.getXmm(), vl.getXmm());
+
+				cc->mulpd(vr.getXmm(), vr.getXmm());
+				cc->haddpd(vr.getXmm(), vr.getXmm());
+				cc->divpd(ret.getXmm(), vr.getXmm());
+				
+			}
 			return ret;
 		}
 		

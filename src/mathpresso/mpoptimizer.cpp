@@ -425,13 +425,13 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 	else {
 		node->getParent()->addNodeFlags(kAstComplex);
 		if (node->getOp() == kOpDiv) {
-			AstUnaryOp* conj = _ast->newNode<AstUnaryOp>(kOpConjug);
-			conj->addNodeFlags(kAstComplex);
-			node->unlinkRight();
-			conj->setChild(right);
-			node->setRight(conj);
-			node->setOp(kOpMul);
-			right = node->getRight();
+			//AstUnaryOp* conj = _ast->newNode<AstUnaryOp>(kOpConjug);
+			//conj->addNodeFlags(kAstComplex);
+			//node->unlinkRight();
+			//conj->setChild(right);
+			//node->setRight(conj);
+			//node->setOp(kOpMul);
+			//right = node->getRight();
 		}
 
 		// if we have to calculate in complex, and one of the operands is an immediate, it should be converted to complex.
