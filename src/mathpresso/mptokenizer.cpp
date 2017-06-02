@@ -161,8 +161,6 @@ uint32_t Tokenizer::next(Token* token) {
   uint32_t c = _token.token;
   uint32_t hVal;
 
-  //std::cout << "test";
-
   if (c != kTokenInvalid) {
     *token = _token;
     _token.token = kTokenInvalid;
@@ -215,7 +213,7 @@ _Repeat:
         break;
     }
 
-    // Parse significand.
+    // Parse significant.
     size_t scale = 0;
     while (p != pEnd) {
       c = static_cast<uint32_t>(p[0]) - static_cast<uint32_t>('0');
@@ -309,7 +307,7 @@ _Repeat:
     safe = safe && exponent >= -kPow10TableSize && exponent <= kPow10TableSize;
     size_t len = (size_t)(p - pToken);
 
-	// check whether there is a cmplex number or not and set the output accordingly.
+	// check whether there is a complex number or not and set the output accordingly.
 	uint32_t tokenType;
 	if (mpCharClass[p[0]] == kTokenCharImg) {
 		p++;
@@ -362,6 +360,15 @@ _Repeat:
         break;
       hVal = HashUtils::hashChar(hVal, ord);
     }
+
+	if (pToken[0] == 'i' && pToken[1] == 'd')
+	{
+		size_t len = size_t(38);
+		uint32_t hash = HashUtils::hashString((char *)pToken, 38);
+		p = pStart + 38;
+		_p = reinterpret_cast<const char *>(p);
+		return token->setData(size_t(pToken - pStart), len, hash, kTokenSymbol);
+	}
 
     size_t len = (size_t)(p - pToken);
     _p = reinterpret_cast<const char*>(p);
