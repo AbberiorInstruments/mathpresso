@@ -404,16 +404,20 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 			double val = rNode->getValue();
 
 			// Evaluate an assignment.
-			if (op.isAssignment() && left->isVar()) {
+			if (op.isAssignment() && left->isVar()) 
+			{
 				AstSymbol* sym = static_cast<AstVar*>(left)->getSymbol();
-				if (op.type == kOpAssign || sym->isAssigned()) {
+				if (op.type == kOpAssign || sym->isAssigned())
+				{
 					sym->setValue(val);
 					sym->setAssigned();
 				}
 			}
-			else {
+			else
+			{
 				if ((val == 0.0 && (op.flags & kOpFlagNopIfRZero)) ||
-					(val == 1.0 && (op.flags & kOpFlagNopIfROne))) {
+					(val == 1.0 && (op.flags & kOpFlagNopIfROne))) 
+{
 					node->unlinkLeft();
 					node->getParent()->replaceNode(node, left);
 
@@ -424,15 +428,6 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 	}
 	else {
 		node->getParent()->addNodeFlags(kAstComplex);
-		if (node->getOp() == kOpDiv) {
-			//AstUnaryOp* conj = _ast->newNode<AstUnaryOp>(kOpConjug);
-			//conj->addNodeFlags(kAstComplex);
-			//node->unlinkRight();
-			//conj->setChild(right);
-			//node->setRight(conj);
-			//node->setOp(kOpMul);
-			//right = node->getRight();
-		}
 
 		// if we have to calculate in complex, and one of the operands is an immediate, it should be converted to complex.
 		if (left->isImm()) {

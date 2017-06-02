@@ -22,6 +22,7 @@ namespace mathpresso {
 //! \internal
 //!
 //! Token type.
+	
 enum TokenType {
   kTokenInvalid = 0,  // <invalid>
 

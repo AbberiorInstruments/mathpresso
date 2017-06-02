@@ -256,7 +256,7 @@ Error Parser::parseVariableDecl(AstBlock* block) {
     }
     else {
       _ast->deleteSymbol(vSym);
-      MATHPRESSO_PARSER_ERROR(token, "Unexpected token.");
+      MATHPRESSO_PARSER_ERROR(token, "Unexpected token %d.", token.token);
     }
 
     isFirst = false;
@@ -468,7 +468,7 @@ _Unary: {
       }
 
       default: {
-        MATHPRESSO_PARSER_ERROR(token, "Unexpected token.");
+        MATHPRESSO_PARSER_ERROR(token, "Unexpected token %d.", token.token);
       }
     }
 
@@ -613,7 +613,7 @@ _Binary: {
 	 
 
       default: {
-        MATHPRESSO_PARSER_ERROR(token, "Unexpected token.");
+        MATHPRESSO_PARSER_ERROR(token, "Unexpected token %d.", token.token);
       }
     }
   }

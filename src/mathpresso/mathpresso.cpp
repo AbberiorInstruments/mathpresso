@@ -255,19 +255,6 @@ static Error mpContextMutable(Context* self, ContextInternalImpl** out) {
   }
 }
 
-// ============================================================================
-// [mathpresso::Context - Construction / Destruction]
-// ============================================================================
-
-Context::Context()
-  : _d(const_cast<ContextImpl*>(&mpContextNull)) {}
-
-Context::Context(const Context& other)
-  : _d(mpContextAddRef(other._d)) {}
-
-Context::~Context() {
-  mpContextRelease(_d);
-}
 
 // ============================================================================
 // [mathpresso::Context - Copy / Reset]
@@ -287,6 +274,22 @@ Context& Context::operator=(const Context& other) {
       &_d, mpContextAddRef(other._d)));
   return *this;
 }
+
+
+// ============================================================================
+// [mathpresso::Context - Construction / Destruction]
+// ============================================================================
+
+Context::Context()
+  : _d(const_cast<ContextImpl*>(&mpContextNull)) {}
+
+Context::Context(const Context& other)
+  : _d(mpContextAddRef(other._d)) {}
+
+Context::~Context() {
+  mpContextRelease(_d);
+}
+
 
 // ============================================================================
 // [mathpresso::Context - Interface]
@@ -347,6 +350,16 @@ Error Context::addBuiltIns(void) {
 
     d->_scope.putSymbol(sym);
   }
+
+  AstSymbol* sym = d->_builder.newSymbol(StringRef("i"), HashUtils::hashString("i",1), kAstSymbolVariable, kAstScopeGlobal);
+  MATHPRESSO_NULLCHECK(sym);
+
+  sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsAssigned | kAstSymbolIsReadOnly | kAstSymbolIsComplex);
+  sym->setVarSlotId(kInvalidSlot);
+  sym->setVarOffset(0);
+  sym->setValueComp({0, 1});
+
+  d->_scope.putSymbol(sym);
 
   return kErrorOk;
 }
@@ -479,11 +492,12 @@ Error Context::delSymbol(const char* name) {
   return kErrorOk;
 }
 
+
 // ============================================================================
 // [mathpresso::Expression - Construction / Destruction]
 // ============================================================================
 
-Expression::Expression() : _func(mpDummyFunc) {}
+Expression::Expression() : _func(mpDummyFunc), _funcComplex(mpDummyFuncComp) {}
 Expression::~Expression() { reset(); }
 
 // ============================================================================
@@ -555,7 +569,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 }
 
 bool Expression::isCompiled() const {
-  return _funcComplex != mpDummyFuncComp;
+  return _funcComplex != mpDummyFuncComp && _func != mpDummyFunc;
 }
 
 void Expression::reset() {
