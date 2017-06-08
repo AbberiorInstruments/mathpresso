@@ -394,6 +394,7 @@ struct OpInfo {
   uint32_t flags;
   char name[12];
 };
+
 extern const OpInfo mpOpInfo[kOpCount];
 
 MATHPRESSO_INLINE const OpInfo& OpInfo::get(uint32_t op) {

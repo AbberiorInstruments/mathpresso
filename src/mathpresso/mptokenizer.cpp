@@ -361,11 +361,13 @@ _Repeat:
       hVal = HashUtils::hashChar(hVal, ord);
     }
 
+
+	// parse id[UUID]
 	if (pToken[0] == 'i' && pToken[1] == 'd')
 	{
 		size_t len = size_t(38);
-		uint32_t hash = HashUtils::hashString((char *)pToken, 38);
-		p = pStart + 38;
+		uint32_t hash = HashUtils::hashString((char *)pToken, len);
+		p = pToken + len;
 		_p = reinterpret_cast<const char *>(p);
 		return token->setData(size_t(pToken - pStart), len, hash, kTokenSymbol);
 	}
