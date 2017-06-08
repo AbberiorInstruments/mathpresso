@@ -77,6 +77,7 @@ Error AstOptimizer::onVarDecl(AstVarDecl* node) {
 Error AstOptimizer::onVarDeclComp(AstVarDecl* node) {
 	AstSymbol* sym = node->getSymbol();
 	node->addNodeFlags(kAstComplex);
+	node->addNodeFlags(kAstReturnsComplex);
 
 	if (node->hasChild()) {
 		MATHPRESSO_PROPAGATE(onNode(node->getChild()));
@@ -110,6 +111,7 @@ Error AstOptimizer::onVar(AstVar* node) {
 Error AstOptimizer::onVarComp(AstVarComplex* node) {
 	node->getParent()->addNodeFlags(kAstComplex);
 	node->addNodeFlags(kAstComplex);
+	node->addNodeFlags(kAstReturnsComplex);
 
 	AstSymbol* sym = node->getSymbol();
 	if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
@@ -126,6 +128,7 @@ Error AstOptimizer::onImm(AstImm* node) {
 Error AstOptimizer::onImmComp(AstImmComplex* node) {
 	node->getParent()->addNodeFlags(kAstComplex);
 	node->addNodeFlags(kAstComplex);
+	node->addNodeFlags(kAstReturnsComplex);
 	return kErrorOk;
 }
 
@@ -136,13 +139,14 @@ Error AstOptimizer::onUnaryOp(AstUnaryOp* node)
   if (node->hasNodeFlag(kAstComplex)|| op.returnsComplex()) 
   {
 	  node->getParent()->addNodeFlags(kAstComplex);
+	  node->addNodeFlags(kAstReturnsComplex);
   }
 
   MATHPRESSO_PROPAGATE(onNode(node->getChild()));
   AstNode* child = node->getChild();
   //if (child->hasNodeFlag(kAstComplex) && !node->hasNodeFlag(kAstComplex)) {
 //	  return _errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
-//		  "Operator '%s' wnats a noncomplex Parameter, but gets a complex one.", op.name);
+//		  "Operator '%s' wants a non-complex Parameter, but gets a complex one.", op.name);
   //}
 
   if (child->isImm()) 
@@ -259,7 +263,7 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 	if (node->getOp() == kOpQMark) {
 
 		AstBinaryOp* lastColon = node;
-		// go to the last Colon after Questionmarks.
+		// go to the last Colon after question-marks.
 		while (lastColon->getOp() == kOpQMark) {
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 		} 
@@ -281,19 +285,19 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 			return _errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
 				"Not a condition.");
 		}
-		// remove branchCondition from the ast
+		// remove branchCondition from the AST
 		node->setLeft(NULL);
 		branchCondition->_parent = NULL;
 
-		// remove the right path from the Ast.
+		// remove the right path from the AST.
 		lastColon->setRight(NULL);
 		branchRight->_parent = NULL;
 
 
-		// Distinguish between a complex and a noncomplex case:
+		// Distinguish between a complex and a non-complex case:
 		// i.e.: cond1 ? cond2 ? a : b : c
 		if (node->getRight() != lastColon) {
-			// remove left branch from the ast.
+			// remove left branch from the AST.
 			branchLeft = node->getRight();
 			node->setRight(NULL);
 			branchLeft->_parent = NULL;
@@ -305,7 +309,7 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 		}
 		// i.e.: cond1 ? a : b
 		else {
-			// remove left branch from the ast.
+			// remove left branch from the AST.
 			lastColon->setLeft(NULL);
 			branchLeft->_parent = NULL;
 		}
@@ -318,10 +322,10 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 
 		AstBinaryOp* oldNode = node;
 		
-		// add the new node to the ast.
+		// add the new node to the AST.
 		node->getParent()->replaceNode(node, newNode);
 
-		// Aufräumen:
+		// clean up:
 		lastColon->setLeft(NULL);
 		_ast->deleteNode(lastColon);
 		_ast->deleteNode(node);
@@ -340,13 +344,15 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 	bool lIsImm = left->isImm();
 	bool rIsImm = right->isImm();
 
-	if (!(node->hasNodeFlag(kAstComplex))) {
-		if (left->hasNodeFlag(kAstComplex) || right->hasNodeFlag(kAstComplex))
+	if (!(node->hasNodeFlag(kAstComplex))) 
+	{
+		if (left->hasNodeFlag(kAstReturnsComplex) || right->hasNodeFlag(kAstReturnsComplex))
 			return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-				"Expect noncomplex parameters for operation '%s'.", op.name);
+				"Expect non-complex parameters for operation '%s'.", op.name);
 
 		// If both nodes are values it's easy, just fold them into a single one.
-		if (lIsImm && rIsImm) {
+		if (lIsImm && rIsImm) 
+		{
 			AstImm* lNode = static_cast<AstImm*>(left);
 			AstImm* rNode = static_cast<AstImm*>(right);
 
@@ -387,12 +393,14 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 			_ast->deleteNode(node);
 		}
 		// There is still a little optimization opportunity.
-		else if (lIsImm) {
+		else if (lIsImm) 
+		{
 			AstImm* lNode = static_cast<AstImm*>(left);
 			double val = lNode->getValue();
 
 			if ((val == 0.0 && (op.flags & kOpFlagNopIfLZero)) ||
-				(val == 1.0 && (op.flags & kOpFlagNopIfLOne))) {
+				(val == 1.0 && (op.flags & kOpFlagNopIfLOne))) 
+			{
 				node->unlinkRight();
 				node->getParent()->replaceNode(node, right);
 
@@ -426,8 +434,10 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 			}
 		}
 	}
-	else {
+	else 
+	{
 		node->getParent()->addNodeFlags(kAstComplex);
+		node->addNodeFlags(kAstReturnsComplex);
 
 		// if we have to calculate in complex, and one of the operands is an immediate, it should be converted to complex.
 		if (left->isImm()) {
@@ -447,7 +457,7 @@ Error AstOptimizer::onBinaryOp(AstBinaryOp* node) {
 			right = node->getRight();
 		}
 
-		// adition for immediate complex values.
+		// addition for immediate complex values.
 		if ((node->getOp() == kOpAdd || node->getOp() == kOpMul ) && left->isImmComplex() && right->isImmComplex()) {
 			AstImmComplex* lNode = static_cast<AstImmComplex*>(left);
 			AstImmComplex* rNode = static_cast<AstImmComplex*>(right);
@@ -505,6 +515,10 @@ Error AstOptimizer::onTernaryOp(AstTernaryOp* node) {
 		node->removeNodeFlags(kAstComplex);
 		MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
 		MATHPRESSO_PROPAGATE(onNode(node->getRight()));
+		if (node->hasNodeFlag(kAstComplex)) 
+		{
+			node->addNodeFlags(kAstReturnsComplex);
+		}
 	}
 	return kErrorOk;
 
@@ -531,8 +545,11 @@ Error AstOptimizer::onCall(AstCall* node) {
 	  }
   } 
 
-  if (sym->hasSymbolFlag(kAstSymbolReturnsComplex))
+  if (sym->hasSymbolFlag(kAstSymbolReturnsComplex)) 
+  {
+	  node->addNodeFlags(kAstReturnsComplex);
 	  node->getParent()->addNodeFlags(kAstComplex);
+  }
 
 
   bool allConst = true;

@@ -855,7 +855,7 @@ emitInst: {
 }
 
 
-//! how to handle complex/noncomplex results?
+
 JitVar JitCompiler::onTernaryOp(AstTernaryOp* node) {
 	Label lblElse = cc->newLabel();
 	Label lblEnd = cc->newLabel();

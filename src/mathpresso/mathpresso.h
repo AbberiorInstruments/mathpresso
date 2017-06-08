@@ -360,7 +360,6 @@ struct Expression {
 	   double result[2];
 	  _funcComplex(result, data);
 	  return std::complex<double>(result[0], result[1]);
-
   }
 
 

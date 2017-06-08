@@ -162,7 +162,8 @@ enum AstNodeType {
 //! `AstNode` flags.
 enum AstNodeFlags {
   kAstNodeHasSideEffect = 0x01,
-  kAstComplex = 0x02
+  kAstComplex = 0x02, // set, if a complex 'parameter' is expected.
+  kAstReturnsComplex = 0x04 // set, if the 'return' is complex.
 };
 
 // ============================================================================
