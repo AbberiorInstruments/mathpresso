@@ -290,6 +290,7 @@ enum OpFlags {
   kOpFlagTernary	   = 0x00000020,
 
   kOpFlagReturnsComplex = 0x00000040,
+  kOpFlagComplex = 0x00000080,
 
   //! The operator performs an arithmetic operation.
   kOpFlagArithmetic    = 0x00000100,
@@ -377,6 +378,7 @@ struct OpInfo {
   MATHPRESSO_INLINE bool isTrigonometric() const { return (flags & kOpFlagTrigonometric) != 0; }
 
   MATHPRESSO_INLINE bool returnsComplex() const { return (flags & kOpFlagReturnsComplex) != 0; }
+  MATHPRESSO_INLINE bool isComplex() const { return (flags & kOpFlagComplex) != 0; }
 
 
   MATHPRESSO_INLINE bool rightAssociate(uint32_t rPrec) const {
