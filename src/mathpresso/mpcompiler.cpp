@@ -735,88 +735,6 @@ namespace mathpresso {
 
 		JitVar vl, vr;
 
-		if (node->hasNodeFlag(kAstComplex) && (op == kOpAdd || op == kOpMul || op == kOpDiv))
-		{
-			// Handle the case that the operands are the same variable.
-			if (left->getNodeType() == kAstNodeVarComplex &&
-				right->getNodeType() == kAstNodeVarComplex &&
-				static_cast<AstVarComplex*>(left)->getSymbol() == static_cast<AstVarComplex*>(right)->getSymbol())
-			{
-				vl = vr = writableVarComplex(onNode(left));
-			}
-			else
-			{
-				vl = onNode(left);
-				vr = onNode(right);
-				if (!left->hasNodeFlag(kAstReturnsComplex))
-					vl = registerVarAsComplex(vl);
-
-				if (!right->hasNodeFlag(kAstReturnsComplex))
-					vr = registerVarAsComplex(vr);
-
-				if (vl.isRO() && !vr.isRO() && op != kOpDiv)
-					vl.swapWith(vr);
-
-				vl = writableVarComplex(vl);
-			}
-
-
-			if (vr.getOperand().isMem())
-			{
-				vr = copyVarComplex(vr, JitVar::FLAG_NONE);
-			}
-
-			if (op == kOpAdd)
-			{
-				cc->emit(X86Inst::kIdAddpd, vl.getOperand(), vr.getOperand());
-				return vl;
-			}
-			else
-			{
-				JitVar ret(cc->newXmmPd(), JitVar::FLAG_NONE);
-
-				// this is optimisable.......
-				if (vr.getOperand() == vl.getOperand())
-				{
-					vr = copyVarComplex(vl, JitVar::FLAG_NONE);
-				}
-				else
-				{
-					vr = writableVarComplex(vr);
-				}
-				JitVar negateImag = getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000));
-
-				// this shouldn't be optimisable:
-				if (op == kOpMul) {
-					cc->movapd(ret.getXmm(), vl.getXmm());
-					cc->mulpd(ret.getXmm(), vr.getXmm());
-					cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
-					cc->pxor(vr.getXmm(), negateImag.getMem());
-					cc->mulpd(vl.getXmm(), vr.getXmm());
-					cc->hsubpd(ret.getXmm(), vl.getXmm());
-				}
-				else
-				{
-
-					cc->pxor(vr.getXmm(), negateImag.getMem());
-
-					cc->movapd(ret.getXmm(), vl.getXmm());
-					cc->mulpd(ret.getXmm(), vr.getXmm());
-					cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
-					cc->pxor(vr.getXmm(), negateImag.getMem());
-					cc->mulpd(vl.getXmm(), vr.getXmm());
-					cc->hsubpd(ret.getXmm(), vl.getXmm());
-
-					cc->mulpd(vr.getXmm(), vr.getXmm());
-					cc->haddpd(vr.getXmm(), vr.getXmm());
-					cc->divpd(ret.getXmm(), vr.getXmm());
-
-				}
-				return ret;
-			}
-
-		}
-
 		if (left->getNodeType() == kAstNodeVarDouble &&
 			right->getNodeType() == kAstNodeVarDouble &&
 			static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
@@ -834,19 +752,15 @@ namespace mathpresso {
 				if (vl.isRO() && !vr.isRO())
 					vl.swapWith(vr);
 			}
-			if (node->getLeft()->hasNodeFlag(kAstReturnsComplex))
-			{
-				vl = writableVarComplex(vl);
-			}
-			else
-			{
-				vl = writableVar(vl);
-			}
+		
 		}
 
 		uint32_t inst = 0;
 		int predicate = 0;
-		if (!node->hasNodeFlag(kAstComplex)){
+
+		if (!node->hasNodeFlag(kAstComplex))
+		{
+			vl = writableVar(vl);
 			switch (op)
 			{
 			case kOpEq: predicate = x86::kCmpEQ; goto emitCompare;
@@ -923,13 +837,74 @@ namespace mathpresso {
 		}
 		else
 		{
-			if (!left->hasNodeFlag(kAstReturnsComplex))
-				vl = registerVarAsComplex(vl);
 
-			if (!right->hasNodeFlag(kAstReturnsComplex))
-				vr = registerVarAsComplex(vr);
+			// Handle the case that the operands are the same variable.
+			if (left->getNodeType() == kAstNodeVarComplex &&
+				right->getNodeType() == kAstNodeVarComplex &&
+				static_cast<AstVarComplex*>(left)->getSymbol() == static_cast<AstVarComplex*>(right)->getSymbol())
+			{
+				vl = vr = writableVarComplex(onNode(left));
+			}
+			else
+			{
 
-			switch (op) {
+				if (!left->hasNodeFlag(kAstReturnsComplex)&& vl.isMem())
+					vl = registerVarAsComplex(vl);
+				else 
+					vl = writableVarComplex(vl);
+
+				if (!right->hasNodeFlag(kAstReturnsComplex) && vr.isMem())
+					vr = registerVarAsComplex(vr);
+
+				if (vl.isRO() && !vr.isRO() && op == kOpAdd && op == kOpMul)
+					vl.swapWith(vr);
+				
+
+			}
+
+			if (vr.getOperand() == vl.getOperand())
+			{
+				vr = copyVarComplex(vl, JitVar::FLAG_NONE);
+			}
+			else if (vr.getOperand().isMem())
+			{
+				vr = copyVarComplex(vr, JitVar::FLAG_NONE);
+			}
+
+
+			JitVar ret(cc->newXmmPd(), JitVar::FLAG_NONE);
+			JitVar negateImag = getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000));
+			
+			switch (op) 
+			{
+			case kOpAdd:
+				cc->addpd(vl.getXmm(), vr.getXmm());
+				return vl;
+			case kOpSub:
+				cc->subpd(vl.getXmm(), vr.getXmm());
+				return vl;
+			case kOpMul:
+				cc->movapd(ret.getXmm(), vl.getXmm());
+				cc->mulpd(ret.getXmm(), vr.getXmm());
+				cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
+				cc->pxor(vr.getXmm(), negateImag.getMem());
+				cc->mulpd(vl.getXmm(), vr.getXmm());
+				cc->hsubpd(ret.getXmm(), vl.getXmm());
+				return ret;
+			case kOpDiv:
+				cc->pxor(vr.getXmm(), negateImag.getMem());
+
+				cc->movapd(ret.getXmm(), vl.getXmm());
+				cc->mulpd(ret.getXmm(), vr.getXmm());
+				cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
+				cc->pxor(vr.getXmm(), negateImag.getMem());
+				cc->mulpd(vl.getXmm(), vr.getXmm());
+				cc->hsubpd(ret.getXmm(), vl.getXmm());
+
+				cc->mulpd(vr.getXmm(), vr.getXmm());
+				cc->haddpd(vr.getXmm(), vr.getXmm());
+				cc->divpd(ret.getXmm(), vr.getXmm());
+				return ret;
 			case kOpPowC:
 				break;
 

@@ -522,18 +522,22 @@ namespace mathpresso {
 
 				std::complex<double> result;
 				switch (node->getOp()) {
-				case kOpAdd: result = rNode->getValue() + lNode->getValue(); break;
-				case kOpMul: result = rNode->getValue() * lNode->getValue(); break;
+				case kOpAdd: result = lNode->getValue() + rNode->getValue(); break;
+				case kOpSub: result = lNode->getValue() - rNode->getValue(); break;
+				case kOpMul: result = lNode->getValue() * rNode->getValue(); break;
 				case kOpDiv: result = lNode->getValue() / rNode->getValue(); break;
 
 				case kOpPow: result = pow(lNode->getValue(), rNode->getValue()); break;
 				}
 
 				rNode->setValue(result);
+				rNode->addNodeFlags(kAstReturnsComplex);
 				node->unlinkRight();
 				node->getParent()->replaceNode(node, rNode);
 
 				_ast->deleteNode(node);
+
+				return kErrorOk;
 			}
 
 			if (node->getOp() == kOpPow)
