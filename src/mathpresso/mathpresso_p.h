@@ -252,15 +252,36 @@ enum OpType {
   kOpHypot,             // hypot(a, b)
   kOpCopySign,          // copysign(a, b)
 
-  kOpReal,				// getReal(std::complex<double> a)
-  kOpImag,				// getImag(std::complex<double> a)
-  kOpSqrtC,				// sqrt with complex result, double as param.
-  kOpConjug,			// conjug(std::complex<double> c)
   
   kOpQMark,			    // b ? a : b
   kOpColon,
 
-  //kOpAddC,
+  kOpReal,				// getReal(std::complex<double> a)
+  kOpImag,				// getImag(std::complex<double> a)
+  kOpConjug,			// conjug(std::complex<double> c)
+  
+  //from here on there are the complex equivalents of some functions. 
+  kOpExpC,
+  kOpPowC,
+  
+  kOpLogC,
+  kOpLog2C,
+  kOpLog10C,
+
+  kOpSqrtC,				// sqrt with complex result
+  kOpRecipC,
+
+  kOpSinC,
+  kOpCosC,
+  kOpTanC,
+
+  kOpSinhC,
+  kOpCoshC,
+  kOpTanhC,
+
+  kOpAsinC,
+  kOpAcosC,
+  kOpAtanC,
 
   //! \internal
   //!

@@ -97,12 +97,33 @@ const OpInfo mpOpInfo[kOpCount] = {
   ROW(Atan2        , Atan2    , 2, 0, 0, 1, LTR | F(Trigonometric)                   , "atan2"    ),
   ROW(Hypot        , Hypot    , 2, 0, 0, 1, LTR | F(Trigonometric)                   , "hypot"    ),
   ROW(CopySign     , CopySign , 2, 0, 0, 1, LTR | 0                                  , "copysign" ),
+  ROW(QMark        , QMark    , 3,15, 0, 0, RTL | 0									 , "?"		  ),
+  ROW(Colon        , Colon    , 3,15, 0, 0, RTL | 0									 , ":"        ),
   ROW(Real         , Real     , 1, 0, 0, 1, LTR | F(Complex)                         , "getReal"  ),
   ROW(Imag	       , Imag     , 1, 0, 0, 1, LTR | F(Complex)                         , "getImag"  ),
-  ROW(SqrtC	       , SqrtC    , 1, 0, 0, 1, LTR | F(ReturnsComplex)                  , "sqrtC"    ),
   ROW(Conjug       , Conjug   , 1, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)     , "conjug"   ),
-  ROW(QMark        , QMark    , 3,15, 0, 0, RTL | 0									 , "?"		  ),
-  ROW(Colon        , Colon    , 3,15, 0, 0, RTL | 0									 , ":"        )
+
+  ROW(ExpC         , ExpC     , 1, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)     , "exp_"      ),
+  ROW(PowC         , PowC     , 2, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)     , "pow_"      ),
+
+  ROW(LogC         , LogC     , 1, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)      , "log_"),
+  ROW(Log2C        , Log2C    , 1, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)      , "log2_"),
+  ROW(Log10C       , Log10C   , 1, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)      , "log10_"),
+
+  ROW(SqrtC	       , SqrtC    , 1, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)     , "sqrtC"    ),
+  ROW(RecipC       , RecipC   , 1, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)     , "recip_"    ),
+  
+  ROW(SinC         , SinC     , 1, 0, 0, 1, LTR | F(Trigonometric) | F(ReturnsComplex) | F(Complex), "sin_"),
+  ROW(CosC         , CosC     , 1, 0, 0, 1, LTR | F(Trigonometric) | F(ReturnsComplex) | F(Complex), "cos_"),
+  ROW(TanC         , TanC     , 1, 0, 0, 1, LTR | F(Trigonometric) | F(ReturnsComplex) | F(Complex), "tan_"),
+  
+  ROW(SinhC        , SinhC    , 1, 0, 0, 1, LTR | F(Trigonometric) | F(ReturnsComplex) | F(Complex), "sinh_"),
+  ROW(CoshC        , CoshC    , 1, 0, 0, 1, LTR | F(Trigonometric) | F(ReturnsComplex) | F(Complex), "cosh_"),
+  ROW(TanhC        , TanhC    , 1, 0, 0, 1, LTR | F(Trigonometric) | F(ReturnsComplex) | F(Complex), "tanh_"),
+  
+  ROW(AsinC        , AsinC    , 1, 0, 0, 1, LTR | F(Trigonometric) | F(ReturnsComplex) | F(Complex), "asin_"),
+  ROW(AcosC        , AcosC    , 1, 0, 0, 1, LTR | F(Trigonometric) | F(ReturnsComplex) | F(Complex), "acos_"),
+  ROW(AtanC        , AtanC    , 1, 0, 0, 1, LTR | F(Trigonometric) | F(ReturnsComplex) | F(Complex), "atan_")
 };
 #undef F
 #undef RTL
@@ -422,7 +443,7 @@ Error Context::addVariable(const char* name, int offset, unsigned int flags) {
 
 //! Adds a complex variable to the Context.
 //
-//! WARNING: If the values are not alinged to 16 byte-boundarys, there will be errors with
+//! WARNING: If the values are not aligned to 16 byte-boundary's, there will be errors with
 //! SSE-instructions. Use of alignas(16) is mandatory!
 Error Context::addVariableComplex(const char* name, int offset, unsigned int flags) {
 	ContextInternalImpl* d;
@@ -596,7 +617,7 @@ OutputLog::~OutputLog() {}
 // ============================================================================
 
 void ErrorReporter::getLineAndColumn(uint32_t position, uint32_t& line, uint32_t& column) {
-  // Should't happen, but be defensive.
+  // Shouldn't happen, but be defensive.
   if (static_cast<size_t>(position) >= _len) {
     line = 0;
     column = 0;

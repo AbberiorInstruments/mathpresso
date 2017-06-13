@@ -154,9 +154,7 @@ namespace mathpresso {
 	static MATHPRESSO_INLINE double mpAtan2(double y, double x) { return ::atan2(y, x); }
 	static MATHPRESSO_INLINE double mpHypot(double x, double y) { return ::hypot(x, y); }
 
-	// Complex functions:
-	//complexe funktionen geben komplexe ergebnisse zurück, also 2 double
-
+	// Complex functions
 
 	//! Used to call a cpp-function from within the assembler.
 	//! the result can be read from data at index 0, arguments are at index 1, 2, ...
@@ -178,7 +176,32 @@ namespace mathpresso {
 	static MATHPRESSO_INLINE double mpGetReal(std::complex<double> *arg) { return arg->real(); }
 	static MATHPRESSO_INLINE double mpGetImag(std::complex<double> *arg) { return arg->imag(); }
 
-	static MATHPRESSO_INLINE std::complex<double> mpSqrtC(double *arg) { return sqrt(std::complex<double>(*arg, 0)); }
+
+	static MATHPRESSO_INLINE std::complex<double> mpExpC(std::complex<double> *x) { return exp(*x); }
+	static MATHPRESSO_INLINE std::complex<double> mpPowC(std::complex<double> *x) { return pow(x[0], x[1]); }
+
+	static MATHPRESSO_INLINE std::complex<double> mpLogC(std::complex<double> *x) { return log(*x); }
+	static MATHPRESSO_INLINE std::complex<double> mpLog2C(std::complex<double> *x) { return log(*x) / log(2); }
+	static MATHPRESSO_INLINE std::complex<double> mpLog10C(std::complex<double> *x) { return log10(*x); }
+
+	static MATHPRESSO_INLINE std::complex<double> mpSqrtC(std::complex<double> *x) { return sqrt(*x); }
+	static MATHPRESSO_INLINE std::complex<double> mpRecipC(std::complex<double> *x) { return 1.0 / *x; }
+
+	static MATHPRESSO_INLINE std::complex<double> mpSinC(std::complex<double> *x) { return sin(*x); }
+	static MATHPRESSO_INLINE std::complex<double> mpCosC(std::complex<double> *x) { return cos(*x); }
+	static MATHPRESSO_INLINE std::complex<double> mpTanC(std::complex<double> *x) { return tan(*x); }
+
+	static MATHPRESSO_INLINE std::complex<double> mpSinhC(std::complex<double> *x) { return sinh(*x); }
+	static MATHPRESSO_INLINE std::complex<double> mpCoshC(std::complex<double> *x) { return cosh(*x); }
+	static MATHPRESSO_INLINE std::complex<double> mpTanhC(std::complex<double> *x) { return tanh(*x); }
+
+	static MATHPRESSO_INLINE std::complex<double> mpAsinC(std::complex<double> *x) { return asin(*x); }
+	static MATHPRESSO_INLINE std::complex<double> mpAcosC(std::complex<double> *x) { return acos(*x); }
+	static MATHPRESSO_INLINE std::complex<double> mpAtanC(std::complex<double> *x) { return atan(*x); }
+
+	// later eventually.....
+	//static MATHPRESSO_INLINE std::complex<double> mpAtan2C(std::complex<double> *x) { return atan2(x[0], x[1]); }
+	//static MATHPRESSO_INLINE std::complex<double> mpHypotC(std::complex<double> *x) { return x[0] *  ; }
 
 } // mathpresso namespace
 
