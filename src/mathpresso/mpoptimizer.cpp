@@ -84,7 +84,7 @@ namespace mathpresso {
 			AstNode* child = node->getChild();
 
 			if (child->isComplex())
-				sym->setValueComp(static_cast<AstImmComplex*>(child)->getValue());
+				sym->setValue(static_cast<AstImmComplex*>(child)->getValue());
 		}
 
 		return kErrorOk;
@@ -156,7 +156,6 @@ namespace mathpresso {
 
 		if (child->isImm())
 		{
-
 			if (!op.returnsComplex())
 			{
 				AstImm* child = static_cast<AstImm*>(node->getChild());
@@ -277,6 +276,8 @@ namespace mathpresso {
 		}
 		else if (node->getChild()->hasNodeFlag(kAstReturnsComplex)) 
 		{
+			// If it is not found, also check for a user function with the same name and 
+			// arguments
 			switch (node->getOp()) {
 			case kOpLog: node->setOp(kOpLogC); break;
 			case kOpLog2: node->setOp(kOpLog2C); break;
@@ -595,47 +596,69 @@ namespace mathpresso {
 
 	}
 
-	Error AstOptimizer::onCall(AstCall* node) {
+	// TODO: functions that have two versions with different parameter types: 
+	Error AstOptimizer::onCall(AstCall* node) 
+	{
 		AstSymbol* sym = node->getSymbol();
 		uint32_t i, count = node->getLength();
 
-		if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
+		bool b_need_cplx = false;
+		for (i = 0; i < count; i++)
+		{
+			b_need_cplx |= node->getAt(i)->isComplex();
+		}
+		
+		if (b_need_cplx) 
+		{
 			node->addNodeFlags(kAstComplex);
 
-			for (i = 0; i < count; i++) {
+			for (i = 0; i < count; i++) 
+			{
 				AstNode *tmp = node->getAt(i);
-				if (tmp->isImm()) {
+				if (tmp->isImm()) 
+				{
 					AstImmComplex* newNode = tmp->getAst()->newNode<AstImmComplex>(std::complex<double>(((AstImm*)tmp)->getValue(), 0.0));
 					newNode->setNodeFlags(kAstComplex);
 					node->replaceNode(tmp, newNode);
 					_ast->deleteNode(tmp);
 				}
-				else {
+				else 
+				{
 					tmp->addNodeFlags(kAstComplex);
 				}
 			}
-		}
 
-		if (sym->hasSymbolFlag(kAstSymbolReturnsComplex))
+			if (!sym->hasSymbolFlag(kAstSymbolComplexFunctionReturnsReal))
+			{
+				node->addNodeFlags(kAstReturnsComplex);
+				node->getParent()->addNodeFlags(kAstComplex);
+			}
+		}
+		else
 		{
-			node->addNodeFlags(kAstReturnsComplex);
-			node->getParent()->addNodeFlags(kAstComplex);
+			if (sym->hasSymbolFlag(kAstSymbolRealFunctionReturnsComplex))
+			{
+				node->addNodeFlags(kAstReturnsComplex);
+				node->getParent()->addNodeFlags(kAstComplex);
+			}
 		}
 
 
 		bool allConst = true;
-		bool allConstComplex = true;;
+		bool allConstComplex = true;
 		for (i = 0; i < count; i++) {
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
 			allConst &= node->getAt(i)->isImm();
 			allConstComplex &= node->getAt(i)->isImmComplex();
 		}
 
-		if (allConst && count <= 8) {
+		if (allConst && count <= 8) 
+		{
 			AstImm** args = reinterpret_cast<AstImm**>(node->getChildren());
 
 			void* fn = sym->getFuncPtr();
-			if (!sym->hasSymbolFlag(kAstSymbolReturnsComplex)) {
+			if (!sym->hasSymbolFlag(kAstSymbolRealFunctionReturnsComplex)) 
+			{
 				double result = 0.0;
 #define ARG(n) args[n]->getValue()
 				switch (count) {
@@ -654,7 +677,8 @@ namespace mathpresso {
 				AstNode* replacement = _ast->newNode<AstImm>(result);
 				node->getParent()->replaceNode(node, replacement);
 			}
-			else  if (count <= 3) {
+			else 
+			{
 				double argsDouble[9];
 				for (i = 0; i < count; i++) {
 					argsDouble[i] = static_cast<AstImm*>(node->getChildren()[i])->getValue();
@@ -666,17 +690,22 @@ namespace mathpresso {
 			}
 			_ast->deleteNode(node);
 		}
-		else if (allConstComplex && count < 9) {
+		else if (allConstComplex && count < 9) 
+		{
 			std::complex<double> argsComplex[9];
-			for (i = 0; i < count; i++) {
+			for (i = 0; i < count; i++) 
+			{
 				argsComplex[i] = static_cast<AstImmComplex*>(node->getChildren()[i])->getValue();
 			}
-			if (sym->hasSymbolFlag(kAstSymbolReturnsComplex)) {
+
+			if (!sym->hasSymbolFlag(kAstSymbolComplexFunctionReturnsReal)) 
+			{
 				std::complex<double> result = ((ArgFuncC)sym->getFuncPtr())(argsComplex);
 				AstNode* replacement = _ast->newNode<AstImmComplex>(result);
 				node->getParent()->replaceNode(node, replacement);
-			}
-			else {
+			} 
+			else 
+			{
 				double result = ((ArgFuncCtoD)sym->getFuncPtr())(argsComplex);
 				AstNode* replacement = _ast->newNode<AstImm>(result);
 				node->getParent()->replaceNode(node, replacement);

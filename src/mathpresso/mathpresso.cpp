@@ -378,7 +378,7 @@ Error Context::addBuiltIns(void) {
   sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsAssigned | kAstSymbolIsReadOnly | kAstSymbolIsComplex);
   sym->setVarSlotId(kInvalidSlot);
   sym->setVarOffset(0);
-  sym->setValueComp({0, 1});
+  sym->setValue({0, 1});
 
   d->_scope.putSymbol(sym);
 
@@ -413,13 +413,13 @@ Error Context::addConstant(const char* name, double value) {
   return kErrorOk;
 }
 
-Error Context::addConstantComplex(const char* name, std::complex<double> value) {
+Error Context::addConstant(const char* name, std::complex<double> value) {
 	ContextInternalImpl* d;
 
 	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
 	MATHPRESSO_ADD_SYMBOL(name, kAstSymbolVariable);
 
-	sym->setValueComp(value);
+	sym->setValue(value);
 	sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsReadOnly | kAstSymbolIsAssigned | kAstSymbolIsComplex);
 
 	return kErrorOk;
@@ -432,6 +432,9 @@ Error Context::addVariable(const char* name, int offset, unsigned int flags) {
   MATHPRESSO_ADD_SYMBOL(name, kAstSymbolVariable);
 
   sym->setSymbolFlag(kAstSymbolIsDeclared);
+  if (flags & kVariableCplx)
+	  sym->setSymbolFlag(kAstSymbolIsComplex);
+
   sym->setVarSlotId(kInvalidSlot);
   sym->setVarOffset(offset);
 
@@ -441,27 +444,9 @@ Error Context::addVariable(const char* name, int offset, unsigned int flags) {
   return kErrorOk;
 }
 
-//! Adds a complex variable to the Context.
-//
-//! WARNING: If the values are not aligned to 16 byte-boundary's, there will be errors with
-//! SSE-instructions. Use of alignas(16) is mandatory!
-Error Context::addVariableComplex(const char* name, int offset, unsigned int flags) {
-	ContextInternalImpl* d;
 
-	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
-	MATHPRESSO_ADD_SYMBOL(name, kAstSymbolVariable);
-
-	sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsComplex);
-	sym->setVarSlotId(kInvalidSlot);
-	sym->setVarOffset(offset);
-
-	if (flags & kVariableRO)
-		sym->setSymbolFlag(kAstSymbolIsReadOnly);
-
-	return kErrorOk;
-}
-
-Error Context::addFunction(const char* name, void* fn, unsigned int flags, bool returnsComplex) {
+Error Context::addFunction(const char* name, void* fn, unsigned int flags, void * fn_cplx) 
+{
   ContextInternalImpl* d;
 
   MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
@@ -469,33 +454,20 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, bool 
 
   sym->setSymbolFlag(kAstSymbolIsDeclared);
   sym->setFuncPtr(fn);
+  sym->setFuncPtr(fn_cplx, true);
   
-  if (returnsComplex)
-	  sym->setSymbolFlag(kAstSymbolReturnsComplex);
+  if (flags & kAstSymbolIsComplex)
+	  sym->setSymbolFlag(kAstSymbolIsComplex);
+
+  if (flags & kRealFunctionReturnsComplex)
+	  sym->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);
+  if (flags & kComplexFunctionReturnsReal)
+	  sym->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
 
   // TODO: Other function flags.
   sym->setFuncArgs(flags & _kFunctionArgMask);
 
   return kErrorOk;
-}
-
-Error Context::addFunctionComplex(const char* name, void* fn, unsigned int flags, bool returnsComplex) {
-	ContextInternalImpl* d;
-
-	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
-	MATHPRESSO_ADD_SYMBOL(name, kAstSymbolFunction);
-
-	sym->setSymbolFlag(kAstSymbolIsDeclared);
-	sym->setFuncPtr(fn);
-	
-	sym->setSymbolFlag(kAstSymbolIsComplex);
-	if (returnsComplex)
-		sym->setSymbolFlag(kAstSymbolReturnsComplex);
-
-	// TODO: Other function flags.
-	sym->setFuncArgs(flags & _kFunctionArgMask);
-
-	return kErrorOk;
 }
 
 Error Context::delSymbol(const char* name) {

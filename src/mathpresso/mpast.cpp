@@ -489,16 +489,16 @@ Error AstDump::onImmComp(AstImmComplex* node) {
 }
 
 Error AstDump::onUnaryOp(AstUnaryOp* node) {
-	nest("%s [Unary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "reel"	,
-		node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "reel");
+	nest("%s [Unary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "real"	,
+		node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "real");
 	if (node->hasChild())
 		MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 	return denest();
 }
 
 Error AstDump::onBinaryOp(AstBinaryOp* node) {
-  nest("%s [Binary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "reel",
-	  node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "reel");
+  nest("%s [Binary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "real",
+	  node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "real");
   if (node->hasLeft())
     MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
   if (node->hasRight())
@@ -507,8 +507,8 @@ Error AstDump::onBinaryOp(AstBinaryOp* node) {
 }
 
 Error AstDump::onTernaryOp(AstTernaryOp* node) {
-	nest("%s [Ternary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "reel",
-		node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "reel");
+	nest("%s [Ternary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "real",
+		node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "real");
 	if (node->hasCondition())
 		MATHPRESSO_PROPAGATE(onNode(node->getCondition()));
 	if (node->hasLeft())
@@ -521,8 +521,8 @@ Error AstDump::onTernaryOp(AstTernaryOp* node) {
 Error AstDump::onCall(AstCall* node) {
 	AstSymbol* sym = node->getSymbol();
 
-	nest("%s(), %s -> %s", sym ? sym->getName() : static_cast<const char*>(NULL), node->hasNodeFlag(kAstComplex) ? "complex" : "reel",
-		node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "reel");
+	nest("%s(), %s -> %s", sym ? sym->getName() : static_cast<const char*>(NULL), node->hasNodeFlag(kAstComplex) ? "complex" : "real",
+		node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "real");
 	onBlock(node);
 	return denest();
 }

@@ -99,9 +99,11 @@ enum AstSymbolFlags {
 
   //! The variable is a complex value.
   kAstSymbolIsComplex = 0x0020,
-
-  // The symbol returns a complex value
-  kAstSymbolReturnsComplex = 0x00040
+  
+  //! The symbol returns a complex value
+  kAstSymbolRealFunctionReturnsComplex = 0x00040,
+  //! The symbol returns a complex value
+  kAstSymbolComplexFunctionReturnsReal = 0x00080
 };
 
 // ============================================================================
@@ -344,8 +346,20 @@ struct AstSymbol : public HashNode {
   MATHPRESSO_INLINE int32_t getVarOffset() const { return _varOffset; }
   MATHPRESSO_INLINE void setVarOffset(int32_t offset) { _varOffset = offset; }
 
-  MATHPRESSO_INLINE void* getFuncPtr() const { return _funcPtr; }
-  MATHPRESSO_INLINE void setFuncPtr(void* ptr) { _funcPtr = ptr; }
+  MATHPRESSO_INLINE void* getFuncPtr(bool args_complex = false) const 
+  { 
+	  if (args_complex)
+		  return _funcPtrCplx;
+	  else
+		  return _funcPtr;
+  }
+  MATHPRESSO_INLINE void setFuncPtr(void* ptr, bool b_cplx = false) 
+  { 
+	   if (b_cplx)
+			_funcPtrCplx = ptr;
+		else
+			_funcPtr = ptr;
+  }
 
   //! Get the number of function/intrinsic arguments
   MATHPRESSO_INLINE uint32_t getFuncArgs() const { return _funcArgs; }
@@ -376,7 +390,7 @@ struct AstSymbol : public HashNode {
   MATHPRESSO_INLINE std::complex<double> getValueComp() const { return _valueComp; }
   //! Set `_isAssigned` to true and `_value` to `value`.
   MATHPRESSO_INLINE void setValue(double value) { _value = value; setAssigned(); }
-  MATHPRESSO_INLINE void setValueComp(std::complex<double> value) { _valueComp = value; setAssigned(); }
+  MATHPRESSO_INLINE void setValue(std::complex<double> value) { _valueComp = value; setAssigned(); }
 
   MATHPRESSO_INLINE uint32_t getUsedCount() const { return _usedCount; }
   MATHPRESSO_INLINE uint32_t getReadCount() const { return _usedCount - _writeCount; }
@@ -434,6 +448,7 @@ struct AstSymbol : public HashNode {
     struct {
       //! Function pointer (in case the symbol is a function).
       void* _funcPtr;
+	  void* _funcPtrCplx;
       //! Number of function arguments (in case the symbol is a function).
       uint32_t _funcArgs;
     };

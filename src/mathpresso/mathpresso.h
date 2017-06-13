@@ -188,7 +188,8 @@ enum Options {
 //! Variable flags.
 enum VariableFlags {
   kVariableRW = 0x00000000,
-  kVariableRO = 0x00000001
+  kVariableRO = 0x00000001,
+  kVariableCplx = 0x0000002,
 };
 
 // ============================================================================
@@ -218,6 +219,8 @@ enum FunctionFlags {
   //! \internal
   _kFunctionArgMask = 0x0000000F,
 
+  kRealFunctionReturnsComplex = 0x00000010,
+  kComplexFunctionReturnsReal = 0x00000020,
   //! The first argument of the function is the `data` pointer passed to the
   //! evaluate function. This is a hidden parameter that is not accessible
   //! within the expression itself.
@@ -278,13 +281,11 @@ struct Context {
 
   //! Add constant to this context.
   MATHPRESSO_API Error addConstant(const char* name, double value);
-  MATHPRESSO_API Error addConstantComplex(const char * name, std::complex<double> value);
+  MATHPRESSO_API Error addConstant(const char * name, std::complex<double> value);
   //! Add variable to this context.
   MATHPRESSO_API Error addVariable(const char* name, int offset, unsigned int flags = kVariableRW);
-  MATHPRESSO_API Error addVariableComplex(const char * name, int offset, unsigned int flags = kVariableRW);
   //! Add function to this context.
-  MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags, bool returnsComplex = false);
-  MATHPRESSO_API Error addFunctionComplex(const char * name, void * fn, unsigned int flags, bool returnsComplex = true);
+  MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags, void * fn_cplx = nullptr);
 
   //! Delete symbol from this context.
   MATHPRESSO_API Error delSymbol(const char* name);
