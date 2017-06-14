@@ -80,9 +80,8 @@ namespace mathpresso {
 
 	Error AstOptimizer::onVarDeclComp(AstVarDecl* node) {
 		AstSymbol* sym = node->getSymbol();
-		node->addNodeFlags(kAstComplex);
-		node->addNodeFlags(kAstReturnsComplex);
-
+		node->addNodeFlags(kAstComplex | kAstReturnsComplex);
+		
 		if (node->hasChild()) {
 			MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 			AstNode* child = node->getChild();
@@ -113,10 +112,8 @@ namespace mathpresso {
 	}
 
 	Error AstOptimizer::onVarComp(AstVarComplex* node) {
-		//node->getParent()->addNodeFlags(kAstComplex);
-		node->addNodeFlags(kAstComplex);
-		node->addNodeFlags(kAstReturnsComplex);
-
+		node->addNodeFlags(kAstComplex| kAstReturnsComplex);
+		
 		AstSymbol* sym = node->getSymbol();
 		if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
 			AstImmComplex* imm = _ast->newNode<AstImmComplex>(sym->getValueComp());
@@ -130,9 +127,7 @@ namespace mathpresso {
 	}
 
 	Error AstOptimizer::onImmComp(AstImmComplex* node) {
-		//node->getParent()->addNodeFlags(kAstComplex);
-		node->addNodeFlags(kAstComplex);
-		node->addNodeFlags(kAstReturnsComplex);
+		node->addNodeFlags(kAstComplex| kAstReturnsComplex);
 		return kErrorOk;
 	}
 
@@ -146,8 +141,7 @@ namespace mathpresso {
 		}
 
 		if (op.returnsComplex())
-		{
-			//node->getParent()->addNodeFlags(kAstComplex);
+		{	
 			node->addNodeFlags(kAstReturnsComplex);
 		}
 
@@ -232,30 +226,31 @@ namespace mathpresso {
 		}
 		else if (child->isImmComplex())
 		{
-			AstImmComplex * child = static_cast<AstImmComplex*> (node->getChild());
+			AstImmComplex * child = static_cast<AstImmComplex*>(node->getChild());
 			std::complex<double> value = child->getValue();
+			
 			switch (node->getOp())
 			{
-			case kOpReal: value = mpGetReal(&value); node->getParent()->removeNodeFlags(kAstComplex); break;
-			case kOpImag: value = mpGetImag(&value); node->getParent()->removeNodeFlags(kAstComplex); break;
+			case kOpReal: value = mpGetReal(&value); child->removeNodeFlags(kAstReturnsComplex); break;
+			case kOpImag: value = mpGetImag(&value); child->removeNodeFlags(kAstReturnsComplex); break;
 
-			case kOpExp: value = mpExpC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
+			case kOpExp: value = mpExpC(&value); break;
 
-			case kOpLog: value = mpLogC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
-			case kOpLog2: value = mpLog2C(&value); node->getParent()->addNodeFlags(kAstComplex); break;
-			case kOpLog10: value = mpLog10C(&value); node->getParent()->addNodeFlags(kAstComplex); break;
+			case kOpLog: value = mpLogC(&value); break;
+			case kOpLog2: value = mpLog2C(&value); break;
+			case kOpLog10: value = mpLog10C(&value); break;
 
-			case kOpSin: value = mpSinC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
-			case kOpCos: value = mpCosC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
-			case kOpTan: value = mpTanC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
+			case kOpSin: value = mpSinC(&value); break;
+			case kOpCos: value = mpCosC(&value); break;
+			case kOpTan: value = mpTanC(&value); break;
 
-			case kOpSinh: value = mpSinhC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
-			case kOpCosh: value = mpCoshC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
-			case kOpTanh: value = mpTanhC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
+			case kOpSinh: value = mpSinhC(&value); break;
+			case kOpCosh: value = mpCoshC(&value); break;
+			case kOpTanh: value = mpTanhC(&value); break;
 
-			case kOpAsin: value = mpAsinC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
-			case kOpAcos: value = mpAcosC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
-			case kOpAtan: value = mpAtanC(&value); node->getParent()->addNodeFlags(kAstComplex); break;
+			case kOpAsin: value = mpAsinC(&value); break;
+			case kOpAcos: value = mpAcosC(&value); break;
+			case kOpAtan: value = mpAtanC(&value); break;
 
 			default:
 				return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
@@ -263,12 +258,18 @@ namespace mathpresso {
 			}
 			child->setValue(value);
 
-			node->unlinkChild();
-			node->getParent()->replaceNode(node, child);
-
-			_ast->deleteNode(node);
-
-			onNode(child);
+			if (child->hasNodeFlag(kAstReturnsComplex)) {
+				node->unlinkChild();
+				node->getParent()->replaceNode(node, child);
+				_ast->deleteNode(node);
+				onNode(child);
+			}
+			else {
+				AstImm* newChild = _ast->newNode<AstImm>(value.real());
+				node->getParent()->replaceNode(node, newChild);
+				_ast->deleteNode(node);
+				onNode(newChild);
+			}
 		}
 		else if (child->getNodeType() == kAstNodeUnaryOp && node->getOp() == child->getOp())
 		{
@@ -301,9 +302,7 @@ namespace mathpresso {
 			default: return kErrorOk;
 			}
 			
-			//node->getParent()->addNodeFlags(kAstComplex);
 			node->addNodeFlags(kAstReturnsComplex | kAstComplex);
-
 		}
 
 		return kErrorOk;
@@ -501,7 +500,6 @@ namespace mathpresso {
 		}
 		else
 		{
-			//node->getParent()->addNodeFlags(kAstComplex);
 			node->addNodeFlags(kAstComplex);
 			if (op.returnsComplex() || (!op.returnsComplex() && !op.isComplex()))
 				node->addNodeFlags(kAstReturnsComplex);
@@ -644,7 +642,6 @@ namespace mathpresso {
 			if (!sym->hasSymbolFlag(kAstSymbolComplexFunctionReturnsReal))
 			{
 				node->addNodeFlags(kAstReturnsComplex);
-				//node->getParent()->addNodeFlags(kAstComplex);
 			}
 			
 		}
@@ -653,7 +650,6 @@ namespace mathpresso {
 			if (sym->hasSymbolFlag(kAstSymbolRealFunctionReturnsComplex))
 			{
 				node->addNodeFlags(kAstReturnsComplex);
-				//node->getParent()->addNodeFlags(kAstComplex);
 			}
 		}
 
@@ -670,7 +666,7 @@ namespace mathpresso {
 			AstImm** args = reinterpret_cast<AstImm**>(node->getChildren());
 
 			void* fn = sym->getFuncPtr();
-			if (!sym->hasSymbolFlag(kAstSymbolRealFunctionReturnsComplex | kAstSymbolComplexFunctionReturnsReal))
+			if (!sym->hasSymbolFlag(kAstSymbolRealFunctionReturnsComplex))
 			{
 				double result = 0.0;
 #define ARG(n) args[n]->getValue()
@@ -691,11 +687,11 @@ namespace mathpresso {
 				node->getParent()->replaceNode(node, replacement);
 				onNode(replacement);
 			}
-			else if(sym->hasSymbolFlag(kAstSymbolRealFunctionReturnsComplex))
+			else
 			{
 				double argsDouble[9];
 				for (i = 0; i < count; i++) {
-					argsDouble[i] = static_cast<AstImm*>(node->getChildren()[i])->getValue();
+					argsDouble[i] = static_cast<AstImm*>(node->getAt(i))->getValue();
 				}
 				std::complex<double> result(0.0, 0.0);
 				result = ((ArgFuncDtoC)sym->getFuncPtr())(argsDouble);
@@ -710,7 +706,7 @@ namespace mathpresso {
 			std::complex<double> argsComplex[9];
 			for (i = 0; i < count; i++) 
 			{
-				argsComplex[i] = static_cast<AstImmComplex*>(node->getChildren()[i])->getValue();
+				argsComplex[i] = static_cast<AstImmComplex*>(node->getAt(i))->getValue();
 			}
 
 			if (!sym->hasSymbolFlag(kAstSymbolComplexFunctionReturnsReal)) 
