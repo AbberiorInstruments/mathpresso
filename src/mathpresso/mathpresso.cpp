@@ -456,8 +456,8 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
   sym->setFuncPtr(fn);
   sym->setFuncPtr(fn_cplx, true);
   
-  if (flags & kAstSymbolIsComplex)
-	  sym->setSymbolFlag(kAstSymbolIsComplex);
+  //if (flags & kAstSymbolIsComplex)
+	 //sym->setSymbolFlag(kAstSymbolIsComplex);
 
   if (flags & kRealFunctionReturnsComplex)
 	  sym->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);

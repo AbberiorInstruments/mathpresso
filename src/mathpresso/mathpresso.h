@@ -221,6 +221,7 @@ enum FunctionFlags {
 
   kRealFunctionReturnsComplex = 0x00000010,
   kComplexFunctionReturnsReal = 0x00000020,
+
   //! The first argument of the function is the `data` pointer passed to the
   //! evaluate function. This is a hidden parameter that is not accessible
   //! within the expression itself.

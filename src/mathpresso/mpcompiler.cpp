@@ -1058,9 +1058,9 @@ namespace mathpresso {
 			args[i] = registerVarComplex(onNode(node->getAt(i)), !node->getAt(i)->hasNodeFlag(kAstReturnsComplex)).getXmm();
 		}
 		if (node->hasNodeFlag(kAstReturnsComplex))
-			inlineCallComplex(result, args, count, sym->getFuncPtr());
+			inlineCallComplex(result, args, count, sym->getFuncPtr(true));
 		else
-			inlineCallCRetD(result, args, count, sym->getFuncPtr());
+			inlineCallCRetD(result, args, count, sym->getFuncPtr(true));
 
 		return JitVar(result, JitVar::FLAG_NONE);
 	}
@@ -1222,7 +1222,6 @@ namespace mathpresso {
 			return;
 		}
 
-		//inlineCall(dst, &src, 1, (void*)(Arg1Func)mpRound);
 		inlineCallAbstract(dst, &src, 2, op, isComplex, returnsComplex);
 	}
 
@@ -1357,7 +1356,6 @@ namespace mathpresso {
 		ctx->setArg(0, _ptr);
 		ctx->setArg(1, ind);
 
-		//cc->movapd(dst, stack);
 	}
 
 	void JitCompiler::inlineCallComplex(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
