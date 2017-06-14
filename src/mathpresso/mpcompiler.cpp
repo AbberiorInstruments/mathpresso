@@ -315,10 +315,9 @@ namespace mathpresso {
 	}
 
 	JitVar JitCompiler::registerVarComplex(const JitVar& other, bool otherIsNonComplex) {
-		if (otherIsNonComplex) {
+		if (otherIsNonComplex) 
 			return registerVarAsComplex(other);
-		}
-		if (other.isMem())
+		else if (other.isMem())
 			return copyVarComplex(other, other.flags);
 		else
 			return other;
@@ -449,6 +448,9 @@ namespace mathpresso {
 
 		for (i = 0; i < len; i++)
 			result = onNode(node->getAt(i));
+
+		if (node->getAt(len-1)->hasNodeFlag(kAstReturnsComplex))
+			node->addNodeFlags(kAstReturnsComplex | kAstComplex);
 
 		// Return the last result (or no result if the block is empty).
 		return result;

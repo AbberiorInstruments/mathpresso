@@ -365,11 +365,23 @@ _Repeat:
 	// parse id[UUID]
 	if (pToken[0] == 'i' && pToken[1] == 'd')
 	{
-		size_t len = size_t(38);
-		uint32_t hash = HashUtils::hashString((char *)pToken, len);
-		p = pToken + len;
-		_p = reinterpret_cast<const char *>(p);
-		return token->setData(size_t(pToken - pStart), len, hash, kTokenSymbol);
+		size_t len(38);
+
+		// check for a valid uuid. if invalid, parse as normal Token.
+		bool valid = true;
+		for (size_t i = 2; i < len; i++) {
+			if (i == 10 || i == 15 || i == 20 || i == 25)
+				valid &= mpCharClass[pToken[i]] == kTokenCharSub;
+			else 
+				valid &= mpCharClass[pToken[i]] <= kTokenChar0xF;
+		}
+		if (valid) 
+		{
+			uint32_t hash = HashUtils::hashString((char *)pToken, len);
+			p = pToken + len;
+			_p = reinterpret_cast<const char *>(p);
+			return token->setData(size_t(pToken - pStart), len, hash, kTokenSymbol);
+		}
 	}
 
     size_t len = (size_t)(p - pToken);
