@@ -159,8 +159,6 @@ namespace mathpresso {
 				AstImm* child = static_cast<AstImm*>(node->getChild());
 				double value = child->getValue();
 
-
-
 				switch (node->getOp()) {
 				case kOpNeg: value = -value; break;
 				case kOpNot: value = (value == 0); break;
@@ -406,7 +404,7 @@ namespace mathpresso {
 
 		bool lIsImm = left->isImm();
 		bool rIsImm = right->isImm();
-		bool needs_complex = node->getLeft()->hasNodeFlag(kAstReturnsComplex) | node->getRight()->hasNodeFlag(kAstReturnsComplex);
+		bool needs_complex = node->getLeft()->hasNodeFlag(kAstReturnsComplex) || node->getRight()->hasNodeFlag(kAstReturnsComplex);
 
 		if (!needs_complex)
 		{
