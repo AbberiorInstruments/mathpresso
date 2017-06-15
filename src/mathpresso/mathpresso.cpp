@@ -160,12 +160,8 @@ MATHPRESSO_NOAPI Error mpTraceError(Error error) {
 //!
 //! Returns NaN.
 static void mpDummyFunc(double* result, void*) {
-  *result = mpGetNan();
-}
-
-static void mpDummyFuncComp(double result[2], void*) {
-	result[0] = mpGetNan();
-	result[1] = mpGetNan();
+  result[0] = mpGetNan();
+  result[1] = mpGetNan();
 }
 
 // ============================================================================
@@ -480,6 +476,8 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 	  sym->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);
   if (flags & kComplexFunctionReturnsReal)
 	  sym->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
+  if (flags & kFunctionHasState)
+	  sym->setSymbolFlag(kAstSymbolHasState);
 
   // TODO: Other function flags.
   sym->setFuncArgs(flags & _kFunctionArgMask);
@@ -507,8 +505,14 @@ Error Context::delSymbol(const char* name) {
 // [mathpresso::Expression - Construction / Destruction]
 // ============================================================================
 
-Expression::Expression() : _func(mpDummyFunc), _funcComplex(mpDummyFuncComp) {}
-Expression::~Expression() { reset(); }
+Expression::Expression() : _func(mpDummyFunc) 
+{
+}
+
+Expression::~Expression() 
+{ 
+	reset(); 
+}
 
 // ============================================================================
 // [mathpresso::Expression - Interface]
@@ -562,36 +566,27 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	// Compile the function to machine code.
 	reset();
 
-	if (!_isComplex) {
-		CompiledFunc fn = mpCompileFunction(&ast, options, log);
-		if (fn == NULL)
-			return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
-		_func = fn;
-	}
+	CompiledFunc fn = mpCompileFunction(&ast, options, log, _isComplex);
 
-	CompiledFuncComp fnc = mpCompileFunctionComplex(&ast, options, log);
-	if (fnc == NULL)
+	if (fn == NULL)
 		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
-
-	_funcComplex = fnc;
+	_func = fn;
 
 	return kErrorOk;
 }
 
-bool Expression::isCompiled() const {
-  return _funcComplex != mpDummyFuncComp && _func != mpDummyFunc;
+bool Expression::isCompiled() const 
+{
+	return _func != mpDummyFunc;
 }
 
-void Expression::reset() {
-  // Allocated by a JIT memory manager, free it.
-  if (_func != mpDummyFunc) {
-    mpFreeFunction((void*)_func);
-    _func = mpDummyFunc;
-  }
-  if (_funcComplex != mpDummyFuncComp) {
-	  mpFreeFunction((void*)_funcComplex);
-	  _funcComplex = mpDummyFuncComp;
-  }
+void Expression::reset() 
+{
+	// Allocated by a JIT memory manager, free it.
+	if (_func != mpDummyFunc) {
+		mpFreeFunction((void*)_func);
+		_func = mpDummyFunc;
+	}
 }
 
 // ============================================================================

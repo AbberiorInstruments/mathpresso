@@ -103,7 +103,9 @@ enum AstSymbolFlags {
   //! The symbol returns a complex value
   kAstSymbolRealFunctionReturnsComplex = 0x00040,
   //! The symbol returns a complex value
-  kAstSymbolComplexFunctionReturnsReal = 0x00080
+  kAstSymbolComplexFunctionReturnsReal = 0x00080,
+  //! See function flags
+  kAstSymbolHasState = 0x00100
 };
 
 // ============================================================================

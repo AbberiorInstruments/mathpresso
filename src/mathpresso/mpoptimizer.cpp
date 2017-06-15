@@ -652,11 +652,19 @@ namespace mathpresso {
 		}
 
 
-		bool allConst = true;
-		bool allConstComplex = true;
-		for (i = 0; i < count; i++) {
-			allConst &= node->getAt(i)->isImm();
-			allConstComplex &= node->getAt(i)->isImmComplex();
+		bool allConst = false;
+		bool allConstComplex = false;
+
+		if (!sym ->hasSymbolFlag(kAstSymbolHasState))
+		{
+			allConst = true;
+			allConstComplex = true;
+
+			for (i = 0; i < count; i++)
+			{
+				allConst &= node->getAt(i)->isImm();
+				allConstComplex &= node->getAt(i)->isImmComplex();
+			}
 		}
 
 		if (allConst && count <= 8) 

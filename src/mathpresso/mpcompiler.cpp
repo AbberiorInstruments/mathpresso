@@ -180,9 +180,8 @@ namespace mathpresso {
 		JitVar registerVarAsComplex(const JitVar & other);
 
 		// Compiler.
-		void compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots);
-		void compileComplex(AstBlock * node, AstScope * rootScope, uint32_t numSlots);
-
+		void compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots, bool b_complex);
+		
 		JitVar onNode(AstNode* node);
 		JitVar onBlock(AstBlock* node);
 		JitVar onVarDecl(AstVarDecl* node);
@@ -337,7 +336,7 @@ namespace mathpresso {
 
 	//! Compiles an AstBlock into assembler.
 	//! NOTE: use beginFunction() before and endFunction() after calling this.
-	void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots) {
+	void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots, bool b_complex) {
 		// Create Definitions for the Variables and add them as JitVar
 		if (numSlots != 0) {
 			varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
@@ -357,8 +356,16 @@ namespace mathpresso {
 				AstSymbol* sym = it.get();
 				if (sym->isGlobal() && sym->isAltered()) {
 					JitVar v = varSlots[sym->getVarSlotId()];
-					cc->emit(X86Inst::kIdMovsd,
-						x86::ptr(variablesAddress, sym->getVarOffset()), registerVar(v).getXmm());
+					if (!b_complex)
+					{
+						cc->emit(X86Inst::kIdMovsd,
+							x86::ptr(variablesAddress, sym->getVarOffset()), registerVar(v).getXmm());
+					}
+					else
+					{
+						cc->emit(X86Inst::kIdMovapd,
+							x86::ptr(variablesAddress, sym->getVarOffset()), registerVarComplex(v).getXmm());
+					}
 				}
 
 				it.next();
@@ -367,56 +374,22 @@ namespace mathpresso {
 
 		// Return NaN if no result is given.
 		X86Xmm var;
-		if (result.isNone())
-			var = registerVar(getConstantD64(mpGetNan())).getXmm();
-		else
-			var = registerVar(result).getXmm();
-		cc->movsd(x86::ptr(resultAddress), var);
-
-
-		// Release the Space allocated for the variables
-		if (numSlots != 0)
-			heap->release(varSlots, sizeof(JitVar) * numSlots);
-	}
-
-	//! Compiles an AstBlock into assembler.
-	//! NOTE: use beginFunction() before and endFunction() after calling this.
-	void JitCompiler::compileComplex(AstBlock* node, AstScope* rootScope, uint32_t numSlots) {
-		// Create Definitions for the Variables and add them as JitVar
-		if (numSlots != 0) {
-			varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
-			if (varSlots == NULL) return;
-
-			for (uint32_t i = 0; i < numSlots; i++)
-				varSlots[i] = JitVar();
-		}
-
-		// Result of the function or NaN. Here the AST is compiled.
-		JitVar result = onBlock(node);
-
-		// Write altered global variables.
+		if (!b_complex)
 		{
-			AstSymbolHashIterator it(rootScope->getSymbols());
-			while (it.has()) {
-				AstSymbol* sym = it.get();
-				if (sym->isGlobal() && sym->isAltered()) {
-					JitVar v = varSlots[sym->getVarSlotId()];
-					cc->emit(X86Inst::kIdMovapd,
-						x86::ptr(variablesAddress, sym->getVarOffset()), registerVarComplex(v).getXmm());
-				}
-
-				it.next();
-			}
+			if (result.isNone())
+				var = registerVar(getConstantD64(mpGetNan())).getXmm();
+			else
+				var = registerVar(result).getXmm();
+			cc->movsd(x86::ptr(resultAddress), var);
 		}
-
-		// Return NaN if no result is given.
-		X86Xmm var;
-		if (result.isNone())
-			var = registerVarComplex(getConstantD64Compl(mpGetNan())).getXmm();
 		else
-			var = registerVarComplex(result, !node->hasNodeFlag(kAstComplex)).getXmm();
-		cc->movupd(x86::ptr(resultAddress), var);
-
+		{
+			if (result.isNone())
+				var = registerVarComplex(getConstantD64Compl(mpGetNan())).getXmm();
+			else
+				var = registerVarComplex(result, !node->hasNodeFlag(kAstComplex)).getXmm();
+			cc->movupd(x86::ptr(resultAddress), var);
+		}
 
 		// Release the Space allocated for the variables
 		if (numSlots != 0)
@@ -1476,7 +1449,7 @@ namespace mathpresso {
 		return getConstantU64AsPD(bits.u);
 	}
 
-	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log) {
+	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, bool b_complex) {
 		StringLogger logger;
 
 		CodeHolder code;
@@ -1486,7 +1459,7 @@ namespace mathpresso {
 		bool debugAsm = log != NULL && (options & kOptionDebugAsm) != 0;
 
 		if (debugAsm) {
-			logger.addOptions(Logger::kOptionBinaryForm);
+			logger.addOptions(Logger::kOptionBinaryForm | (b_complex ? Logger::kOptionImmExtended : 0));
 			code.setLogger(&logger);
 		}
 
@@ -1495,45 +1468,12 @@ namespace mathpresso {
 			jitCompiler.enableSSE4_1 = false;
 
 		jitCompiler.beginFunction();
-		jitCompiler.compile(ast->getProgramNode(), ast->getRootScope(), ast->_numSlots);
+		jitCompiler.compile(ast->getProgramNode(), ast->getRootScope(), ast->_numSlots, b_complex);
 		jitCompiler.endFunction();
 
 		c.finalize();
 
 		CompiledFunc fn;
-		jitGlobal.runtime.add(&fn, &code);
-
-		if (debugAsm)
-			log->log(OutputLog::kMessageAsm, 0, 0, logger.getString(), logger._stringBuilder.getLength());
-
-		return fn;
-	}
-
-	CompiledFuncComp mpCompileFunctionComplex(AstBuilder* ast, uint32_t options, OutputLog* log) {
-		StringLogger logger;
-
-		CodeHolder code;
-		code.init((jitGlobal.runtime.getCodeInfo()));
-
-		X86Compiler c(&code);
-		bool debugAsm = log != NULL && (options & kOptionDebugAsm) != 0;
-
-		if (debugAsm) {
-			logger.addOptions(Logger::kOptionBinaryForm | Logger::kOptionImmExtended);
-			code.setLogger(&logger);
-		}
-
-		JitCompiler jitCompiler(ast->getHeap(), &c);
-		if ((options & kOptionDisableSSE4_1) != 0)
-			jitCompiler.enableSSE4_1 = false;
-
-		jitCompiler.beginFunction();
-		jitCompiler.compileComplex(ast->getProgramNode(), ast->getRootScope(), ast->_numSlots);
-		jitCompiler.endFunction();
-
-		c.finalize();
-
-		CompiledFuncComp fn;
 		jitGlobal.runtime.add(&fn, &code);
 
 		if (debugAsm)
