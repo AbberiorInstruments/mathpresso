@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <complex>
+#include <vector>
 
 #if !defined(_MSC_VER)
 #include <stdint.h>
@@ -291,6 +292,8 @@ struct Context {
   //! Delete symbol from this context.
   MATHPRESSO_API Error delSymbol(const char* name);
 
+  //! Retrieve a list of all available symbols
+  MATHPRESSO_API Error listSymbols(std::vector<std::string> &syms);
   // --------------------------------------------------------------------------
   // [Members]
   // --------------------------------------------------------------------------

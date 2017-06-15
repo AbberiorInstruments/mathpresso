@@ -444,6 +444,23 @@ Error Context::addVariable(const char* name, int offset, unsigned int flags) {
   return kErrorOk;
 }
 
+Error Context::listSymbols(std::vector<std::string> &syms)
+{
+	syms.clear();
+
+	ContextInternalImpl* d;
+	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
+
+	HashIterator<StringRef, AstSymbol> it(d ->_scope.getSymbols());
+	do 
+	{
+		syms.push_back(it.get()->_name);
+	} 
+	while (it.next());
+
+	return kErrorOk;
+}
+
 
 Error Context::addFunction(const char* name, void* fn, unsigned int flags, void * fn_cplx) 
 {
