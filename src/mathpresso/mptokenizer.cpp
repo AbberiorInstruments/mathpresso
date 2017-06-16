@@ -143,8 +143,8 @@ enum {
 //!
 //! Converts a given symbol `s` of `sLen` to a keyword token.
 static uint32_t mpGetKeyword(const uint8_t* s, size_t sLen) {
-  //if (sLen == 3 && s[0] == 'v' && s[1] == 'a' && s[2] == 'r')
-    //return kTokenVar;
+  if (sLen == 3 && s[0] == 'v' && s[1] == 'a' && s[2] == 'r')
+    return kTokenVar;
 
   return kTokenSymbol;
 }

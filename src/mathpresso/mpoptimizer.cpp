@@ -626,7 +626,7 @@ namespace mathpresso {
 		if (allConst && count <= 8) 
 		{
 			AstImm** args = reinterpret_cast<AstImm**>(node->getChildren());
-
+			AstNode* replacement;
 			void* fn = sym->getFuncPtr();
 			if (!sym->hasSymbolFlag(kAstSymbolRealFunctionReturnsComplex))
 			{
@@ -645,9 +645,8 @@ namespace mathpresso {
 				}
 #undef ARG
 
-				AstNode* replacement = _ast->newNode<AstImm>(result);
-				node->getParent()->replaceNode(node, replacement);
-				onNode(replacement);
+				replacement = _ast->newNode<AstImm>(result);
+				
 			}
 			else
 			{
@@ -655,12 +654,12 @@ namespace mathpresso {
 				for (i = 0; i < count; i++) {
 					argsDouble[i] = static_cast<AstImm*>(node->getAt(i))->getValue();
 				}
-				std::complex<double> result(0.0, 0.0);
-				result = ((ArgFuncDtoC)sym->getFuncPtr())(argsDouble);
-				AstNode* replacement = _ast->newNode<AstImm>(result);
-				node->getParent()->replaceNode(node, replacement);
-				onNode(replacement);
+				replacement = _ast->newNode<AstImm>(((ArgFuncDtoC)sym->getFuncPtr())(argsDouble));	
 			}
+
+			node->getParent()->replaceNode(node, replacement);
+			onNode(replacement);
+
 			_ast->deleteNode(node);
 		}
 		else if (allConstComplex && count < 9) 

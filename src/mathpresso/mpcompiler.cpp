@@ -798,7 +798,7 @@ namespace mathpresso {
 		{
 
 			// Handle the case that the operands are the same variable.
-			if (left->returnsComplex() && right->returnsComplex() &&
+			if (left->returnsComplex() && right->returnsComplex() && left->isVar() && right->isVar() &&
 				static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
 			{
 				vl = vr = writableVarComplex(onNode(left));
