@@ -195,8 +195,8 @@ namespace mathpresso {
 
 
 		// Helpers.
-		void inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool isComplex, bool returnsComplex);
-		void inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool paramsAreComplex, bool returnsComplex);
+		void inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool takesComplex, bool returnsComplex);
+		void inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool takesComplex, bool returnsComplex);
 		void inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn);
 		void inlineCallDRetC(const X86Xmm & dst, const X86Xmm * args, uint32_t count, void * fn);
 		void inlineCallCRetD(const X86Xmm & dst, const X86Xmm * args, const uint32_t count, void * fn);
@@ -385,7 +385,7 @@ namespace mathpresso {
 			if (result.isNone())
 				var = registerVarComplex(getConstantD64Compl(mpGetNan())).getXmm();
 			else
-				var = registerVarComplex(result, !node->hasNodeFlag(kAstComplex)).getXmm();
+				var = registerVarComplex(result, !node->returnsComplex()).getXmm();
 			cc->movupd(x86::ptr(resultAddress), var);
 		}
 
@@ -440,7 +440,7 @@ namespace mathpresso {
 	JitVar JitCompiler::onVar(AstVar* node) {
 		AstSymbol* sym = node->getSymbol();
 		uint32_t slotId = sym->getVarSlotId();
-		bool b_complex = node ->hasNodeFlag(kAstReturnsComplex);
+		bool b_complex = node ->returnsComplex();
 
 		JitVar result = varSlots[slotId];
 		if (result.isNone()) {
@@ -484,7 +484,7 @@ namespace mathpresso {
 		uint32_t op = node->getOp();
 		JitVar var = onNode(node->getChild());
 
-		if (!node->hasNodeFlag(kAstComplex))
+		if (!node->takesComplex())
 		{
 			switch (op)
 			{
@@ -549,7 +549,7 @@ namespace mathpresso {
 			case kOpCeil:
 			{
 				var = writableVar(var);
-				inlineRound(var.getXmm(), var.getXmm(), op, node->hasNodeFlag(kAstComplex), node->getChild()->hasNodeFlag(kAstReturnsComplex));
+				inlineRound(var.getXmm(), var.getXmm(), op, node->takesComplex(), node->getChild()->returnsComplex());
 				return var;
 			}
 
@@ -589,7 +589,7 @@ namespace mathpresso {
 				else
 				{
 					// Pure SSE2 `frac()`, uses the same rounding trick as `floor()`.
-					inlineRound(tmp, var.getXmm(), kOpFloor, node->hasNodeFlag(kAstComplex), node->hasNodeFlag(kAstReturnsComplex));
+					inlineRound(tmp, var.getXmm(), kOpFloor, node->takesComplex(), node->returnsComplex());
 					cc->subsd(var.getXmm(), tmp);
 					return var;
 				}
@@ -619,7 +619,7 @@ namespace mathpresso {
 			// No inline implementation -> function call.
 			X86Xmm result;
 			X86Xmm args[1];
-			if (node->hasNodeFlag(kAstComplex)) {
+			if (node->takesComplex()) {
 				result = cc->newXmmPd();
 				args[0] = registerVarComplex(var).getXmm();
 			}
@@ -629,7 +629,7 @@ namespace mathpresso {
 			}
 
 
-			inlineCallAbstract(result, args, 1, op, node->hasNodeFlag(kAstComplex), node->hasNodeFlag(kAstReturnsComplex));
+			inlineCallAbstract(result, args, 1, op, node->takesComplex(), node->returnsComplex());
 			return JitVar(result, JitVar::FLAG_NONE);
 		
 		}
@@ -637,7 +637,7 @@ namespace mathpresso {
 			switch (op)
 			{
 			case kOpConjug:
-				JitVar result = registerVarComplex(var, node->getChild()->hasNodeFlag(kAstReturnsComplex));
+				JitVar result = registerVarComplex(var, node->getChild()->returnsComplex());
 				cc->pxor(result.getXmm(), getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000)).getMem());
 				return result;
 			}
@@ -645,9 +645,9 @@ namespace mathpresso {
 			X86Xmm result;
 			X86Xmm args[1];
 
-			if (node->hasNodeFlag(kAstComplex)) {
+			if (node->takesComplex()) {
 				result = cc->newXmmPd();
-				args[0] = registerVarComplex(var, !node->getChild()->hasNodeFlag(kAstReturnsComplex)).getXmm();
+				args[0] = registerVarComplex(var, !node->getChild()->returnsComplex()).getXmm();
 			}
 			else {
 				result = cc->newXmmSd();
@@ -655,7 +655,7 @@ namespace mathpresso {
 			}
 
 
-			inlineCallAbstract(result, args, 1, op, node->hasNodeFlag(kAstComplex), node->hasNodeFlag(kAstReturnsComplex));
+			inlineCallAbstract(result, args, 1, op, node->takesComplex(), node->returnsComplex());
 			return JitVar(result, JitVar::FLAG_NONE);
 		}
 	}
@@ -673,7 +673,7 @@ namespace mathpresso {
 			AstVar* varNode = reinterpret_cast<AstVar*>(left);
 			MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVar);
 
-			if (varNode->isComplex()) 
+			if (varNode->takesComplex()) 
 			{
 				;
 			}
@@ -717,7 +717,7 @@ namespace mathpresso {
 		uint32_t inst = 0;
 		int predicate = 0;
 
-		if (!node->hasNodeFlag(kAstComplex))
+		if (!node->takesComplex())
 		{
 			vl = writableVar(vl);
 			switch (op)
@@ -765,7 +765,7 @@ namespace mathpresso {
 
 				cc->movsd(result, vl.getXmm());
 				cc->divsd(vl.getXmm(), vr.getXmm());
-				inlineRound(vl.getXmm(), vl.getXmm(), kOpTrunc, node->hasNodeFlag(kAstComplex), node->hasNodeFlag(kAstReturnsComplex));
+				inlineRound(vl.getXmm(), vl.getXmm(), kOpTrunc, node->takesComplex(), node->returnsComplex());
 				cc->mulsd(vl.getXmm(), vr.getXmm());
 				cc->subsd(result, vl.getXmm());
 
@@ -806,12 +806,12 @@ namespace mathpresso {
 			else
 			{
 
-				if (!left->hasNodeFlag(kAstReturnsComplex)&& vl.isMem())
+				if (!left->returnsComplex()&& vl.isMem())
 					vl = registerVarAsComplex(vl);
 				else 
 					vl = writableVarComplex(vl);
 
-				if (!right->hasNodeFlag(kAstReturnsComplex) && vr.isMem())
+				if (!right->returnsComplex() && vr.isMem())
 					vr = registerVarAsComplex(vr);
 
 				if (vl.isRO() && !vr.isRO() && op == kOpAdd && op == kOpMul)
@@ -875,7 +875,7 @@ namespace mathpresso {
 		// No inline implementation -> function call.
 		X86Xmm result;
 		X86Xmm args[2];
-		if (node->hasNodeFlag(kAstComplex))
+		if (node->takesComplex())
 		{
 			result = cc->newXmmPd();
 			args[0] = registerVarComplex(vl).getXmm();
@@ -888,7 +888,7 @@ namespace mathpresso {
 			args[1] = registerVar(vr).getXmm();
 		}
 
-		inlineCallAbstract(result, args, 2, op, node->hasNodeFlag(kAstComplex), node->hasNodeFlag(kAstReturnsComplex));
+		inlineCallAbstract(result, args, 2, op, node->takesComplex(), node->returnsComplex());
 
 		return JitVar(result, JitVar::FLAG_NONE);
 	}
@@ -906,7 +906,7 @@ namespace mathpresso {
 
 		JitVar ret = onNode(condition);
 					
-		if (condition->hasNodeFlag(kAstReturnsComplex))
+		if (condition->returnsComplex())
 			cc->haddpd(ret.getXmm(), ret.getXmm());
 			
 		cc->ucomisd(ret.getXmm(), getConstantD64(0).getMem());
@@ -956,14 +956,14 @@ namespace mathpresso {
 
 	JitVar JitCompiler::onCall(AstCall* node)
 	{
-		if (node->hasNodeFlag(kAstComplex))
+		if (node->takesComplex())
 		{
 			return onCallComp(node);
 		}
 		uint32_t i, count = node->getLength();
 		AstSymbol* sym = node->getSymbol();
 
-		X86Xmm result = node->hasNodeFlag(kAstReturnsComplex) ? cc->newXmmPd() : cc->newXmmSd();
+		X86Xmm result = node->returnsComplex() ? cc->newXmmPd() : cc->newXmmSd();
 		X86Xmm args[8];
 
 		for (i = 0; i < count; i++)
@@ -971,7 +971,7 @@ namespace mathpresso {
 			args[i] = registerVar(onNode(node->getAt(i))).getXmm();
 		}
 
-		if (node->hasNodeFlag(kAstReturnsComplex))
+		if (node->returnsComplex())
 			inlineCallDRetC(result, args, count, sym->getFuncPtr());
 		else
 			inlineCall(result, args, count, sym->getFuncPtr());
@@ -983,13 +983,13 @@ namespace mathpresso {
 		uint32_t i, count = node->getLength();
 		AstSymbol* sym = node->getSymbol();
 
-		X86Xmm result = node->hasNodeFlag(kAstReturnsComplex) ? cc->newXmmPd() : cc->newXmmSd();
+		X86Xmm result = node->returnsComplex() ? cc->newXmmPd() : cc->newXmmSd();
 		X86Xmm args[8];
 
 		for (i = 0; i < count; i++) {
-			args[i] = registerVarComplex(onNode(node->getAt(i)), !node->getAt(i)->hasNodeFlag(kAstReturnsComplex)).getXmm();
+			args[i] = registerVarComplex(onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
 		}
-		if (node->hasNodeFlag(kAstReturnsComplex))
+		if (node->returnsComplex())
 			inlineCallComplex(result, args, count, sym->getFuncPtr(true));
 		else
 			inlineCallCRetD(result, args, count, sym->getFuncPtr(true));
@@ -997,7 +997,7 @@ namespace mathpresso {
 		return JitVar(result, JitVar::FLAG_NONE);
 	}
 
-	void JitCompiler::inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool isComplex, bool returnsComplex) {
+	void JitCompiler::inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool takesComplex, bool returnsComplex) {
 		// SSE4.1 implementation is easy except `round()`, which is not `roundeven()`.
 		if (enableSSE4_1) {
 			if (op == kOpRound) {
@@ -1154,11 +1154,11 @@ namespace mathpresso {
 			return;
 		}
 
-		inlineCallAbstract(dst, &src, 2, op, isComplex, returnsComplex);
+		inlineCallAbstract(dst, &src, 2, op, takesComplex, returnsComplex);
 	}
 
-	void JitCompiler::inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool paramsAreComplex, bool returnsComplex) {
-		if (paramsAreComplex) {
+	void JitCompiler::inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool takesComplex, bool returnsComplex) {
+		if (takesComplex) {
 			if (returnsComplex)
 				inlineCallComplex(dst, args, count, JitUtils::getFuncByOp(op));
 			else

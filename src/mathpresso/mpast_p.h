@@ -162,7 +162,7 @@ enum AstNodeType {
 //! `AstNode` flags.
 enum AstNodeFlags {
   kAstNodeHasSideEffect = 0x01,
-  kAstComplex = 0x02, // set, if a complex 'parameter' is expected.
+  kAstTakesComplex = 0x02, // set, if a complex 'parameter' is expected.
   kAstReturnsComplex = 0x04 // set, if the 'return' is complex.
 };
 
@@ -615,11 +615,7 @@ struct AstNode {
   MATHPRESSO_INLINE bool isVar() const { return _nodeType == kAstNodeVar; }
   //! Get whether the node is `AstImm`.
   MATHPRESSO_INLINE bool isImm() const { return _nodeType == kAstNodeImm; }
-  //! Get whether the node wraps around a complex Value.
-  MATHPRESSO_INLINE bool isComplex() const { return hasNodeFlag(kAstComplex); }
-
-  MATHPRESSO_INLINE bool returnsComplex() const { return hasNodeFlag(kAstReturnsComplex); }
-
+  
   //! Get whether the node has flag `flag`.
   MATHPRESSO_INLINE bool hasNodeFlag(uint32_t flag) const { return (static_cast<uint32_t>(_nodeFlags) & flag) != 0; }
   //! Get node flags.
@@ -630,6 +626,9 @@ struct AstNode {
   MATHPRESSO_INLINE void addNodeFlags(uint32_t flags) { _nodeFlags |= static_cast<uint8_t>(flags); }
   //! remove a flag.
   MATHPRESSO_INLINE void removeNodeFlags(uint32_t flags) { _nodeFlags &= ~static_cast<uint8_t>(flags); }
+
+  MATHPRESSO_INLINE bool takesComplex()   const { return hasNodeFlag(kAstTakesComplex); }
+  MATHPRESSO_INLINE bool returnsComplex() const { return hasNodeFlag(kAstReturnsComplex); }
 
   //! Get node size (in bytes).
   MATHPRESSO_INLINE uint32_t getNodeSize() const { return _nodeSize; }
@@ -966,7 +965,7 @@ struct AstImm : public AstNode {
 	  : AstNode(ast, kAstNodeImm),
 	  _value(value) 
   {
-	  addNodeFlags(kAstReturnsComplex | kAstComplex);
+	  addNodeFlags(kAstReturnsComplex);
   }
 
   // --------------------------------------------------------------------------
@@ -986,12 +985,12 @@ struct AstImm : public AstNode {
   MATHPRESSO_INLINE void setValue(double value) 
   { 
 	  _value = { value, 0 };
-	  removeNodeFlags(kAstReturnsComplex | kAstComplex);
+	  removeNodeFlags(kAstReturnsComplex);
   }
   MATHPRESSO_INLINE void setValue(std::complex<double> value) 
   { 
 	  _value = value; 
-	  addNodeFlags(kAstReturnsComplex | kAstComplex);
+	  addNodeFlags(kAstReturnsComplex);
   }
 
   // --------------------------------------------------------------------------
