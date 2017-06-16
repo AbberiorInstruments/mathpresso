@@ -96,17 +96,9 @@ namespace mathpresso {
 	Error AstOptimizer::onVar(AstVar* node) {
 		AstSymbol* sym = node->getSymbol();
 
-		if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
-			AstVarComplex* comp = _ast->newNode<AstVarComplex>();
-			_ast->deleteNode(node->getParent()->replaceNode(node, comp));
-			return onVarComp(comp);
-		}
-		else {
-
-			if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
-				AstImm* imm = _ast->newNode<AstImm>(sym->getValue());
-				_ast->deleteNode(node->getParent()->replaceNode(node, imm));
-			}
+		if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
+			AstImm* imm = _ast->newNode<AstImm>(sym->getValue());
+			_ast->deleteNode(node->getParent()->replaceNode(node, imm));
 		}
 		return kErrorOk;
 	}
@@ -116,11 +108,6 @@ namespace mathpresso {
 		if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
 			AstImmComplex* imm = _ast->newNode<AstImmComplex>(sym->getValueComp());
 			_ast->deleteNode(node->getParent()->replaceNode(node, imm));
-			imm->addNodeFlags(kAstComplex | kAstReturnsComplex);
-		}
-		else
-		{
-			node->addNodeFlags(kAstComplex | kAstReturnsComplex);
 		}
 		return kErrorOk;
 	}
@@ -130,7 +117,6 @@ namespace mathpresso {
 	}
 
 	Error AstOptimizer::onImmComp(AstImmComplex* node) {
-		node->addNodeFlags(kAstComplex| kAstReturnsComplex);
 		return kErrorOk;
 	}
 
