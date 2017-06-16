@@ -135,9 +135,7 @@ enum AstNodeType {
   //! Node is `AstVarDecl`.
   kAstNodeVarDecl,
   //! Node is `AstVar` of type double.
-  kAstNodeVarDouble,
-  //! Node is `AstVar` of type std::complex<double>.
-  kAstNodeVarComplex,
+  kAstNodeVar,
   //! Node is `AstImm`.
   kAstNodeImm,
   //! Node is `AstImm` of type std::complex<double>.
@@ -605,7 +603,7 @@ struct AstNode {
   //! Get whether the node has children.
   //!
   //! NOTE: Nodes that always have children (even if they are implicitly set
-  //! to NULL) always return `true`. This function if usefuly mostly if the
+  //! to NULL) always return `true`. This function if useful mostly if the
   //! node is of `AstBlock` type.
   MATHPRESSO_INLINE bool hasChildren() const { return _length != 0; }
   //! Get children array.
@@ -616,7 +614,7 @@ struct AstNode {
   //! Get node type.
   MATHPRESSO_INLINE uint32_t getNodeType() const { return _nodeType; }
   //! Get whether the node is `AstVar`.
-  MATHPRESSO_INLINE bool isVar() const { return _nodeType == kAstNodeVarDouble; }
+  MATHPRESSO_INLINE bool isVar() const { return _nodeType == kAstNodeVar; }
   //! Get whether the node is `AstImm`.
   MATHPRESSO_INLINE bool isImm() const { return _nodeType == kAstNodeImm; }
   MATHPRESSO_INLINE bool isImmComplex() const { return _nodeType == kAstNodeImmComplex; }
@@ -932,7 +930,7 @@ struct AstVar : public AstNode {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstVar(AstBuilder* ast)
-    : AstNode(ast, kAstNodeVarDouble),
+    : AstNode(ast, kAstNodeVar),
       _symbol(NULL) {}
 
   // --------------------------------------------------------------------------
@@ -971,47 +969,19 @@ struct AstImm : public AstNode {
 
   MATHPRESSO_INLINE double getValue() const { return _value; }
   MATHPRESSO_INLINE void setValue(double value) { _value = value; }
+  MATHPRESSO_INLINE std::complex<double> getValueComp() const { return _valueComp; }
+  MATHPRESSO_INLINE void setValueComp(std::complex<double> value) const { _valueComp = value; }
 
   // --------------------------------------------------------------------------
   // [Members]
   // --------------------------------------------------------------------------
 
   double _value;
-};
-
-// ============================================================================
-// [mathpresso::AstVarComplex]
-// ============================================================================
-
-struct AstVarComplex : public AstNode {
-	MATHPRESSO_NO_COPY(AstVarComplex)
-
-	// --------------------------------------------------------------------------
-	// [Construction / Destruction]
-	// --------------------------------------------------------------------------
-
-	MATHPRESSO_INLINE AstVarComplex(AstBuilder* ast)
-		: AstNode(ast, kAstNodeVarComplex),
-		_symbol(NULL) 
-	{
-		_nodeFlags = kAstComplex | kAstReturnsComplex;
-	}
-
-	// --------------------------------------------------------------------------
-	// [Accessors]
-	// --------------------------------------------------------------------------
-
-	MATHPRESSO_INLINE AstSymbol* getSymbol() const { return _symbol; }
-	MATHPRESSO_INLINE void setSymbol(AstSymbol* symbol) { _symbol = symbol; }
-
-	// --------------------------------------------------------------------------
-	// [Members]
-	// --------------------------------------------------------------------------
-
-	AstSymbol* _symbol;
+  std::complex<double> _valueComp;
 };
 
 
+/*
 // ============================================================================
 // [mathpresso::AstImmComplex]
 // ============================================================================
@@ -1043,7 +1013,7 @@ struct AstImmComplex : public AstNode {
 	std::complex<double> _value;
 
 };
-
+*/
 
 // ============================================================================
 // [mathpresso::AstUnaryOp]
@@ -1161,7 +1131,6 @@ struct AstVisitor {
   virtual Error onBlock(AstBlock* node) = 0;
   virtual Error onVarDecl(AstVarDecl* node) = 0;
   virtual Error onVar(AstVar* node) = 0;
-  virtual Error onVarComp(AstVarComplex* node) = 0;
   virtual Error onImm(AstImm* node) = 0;
   virtual Error onImmComp(AstImmComplex* node) = 0;
   virtual Error onUnaryOp(AstUnaryOp* node) = 0;
@@ -1197,7 +1166,6 @@ struct AstDump : public AstVisitor {
   virtual Error onBlock(AstBlock* node);
   virtual Error onVarDecl(AstVarDecl* node);
   virtual Error onVar(AstVar* node);
-  virtual Error onVarComp(AstVarComplex * node);
   virtual Error onImm(AstImm* node);
   virtual Error onImmComp(AstImmComplex * node);
   virtual Error onUnaryOp(AstUnaryOp* node);

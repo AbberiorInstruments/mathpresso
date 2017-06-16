@@ -360,16 +360,12 @@ _Repeat1:
 				symScope->putSymbol(sym);
 			}
 
-			if (sym->hasSymbolFlag(kAstSymbolIsComplex)) {
-				zNode = _ast->newNode<AstVarComplex>();
-				MATHPRESSO_NULLCHECK(zNode);
-				static_cast<AstVarComplex*>(zNode)->setSymbol(sym);
-			}
-			else {
-				zNode = _ast->newNode<AstVar>();
-				MATHPRESSO_NULLCHECK(zNode);
-				static_cast<AstVar*>(zNode)->setSymbol(sym);
-			}
+			zNode = _ast->newNode<AstVar>();
+			MATHPRESSO_NULLCHECK(zNode);
+			static_cast<AstVar*>(zNode)->setSymbol(sym);
+
+			if (sym->hasSymbolFlag(kAstSymbolIsComplex))
+				zNode ->addNodeFlags(kAstComplex | kAstReturnsComplex);
 
 			zNode->setPosition(token.getPosAsUInt());
 			sym->incUsedCount();
@@ -498,7 +494,7 @@ _Unary: {
         op = kOpAssign;
 
         // Check whether the assignment is valid.
-        if (tNode->getNodeType() != kAstNodeVarDouble)
+        if (tNode->getNodeType() != kAstNodeVar)
           MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
 
         AstSymbol* sym = static_cast<AstVar*>(tNode)->getSymbol();

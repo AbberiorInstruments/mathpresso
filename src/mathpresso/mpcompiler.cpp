@@ -186,7 +186,6 @@ namespace mathpresso {
 		JitVar onBlock(AstBlock* node);
 		JitVar onVarDecl(AstVarDecl* node);
 		JitVar onVar(AstVar* node);
-		JitVar onVarComplex(AstVarComplex* node);
 		JitVar onImm(AstImm* node);
 		JitVar onImmComplex(AstImmComplex * node);
 		JitVar onUnaryOp(AstUnaryOp* node);
@@ -400,8 +399,7 @@ namespace mathpresso {
 		switch (node->getNodeType()) {
 		case kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
 		case kAstNodeVarDecl: return onVarDecl(static_cast<AstVarDecl*>(node));
-		case kAstNodeVarDouble: return onVar(static_cast<AstVar*>(node));
-		case kAstNodeVarComplex: return onVarComplex(static_cast<AstVarComplex*>(node));
+		case kAstNodeVar: return onVar(static_cast<AstVar*>(node));
 		case kAstNodeImm: return onImm(static_cast<AstImm*>(node));
 		case kAstNodeImmComplex: return onImmComplex(static_cast<AstImmComplex*>(node));
 		case kAstNodeUnaryOp: return onUnaryOp(static_cast<AstUnaryOp*>(node));
@@ -444,6 +442,7 @@ namespace mathpresso {
 	JitVar JitCompiler::onVar(AstVar* node) {
 		AstSymbol* sym = node->getSymbol();
 		uint32_t slotId = sym->getVarSlotId();
+		bool b_complex = node ->hasNodeFlag(kAstReturnsComplex);
 
 		JitVar result = varSlots[slotId];
 		if (result.isNone()) {
@@ -451,38 +450,31 @@ namespace mathpresso {
 				result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAG_RO);
 				varSlots[slotId] = result;
 				if (sym->getWriteCount() > 0)
-					result = copyVar(result, JitVar::FLAG_NONE);
+				{
+					if (!b_complex)
+						result = copyVar(result, JitVar::FLAG_NONE);
+					else
+						result = copyVarComplex(result, JitVar::FLAG_NONE);
+				}
+
 			}
-			else {
-				result = getConstantD64(mpGetNan());
+			else 
+			{
+				if (!b_complex)
+				{
+					result = getConstantD64(mpGetNan());
+				}
+				else
+				{
+					result = getConstantD64Compl(mpGetNan());
+				}
 				varSlots[slotId] = result;
 			}
 		}
 
 		return result;
 	}
-
-	JitVar JitCompiler::onVarComplex(AstVarComplex* node) {
-		AstSymbol* sym = node->getSymbol();
-		uint32_t slotId = sym->getVarSlotId();
-
-		JitVar result = varSlots[slotId];
-		if (result.isNone()) {
-			if (sym->isGlobal()) {
-				result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAG_RO);
-				varSlots[slotId] = result;
-				if (sym->getWriteCount() > 0)
-					result = copyVarComplex(result, JitVar::FLAG_NONE);
-			}
-			else {
-				result = getConstantD64Compl(mpGetNan());
-				varSlots[slotId] = result;
-			}
-		}
-
-		return result;
-	}
-
+	
 	JitVar JitCompiler::onImm(AstImm* node) {
 		return getConstantD64(node->getValue());
 	}
@@ -682,12 +674,14 @@ namespace mathpresso {
 		// Compile assignment. Should never be reached.
 		if (op == kOpAssign) {
 			AstVar* varNode = reinterpret_cast<AstVar*>(left);
-			if (varNode->hasNodeFlag(kAstComplex)) {
-				MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVarComplex);
-			}
-			else {
-				MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVarDouble);
+			MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVar);
 
+			if (varNode->isComplex()) 
+			{
+				;
+			}
+			else 
+			{
 				AstSymbol* sym = varNode->getSymbol();
 				uint32_t slotId = sym->getVarSlotId();
 
@@ -703,8 +697,8 @@ namespace mathpresso {
 
 		JitVar vl, vr;
 
-		if (left->getNodeType() == kAstNodeVarDouble &&
-			right->getNodeType() == kAstNodeVarDouble &&
+		if (left->getNodeType() == kAstNodeVar &&
+			right->getNodeType() == kAstNodeVar &&
 			static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
 		{
 			vl = vr = writableVar(onNode(node->getLeft()));
@@ -807,9 +801,8 @@ namespace mathpresso {
 		{
 
 			// Handle the case that the operands are the same variable.
-			if (left->getNodeType() == kAstNodeVarComplex &&
-				right->getNodeType() == kAstNodeVarComplex &&
-				static_cast<AstVarComplex*>(left)->getSymbol() == static_cast<AstVarComplex*>(right)->getSymbol())
+			if (left->isComplex() && right->isComplex() &&
+				static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
 			{
 				vl = vr = writableVarComplex(onNode(left));
 			}
@@ -925,12 +918,12 @@ namespace mathpresso {
 		X86Xmm regErg = cc->newXmmPd();
 		JitVar ergLeft = onNode(left);
 
-		if (left->getNodeType() == kAstNodeImmComplex || left->getNodeType() == kAstNodeVarComplex)
+		if (left->getNodeType() == kAstNodeImmComplex || (left->getNodeType() == kAstNodeVar && left ->isComplex()))
 		{
 			cc->movupd(regErg, ergLeft.getXmm());
 		}
 
-		else if (left->getNodeType() == kAstNodeImm || left->getNodeType() == kAstNodeVarDouble)
+		else if (left->getNodeType() == kAstNodeImm || left->getNodeType() == kAstNodeVar)
 		{
 			cc->xorpd(regErg, regErg);
 			cc->movsd(regErg, ergLeft.getXmm());
@@ -941,12 +934,12 @@ namespace mathpresso {
 
 		JitVar ergRight = onNode(right);
 
-		if (right->getNodeType() == kAstNodeImmComplex || right->getNodeType() == kAstNodeVarComplex)
+		if (right->getNodeType() == kAstNodeImmComplex || (left->getNodeType() == kAstNodeVar && left ->isComplex()))
 		{
 			cc->movupd(regErg, ergRight.getXmm());
 		}
 
-		else if (right->getNodeType() == kAstNodeImm || right->getNodeType() == kAstNodeVarDouble)
+		else if (right->getNodeType() == kAstNodeImm || right->getNodeType() == kAstNodeVar)
 		{
 			cc->xorpd(regErg, regErg);
 			cc->movsd(regErg, ergRight.getXmm());

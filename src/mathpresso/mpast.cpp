@@ -39,10 +39,8 @@ static const AstNodeSize mpAstNodeSize[] = {
   ROW(kAstNodeProgram  , sizeof(AstProgram)  ),
   ROW(kAstNodeBlock    , sizeof(AstBlock)    ),
   ROW(kAstNodeVarDecl  , sizeof(AstVarDecl)  ),
-  ROW(kAstNodeVarDouble      , sizeof(AstVar)      ),
-  ROW(kAstNodeVarComplex	, sizeof(AstVarComplex) ),
+  ROW(kAstNodeVar      , sizeof(AstVar)      ),
   ROW(kAstNodeImm      , sizeof(AstImm)      ),
-  ROW(kAstNodeImmComplex , sizeof(AstImmComplex)),
   ROW(kAstNodeUnaryOp  , sizeof(AstUnaryOp)  ),
   ROW(kAstNodeBinaryOp , sizeof(AstBinaryOp) ),
   ROW(kAstNodeTernaryOp , sizeof(AstTernaryOp)),
@@ -102,13 +100,16 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
   sym->_symbolFlags = other->_symbolFlags;
 
   switch (sym->getSymbolType()) {
-    case kAstSymbolVariable: {
+    case kAstSymbolVariable: 
+	{
       sym->_varSlotId = other->_varSlotId;
       sym->_varOffset = other->_varOffset;
-	  if (sym->hasSymbolFlag(kAstComplex)) {
+	  if (sym->hasSymbolFlag(kAstComplex)) 
+	  {
 		  sym->_valueComp = other->_valueComp;
 	  }
-	  else {
+	  else 
+	  {
 		  sym->_value = other->_value;
 	  }
       break;
@@ -141,8 +142,7 @@ void AstBuilder::deleteNode(AstNode* node) {
     case kAstNodeProgram  : static_cast<AstProgram*  >(node)->destroy(this); break;
     case kAstNodeBlock    : static_cast<AstBlock*    >(node)->destroy(this); break;
     case kAstNodeVarDecl  : static_cast<AstVarDecl*  >(node)->destroy(this); break;
-    case kAstNodeVarDouble: static_cast<AstVar*      >(node)->destroy(this); break;
-	case kAstNodeVarComplex: static_cast<AstVarComplex*>(node)->destroy(this); break;
+    case kAstNodeVar      : static_cast<AstVar*      >(node)->destroy(this); break;
     case kAstNodeImm      : static_cast<AstImm*      >(node)->destroy(this); break;
     case kAstNodeUnaryOp  : static_cast<AstUnaryOp*  >(node)->destroy(this); break;
     case kAstNodeBinaryOp : static_cast<AstBinaryOp* >(node)->destroy(this); break;
@@ -419,10 +419,8 @@ Error AstVisitor::onNode(AstNode* node) {
     case kAstNodeProgram  : return onProgram  (static_cast<AstProgram*  >(node));
     case kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
     case kAstNodeVarDecl  : return onVarDecl  (static_cast<AstVarDecl*  >(node));
-    case kAstNodeVarDouble: return onVar      (static_cast<AstVar*      >(node));
-	case kAstNodeVarComplex: return onVarComp (static_cast<AstVarComplex*>(node));
+    case kAstNodeVar      : return onVar      (static_cast<AstVar*      >(node));
 	case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
-	case kAstNodeImmComplex: return onImmComp(static_cast<AstImmComplex*>(node));
 	case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
     case kAstNodeBinaryOp : return onBinaryOp (static_cast<AstBinaryOp* >(node));
 	case kAstNodeTernaryOp: return onTernaryOp(static_cast<AstTernaryOp*>(node));
@@ -472,12 +470,8 @@ Error AstDump::onVarDecl(AstVarDecl* node) {
 
 Error AstDump::onVar(AstVar* node) {
   AstSymbol* sym = node->getSymbol();
-  return info("%s", sym ? sym->getName() : static_cast<const char*>(NULL));
-}
-
-Error AstDump::onVarComp(AstVarComplex* node) {
-	AstSymbol* sym = node->getSymbol();
-	return info("%s <complex>", sym ? sym->getName() : static_cast<const char*>(NULL));
+  auto * t = node ->hasNodeFlag(kAstReturnsComplex) ? "<clpx>" : "<real>";
+  return info("%s %s", sym ? sym->getName() : nullptr, t);
 }
 
 Error AstDump::onImm(AstImm* node) {
