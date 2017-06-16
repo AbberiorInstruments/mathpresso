@@ -475,12 +475,14 @@ Error AstDump::onVar(AstVar* node) {
 }
 
 Error AstDump::onImm(AstImm* node) {
-	return info("%lf", node->_value);
+	auto v = node ->getValueComp();
+
+	if (node ->hasNodeFlag(kAstReturnsComplex))
+		return info("%lf%+lfi", v.real(), v.imag());
+	else
+		return info("%lf", v.real());
 }
 
-Error AstDump::onImmComp(AstImmComplex* node) {
-	return info("%lf + %lf i", node->_value.real(), node->_value.imag());
-}
 
 Error AstDump::onUnaryOp(AstUnaryOp* node) {
 	nest("%s [Unary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "real"	,

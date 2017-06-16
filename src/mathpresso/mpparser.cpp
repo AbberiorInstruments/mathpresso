@@ -317,13 +317,14 @@ Error Parser::parseExpression(AstNode** pNode, bool isNested) {
 
   // Currently parsed node.
   AstNode* tNode = NULL;
-
+  
   for (;;) {
     // Last unary node. It's an optimization to prevent recursion in case that
     // we found two or more unary expressions after each other. For example the
     // expression "-!-1" contains only unary operators that will be parsed by
     // a single `parseExpression()` call.
     AstUnary* unary = NULL;
+	bool b_complex = false;
 
 _Repeat1:
     switch (_tokenizer.next(&token)) {
@@ -384,34 +385,28 @@ _Repeat1:
       }
 
       // Parse a number.
+	  case kTokenComplex:
+		  b_complex = true;
       case kTokenNumber: {
         AstImm* zNode = _ast->newNode<AstImm>();
         MATHPRESSO_NULLCHECK(zNode);
 
         zNode->setPosition(token.getPosAsUInt());
-        zNode->_value = token.value;
-
+		if (b_complex)
+		{
+			zNode->setValue(token.value);
+		}
+		else
+		{
+			zNode->setValue({ 0, token.value });
+		}
+			
         if (unary == NULL)
           tNode = zNode;
         else
           unary->setChild(zNode);
         break;
       }
-
-	  // Parse a complex number.
-	  case kTokenComplex: {
-		  AstImmComplex* zNode = _ast->newNode<AstImmComplex>();
-		  MATHPRESSO_NULLCHECK(zNode);
-
-		  zNode->setPosition(token.getPosAsUInt());
-		  zNode->_value = std::complex<double>(0.0, token.value);
-
-		  if (unary == NULL)
-			  tNode = zNode;
-		  else
-			  unary->setChild(zNode);
-		  break;
-	  }
 
       // Parse expression terminators - ',', ';' or ')'.
       case kTokenComma:

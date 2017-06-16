@@ -187,7 +187,6 @@ namespace mathpresso {
 		JitVar onVarDecl(AstVarDecl* node);
 		JitVar onVar(AstVar* node);
 		JitVar onImm(AstImm* node);
-		JitVar onImmComplex(AstImmComplex * node);
 		JitVar onUnaryOp(AstUnaryOp* node);
 		JitVar onBinaryOp(AstBinaryOp* node);
 		JitVar onTernaryOp(AstTernaryOp * node);
@@ -401,7 +400,6 @@ namespace mathpresso {
 		case kAstNodeVarDecl: return onVarDecl(static_cast<AstVarDecl*>(node));
 		case kAstNodeVar: return onVar(static_cast<AstVar*>(node));
 		case kAstNodeImm: return onImm(static_cast<AstImm*>(node));
-		case kAstNodeImmComplex: return onImmComplex(static_cast<AstImmComplex*>(node));
 		case kAstNodeUnaryOp: return onUnaryOp(static_cast<AstUnaryOp*>(node));
 		case kAstNodeBinaryOp: return onBinaryOp(static_cast<AstBinaryOp*>(node));
 		case kAstNodeTernaryOp: return onTernaryOp(static_cast<AstTernaryOp*>(node));
@@ -476,11 +474,10 @@ namespace mathpresso {
 	}
 	
 	JitVar JitCompiler::onImm(AstImm* node) {
-		return getConstantD64(node->getValue());
-	}
-
-	JitVar JitCompiler::onImmComplex(AstImmComplex* node) {
-		return getConstantD64Compl(node->getValue());
+		if (node ->isComplex())
+			return getConstantD64Compl(node->getValue());
+		else
+			return getConstantD64(node->getValue());
 	}
 
 	JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
@@ -918,15 +915,20 @@ namespace mathpresso {
 		X86Xmm regErg = cc->newXmmPd();
 		JitVar ergLeft = onNode(left);
 
-		if (left->getNodeType() == kAstNodeImmComplex || (left->getNodeType() == kAstNodeVar && left ->isComplex()))
-		{
-			cc->movupd(regErg, ergLeft.getXmm());
-		}
+		bool lIsVarOrImm = left  ->getNodeType() == kAstNodeVar || left  ->getNodeType() == kAstNodeImm;
+		bool rIsVarOrImm = right ->getNodeType() == kAstNodeVar || right ->getNodeType() == kAstNodeImm;
 
-		else if (left->getNodeType() == kAstNodeImm || left->getNodeType() == kAstNodeVar)
+		if (lIsVarOrImm)
 		{
-			cc->xorpd(regErg, regErg);
-			cc->movsd(regErg, ergLeft.getXmm());
+			if (left ->isComplex())
+			{
+				cc->movupd(regErg, ergLeft.getXmm());
+			}
+			else
+			{
+				cc->xorpd(regErg, regErg);
+				cc->movsd(regErg, ergLeft.getXmm());
+			}
 		}
 
 		cc->jmp(lblEnd);
@@ -934,15 +936,17 @@ namespace mathpresso {
 
 		JitVar ergRight = onNode(right);
 
-		if (right->getNodeType() == kAstNodeImmComplex || (left->getNodeType() == kAstNodeVar && left ->isComplex()))
+		if (rIsVarOrImm)
 		{
-			cc->movupd(regErg, ergRight.getXmm());
-		}
-
-		else if (right->getNodeType() == kAstNodeImm || right->getNodeType() == kAstNodeVar)
-		{
-			cc->xorpd(regErg, regErg);
-			cc->movsd(regErg, ergRight.getXmm());
+			if (right ->isComplex())
+			{
+				cc->movupd(regErg, ergRight.getXmm());
+			}
+			else
+			{
+				cc->xorpd(regErg, regErg);
+				cc->movsd(regErg, ergRight.getXmm());
+			}
 		}
 
 		cc->bind(lblEnd);
