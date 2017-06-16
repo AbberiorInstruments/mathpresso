@@ -158,21 +158,13 @@ namespace mathpresso {
 
 	//! Used to call a cpp-function from within the assembler.
 	//! the result can be read from data at index 0, arguments are at index 1, 2, ...
-	//! Eventually there is a better way, but unless i understand how to pass struct, i cannot provide one.
-	static MATHPRESSO_INLINE void mpWrapComplex(std::complex<double>(*ptr)(std::complex<double> *), std::complex<double>* data) 
-	{
+	//! Eventually there is a better way, but unless i understand how to pass structs, i cannot provide one.
+	static MATHPRESSO_INLINE void mpWrapComplex(std::complex<double>(*ptr)(std::complex<double> *), std::complex<double>* data) {
 		data[0] = ptr(data + 1);
 	}
 
-	// function from complex to double
-	static MATHPRESSO_INLINE double mpWrapComplexD(double(*ptr)(std::complex<double> *), std::complex<double>* data) 
-	{
-		return ptr(data);
-	}	
-
 	// function from double to complex
-	static MATHPRESSO_INLINE void mpWrapDoubleC(std::complex<double>(*ptr)(double *), std::complex<double>* ret, double* data) 
-	{
+	static MATHPRESSO_INLINE void mpWrapDoubleC(std::complex<double>(*ptr)(double *), std::complex<double>* ret, double* data) {
 		*ret = ptr(data);
 	}
 	

@@ -474,8 +474,8 @@ namespace mathpresso {
 	}
 	
 	JitVar JitCompiler::onImm(AstImm* node) {
-		if (node ->isComplex())
-			return getConstantD64Compl(node->getValue());
+		if (node->returnsComplex())
+			return getConstantD64Compl(node->getValueComp());
 		else
 			return getConstantD64(node->getValue());
 	}
@@ -798,7 +798,7 @@ namespace mathpresso {
 		{
 
 			// Handle the case that the operands are the same variable.
-			if (left->isComplex() && right->isComplex() &&
+			if (left->returnsComplex() && right->returnsComplex() &&
 				static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
 			{
 				vl = vr = writableVarComplex(onNode(left));
@@ -920,7 +920,7 @@ namespace mathpresso {
 
 		if (lIsVarOrImm)
 		{
-			if (left ->isComplex())
+			if (left ->returnsComplex())
 			{
 				cc->movupd(regErg, ergLeft.getXmm());
 			}
@@ -938,7 +938,7 @@ namespace mathpresso {
 
 		if (rIsVarOrImm)
 		{
-			if (right ->isComplex())
+			if (right ->returnsComplex())
 			{
 				cc->movupd(regErg, ergRight.getXmm());
 			}
@@ -1262,31 +1262,16 @@ namespace mathpresso {
 		}
 		stack.resetOffset();
 
-		X86Gp _ptr = cc->newUIntPtr();
-
-		if (cc->getArchInfo().is64Bit()) {
-			X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t)fn);
-			cc->mov(_ptr, function);
-		}
-		else {
-			X86Mem function = cc->newUInt32Const(kAstScopeGlobal, uint32_t((uint64_t)fn));
-			cc->mov(_ptr, function);
-		}
-
-
 		// Use function builder to build a function prototype.
 		FuncSignatureX signature;
 		signature.setRetT<double>();
-		signature.addArgT<TypeId::UIntPtr>(); // function-pointer
 		signature.addArgT<TypeId::UIntPtr>(); // data
 
 		CCFuncCall* ctx;
-		// Create the function call.
-		ctx = cc->call((uint64_t)mpWrapComplexD, signature);
+		ctx = cc->call((uint64_t)fn, signature);
 
 		ctx->setRet(0, dst);
-		ctx->setArg(0, _ptr);
-		ctx->setArg(1, ind);
+		ctx->setArg(0, ind);
 
 	}
 

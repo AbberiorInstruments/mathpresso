@@ -618,6 +618,8 @@ struct AstNode {
   //! Get whether the node wraps around a complex Value.
   MATHPRESSO_INLINE bool isComplex() const { return hasNodeFlag(kAstComplex); }
 
+  MATHPRESSO_INLINE bool returnsComplex() const { return hasNodeFlag(kAstReturnsComplex); }
+
   //! Get whether the node has flag `flag`.
   MATHPRESSO_INLINE bool hasNodeFlag(uint32_t flag) const { return (static_cast<uint32_t>(_nodeFlags) & flag) != 0; }
   //! Get node flags.
