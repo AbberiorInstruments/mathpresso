@@ -112,12 +112,15 @@ namespace mathpresso {
 	}
 
 	Error AstOptimizer::onVarComp(AstVarComplex* node) {
-		node->addNodeFlags(kAstComplex| kAstReturnsComplex);
-		
 		AstSymbol* sym = node->getSymbol();
 		if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) {
 			AstImmComplex* imm = _ast->newNode<AstImmComplex>(sym->getValueComp());
 			_ast->deleteNode(node->getParent()->replaceNode(node, imm));
+			imm->addNodeFlags(kAstComplex | kAstReturnsComplex);
+		}
+		else
+		{
+			node->addNodeFlags(kAstComplex | kAstReturnsComplex);
 		}
 		return kErrorOk;
 	}
