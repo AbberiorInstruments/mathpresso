@@ -422,9 +422,6 @@ namespace mathpresso {
 		for (i = 0; i < len; i++)
 			result = onNode(node->getAt(i));
 
-		if (node->getAt(len-1)->hasNodeFlag(kAstReturnsComplex))
-			node->addNodeFlags(kAstReturnsComplex | kAstComplex);
-
 		// Return the last result (or no result if the block is empty).
 		return result;
 	}
@@ -467,8 +464,6 @@ namespace mathpresso {
 
 	JitVar JitCompiler::onVarComplex(AstVarComplex* node) {
 		AstSymbol* sym = node->getSymbol();
-		node->addNodeFlags(kAstComplex); // not necessary?
-		node->addNodeFlags(kAstReturnsComplex);
 		uint32_t slotId = sym->getVarSlotId();
 
 		JitVar result = varSlots[slotId];
@@ -493,8 +488,6 @@ namespace mathpresso {
 	}
 
 	JitVar JitCompiler::onImmComplex(AstImmComplex* node) {
-		node->addNodeFlags(kAstComplex);
-		node->addNodeFlags(kAstReturnsComplex); // should be set by optimizer, but AstOptimizer::onImmComp() is not called?! 
 		return getConstantD64Compl(node->getValue());
 	}
 
@@ -922,41 +915,31 @@ namespace mathpresso {
 		AstNode* condition = node->getCondition();
 
 		JitVar ret = onNode(condition);
-		if (condition->hasNodeFlag(kAstReturnsComplex))
+
+
+		if (cc->getArchInfo().is64Bit()) {
+			X86Gp reg = cc->newGpq("r8");
+			if (condition->hasNodeFlag(kAstReturnsComplex)) {
+				//cc->mov(reg, ret.getXmm());
+			}
+			else
+				;
+		}
+			
+
+		/*f (enableSSE4_1)
+			cc->ptest(ret.getXmm(),getConstantD64Compl(std::complex<double>(0,0)).getXmm());
+		else
 		{
-			node->removeNodeFlags(kAstComplex);
+			X86Gp cmp = cc->newGpq();
+			cc->movd(cmp, ret.getXmm());
+			cc->test(cmp, 0);
+		}*/
 
-			if (enableSSE4_1)
-				cc->ptest(ret.getXmm(), ret.getXmm());
-			else
-			{
-				X86Gp cmp = cc->newGpd();
-				cc->movd(cmp, ret.getXmm());
-				cc->test(cmp, cmp);
-			}
-		}
-		else {
-
-			if (enableSSE4_1)
-				cc->ptest(ret.getXmm(), ret.getXmm());
-			else
-			{
-				X86Gp cmp = cc->newGpd();
-				cc->movd(cmp, ret.getXmm());
-				cc->test(cmp, cmp);
-			}
-		}
-
-		cc->jz(lblElse);
+		cc->jnz(lblElse);
 
 		X86Xmm regErg = cc->newXmmPd();
 		JitVar ergLeft = onNode(left);
-		if (left->hasNodeFlag(kAstReturnsComplex))
-		{
-			node->addNodeFlags(kAstComplex);
-			node->addNodeFlags(kAstReturnsComplex);
-			node->getParent()->addNodeFlags(kAstComplex);
-		}
 
 		if (left->getNodeType() == kAstNodeImmComplex || left->getNodeType() == kAstNodeVarComplex)
 		{
@@ -973,12 +956,7 @@ namespace mathpresso {
 		cc->bind(lblElse);
 
 		JitVar ergRight = onNode(right);
-		if (right->hasNodeFlag(kAstReturnsComplex))
-		{
-			node->addNodeFlags(kAstComplex);
-			node->addNodeFlags(kAstReturnsComplex);
-			node->getParent()->addNodeFlags(kAstComplex);
-		}
+
 
 		if (right->getNodeType() == kAstNodeImmComplex || right->getNodeType() == kAstNodeVarComplex)
 		{
@@ -1259,7 +1237,7 @@ namespace mathpresso {
 
 		X86Gp _ptr = cc->newUIntPtr();
 
-		if (CallConv::kIdHost == CallConv::kIdX86Win64) {
+		if (cc->getArchInfo().is64Bit()) {
 			X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t)fn);
 			cc->mov(_ptr, function);
 		}
@@ -1307,7 +1285,7 @@ namespace mathpresso {
 
 		X86Gp _ptr = cc->newUIntPtr();
 
-		if (CallConv::kIdHost == CallConv::kIdX86Win64) {
+		if (cc->getArchInfo().is64Bit()) {
 			X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t)fn);
 			cc->mov(_ptr, function);
 		}
@@ -1352,7 +1330,7 @@ namespace mathpresso {
 
 		X86Gp _ptr = cc->newUIntPtr();
 
-		if (CallConv::kIdHost == CallConv::kIdX86Win64) {
+		if (cc->getArchInfo().is64Bit()) {
 			X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t)fn);
 			cc->mov(_ptr, function);
 		}

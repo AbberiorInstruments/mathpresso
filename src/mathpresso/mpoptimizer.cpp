@@ -577,18 +577,18 @@ namespace mathpresso {
 
 			if (conditionIsTrue) {
 				newNode = node->getLeft();
-				node->setLeft(NULL);
+				node->setLeft(nullptr);
 			}
 			else {
 				newNode = node->getRight();
-				node->setRight(NULL);
+				node->setRight(nullptr);
 			}
 
-			newNode->_parent = NULL;
+			newNode->_parent = nullptr;
 			node->getParent()->replaceNode(node, newNode);
-			node->setCondition(NULL);
-			node->setLeft(NULL);
-			node->setRight(NULL);
+			node->setCondition(nullptr);
+			node->setLeft(nullptr);
+			node->setRight(nullptr);
 			_ast->deleteNode(node);
 			MATHPRESSO_PROPAGATE(onNode(newNode));
 
@@ -600,7 +600,7 @@ namespace mathpresso {
 			bool needs_complex = node->getLeft()->hasNodeFlag(kAstReturnsComplex) | node->getRight()->hasNodeFlag(kAstReturnsComplex);
 			if (needs_complex)
 			{
-				node->addNodeFlags(kAstReturnsComplex);
+				node->addNodeFlags(kAstReturnsComplex | kAstComplex);
 			}
 		}
 		return kErrorOk;

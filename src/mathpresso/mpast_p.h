@@ -991,8 +991,11 @@ struct AstVarComplex : public AstNode {
 	// --------------------------------------------------------------------------
 
 	MATHPRESSO_INLINE AstVarComplex(AstBuilder* ast)
-	: AstNode(ast, kAstNodeVarComplex),
-	_symbol(NULL) {}
+		: AstNode(ast, kAstNodeVarComplex),
+		_symbol(NULL) 
+	{
+		_nodeFlags = kAstComplex | kAstReturnsComplex;
+	}
 
 	// --------------------------------------------------------------------------
 	// [Accessors]
@@ -1021,8 +1024,10 @@ struct AstImmComplex : public AstNode {
 	// --------------------------------------------------------------------------
 
 	MATHPRESSO_INLINE AstImmComplex(AstBuilder* ast, std::complex<double> value = (0.0, 0.0))
-	: AstNode(ast, kAstNodeImmComplex),
-	_value(value) {}
+		: AstNode(ast, kAstNodeImmComplex),
+	_value(value) {
+		_nodeFlags = kAstComplex | kAstReturnsComplex;
+	}
 
 	// --------------------------------------------------------------------------
 	// [Accessors]
