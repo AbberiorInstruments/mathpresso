@@ -104,7 +104,7 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
 	{
       sym->_varSlotId = other->_varSlotId;
       sym->_varOffset = other->_varOffset;
-	  if (sym->hasSymbolFlag(kAstComplex)) 
+	  if (sym->hasSymbolFlag(kAstTakesComplex)) 
 	  {
 		  sym->_valueComp = other->_valueComp;
 	  }
@@ -462,22 +462,44 @@ Error AstDump::onBlock(AstBlock* node) {
 Error AstDump::onVarDecl(AstVarDecl* node) {
   AstSymbol* sym = node->getSymbol();
 
-  nest("%s [VarDecl%s]", sym ? sym->getName() : static_cast<const char*>(NULL), (node->hasNodeFlag(kAstComplex)? ", complex":""));
+  nest("%s [VarDecl%s]", sym ? sym->getName() : static_cast<const char*>(NULL), (node->takesComplex()? ", complex":""));
   if (node->hasChild())
     MATHPRESSO_PROPAGATE(onNode(node->getChild()));
   return denest();
 }
 
-Error AstDump::onVar(AstVar* node) {
-  AstSymbol* sym = node->getSymbol();
-  auto * t = node ->hasNodeFlag(kAstReturnsComplex) ? "<clpx>" : "<real>";
-  return info("%s %s", sym ? sym->getName() : nullptr, t);
+template<class T>
+const char * sym_name(T * node)
+{
+	auto sym = node ->getSymbol();
+	return sym ? sym ->getName() : "(null)";
+}
+
+template<class T>
+const char * op_name(T * node)
+{
+	return OpInfo::get(node->getOp()).name;
+}
+
+const char * node_type(AstNode * node)
+{
+	return node ->returnsComplex() ? "<cplx>" : "<real>";
+}
+
+const char * parm_type(AstNode * node)
+{
+	return node ->takesComplex() ? "<cplx>" : "<real>";
+}
+
+Error AstDump::onVar(AstVar* node) 
+{
+  return info("%s %s", sym_name(node), node_type(node));
 }
 
 Error AstDump::onImm(AstImm* node) {
 	auto v = node ->getValueComp();
 
-	if (node ->hasNodeFlag(kAstReturnsComplex))
+	if (node ->returnsComplex())
 		return info("%lf%+lfi", v.real(), v.imag());
 	else
 		return info("%lf", v.real());
@@ -485,16 +507,14 @@ Error AstDump::onImm(AstImm* node) {
 
 
 Error AstDump::onUnaryOp(AstUnaryOp* node) {
-	nest("%s [Unary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "real"	,
-		node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "real");
+	nest("%s [Unary, %s -> %s]", op_name(node), parm_type(node), node_type(node));
 	if (node->hasChild())
 		MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 	return denest();
 }
 
 Error AstDump::onBinaryOp(AstBinaryOp* node) {
-  nest("%s [Binary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "real",
-	  node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "real");
+  nest("%s [Binary, %s -> %s]", op_name(node), parm_type(node), node_type(node));
   if (node->hasLeft())
     MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
   if (node->hasRight())
@@ -503,8 +523,7 @@ Error AstDump::onBinaryOp(AstBinaryOp* node) {
 }
 
 Error AstDump::onTernaryOp(AstTernaryOp* node) {
-	nest("%s [Ternary, %s -> %s]", OpInfo::get(node->getOp()).name, node->hasNodeFlag(kAstComplex) ? "complex" : "real",
-		node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "real");
+	nest("%s [Ternary, %s -> %s]", op_name(node), parm_type(node), node_type(node));
 	if (node->hasCondition())
 		MATHPRESSO_PROPAGATE(onNode(node->getCondition()));
 	if (node->hasLeft())
@@ -514,11 +533,11 @@ Error AstDump::onTernaryOp(AstTernaryOp* node) {
 	return denest();
 }
 
-Error AstDump::onCall(AstCall* node) {
+Error AstDump::onCall(AstCall* node) 
+{
 	AstSymbol* sym = node->getSymbol();
 
-	nest("%s(), %s -> %s", sym ? sym->getName() : static_cast<const char*>(NULL), node->hasNodeFlag(kAstComplex) ? "complex" : "real",
-		node->hasNodeFlag(kAstReturnsComplex) ? "complex" : "real");
+	nest("%s(), %s -> %s", sym_name(node), parm_type(node), node_type(node));
 	onBlock(node);
 	return denest();
 }

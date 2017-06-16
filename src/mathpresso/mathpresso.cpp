@@ -561,7 +561,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 		sbTmp.clear();
 	}
 	
-	_isComplex = ast._programNode->hasNodeFlag(kAstComplex);
+	_isComplex = ast._programNode->takesComplex();
 
 	// Compile the function to machine code.
 	reset();

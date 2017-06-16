@@ -37,7 +37,8 @@ namespace mathpresso {
 		uint32_t oldCount;
 		bool isComplex = false;
 
-		while (i < curCount) {
+		while (i < curCount) 
+		{
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
 
 			oldCount = curCount;
@@ -49,17 +50,21 @@ namespace mathpresso {
 				continue;
 			}
 
-			if (alterable && (node->getAt(i)->isImm())) {
+			if (alterable && (node->getAt(i)->isImm())) 
+			{
 				_ast->deleteNode(node->removeAt(i));
 				curCount--;
 				continue;
 			}
+			// TODO: check semantics here
 			isComplex |= node->getAt(i)->returnsComplex();
 			i++;
 		}
 
-		if (isComplex) 
-			node->addNodeFlags(kAstReturnsComplex | kAstComplex);
+		if (isComplex)
+		{
+			node->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
+		}
 
 		return kErrorOk;
 	}
@@ -85,7 +90,7 @@ namespace mathpresso {
 
 	Error AstOptimizer::onVar(AstVar* node) {
 		AstSymbol* sym = node->getSymbol();
-		bool b_complex = node ->hasNodeFlag(kAstReturnsComplex);
+		bool b_complex = node ->returnsComplex();
 
 		if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) 
 		{
@@ -114,7 +119,7 @@ namespace mathpresso {
 
 		if (op.isComplex())
 		{
-			node->addNodeFlags(kAstComplex);
+			node->addNodeFlags(kAstTakesComplex);
 		}
 
 		if (op.returnsComplex())
@@ -235,7 +240,7 @@ namespace mathpresso {
 				}
 				p_imm->setValue(value);
 
-				if (p_imm->hasNodeFlag(kAstReturnsComplex)) {
+				if (p_imm->returnsComplex()) {
 					node->unlinkChild();
 					node->getParent()->replaceNode(node, p_imm);
 					_ast->deleteNode(node);
@@ -259,7 +264,7 @@ namespace mathpresso {
 				_ast->deleteNode(node);
 			}
 		}
-		else if (node->getChild()->hasNodeFlag(kAstReturnsComplex)) 
+		else if (node->getChild()->returnsComplex()) 
 		{
 			// If it is not found, also check for a user function with the same name and 
 			// arguments
@@ -280,7 +285,7 @@ namespace mathpresso {
 			default: return kErrorOk;
 			}
 			
-			node->addNodeFlags(kAstReturnsComplex | kAstComplex);
+			node->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
 		}
 
 		return kErrorOk;
@@ -384,11 +389,11 @@ namespace mathpresso {
 
 		bool lIsImm = left->isImm();
 		bool rIsImm = right->isImm();
-		bool needs_complex = node->getLeft()->hasNodeFlag(kAstReturnsComplex) || node->getRight()->hasNodeFlag(kAstReturnsComplex);
+		bool needs_complex = node->getLeft()->returnsComplex() || node->getRight()->returnsComplex();
 
 		if (!needs_complex)
 		{
-			if (left->hasNodeFlag(kAstReturnsComplex) || right->hasNodeFlag(kAstReturnsComplex))
+			if (left->returnsComplex() || right->returnsComplex())
 				return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 					"Expect non-complex parameters for operation '%s'.", op.name); // should never be reached
 
@@ -478,20 +483,20 @@ namespace mathpresso {
 		}
 		else
 		{
-			node->addNodeFlags(kAstComplex);
+			node->addNodeFlags(kAstTakesComplex);
 			if (op.returnsComplex() || (!op.returnsComplex() && !op.isComplex()))
 				node->addNodeFlags(kAstReturnsComplex);
 
 			// if we have to calculate in complex, and one of the operands is an immediate, it should be converted to complex.
-			if (left->isImm()&& !left->isComplex()) {
-				left->addNodeFlags(kAstComplex | kAstReturnsComplex);
+			if (left->isImm()&& !left->takesComplex()) {
+				left->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
 			}
-			if (right->isImm() && !right->isComplex()) {
-				right->addNodeFlags(kAstComplex | kAstReturnsComplex);
+			if (right->isImm() && !right->takesComplex()) {
+				right->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
 			}
 
 			// complex immediates.
-			if (left->isImm() && right->isImm() && left ->isComplex() && right ->isComplex()) {
+			if (left->isImm() && right->isImm() && left ->takesComplex() && right ->takesComplex()) {
 				AstImm* lNode = static_cast<AstImm*>(left);
 				AstImm* rNode = static_cast<AstImm*>(right);
 
@@ -555,13 +560,13 @@ namespace mathpresso {
 
 		}
 		else {
-			node->removeNodeFlags(kAstComplex);
+			node->removeNodeFlags(kAstTakesComplex);
 			MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
 			MATHPRESSO_PROPAGATE(onNode(node->getRight()));
 			bool needs_complex = node->getLeft()->returnsComplex() | node->getRight()->returnsComplex();
 			if (needs_complex)
 			{
-				node->addNodeFlags(kAstReturnsComplex | kAstComplex);
+				node->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
 			}
 		}
 		return kErrorOk;
@@ -578,17 +583,17 @@ namespace mathpresso {
 		for (i = 0; i < count; i++)
 		{
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
-			b_need_cplx |= node->getAt(i)->isComplex();
+			b_need_cplx |= node->getAt(i)->takesComplex();
 		}
 		
 		if (b_need_cplx) 
 		{
-			node->addNodeFlags(kAstComplex);
+			node->addNodeFlags(kAstTakesComplex);
 
 			for (i = 0; i < count; i++) 
 			{
 				AstNode *tmp = node->getAt(i);
-				tmp->addNodeFlags(kAstComplex | kAstReturnsComplex);
+				tmp->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
 			}
 
 			if (!sym->hasSymbolFlag(kAstSymbolComplexFunctionReturnsReal))
@@ -618,8 +623,8 @@ namespace mathpresso {
 			{
 				auto n = node->getAt(i);
 
-				allConst &= n->isImm() && !n->isComplex();
-				allConstComplex &= allConst &= n->isImm() && n->isComplex();
+				allConst &= n->isImm() && !n->returnsComplex();
+				allConstComplex &= allConst &= n->isImm() && n->returnsComplex();
 			}
 		}
 

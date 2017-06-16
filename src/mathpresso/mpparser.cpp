@@ -366,7 +366,7 @@ _Repeat1:
 			static_cast<AstVar*>(zNode)->setSymbol(sym);
 
 			if (sym->hasSymbolFlag(kAstSymbolIsComplex))
-				zNode ->addNodeFlags(kAstComplex | kAstReturnsComplex);
+				zNode ->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
 
 			zNode->setPosition(token.getPosAsUInt());
 			sym->incUsedCount();
