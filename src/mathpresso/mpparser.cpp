@@ -392,7 +392,7 @@ _Repeat1:
         MATHPRESSO_NULLCHECK(zNode);
 
         zNode->setPosition(token.getPosAsUInt());
-		if (b_complex)
+		if (!b_complex)
 		{
 			zNode->setValue(token.value);
 		}
