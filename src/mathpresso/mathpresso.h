@@ -118,9 +118,7 @@ typedef double (*Arg7Func)(double, double, double, double, double, double, doubl
 typedef double (*Arg8Func)(double, double, double, double, double, double, double, double);
 
 typedef std::complex<double> (*ArgFuncC)(std::complex<double>*);
-
 typedef double (*ArgFuncCtoD)(std::complex<double>*);
-
 typedef std::complex<double>(*ArgFuncDtoC)(double*);
 
 

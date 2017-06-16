@@ -99,8 +99,8 @@ const OpInfo mpOpInfo[kOpCount] = {
   ROW(CopySign     , CopySign , 2, 0, 0, 1, LTR | 0                                  , "copysign" ),
   ROW(QMark        , QMark    , 3,15, 0, 0, RTL | 0									 , "?"		  ),
   ROW(Colon        , Colon    , 3,15, 0, 0, RTL | 0									 , ":"        ),
-  ROW(Real         , Real     , 1, 0, 0, 1, LTR | F(Complex)                         , "getReal"  ),
-  ROW(Imag	       , Imag     , 1, 0, 0, 1, LTR | F(Complex)                         , "getImag"  ),
+  ROW(Real         , Real     , 1, 0, 0, 1, LTR | F(Complex)                         , "real"  ),
+  ROW(Imag	       , Imag     , 1, 0, 0, 1, LTR | F(Complex)                         , "imag"  ),
   ROW(Conjug       , Conjug   , 1, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)     , "conjug"   ),
 
   ROW(ExpC         , ExpC     , 1, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)     , "exp_"      ),
@@ -348,7 +348,7 @@ Error Context::addBuiltIns(void) {
     { "NaN", mpGetNan() },
     { "INF", mpGetInf() },
     { "PI" , 3.14159265358979323846 },
-    { "E"  , 2.7182818284590452354 }
+    { "E"  , 2.7182818284590452354  }
   };
 
   for (i = 0; i < MATHPRESSO_ARRAY_SIZE(mpGlobalConstants); i++) {

@@ -12,6 +12,18 @@
 #include "./mpcompiler_p.h"
 #include "./mpeval_p.h"
 
+template <std::complex<double>(*T)(const std::complex<double> &)>
+std::complex<double> mpCFunc1(std::complex<double> *x)
+{
+	return T(*x);
+}
+
+template <std::complex<double>(*T)(const std::complex<double> &, const std::complex<double> &)>
+std::complex<double> mpCFunc2(std::complex<double> *x)
+{
+	return T(x[0], x[1]);
+}
+
 namespace mathpresso {
 	using namespace asmjit;
 
@@ -68,30 +80,32 @@ namespace mathpresso {
 			case kOpAtan2: return (void*)(Arg2Func)atan2;
 			case kOpHypot: return (void*)(Arg2Func)hypot;
 			case kOpCopySign: return (void*)(Arg2Func)mpCopySign;
+
 			case kOpReal: return (void*)(ArgFuncCtoD)mpGetReal;
 			case kOpImag: return (void*)(ArgFuncCtoD)mpGetImag;
 
-			case kOpExpC: return (void*)(ArgFuncC)mpExpC;
-			case kOpPowC: return (void*)(ArgFuncC)mpPowC;
+			case kOpExpC: return (void*)mpCFunc1<std::exp>;
+			case kOpPowC: return (void*)mpCFunc2<std::pow>;;
 
-			case kOpLogC: return (void*)(ArgFuncC)mpLogC;
+			case kOpLogC: return (void*)mpCFunc1<std::log>;
 			case kOpLog2C: return (void*)(ArgFuncC)mpLog2C;
-			case kOpLog10C: return (void*)(ArgFuncC)mpLog10C;
+			case kOpLog10C: return (void*)mpCFunc1<std::log10>;
 
-			case kOpSqrtC: return (void*)(ArgFuncC)mpSqrtC;
+			case kOpSqrtC: return (void*)mpCFunc1<std::sqrt>;
 			case kOpRecipC: return (void*)(ArgFuncC)mpRecipC;
 
-			case kOpSinC: return (void*)(ArgFuncC)mpSinC;
-			case kOpCosC: return (void*)(ArgFuncC)mpCosC;
-			case kOpTanC: return (void*)(ArgFuncC)mpTanC;
+			case kOpSinC: return (void*)mpCFunc1<std::sin>;
+			case kOpCosC: return (void*)mpCFunc1<std::cos>;
+			case kOpTanC: return (void*)mpCFunc1<std::tan>;
 
-			case kOpSinhC: return (void*)(ArgFuncC)mpSinhC;
-			case kOpCoshC: return (void*)(ArgFuncC)mpCoshC;
-			case kOpTanhC: return (void*)(ArgFuncC)mpTanhC;
+			case kOpSinhC: return (void*)mpCFunc1<std::sinh>;
+			case kOpCoshC: return (void*)mpCFunc1<std::cosh>;
+			case kOpTanhC: return (void*)mpCFunc1<std::tanh>;
 
-			case kOpAsinC: return (void*)(ArgFuncC)mpAsinC;
-			case kOpAcosC: return (void*)(ArgFuncC)mpAcosC;
-			case kOpAtanC: return (void*)(ArgFuncC)mpAtanC;
+			case kOpAsinC: return (void*)mpCFunc1<std::asin>;
+			case kOpAcosC: return (void*)mpCFunc1<std::acos>;
+			case kOpAtanC: return (void*)mpCFunc1<std::atan>;
+
 
 			default:
 				MATHPRESSO_ASSERT_NOT_REACHED();

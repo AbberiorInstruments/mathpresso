@@ -256,8 +256,8 @@ enum OpType {
   kOpQMark,			    // b ? a : b
   kOpColon,
 
-  kOpReal,				// getReal(std::complex<double> a)
-  kOpImag,				// getImag(std::complex<double> a)
+  kOpReal,				// real(std::complex<double> a)
+  kOpImag,				// imag(std::complex<double> a)
   kOpConjug,			// conjug(std::complex<double> c)
   
   //from here on there are the complex equivalents of some functions. 

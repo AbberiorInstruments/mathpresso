@@ -171,7 +171,6 @@ namespace mathpresso {
 	static MATHPRESSO_INLINE double mpGetReal(std::complex<double> *arg) { return arg->real(); }
 	static MATHPRESSO_INLINE double mpGetImag(std::complex<double> *arg) { return arg->imag(); }
 
-
 	static MATHPRESSO_INLINE std::complex<double> mpExpC(std::complex<double> *x) { return exp(*x); }
 	static MATHPRESSO_INLINE std::complex<double> mpPowC(std::complex<double> *x) { return pow(x[0], x[1]); }
 
