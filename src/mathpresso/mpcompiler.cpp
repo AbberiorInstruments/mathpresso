@@ -947,7 +947,7 @@ namespace mathpresso {
 				cc->xorpd(regErg, regErg);
 				cc->movsd(regErg, ergRight.getXmm());
 			}
-		}
+			}
 
 		cc->bind(lblEnd);
 
