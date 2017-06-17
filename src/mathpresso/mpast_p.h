@@ -100,9 +100,9 @@ enum AstSymbolFlags {
   //! The variable is a complex value.
   kAstSymbolIsComplex = 0x0020,
   
-  //! The symbol returns a complex value
+  //! The function returns a complex value
   kAstSymbolRealFunctionReturnsComplex = 0x00040,
-  //! The symbol returns a complex value
+  //! The function takes complex arguments
   kAstSymbolComplexFunctionReturnsReal = 0x00080,
   //! See function flags
   kAstSymbolHasState = 0x00100
@@ -281,7 +281,10 @@ struct AstSymbol : public HashNode {
 		_value(),
 		_valueComp(),
 		_usedCount(0),
-		_writeCount(0) {}
+		_writeCount(0),
+		_funcPtr(nullptr),
+		_funcPtrCplx(nullptr)
+	{}
 
   // --------------------------------------------------------------------------
   // [Accessors]

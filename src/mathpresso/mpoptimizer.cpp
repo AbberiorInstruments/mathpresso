@@ -586,9 +586,15 @@ namespace mathpresso {
 			b_need_cplx |= node->getAt(i)->takesComplex();
 		}
 		
-		if (b_need_cplx) 
+		// If we have a complex argument or no real function version, use the function
+		// version that takes complex arguments
+		if (b_need_cplx || !sym ->getFuncPtr()) 
 		{
 			node->addNodeFlags(kAstTakesComplex);
+
+			// Need function that takes complex arguments here!
+			if (!sym ->getFuncPtr(true))
+				return kErrorInvalidArgument;
 
 			for (i = 0; i < count; i++) 
 			{
@@ -600,7 +606,6 @@ namespace mathpresso {
 			{
 				node->addNodeFlags(kAstReturnsComplex);
 			}
-			
 		}
 		else
 		{

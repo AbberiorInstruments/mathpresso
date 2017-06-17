@@ -1000,7 +1000,8 @@ namespace mathpresso {
 		X86Xmm result = node->returnsComplex() ? cc->newXmmPd() : cc->newXmmSd();
 		X86Xmm args[8];
 
-		for (i = 0; i < count; i++) {
+		for (i = 0; i < count; i++) 
+		{
 			args[i] = registerVarComplex(onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
 		}
 		if (node->returnsComplex())

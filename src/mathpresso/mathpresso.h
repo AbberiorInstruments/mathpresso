@@ -217,8 +217,8 @@ enum FunctionFlags {
   //! \internal
   _kFunctionArgMask = 0x0000000F,
 
-  kRealFunctionReturnsComplex = 0x00000010,
-  kComplexFunctionReturnsReal = 0x00000020,
+  kFunctionReturnsComplex = 0x00000010,
+  kFunctionTakesComplex = 0x00000020,
 
   //! Function cannot be optimized out as the pointer carries state information
   //! that can change
@@ -289,8 +289,9 @@ struct Context {
   MATHPRESSO_API Error addConstant(const char * name, std::complex<double> value);
   //! Add variable to this context.
   MATHPRESSO_API Error addVariable(const char* name, int offset, unsigned int flags = kVariableRW);
-  //! Add function to this context.
-  MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags, void * fn_cplx = nullptr);
+  //! Add function to this context. For functions this may be called once with and once without
+  //! the 
+  MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags);
 
   //! Internal implementation
   MATHPRESSO_API Error addSymbol(AstSymbol* &sym, const char * name, int type);

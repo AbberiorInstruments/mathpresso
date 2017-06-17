@@ -323,7 +323,8 @@ Error Context::addBuiltIns(void) {
 
   uint32_t i;
 
-  for (i = kOpNone + 1; i < kOpCount; i++) {
+  for (i = kOpNone + 1; i < kOpCount; i++) 
+  {
     const OpInfo& op = OpInfo::get(i);
     MATHPRESSO_ASSERT(op.type == i);
 
@@ -457,29 +458,45 @@ Error Context::listSymbols(std::vector<std::string> &syms)
 }
 
 
-Error Context::addFunction(const char* name, void* fn, unsigned int flags, void * fn_cplx) 
+Error Context::addFunction(const char* name, void* fn, unsigned int flags) 
 {
-  AstSymbol* sym;
-  MATHPRESSO_PROPAGATE(addSymbol(sym, name, kAstSymbolFunction));
-
-  sym->setSymbolFlag(kAstSymbolIsDeclared);
-  sym->setFuncPtr(fn);
-  sym->setFuncPtr(fn_cplx, true);
+	AstSymbol * sym;
+	Error e = addSymbol(sym, name, kAstSymbolFunction);
+	if (e != kErrorOk)
+	{
+		if (e != kErrorSymbolAlreadyExists || sym ->getSymbolType() != kAstSymbolFunction)
+			return e;
+	}
+	else
+	{
+		sym->setSymbolFlag(kAstSymbolIsDeclared);
+	}
   
-  //if (flags & kAstSymbolIsComplex)
-	 //sym->setSymbolFlag(kAstSymbolIsComplex);
+	// Declaring complex part?
+	if (flags & kFunctionTakesComplex)
+	{
+		if (sym ->getFuncPtr(true))
+			return kErrorSymbolAlreadyExists;
 
-  if (flags & kRealFunctionReturnsComplex)
-	  sym->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);
-  if (flags & kComplexFunctionReturnsReal)
-	  sym->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
-  if (flags & kFunctionHasState)
+		sym ->setFuncPtr(fn, true);
+		if (0 == (flags & kFunctionReturnsComplex))
+			sym ->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
+	}
+	else
+	{
+		if (sym ->getFuncPtr())
+			return kErrorSymbolAlreadyExists;
+
+		sym ->setFuncPtr(fn);
+		if (flags & kFunctionReturnsComplex)
+			sym ->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);
+	}
+
+	if (flags & kFunctionHasState)
 	  sym->setSymbolFlag(kAstSymbolHasState);
 
-  // TODO: Other function flags.
-  sym->setFuncArgs(flags & _kFunctionArgMask);
-
-  return kErrorOk;
+	sym->setFuncArgs(flags & _kFunctionArgMask);
+	return kErrorOk;
 }
 
 Error Context::delSymbol(const char* name) {
