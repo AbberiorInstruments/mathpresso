@@ -247,6 +247,8 @@ struct ContextImpl {
 // [mathpresso::Context]
 // ============================================================================
 
+struct AstSymbol;
+
 //! MathPresso context.
 //!
 //! Context is an environment where you can add/remove constants, variables and
@@ -290,6 +292,8 @@ struct Context {
   //! Add function to this context.
   MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags, void * fn_cplx = nullptr);
 
+  //! Internal implementation
+  MATHPRESSO_API Error addSymbol(AstSymbol* &sym, const char * name, int type);
   //! Delete symbol from this context.
   MATHPRESSO_API Error delSymbol(const char* name);
 

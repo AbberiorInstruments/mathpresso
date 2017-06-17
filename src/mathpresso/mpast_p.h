@@ -351,6 +351,7 @@ struct AstSymbol : public HashNode {
 	  else
 		  return _funcPtr;
   }
+
   MATHPRESSO_INLINE void setFuncPtr(void* ptr, bool b_cplx = false) 
   { 
 	   if (b_cplx)
