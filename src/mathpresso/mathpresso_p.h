@@ -382,7 +382,7 @@ struct OpInfo {
 	OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_) :
 		name(name_),
 		type(type_),
-		altType(type_),
+		precedence(precedence_),
 		flags(flags_),
 		funcC(nullptr),
 		funcD(nullptr) {
