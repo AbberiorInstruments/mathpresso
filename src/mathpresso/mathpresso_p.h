@@ -310,8 +310,12 @@ enum OpFlags {
   //! The operator 3 parameters (ternary node).
   kOpFlagTernary	   = 0x00000020,
 
-  kOpFlagReturnsComplex = 0x00000040,
-  kOpFlagComplex = 0x00000080,
+  //! this Operator returns a complex result.
+  kOpFlagReturnsComplex = 0x00001000,
+  //! this Operator wants complex parameters.
+  kOpFlagComplex = 0x00002000,
+  //! set to indicate, that no real version is available if kOpFlagComplex is set, etc.
+  kOpFlagNoOther = 0x00004000,
 
   //! The operator performs an arithmetic operation.
   kOpFlagArithmetic    = 0x00000100,
@@ -375,23 +379,21 @@ struct OpInfo {
   // --------------------------------------------------------------------------
   // [Constructor]
   // --------------------------------------------------------------------------
-	OpInfo(char* name_, uint8_t type_, uint8_t alttype_, uint8_t precedence_, uint32_t flags_) :
+	OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_) :
 		name(name_),
 		type(type_),
-		altType(alttype_),
-		precedence(precedence_),
+		altType(type_),
 		flags(flags_),
 		funcC(nullptr),
 		funcD(nullptr) {
 	};
-	OpInfo(char* name_, uint8_t type_, uint8_t alttype_, uint8_t precedence_, uint32_t flags_, void* funcCplx_, void* funcReal_) :
+	OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcReal, void* funcCplx = nullptr) :
 		name(name_),
 		type(type_),
-		altType(alttype_),
 		precedence(precedence_),
-		flags(flags_),
-		funcC(funcCplx_),
-		funcD(funcReal_) 
+		flags(flags_ | kOpFlagIntrinsic),
+		funcC(funcCplx),
+		funcD(funcReal) 
 	{
 	};
 
