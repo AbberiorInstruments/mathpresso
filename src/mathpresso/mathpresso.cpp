@@ -77,7 +77,7 @@ const OpInfo mpOpInfo[kOpCount] = {
   //ROW(Abs          , Abs      , 1, 0, 0, 1, LTR | 0                                  , "abs"      ),
   OpInfo("abs", kOpAbs, 0, LTR | kOpFlagUnary, mpAbs),
   //ROW(Exp          , Exp      , 1, 0, 0, 1, LTR | 0                                  , "exp"      ),
-  OpInfo("exp", kOpExp, 1, LTR | kOpFlagUnary, mpExpC, mpExp),
+  OpInfo("exp", kOpExp, 0, LTR | kOpFlagUnary, mpExpC, mpExp),
   //ROW(Log          , Log      , 1, 0, 0, 1, LTR | 0                                  , "log"      ),
   OpInfo("log", kOpLog, 0, LTR | kOpFlagUnary, mpLog, mpLogC),
   //ROW(Log2         , Log2     , 1, 0, 0, 1, LTR | 0                                  , "log2"     ),
@@ -109,7 +109,7 @@ const OpInfo mpOpInfo[kOpCount] = {
   //ROW(Atan         , Atan     , 1, 0, 0, 1, LTR | F(Trigonometric)                   , "atan"     ),
   OpInfo("atan", kOpAtan, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpAtan, mpAtanC),
   //ROW(Assign       , Assign   , 2,15,-1, 0, RTL | 0                                  , "="        ),
-  OpInfo("=", kOpAssign, 15, RTL| kOpFlagAssign| kOpFlagBinary),
+  OpInfo("=", kOpAssign, 15, RTL | kOpFlagAssign| kOpFlagBinary),
   //ROW(Eq           , Eq       , 2, 9, 0, 0, LTR | F(Condition)                       , "=="       ),
   OpInfo("==", kOpEq, 9, LTR | kOpFlagCondition | kOpFlagBinary),
   //ROW(Ne           , Ne       , 2, 9, 0, 0, LTR | F(Condition)                       , "!="       ),
@@ -158,7 +158,7 @@ const OpInfo mpOpInfo[kOpCount] = {
   //ROW(Conjug       , Conjug   , 1, 0, 0, 0, LTR | F(ReturnsComplex) | F(Complex)     , "conjug"   ),
   OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary),
 
-  OpInfo("exp", kOpExpC, 1, LTR | kOpFlagUnary, mpExpC, mpExp),
+  OpInfo("exp", kOpExpC, 0, LTR | kOpFlagUnary, mpExpC, mpExp),
   //ROW(PowC         , PowC     , 2, 0, 0, 1, LTR | F(ReturnsComplex) | F(Complex)     , "pow_"      ),
   OpInfo("pow_", kOpPowC, 0, LTR | kOpFlagBinary | kOpFlagNopIfROne, mpPow, mpPowC),
 
