@@ -31,7 +31,7 @@ namespace mathpresso {
 
 
 	struct JitUtils {
-		static void* getFuncByOp(uint32_t op) {
+		static void* getFuncByOp(uint32_t op, bool takesComplex, bool returnsComplex) {
 			switch (op) {
 			case kOpIsNan: return mpIsNan;
 			case kOpIsInf: return mpIsInf;
@@ -94,6 +94,7 @@ namespace mathpresso {
 
 			case kOpAsinC: return mpFuncCtoC1<std::asin>;
 			case kOpAcosC: return mpFuncCtoC1<std::acos>;
+			case kOpAtanC: return mpFuncCtoC1<std::atan>;
 			case kOpAtanC: return mpFuncCtoC1<std::atan>;
 
 
@@ -1162,19 +1163,23 @@ namespace mathpresso {
 		inlineCallAbstract(dst, &src, 2, op, takesComplex, returnsComplex);
 	}
 
-	void JitCompiler::inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool takesComplex, bool returnsComplex) {
-		if (takesComplex) {
-			if (returnsComplex)
-				inlineCallComplex(dst, args, count, JitUtils::getFuncByOp(op));
-			else
-				inlineCallCRetD(dst, args, count, JitUtils::getFuncByOp(op));
-		}
-		else {
-			if (returnsComplex)
-				inlineCallDRetC(dst, args, count, JitUtils::getFuncByOp(op));
-			else
-				inlineCall(dst, args, count, JitUtils::getFuncByOp(op));
+	void JitCompiler::inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool takesComplex, bool returnsComplex) 
+	{
+		auto fp = JitUtils::getFuncByOp(op, takesComplex, returnsComplex);
 
+		if (takesComplex) 
+		{
+			if (returnsComplex)
+				inlineCallComplex(dst, args, count, fp);
+			else
+				inlineCallCRetD(dst, args, count, fp);
+		}
+		else 
+		{
+			if (returnsComplex)
+				inlineCallDRetC(dst, args, count, fp);
+			else
+				inlineCall(dst, args, count, fp);
 		}
 	}
 
