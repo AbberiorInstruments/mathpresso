@@ -666,7 +666,7 @@ namespace mathpresso {
 					argsDouble[i] = static_cast<AstImm*>(node->getAt(i))->getValue();
 				}
 				std::complex<double> result(0.0, 0.0);
-				result = ((ArgFuncDtoC)sym->getFuncPtr())(argsDouble);
+				result = ((mpFuncpDtoC)sym->getFuncPtr())(argsDouble);
 				AstNode* replacement = _ast->newNode<AstImm>(result);
 				node->getParent()->replaceNode(node, replacement);
 				onNode(replacement);
@@ -688,7 +688,7 @@ namespace mathpresso {
 			} 
 			else 
 			{
-				replacement->setValue(((ArgFuncCtoD)sym->getFuncPtr(true))(argsComplex));
+				replacement->setValue(((mpFuncpCtoD)sym->getFuncPtr(true))(argsComplex));
 			}
 			node->getParent()->replaceNode(node, replacement);
 			onNode(replacement);

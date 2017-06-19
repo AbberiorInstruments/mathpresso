@@ -102,7 +102,7 @@ namespace mathpresso {
 
 	static MATHPRESSO_INLINE double mpGetNan() { static const DoubleBits value = { MATHPRESSO_UINT64_C(0x7FF8000000000000) }; return value.d; }
 	static MATHPRESSO_INLINE double mpGetInf() { static const DoubleBits value = { MATHPRESSO_UINT64_C(0x7FF0000000000000) }; return value.d; }
-	static MATHPRESSO_INLINE bool mpIsNan(double x) { return DoubleBits::fromDouble(x).isNan(); }
+	static MATHPRESSO_INLINE double mpIsNan(double x) { return DoubleBits::fromDouble(x).isNan(); }
 	static MATHPRESSO_INLINE bool mpIsInf(double x) { return DoubleBits::fromDouble(x).isInf(); }
 	static MATHPRESSO_INLINE bool mpIsFinite(double x) { return DoubleBits::fromDouble(x).isFinite(); }
 
