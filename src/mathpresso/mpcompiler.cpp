@@ -95,7 +95,7 @@ namespace mathpresso {
 			case kOpAsinC: return mpFuncCtoC1<std::asin>;
 			case kOpAcosC: return mpFuncCtoC1<std::acos>;
 			case kOpAtanC: return mpFuncCtoC1<std::atan>;
-			case kOpAtanC: return mpFuncCtoC1<std::atan>;
+			//ase kOpAtanC: return mpFuncCtoC1<std::atan>;
 
 
 			default:

@@ -478,7 +478,7 @@ const char * sym_name(T * node)
 template<class T>
 const char * op_name(T * node)
 {
-	return OpInfo::get(node->getOp()).name;
+	return OpInfo::get(node->getOp()).name.c_str();
 }
 
 const char * node_type(AstNode * node)

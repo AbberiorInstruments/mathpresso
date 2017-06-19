@@ -373,6 +373,29 @@ MATHPRESSO_NOAPI Error mpTraceError(Error error);
 //! Operator information.
 struct OpInfo {
   // --------------------------------------------------------------------------
+  // [Constructor]
+  // --------------------------------------------------------------------------
+	OpInfo(char* name_, uint8_t type_, uint8_t alttype_, uint8_t precedence_, uint32_t flags_) :
+		name(name_),
+		type(type_),
+		altType(alttype_),
+		precedence(precedence_),
+		flags(flags_),
+		funcC(nullptr),
+		funcD(nullptr) {
+	};
+	OpInfo(char* name_, uint8_t type_, uint8_t alttype_, uint8_t precedence_, uint32_t flags_, void* funcCplx_, void* funcReal_) :
+		name(name_),
+		type(type_),
+		altType(alttype_),
+		precedence(precedence_),
+		flags(flags_),
+		funcC(funcCplx_),
+		funcD(funcReal_) 
+	{
+	};
+
+  // --------------------------------------------------------------------------
   // [Statics]
   // --------------------------------------------------------------------------
 
@@ -415,7 +438,9 @@ struct OpInfo {
   uint8_t precedence;
   uint8_t reserved;
   uint32_t flags;
-  char name[12];
+  void* funcC;
+  void* funcD;
+  std::string name;
 };
 
 extern const OpInfo mpOpInfo[kOpCount];

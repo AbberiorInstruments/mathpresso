@@ -32,15 +32,14 @@ namespace mathpresso {
 // fully compatible with C.
 #define ROW(opType, altType, params, precedence, assignment, intrinsic, flags, name) \
   { \
+	name, \
     static_cast<uint8_t>(kOp##opType), \
     static_cast<uint8_t>(kOp##altType), \
     static_cast<uint8_t>(precedence), \
-    0, \
     static_cast<uint32_t>( \
       flags | (assignment != 0 ? kOpFlagAssign : 0) \
             | (params     == 1 ? kOpFlagUnary : (params == 2 ? kOpFlagBinary : (params == 3 ? kOpFlagTernary : 0))) \
             | (intrinsic  == 1 ? kOpFlagIntrinsic : 0)), \
-    name \
   }
 #define LTR 0
 #define RTL kOpFlagRightToLeft
@@ -331,7 +330,7 @@ Error Context::addBuiltIns(void) {
     if (!op.isIntrinsic())
       continue;
 
-    StringRef name(op.name, ::strlen(op.name));
+    StringRef name(op.name.data());
     uint32_t hVal = HashUtils::hashString(name.getData(), name.getLength());
 
     AstSymbol* sym = d->_builder.newSymbol(name, hVal, kAstSymbolIntrinsic, kAstScopeGlobal);
