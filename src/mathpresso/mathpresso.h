@@ -118,15 +118,21 @@ typedef double (*Arg7Func)(double, double, double, double, double, double, doubl
 typedef double (*Arg8Func)(double, double, double, double, double, double, double, double);
 
 template <std::complex<double>(*T)(const std::complex<double> &)>
-std::complex<double> mpCFunc1(std::complex<double> *x)
+std::complex<double> mpFuncCtoC1(std::complex<double> *x)
 {
 	return T(*x);
 }
 
 template <std::complex<double>(*T)(const std::complex<double> &, const std::complex<double> &)>
-std::complex<double> mpCFunc2(std::complex<double> *x)
+std::complex<double> mpFuncCtoC2(std::complex<double> *x)
 {
 	return T(x[0], x[1]);
+}
+
+template <std::complex<double>(*T)(const std::complex<double> &, const std::complex<double> &, const std::complex<double> &)>
+std::complex<double> mpFuncCtoC3(std::complex<double> *x)
+{
+	return T(x[0], x[1], x[2]);
 }
 
 typedef std::complex<double> (*mpFuncpCtoC)(std::complex<double>*);

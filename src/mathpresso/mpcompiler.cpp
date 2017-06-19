@@ -33,68 +33,68 @@ namespace mathpresso {
 	struct JitUtils {
 		static void* getFuncByOp(uint32_t op) {
 			switch (op) {
-			case kOpIsNan: return (void*)(Arg1Func)mpIsNan;
-			case kOpIsInf: return (void*)(Arg1Func)mpIsInf;
-			case kOpIsFinite: return (void*)(Arg1Func)mpIsFinite;
-			case kOpSignBit: return (void*)(Arg1Func)mpSignBit;
+			case kOpIsNan: return mpIsNan;
+			case kOpIsInf: return mpIsInf;
+			case kOpIsFinite: return mpIsFinite;
+			case kOpSignBit: return mpSignBit;
 
-			case kOpRound: return (void*)(Arg1Func)mpRound;
-			case kOpRoundEven: return (void*)(Arg1Func)rint;
-			case kOpTrunc: return (void*)(Arg1Func)trunc;
-			case kOpFloor: return (void*)(Arg1Func)floor;
-			case kOpCeil: return (void*)(Arg1Func)ceil;
+			case kOpRound: return mpRound;
+			case kOpRoundEven: return (Arg1Func)rint;
+			case kOpTrunc: return (Arg1Func)trunc;
+			case kOpFloor: return (Arg1Func)floor;
+			case kOpCeil: return (Arg1Func)ceil;
 
-			case kOpAbs: return (void*)(Arg1Func)fabs;
-			case kOpExp: return (void*)(Arg1Func)exp;
-			case kOpLog: return (void*)(Arg1Func)log;
-			case kOpLog2: return (void*)(Arg1Func)log2;
-			case kOpLog10: return (void*)(Arg1Func)log10;
-			case kOpSqrt: return (void*)(Arg1Func)sqrt;
-			case kOpFrac: return (void*)(Arg1Func)mpFrac;
-			case kOpRecip: return (void*)(Arg1Func)mpRecip;
+			case kOpAbs: return (Arg1Func)fabs;
+			case kOpExp: return (Arg1Func)exp;
+			case kOpLog: return (Arg1Func)log;
+			case kOpLog2: return (Arg1Func)log2;
+			case kOpLog10: return (Arg1Func)log10;
+			case kOpSqrt: return (Arg1Func)sqrt;
+			case kOpFrac: return (Arg1Func)mpFrac;
+			case kOpRecip: return (Arg1Func)mpRecip;
 
-			case kOpSin: return (void*)(Arg1Func)sin;
-			case kOpCos: return (void*)(Arg1Func)cos;
-			case kOpTan: return (void*)(Arg1Func)tan;
-			case kOpSinh: return (void*)(Arg1Func)sinh;
-			case kOpCosh: return (void*)(Arg1Func)cosh;
-			case kOpTanh: return (void*)(Arg1Func)tanh;
-			case kOpAsin: return (void*)(Arg1Func)asin;
-			case kOpAcos: return (void*)(Arg1Func)acos;
-			case kOpAtan: return (void*)(Arg1Func)atan;
+			case kOpSin: return (Arg1Func)sin;
+			case kOpCos: return (Arg1Func)cos;
+			case kOpTan: return (Arg1Func)tan;
+			case kOpSinh: return (Arg1Func)sinh;
+			case kOpCosh: return (Arg1Func)cosh;
+			case kOpTanh: return (Arg1Func)tanh;
+			case kOpAsin: return (Arg1Func)asin;
+			case kOpAcos: return (Arg1Func)acos;
+			case kOpAtan: return (Arg1Func)atan;
 
-			case kOpAvg: return (void*)(Arg2Func)mpAvg;
-			case kOpMin: return (void*)(Arg2Func)mpMin<double>;
-			case kOpMax: return (void*)(Arg2Func)mpMax<double>;
-			case kOpPow: return (void*)(Arg2Func)pow;
-			case kOpAtan2: return (void*)(Arg2Func)atan2;
-			case kOpHypot: return (void*)(Arg2Func)hypot;
-			case kOpCopySign: return (void*)(Arg2Func)mpCopySign;
+			case kOpAvg: return (Arg2Func)mpAvg;
+			case kOpMin: return (Arg2Func)mpMin<double>;
+			case kOpMax: return (Arg2Func)mpMax<double>;
+			case kOpPow: return (Arg2Func)pow;
+			case kOpAtan2: return (Arg2Func)atan2;
+			case kOpHypot: return (Arg2Func)hypot;
+			case kOpCopySign: return (Arg2Func)mpCopySign;
 
 			case kOpReal: return mpGetReal;
 			case kOpImag: return mpGetImag;
 
-			case kOpExpC: return mpCFunc1<std::exp>;
-			case kOpPowC: return mpCFunc2<std::pow>;;
+			case kOpExpC: return mpFuncCtoC1<std::exp>;
+			case kOpPowC: return mpFuncCtoC2<std::pow>;;
 
-			case kOpLogC: return mpCFunc1<std::log>;
+			case kOpLogC: return mpFuncCtoC1<std::log>;
 			case kOpLog2C: return mpLog2C;
-			case kOpLog10C: return mpCFunc1<std::log10>;
+			case kOpLog10C: return mpFuncCtoC1<std::log10>;
 
-			case kOpSqrtC: return mpCFunc1<std::sqrt>;
+			case kOpSqrtC: return mpFuncCtoC1<std::sqrt>;
 			case kOpRecipC: return mpRecipC;
 
-			case kOpSinC: return mpCFunc1<std::sin>;
-			case kOpCosC: return mpCFunc1<std::cos>;
-			case kOpTanC: return mpCFunc1<std::tan>;
+			case kOpSinC: return mpFuncCtoC1<std::sin>;
+			case kOpCosC: return mpFuncCtoC1<std::cos>;
+			case kOpTanC: return mpFuncCtoC1<std::tan>;
 
-			case kOpSinhC: return mpCFunc1<std::sinh>;
-			case kOpCoshC: return mpCFunc1<std::cosh>;
-			case kOpTanhC: return mpCFunc1<std::tanh>;
+			case kOpSinhC: return mpFuncCtoC1<std::sinh>;
+			case kOpCoshC: return mpFuncCtoC1<std::cosh>;
+			case kOpTanhC: return mpFuncCtoC1<std::tanh>;
 
-			case kOpAsinC: return mpCFunc1<std::asin>;
-			case kOpAcosC: return mpCFunc1<std::acos>;
-			case kOpAtanC: return mpCFunc1<std::atan>;
+			case kOpAsinC: return mpFuncCtoC1<std::asin>;
+			case kOpAcosC: return mpFuncCtoC1<std::acos>;
+			case kOpAtanC: return mpFuncCtoC1<std::atan>;
 
 
 			default:

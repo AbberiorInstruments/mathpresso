@@ -642,7 +642,8 @@ namespace mathpresso {
 			{
 				double result = 0.0;
 #define ARG(n) args[n]->getValue()
-				switch (count) {
+				switch (count) 
+				{
 				case 0: result = ((Arg0Func)fn)(); break;
 				case 1: result = ((Arg1Func)fn)(ARG(0)); break;
 				case 2: result = ((Arg2Func)fn)(ARG(0), ARG(1)); break;
@@ -684,7 +685,7 @@ namespace mathpresso {
 			AstImm* replacement = _ast->newNode<AstImm>(0);
 			if (!sym->hasSymbolFlag(kAstSymbolComplexFunctionReturnsReal)) 
 			{
-				replacement->setValue(((ArgFuncC)sym->getFuncPtr(true))(argsComplex));
+				replacement->setValue(((mpFuncpCtoC)sym->getFuncPtr(true))(argsComplex));
 			} 
 			else 
 			{
