@@ -232,10 +232,9 @@ namespace mathpresso {
 		}
 		else if (node->getChild()->returnsComplex()) 
 		{
-			// If it is not found, also check for a user function with the same name and 
-			// arguments
-			
-			node->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
+			// binary operators +, -, *, / with a complex parameters should return complex result
+			if (!op.isComplex() && op.allowsOtherSignature())
+				node->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
 		}
 
 		return kErrorOk;

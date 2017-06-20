@@ -425,6 +425,7 @@ struct OpInfo {
 
   MATHPRESSO_INLINE bool returnsComplex() const { return (flags & kOpFlagReturnsComplex) != 0; }
   MATHPRESSO_INLINE bool isComplex() const { return (flags & kOpFlagComplex) != 0; }
+  MATHPRESSO_INLINE bool allowsOtherSignature() const { return !((flags & kOpFlagNoOther) != 0); }
 
 
   MATHPRESSO_INLINE bool rightAssociate(uint32_t rPrec) const {
