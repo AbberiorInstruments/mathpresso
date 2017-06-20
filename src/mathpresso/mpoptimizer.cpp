@@ -233,7 +233,7 @@ namespace mathpresso {
 		else if (node->getChild()->returnsComplex()) 
 		{
 			// unary operators which are available in CtoC and DtoD
-			if (!op.isComplex() && op.allowsOtherSignature())
+			if (!op.isComplex()&& !op.returnsComplex() && op.allowsOtherSignature())
 				node->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
 		}
 

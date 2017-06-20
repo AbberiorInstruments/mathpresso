@@ -44,10 +44,10 @@ namespace mathpresso {
 #define LTR 0
 #define RTL kOpFlagRightToLeft
 #define F(flag) kOpFlag##flag
-#define CtoC (kOpFlagReturnsComplex | kOpFlagComplex| kOpFlagNoOther)
-#define DtoD (kOpFlagNoOther)
-#define CtoD (kOpFlagComplex | kOpFlagNoOther)
-#define DtoC (kOpFlagReturnsComplex | kOpFlagNoOther)
+#define CtoC (kOpFlagReturnsComplex | kOpFlagComplex| kOpFlagNoOtherSignature)
+#define DtoD (kOpFlagNoOtherSignature)
+#define CtoD (kOpFlagComplex | kOpFlagNoOtherSignature)
+#define DtoC (kOpFlagReturnsComplex | kOpFlagNoOtherSignature)
 	const OpInfo mpOpInfo[kOpCount] = {
 	  OpInfo("<none>", kOpNone, 0, LTR),
 	  OpInfo("-", kOpNeg, 3, RTL | DtoD | kOpFlagArithmetic | kOpFlagUnary),
