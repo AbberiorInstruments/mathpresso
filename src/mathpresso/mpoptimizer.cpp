@@ -428,7 +428,7 @@ namespace mathpresso {
 				double lVal = lNode->getValue();
 				double rVal = rNode->getValue();
 				double result = 0.0;
-				if (op.isIntrinsic())
+				if (!op.isIntrinsic())
 				{
 					switch (node->getOp()) 
 					{
@@ -540,17 +540,27 @@ namespace mathpresso {
 				AstImm* rNode = static_cast<AstImm*>(right);
 
 				std::complex<double> result;
-				switch (node->getOp()) {
-				case kOpAdd: result = lNode->getValueComp() + rNode->getValueComp(); break;
-				case kOpSub: result = lNode->getValueComp() - rNode->getValueComp(); break;
-				case kOpMul: result = lNode->getValueComp() * rNode->getValueComp(); break;
-				case kOpDiv: result = lNode->getValueComp() / rNode->getValueComp(); break;
+				if (!op.isIntrinsic()) {
+					switch (node->getOp()) {
+					case kOpAdd: result = lNode->getValueComp() + rNode->getValueComp(); break;
+					case kOpSub: result = lNode->getValueComp() - rNode->getValueComp(); break;
+					case kOpMul: result = lNode->getValueComp() * rNode->getValueComp(); break;
+					case kOpDiv: result = lNode->getValueComp() / rNode->getValueComp(); break;
 
-				case kOpPow: result = pow(lNode->getValueComp(), rNode->getValueComp()); break;
 
-				default:
-					return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-						"Invalid complex binary operation '%s'.", op.name);
+					default:
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid complex binary operation '%s'.", op.name);
+					}
+				}
+				else {
+					if (op.funcC) {
+						result = pow(lNode->getValueComp(), rNode->getValueComp());
+					}
+					else {
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid complex binary operation '%s'.", op.name);
+					}
 				}
 
 				rNode->setValue(result);

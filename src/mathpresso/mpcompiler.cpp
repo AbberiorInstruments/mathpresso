@@ -32,7 +32,14 @@ namespace mathpresso {
 
 	struct JitUtils {
 		static void* getFuncByOp(uint32_t op, bool takesComplex, bool returnsComplex) {
-			switch (op) {
+			if (takesComplex) {
+				return OpInfo::get(op).funcC;
+			}
+			else {
+				return OpInfo::get(op).funcD;
+			}
+
+			/*switch (op) {
 			case kOpIsNan: return mpIsNan;
 			case kOpIsInf: return mpIsInf;
 			case kOpIsFinite: return mpIsFinite;
@@ -102,6 +109,7 @@ namespace mathpresso {
 				MATHPRESSO_ASSERT_NOT_REACHED();
 				return NULL;
 			}
+			*/
 		}
 	};
 
