@@ -775,42 +775,42 @@ namespace mathpresso {
 			JitVar ret(cc->newXmmPd(), JitVar::FLAG_NONE);
 			JitVar negateImag = getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000));
 			
-			switch (op) 
-			{
-			case kOpAdd:
-				cc->addpd(vl.getXmm(), vr.getXmm());
-				return vl;
-			case kOpSub:
-				cc->subpd(vl.getXmm(), vr.getXmm());
-				return vl;
-			case kOpMul:
-				cc->movapd(ret.getXmm(), vl.getXmm());
-				cc->mulpd(ret.getXmm(), vr.getXmm());
-				cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
-				cc->pxor(vr.getXmm(), negateImag.getMem());
-				cc->mulpd(vl.getXmm(), vr.getXmm());
-				cc->hsubpd(ret.getXmm(), vl.getXmm());
-				return ret;
-			case kOpDiv:
-				cc->pxor(vr.getXmm(), negateImag.getMem());
+			if (!OpInfo::get(op).isIntrinsic()) {
+				switch (op)
+				{
+				case kOpAdd:
+					cc->addpd(vl.getXmm(), vr.getXmm());
+					return vl;
+				case kOpSub:
+					cc->subpd(vl.getXmm(), vr.getXmm());
+					return vl;
+				case kOpMul:
+					cc->movapd(ret.getXmm(), vl.getXmm());
+					cc->mulpd(ret.getXmm(), vr.getXmm());
+					cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
+					cc->pxor(vr.getXmm(), negateImag.getMem());
+					cc->mulpd(vl.getXmm(), vr.getXmm());
+					cc->hsubpd(ret.getXmm(), vl.getXmm());
+					return ret;
+				case kOpDiv:
+					cc->pxor(vr.getXmm(), negateImag.getMem());
 
-				cc->movapd(ret.getXmm(), vl.getXmm());
-				cc->mulpd(ret.getXmm(), vr.getXmm());
-				cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
-				cc->pxor(vr.getXmm(), negateImag.getMem());
-				cc->mulpd(vl.getXmm(), vr.getXmm());
-				cc->hsubpd(ret.getXmm(), vl.getXmm());
+					cc->movapd(ret.getXmm(), vl.getXmm());
+					cc->mulpd(ret.getXmm(), vr.getXmm());
+					cc->shufpd(vr.getXmm(), vr.getXmm(), 1);
+					cc->pxor(vr.getXmm(), negateImag.getMem());
+					cc->mulpd(vl.getXmm(), vr.getXmm());
+					cc->hsubpd(ret.getXmm(), vl.getXmm());
 
-				cc->mulpd(vr.getXmm(), vr.getXmm());
-				cc->haddpd(vr.getXmm(), vr.getXmm());
-				cc->divpd(ret.getXmm(), vr.getXmm());
-				return ret;
-			case kOpPowC:
-				break;
-
-			default:
-				MATHPRESSO_ASSERT_NOT_REACHED();
-				return vl;
+					cc->mulpd(vr.getXmm(), vr.getXmm());
+					cc->haddpd(vr.getXmm(), vr.getXmm());
+					cc->divpd(ret.getXmm(), vr.getXmm());
+					return ret;
+				
+				default:
+					MATHPRESSO_ASSERT_NOT_REACHED();
+					return vl;
+				}
 			}
 		}
 

@@ -260,28 +260,7 @@ enum OpType {
   kOpImag,				// imag(std::complex<double> a)
   kOpConjug,			// conjug(std::complex<double> c)
   
-  //from here on there are the complex equivalents of some functions. 
-  kOpExpC,
-  kOpPowC,
-  
-  kOpLogC,
-  kOpLog2C,
-  kOpLog10C,
-
   kOpSqrtC,				// sqrt with complex result
-  kOpRecipC,
-
-  kOpSinC,
-  kOpCosC,
-  kOpTanC,
-
-  kOpSinhC,
-  kOpCoshC,
-  kOpTanhC,
-
-  kOpAsinC,
-  kOpAcosC,
-  kOpAtanC,
 
   //! \internal
   //!

@@ -102,22 +102,7 @@ namespace mathpresso {
 	  OpInfo("real", kOpReal, 0, LTR | CtoD | kOpFlagUnary, nullptr, mpGetReal),
 	  OpInfo("imag", kOpImag, 0, LTR | CtoD | kOpFlagUnary, nullptr, mpGetImag),
 	  OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary),
-	  OpInfo("exp_", kOpExpC, 0, LTR | kOpFlagUnary, mpExp, mpFuncCtoC1<std::exp>),
-	  OpInfo("pow_", kOpPowC, 0, LTR | kOpFlagBinary | kOpFlagNopIfROne, mpPow, mpFuncCtoC2<std::pow>),
-	  OpInfo("log_", kOpLogC, 0, LTR | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpLog, mpFuncCtoC1<std::log>),
-	  OpInfo("log2_", kOpLog2C, 0, LTR | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpLog2, mpLog2C),
-	  OpInfo("log10_", kOpLog10C, 0, LTR | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpLog10, mpFuncCtoC1<std::log10>),
-	  OpInfo("sqrtC", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary, nullptr, mpFuncCtoC1<std::sqrt>),
-	  OpInfo("recip_", kOpRecipC, 0, LTR | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpRecip, mpRecipC),
-	  OpInfo("sin_", kOpSinC, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpSin, mpFuncCtoC1<std::sin>),
-	  OpInfo("cos_", kOpCosC, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpCos, mpFuncCtoC1<std::cos>),
-	  OpInfo("tan_", kOpTanC, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpTan, mpFuncCtoC1<std::tan>),
-	  OpInfo("sinh_", kOpSinhC, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpSinh, mpFuncCtoC1<std::sinh>),
-	  OpInfo("cosh_", kOpCoshC, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpCosh, mpFuncCtoC1<std::cosh>),
-	  OpInfo("tanh_", kOpTanhC, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpTanh, mpFuncCtoC1<std::tanh>),
-	  OpInfo("asin_", kOpAsinC, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpAsin, mpFuncCtoC1<std::asin>),
-	  OpInfo("acos_", kOpAcosC, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpAcos, mpFuncCtoC1<std::acos>),
-	  OpInfo("atan_", kOpAtanC, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagReturnsComplex | kOpFlagComplex, mpAtan, mpFuncCtoC1<std::atan>)
+	  OpInfo("sqrtC", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary, nullptr, mpFuncCtoC1<std::sqrt>)
 	};
 #undef F
 #undef RTL

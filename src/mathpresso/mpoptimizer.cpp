@@ -232,7 +232,7 @@ namespace mathpresso {
 		}
 		else if (node->getChild()->returnsComplex()) 
 		{
-			// binary operators +, -, *, / with a complex parameters should return complex result
+			// unary operators which are available in CtoC and DtoD
 			if (!op.isComplex() && op.allowsOtherSignature())
 				node->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
 		}
@@ -484,11 +484,6 @@ namespace mathpresso {
 				_ast->deleteNode(node);
 				onNode(rNode);
 				return kErrorOk;
-			}
-
-			if (node->getOp() == kOpPow)
-			{
-				node->setOp(kOpPowC);
 			}
 
 		}
