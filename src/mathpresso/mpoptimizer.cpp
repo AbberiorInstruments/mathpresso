@@ -144,48 +144,60 @@ namespace mathpresso {
 				{
 					double value = p_imm->getValue();
 
-					switch (node->getOp()) {
-					case kOpNeg: value = -value; break;
-					case kOpNot: value = (value == 0); break;
+					if (!op.isIntrinsic()) {
+						switch (node->getOp()) {
+						case kOpNeg: value = -value; break;
+						case kOpNot: value = (value == 0); break;
 
-					case kOpIsNan: value = mpIsNan(value); break;
-					case kOpIsInf: value = mpIsInf(value); break;
-					case kOpIsFinite: value = mpIsFinite(value); break;
-					case kOpSignBit: value = mpSignBit(value); break;
-
-					case kOpRound: value = mpRound(value); break;
-					case kOpRoundEven: value = mpRoundEven(value); break;
-					case kOpTrunc: value = mpTrunc(value); break;
-					case kOpFloor: value = mpFloor(value); break;
-					case kOpCeil: value = mpCeil(value); break;
-
-					case kOpAbs: value = mpAbs(value); break;
-					case kOpExp: value = mpExp(value); break;
-
-					case kOpLog: value = mpLog(value); break;
-					case kOpLog2: value = mpLog2(value); break;
-					case kOpLog10: value = mpLog10(value); break;
-
-					case kOpSqrt: value = mpSqrt(value); break;
-					case kOpFrac: value = mpFrac(value); break;
-					case kOpRecip: value = mpRecip(value); break;
-
-					case kOpSin: value = mpSin(value); break;
-					case kOpCos: value = mpCos(value); break;
-					case kOpTan: value = mpTan(value); break;
-
-					case kOpSinh: value = mpSinh(value); break;
-					case kOpCosh: value = mpCosh(value); break;
-					case kOpTanh: value = mpTanh(value); break;
-
-					case kOpAsin: value = mpAsin(value); break;
-					case kOpAcos: value = mpAcos(value); break;
-					case kOpAtan: value = mpAtan(value); break;
-
-					default:
-						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-							"Invalid unary operation '%s'.", op.name);
+						default:
+							return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+								"Invalid unary operation '%s'.", op.name);
+						}
 					}
+					else {
+						if (op.funcD)
+							value = ((Arg1Func)op.funcD)(value);
+						else {
+							return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+								"Invalid unary operation '%s'.", op.name);
+						}
+						/*
+						case kOpIsNan: value = mpIsNan(value); break;
+						case kOpIsInf: value = mpIsInf(value); break;
+						case kOpIsFinite: value = mpIsFinite(value); break;
+						case kOpSignBit: value = mpSignBit(value); break;
+
+						case kOpRound: value = mpRound(value); break;
+						case kOpRoundEven: value = mpRoundEven(value); break;
+						case kOpTrunc: value = mpTrunc(value); break;
+						case kOpFloor: value = mpFloor(value); break;
+						case kOpCeil: value = mpCeil(value); break;
+
+						case kOpAbs: value = mpAbs(value); break;
+						case kOpExp: value = mpExp(value); break;
+
+						case kOpLog: value = mpLog(value); break;
+						case kOpLog2: value = mpLog2(value); break;
+						case kOpLog10: value = mpLog10(value); break;
+
+						case kOpSqrt: value = mpSqrt(value); break;
+						case kOpFrac: value = mpFrac(value); break;
+						case kOpRecip: value = mpRecip(value); break;
+
+						case kOpSin: value = mpSin(value); break;
+						case kOpCos: value = mpCos(value); break;
+						case kOpTan: value = mpTan(value); break;
+
+						case kOpSinh: value = mpSinh(value); break;
+						case kOpCosh: value = mpCosh(value); break;
+						case kOpTanh: value = mpTanh(value); break;
+
+						case kOpAsin: value = mpAsin(value); break;
+						case kOpAcos: value = mpAcos(value); break;
+						case kOpAtan: value = mpAtan(value); break;
+						*/
+					}
+
 					p_imm->setValue(value);
 
 					node->unlinkChild();
@@ -195,51 +207,61 @@ namespace mathpresso {
 				{
 					double operand = static_cast<AstImm*>(node->getChild())->getValue();
 					std::complex<double> value(0, 0);
-					switch (node->getOp())
-					{
-					case kOpSqrtC: value = mpSqrtC(&std::complex<double>(operand, 0)); break;
-					default:
+					if (op.funcC) {
+						value = ((mpFuncpCtoC)op.funcC)(&std::complex<double>(operand, 0));
+					} else {
 						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 							"invalid unary operation '%s'.", op.name);
 					}
+
 					AstImm* replacement = _ast->newNode<AstImm>(value);
 					node->getParent()->replaceNode(node, replacement);
 				}
 				_ast->deleteNode(node);
 			}
-			else 
+			else
 			{
 				std::complex<double> value = p_imm->getValueComp();
 
-				switch (node->getOp())
+				if (op.funcC) 
 				{
-				case kOpReal: value = mpGetReal(&value); p_imm->removeNodeFlags(kAstReturnsComplex); break;
-				case kOpImag: value = mpGetImag(&value); p_imm->removeNodeFlags(kAstReturnsComplex); break;
+					if ((op.flags & kOpFlagComplex) != 0) 
+					{
+						p_imm->setValue(((mpFuncpCtoD)op.funcC)(&value));
+						p_imm->removeNodeFlags(kAstReturnsComplex);
+						//case kOpReal: value = mpGetReal(&value); p_imm->removeNodeFlags(kAstReturnsComplex);
+						//case kOpImag: value = mpGetImag(&value); p_imm->removeNodeFlags(kAstReturnsComplex);
+					}
+					else 
+					{
+						p_imm->setValue(((mpFuncpCtoC)op.funcC)(&value));
+						/*
+						case kOpExp: value = mpExpC(&value); break;
 
-				case kOpExp: value = mpExpC(&value); break;
+						case kOpLog: value = mpLogC(&value); break;
+						case kOpLog2: value = mpLog2C(&value); break;
+						case kOpLog10: value = mpLog10C(&value); break;
 
-				case kOpLog: value = mpLogC(&value); break;
-				case kOpLog2: value = mpLog2C(&value); break;
-				case kOpLog10: value = mpLog10C(&value); break;
+						case kOpSin: value = mpSinC(&value); break;
+						case kOpCos: value = mpCosC(&value); break;
+						case kOpTan: value = mpTanC(&value); break;
 
-				case kOpSin: value = mpSinC(&value); break;
-				case kOpCos: value = mpCosC(&value); break;
-				case kOpTan: value = mpTanC(&value); break;
+						case kOpSinh: value = mpSinhC(&value); break;
+						case kOpCosh: value = mpCoshC(&value); break;
+						case kOpTanh: value = mpTanhC(&value); break;
 
-				case kOpSinh: value = mpSinhC(&value); break;
-				case kOpCosh: value = mpCoshC(&value); break;
-				case kOpTanh: value = mpTanhC(&value); break;
-
-				case kOpAsin: value = mpAsinC(&value); break;
-				case kOpAcos: value = mpAcosC(&value); break;
-				case kOpAtan: value = mpAtanC(&value); break;
-
-				default:
+						case kOpAsin: value = mpAsinC(&value); break;
+						case kOpAcos: value = mpAcosC(&value); break;
+						case kOpAtan: value = mpAtanC(&value); break;
+						*/
+					}
+				}
+				else 
+				{
 					return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 						"Invalid unary operation with complex parameters '%s'.", op.name);
 				}
-				p_imm->setValue(value);
-
+				
 				if (p_imm->returnsComplex()) {
 					node->unlinkChild();
 					node->getParent()->replaceNode(node, p_imm);
@@ -406,32 +428,49 @@ namespace mathpresso {
 				double lVal = lNode->getValue();
 				double rVal = rNode->getValue();
 				double result = 0.0;
-
-				switch (node->getOp()) {
-				case kOpEq: result = lVal == rVal; break;
-				case kOpNe: result = lVal != rVal; break;
-				case kOpLt: result = lVal < rVal; break;
-				case kOpLe: result = lVal <= rVal; break;
-				case kOpGt: result = lVal > rVal; break;
-				case kOpGe: result = lVal >= rVal; break;
-				case kOpAdd: result = lVal + rVal; break;
-				case kOpSub: result = lVal - rVal; break;
-				case kOpMul: result = lVal * rVal; break;
-				case kOpDiv: result = lVal / rVal; break;
-				case kOpMod: result = mpMod(lVal, rVal); break;
-				case kOpAvg: result = mpAvg(lVal, rVal); break;
-				case kOpMin: result = mpMin(lVal, rVal); break;
-				case kOpMax: result = mpMax(lVal, rVal); break;
-				case kOpPow: result = mpPow(lVal, rVal); break;
-				case kOpAtan2: result = mpAtan2(lVal, rVal); break;
-				case kOpHypot: result = mpHypot(lVal, rVal); break;
-				case kOpCopySign: result = mpCopySign(lVal, rVal); break;
-
-
-				default:
-					return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-						"Invalid binary operation '%s'.", op.name);
+				if (op.isIntrinsic())
+				{
+					switch (node->getOp()) 
+					{
+					case kOpEq: result = lVal == rVal; break;
+					case kOpNe: result = lVal != rVal; break;
+					case kOpLt: result = lVal < rVal; break;
+					case kOpLe: result = lVal <= rVal; break;
+					case kOpGt: result = lVal > rVal; break;
+					case kOpGe: result = lVal >= rVal; break;
+					case kOpAdd: result = lVal + rVal; break;
+					case kOpSub: result = lVal - rVal; break;
+					case kOpMul: result = lVal * rVal; break;
+					case kOpDiv: result = lVal / rVal; break;
+					default:
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid binary operation '%s'.", op.name);
+					}
 				}
+				else
+				{
+					if (op.funcD) 
+					{
+						result = ((Arg2Func)op.funcD)(lVal, rVal);
+					}
+					else 
+					{
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid binary operation '%s'.", op.name);
+					}
+
+					/*case kOpMod: result = mpMod(lVal, rVal); break;
+					case kOpAvg: result = mpAvg(lVal, rVal); break;
+					case kOpMin: result = mpMin(lVal, rVal); break;
+					case kOpMax: result = mpMax(lVal, rVal); break;
+					case kOpPow: result = mpPow(lVal, rVal); break;
+					case kOpAtan2: result = mpAtan2(lVal, rVal); break;
+					case kOpHypot: result = mpHypot(lVal, rVal); break;
+					case kOpCopySign: result = mpCopySign(lVal, rVal); break;*/
+				}
+
+				
+				
 
 				lNode->setValue(result);
 				node->unlinkLeft();
