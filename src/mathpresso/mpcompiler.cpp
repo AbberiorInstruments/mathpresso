@@ -648,7 +648,7 @@ namespace mathpresso {
 			vr = onNode(node->getRight());
 
 			// Commutativity.
-			if (op == kOpAdd || op == kOpMul || op == kOpAvg || op == kOpMin || op == kOpMax)
+			if (!node->takesComplex() && (op == kOpAdd || op == kOpMul || op == kOpAvg || op == kOpMin || op == kOpMax))
 			{
 				if (vl.isRO() && !vr.isRO())
 					vl.swapWith(vr);
@@ -773,7 +773,7 @@ namespace mathpresso {
 
 
 			JitVar ret(cc->newXmmPd(), JitVar::FLAG_NONE);
-			JitVar negateImag = getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000));
+			JitVar negateImag = getConstantU64Compl(uint64_t(0), uint64_t(0x8000000000000000));
 			
 			if (!OpInfo::get(op).isIntrinsic()) {
 				switch (op)
@@ -1121,58 +1121,38 @@ namespace mathpresso {
 	}
 
 	void JitCompiler::inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn) {
-		uint32_t i;
-
 		// Use function builder to build a function prototype.
 		FuncSignatureX signature;
 		signature.setRetT<double>();
 
-		for (i = 0; i < count; i++)
+		for (size_t i = 0; i < count; i++)
 			signature.addArgT<double>();
 
 		// Create the function call.
-		CCFuncCall* ctx = cc->call((uint64_t)fn, signature);
+		CCFuncCall* ctx = cc->call(uint64_t(fn), signature);
 		ctx->setRet(0, dst);
 
-		for (i = 0; i < count; i++)
+		for (size_t i = 0; i < count; i++)
 			ctx->setArg(static_cast<uint32_t>(i), args[i]);
 	}
 
 	void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn) {
-		size_t i;
-
-		uint32_t length = count * sizeof(double);
-
 		// copy the parameters to Memory.
-		X86Mem stack = cc->newStack(length, sizeof(double));
-		X86Gp dataPointerReg = cc->newUIntPtr();
+		X86Mem stack(cc->newStack(count * sizeof(double), sizeof(double)));
+		X86Gp dataPointerReg(cc->newUIntPtr());
 		cc->lea(dataPointerReg, stack);
 
 		// allocate Memory for the return
-		X86Mem ret = cc->newStack(16, 16);
-		X86Gp retReg = cc->newUIntPtr();
+		X86Mem ret(cc->newStack(16, 16));
+		X86Gp retReg(cc->newUIntPtr());
 		cc->lea(retReg, ret);
 
-		for (i = 0; i < count; i++)
+		for (size_t i = 0; i < count; i++)
 		{
 			cc->movsd(stack, args[i]);
 			stack.addOffset(sizeof(double));
 		}
-		stack.resetOffset();
-
-
-		X86Gp _ptr = cc->newUIntPtr();
-
-		if (cc->getArchInfo().is64Bit()) {
-			X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t)fn);
-			cc->mov(_ptr, function);
-		}
-		else {
-			X86Mem function = cc->newUInt32Const(kAstScopeGlobal, uint32_t((uint64_t)fn));
-			cc->mov(_ptr, function);
-		}
-
-
+		
 		// Use function builder to build a function prototype.
 		FuncSignatureX signature;
 		signature.setRetT<void>();
@@ -1180,29 +1160,24 @@ namespace mathpresso {
 		signature.addArgT<TypeId::UIntPtr>(); // pointer to the return
 		signature.addArgT<TypeId::UIntPtr>(); // parameters
 
-		CCFuncCall* ctx;
 		// Create the function call.
-		ctx = cc->call((uint64_t)mpWrapDoubleC, signature);
+		CCFuncCall* ctx = cc->call(uint64_t(mpWrapDoubleC), signature);
 
-		ctx->setArg(0, _ptr);
-		ctx->setArg(1, retReg);
-		ctx->setArg(2, dataPointerReg);
+		ctx->setArg(0, imm_u(uint64_t(fn)));
+		ctx->setArg(1, dataPointerReg);
+		ctx->setArg(2, retReg);
 
 		cc->movapd(dst, ret);
 	}
 
 	//! Calls a function with complex arguments and non-complex returns.
 	void JitCompiler::inlineCallCRetD(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
-		size_t i;
-
-		uint32_t length = count * 16;
-
 		// copy the data to Memory.
-		X86Mem stack = cc->newStack(length, 16);
-		X86Gp ind = cc->newUIntPtr();
-		cc->lea(ind, stack);
+		X86Mem stack(cc->newStack(count * 16, 16));
+		X86Gp dataPointerReg(cc->newUIntPtr());
+		cc->lea(dataPointerReg, stack);
 
-		for (i = 0; i < count; i++)
+		for (size_t i = 0; i < count; i++)
 		{
 			cc->movapd(stack, args[i]);
 			stack.addOffset(16);
@@ -1214,42 +1189,25 @@ namespace mathpresso {
 		signature.setRetT<double>();
 		signature.addArgT<TypeId::UIntPtr>(); // data
 
-		CCFuncCall* ctx;
-		ctx = cc->call((uint64_t)fn, signature);
+		CCFuncCall* ctx = cc->call(uint64_t(fn), signature);
 
 		ctx->setRet(0, dst);
-		ctx->setArg(0, ind);
+		ctx->setArg(0, dataPointerReg);
 
 	}
 
 	void JitCompiler::inlineCallComplex(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
-		size_t i;
-
-		uint32_t length = (count + 1) * 16;
-
 		// copy the data to Memory.
-		X86Mem stack = cc->newStack(length, 16);
-		X86Gp ind = cc->newUIntPtr();
-		cc->lea(ind, stack);
+		X86Mem stack(cc->newStack((count + 1) * 16, 16));
+		X86Gp dataPointerReg(cc->newUIntPtr());
+		cc->lea(dataPointerReg, stack);
 
-		for (i = 0; i < count; i++)
+		for (size_t i = 0; i < count; i++)
 		{
 			stack.addOffset(16);
 			cc->movapd(stack, args[i]);
 		}
 		stack.resetOffset();
-
-		X86Gp _ptr = cc->newUIntPtr();
-
-		if (cc->getArchInfo().is64Bit()) {
-			X86Mem function = cc->newUInt64Const(kAstScopeGlobal, (uint64_t)fn);
-			cc->mov(_ptr, function);
-		}
-		else {
-			X86Mem function = cc->newUInt32Const(kAstScopeGlobal, uint32_t((uint64_t)fn));
-			cc->mov(_ptr, function);
-		}
-
 
 		// Use function builder to build a function prototype.
 		FuncSignatureX signature;
@@ -1257,12 +1215,11 @@ namespace mathpresso {
 		signature.addArgT<TypeId::UIntPtr>();
 		signature.addArgT<TypeId::UIntPtr>();
 
-		CCFuncCall* ctx;
 		// Create the function call.
-		ctx = cc->call((uint64_t)mpWrapComplex, signature);
+		CCFuncCall* ctx = cc->call(uint64_t(mpWrapComplex), signature);
 
-		ctx->setArg(0, _ptr);
-		ctx->setArg(1, ind);
+		ctx->setArg(0, imm_u(uint64_t(fn)));
+		ctx->setArg(1, dataPointerReg);
 
 		cc->movapd(dst, stack);
 	}

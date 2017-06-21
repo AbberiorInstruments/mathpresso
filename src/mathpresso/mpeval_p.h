@@ -164,7 +164,7 @@ namespace mathpresso {
 	}
 
 	// function from double to complex
-	static MATHPRESSO_INLINE void mpWrapDoubleC(std::complex<double>(*ptr)(double *), std::complex<double>* ret, double* data) {
+	static MATHPRESSO_INLINE void mpWrapDoubleC(std::complex<double>(*ptr)(double *), double* data, std::complex<double>* ret) {
 		*ret = ptr(data);
 	}
 	
