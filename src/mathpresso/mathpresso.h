@@ -357,7 +357,7 @@ struct Expression {
   //!        generate
   //!
   //! Returns MathPresso's error code, see \ref Error.
-  MATHPRESSO_API Error compile(const Context& ctx, const char* body, unsigned int options, OutputLog* log = NULL);
+  MATHPRESSO_API Error compile(const Context& ctx, const char* body, unsigned int options, OutputLog* log = nullptr);
 
   //! Get whether the `Expression` contains a valid compiled expression.
   MATHPRESSO_API bool isCompiled() const;

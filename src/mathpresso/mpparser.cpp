@@ -46,7 +46,7 @@ struct AstNestedScope : public AstScope {
 
   MATHPRESSO_INLINE ~AstNestedScope() {
     AstScope* parent = getParent();
-    MATHPRESSO_ASSERT(parent != NULL);
+    MATHPRESSO_ASSERT(parent != nullptr);
 
     _parser->_currentScope = parent;
     parent->_symbols.mergeToInvisibleSlot(this->_symbols);
@@ -200,7 +200,7 @@ Error Parser::parseVariableDecl(AstBlock* block) {
     AstScope* vScope;
 
     str.set(_tokenizer._start + token.position, token.length);
-    if ((vSym = scope->resolveSymbol(str, token.hVal, &vScope)) != NULL) {
+    if ((vSym = scope->resolveSymbol(str, token.hVal, &vScope)) != nullptr) {
       if (vSym->getSymbolType() != kAstSymbolVariable || scope == vScope)
         MATHPRESSO_PARSER_ERROR(token, "Attempt to redefine '%s'.", vSym->getName());
 
@@ -311,19 +311,19 @@ Error Parser::parseExpression(AstNode** pNode, bool isNested) {
   // Current binary operator node. Initial NULL value means that the parsing
   // just started and there is no binary operator yet. Once the first binary
   // operator has been parsed `oNode` will be set accordingly.
-  AstBinaryOp* oNode = NULL;
+  AstBinaryOp* oNode = nullptr;
   // The current ternary Operator node.
-  AstTernaryOp* nNode = NULL;
+  AstTernaryOp* nNode = nullptr;
 
   // Currently parsed node.
-  AstNode* tNode = NULL;
+  AstNode* tNode = nullptr;
   
   for (;;) {
     // Last unary node. It's an optimization to prevent recursion in case that
     // we found two or more unary expressions after each other. For example the
     // expression "-!-1" contains only unary operators that will be parsed by
     // a single `parseExpression()` call.
-    AstUnary* unary = NULL;
+    AstUnary* unary = nullptr;
 	bool b_complex = false;
 
 _Repeat1:
@@ -340,7 +340,7 @@ _Repeat1:
         AstScope* symScope;
         AstSymbol* sym = scope->resolveSymbol(str, token.hVal, &symScope);
 
-        if (sym == NULL)
+        if (sym == nullptr)
           MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %.*s.", static_cast<int>(str.getLength()), str.getData());
 
         uint32_t symType = sym->getSymbolType();
@@ -377,7 +377,7 @@ _Repeat1:
           MATHPRESSO_PROPAGATE(parseCall(&zNode));
         }
 
-        if (unary == NULL)
+        if (unary == nullptr)
           tNode = zNode;
         else
           unary->setChild(zNode);
@@ -401,7 +401,7 @@ _Repeat1:
 			zNode->setValue({ 0, token.value });
 		}
 			
-        if (unary == NULL)
+        if (unary == nullptr)
           tNode = zNode;
         else
           unary->setChild(zNode);
@@ -425,7 +425,7 @@ _Repeat1:
         if (_tokenizer.next(&token) != kTokenRParen)
           MATHPRESSO_PARSER_ERROR(token, "Expected a ')' token.");
 
-        if (unary == NULL)
+        if (unary == nullptr)
           tNode = zNode;
         else
           unary->setChild(zNode);
@@ -443,7 +443,7 @@ _Unary: {
         MATHPRESSO_NULLCHECK(opNode);
         opNode->setPosition(token.getPosAsUInt());
 
-        if (unary == NULL)
+        if (unary == nullptr)
           tNode = opNode;
         else
           unary->setChild(opNode);
@@ -472,7 +472,7 @@ _Unary: {
       case kTokenEnd: {
         _tokenizer.set(&token);
 
-        if (oNode != NULL) {
+        if (oNode != nullptr) {
           oNode->setRight(tNode);
           // Iterate to the top-most node.
           while (oNode->hasParent())
@@ -522,7 +522,7 @@ _Binary: {
         MATHPRESSO_NULLCHECK(zNode);
         zNode->setPosition(token.getPosAsUInt());
 
-        if (oNode == NULL) {
+        if (oNode == nullptr) {
           // oNode <------+
           //              |
           // +------------+------------+ First operand - oNode becomes the newly
@@ -622,7 +622,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   StringRef str(_tokenizer._start + token.position, token.length);
   AstSymbol* sym = _currentScope->resolveSymbol(str, token.hVal);
 
-  if (sym == NULL)
+  if (sym == nullptr)
     MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %.*s.", static_cast<int>(str.getLength()), str.getData());
 
   if (sym->getSymbolType() != kAstSymbolIntrinsic &&

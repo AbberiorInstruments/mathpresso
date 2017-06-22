@@ -281,12 +281,12 @@ namespace mathpresso {
 					"Not a condition.");
 			}
 			// remove branchCondition from the AST
-			node->setLeft(NULL);
-			branchCondition->_parent = NULL;
+			node->setLeft(nullptr);
+			branchCondition->_parent = nullptr;
 
 			// remove the right path from the AST.
-			lastColon->setRight(NULL);
-			branchRight->_parent = NULL;
+			lastColon->setRight(nullptr);
+			branchRight->_parent = nullptr;
 
 
 			// Distinguish between a complex and a non-complex case:
@@ -294,8 +294,8 @@ namespace mathpresso {
 			if (node->getRight() != lastColon) {
 				// remove left branch from the AST.
 				branchLeft = node->getRight();
-				node->setRight(NULL);
-				branchLeft->_parent = NULL;
+				node->setRight(nullptr);
+				branchLeft->_parent = nullptr;
 
 				// correct the right path.
 				AstBinaryOp* preLastColon = static_cast<AstBinaryOp*>(lastColon->getParent());
@@ -305,8 +305,8 @@ namespace mathpresso {
 			// i.e.: cond1 ? a : b
 			else {
 				// remove left branch from the AST.
-				lastColon->setLeft(NULL);
-				branchLeft->_parent = NULL;
+				lastColon->setLeft(nullptr);
+				branchLeft->_parent = nullptr;
 			}
 
 			// create the new Ternary Node.
@@ -321,7 +321,7 @@ namespace mathpresso {
 			node->getParent()->replaceNode(node, newNode);
 
 			// clean up:
-			lastColon->setLeft(NULL);
+			lastColon->setLeft(nullptr);
 			_ast->deleteNode(lastColon);
 			_ast->deleteNode(node);
 
@@ -484,6 +484,46 @@ namespace mathpresso {
 				_ast->deleteNode(node);
 				onNode(rNode);
 				return kErrorOk;
+			}
+			else if (lIsImm)
+			{
+				AstImm* lNode = static_cast<AstImm*>(left);
+				std::complex<double> val = lNode->getValueComp();
+
+				if ((val == std::complex<double>(0.0, 0.0) && (op.flags & kOpFlagNopIfLZero)) ||
+					(val == std::complex<double>(1.0, 0.0) && (op.flags & kOpFlagNopIfLOne)))
+				{
+					node->unlinkRight();
+					node->getParent()->replaceNode(node, right);
+
+					_ast->deleteNode(node);
+				}
+			}
+			else if (rIsImm) {
+				AstImm* rNode = static_cast<AstImm*>(right);
+				std::complex<double> val = rNode->getValueComp();
+
+				// Evaluate an assignment.
+				if (op.isAssignment() && left->isVar())
+				{
+					AstSymbol* sym = static_cast<AstVar*>(left)->getSymbol();
+					if (op.type == kOpAssign || sym->isAssigned())
+					{
+						sym->setValue(val);
+						sym->setAssigned();
+					}
+				}
+				else
+				{
+					if ((val == std::complex<double>(0.0, 0.0) && (op.flags & kOpFlagNopIfRZero)) ||
+						(val == std::complex<double>(1.0, 0.0) && (op.flags & kOpFlagNopIfROne)))
+					{
+						node->unlinkLeft();
+						node->getParent()->replaceNode(node, left);
+
+						_ast->deleteNode(node);
+					}
+				}
 			}
 
 		}

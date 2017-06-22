@@ -175,8 +175,8 @@ namespace mathpresso {
 	JitCompiler::JitCompiler(ZoneHeap* heap, X86Compiler* cc)
 		: heap(heap),
 		cc(cc),
-		varSlots(NULL),
-		functionBody(NULL),
+		varSlots(nullptr),
+		functionBody(nullptr),
 		constPool(&cc->_cbDataZone) {
 
 		enableSSE4_1 = CpuInfo::getHost().hasFeature(CpuInfo::kX86FeatureSSE4_1);
@@ -280,7 +280,7 @@ namespace mathpresso {
 		// Create Definitions for the Variables and add them as JitVar
 		if (numSlots != 0) {
 			varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
-			if (varSlots == NULL) return;
+			if (varSlots == nullptr) return;
 
 			for (uint32_t i = 0; i < numSlots; i++)
 				varSlots[i] = JitVar();
@@ -1302,7 +1302,7 @@ namespace mathpresso {
 		code.init((jitGlobal.runtime.getCodeInfo()));
 
 		X86Compiler c(&code);
-		bool debugAsm = log != NULL && (options & kOptionDebugAsm) != 0;
+		bool debugAsm = log != nullptr && (options & kOptionDebugAsm) != 0;
 
 		if (debugAsm) {
 			logger.addOptions(Logger::kOptionBinaryForm | (b_complex ? Logger::kOptionImmExtended : 0));
