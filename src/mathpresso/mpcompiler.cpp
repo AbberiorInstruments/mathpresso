@@ -580,7 +580,7 @@ namespace mathpresso {
 			{
 			case kOpConjug:
 				JitVar result = registerVarComplex(var, node->getChild()->returnsComplex());
-				cc->pxor(result.getXmm(), getConstantU64Compl(uint64_t(0x0000000000000000), uint64_t(0x8000000000000000)).getMem());
+				cc->pxor(result.getXmm(), getConstantU64Compl(uint64_t(0), uint64_t(0x8000000000000000)).getMem());
 				return result;
 			}
 
@@ -1129,7 +1129,7 @@ namespace mathpresso {
 			signature.addArgT<double>();
 
 		// Create the function call.
-		CCFuncCall* ctx = cc->call(uint64_t(fn), signature);
+		CCFuncCall* ctx = cc->call(reinterpret_cast<uint64_t>(fn), signature);
 		ctx->setRet(0, dst);
 
 		for (size_t i = 0; i < count; i++)
@@ -1161,9 +1161,9 @@ namespace mathpresso {
 		signature.addArgT<TypeId::UIntPtr>(); // parameters
 
 		// Create the function call.
-		CCFuncCall* ctx = cc->call(uint64_t(mpWrapDoubleC), signature);
+		CCFuncCall* ctx = cc->call(reinterpret_cast<uint64_t>(mpWrapDoubleC), signature);
 
-		ctx->setArg(0, imm_u(uint64_t(fn)));
+		ctx->setArg(0, imm_u(reinterpret_cast<uint64_t>(fn)));
 		ctx->setArg(1, dataPointerReg);
 		ctx->setArg(2, retReg);
 
@@ -1189,7 +1189,7 @@ namespace mathpresso {
 		signature.setRetT<double>();
 		signature.addArgT<TypeId::UIntPtr>(); // data
 
-		CCFuncCall* ctx = cc->call(uint64_t(fn), signature);
+		CCFuncCall* ctx = cc->call(reinterpret_cast<uint64_t>(fn), signature);
 
 		ctx->setRet(0, dst);
 		ctx->setArg(0, dataPointerReg);
@@ -1216,9 +1216,9 @@ namespace mathpresso {
 		signature.addArgT<TypeId::UIntPtr>();
 
 		// Create the function call.
-		CCFuncCall* ctx = cc->call(uint64_t(mpWrapComplex), signature);
+		CCFuncCall* ctx = cc->call(reinterpret_cast<uint64_t>(mpWrapComplex), signature);
 
-		ctx->setArg(0, imm_u(uint64_t(fn)));
+		ctx->setArg(0, imm_u(reinterpret_cast<uint64_t>(fn)));
 		ctx->setArg(1, dataPointerReg);
 
 		cc->movapd(dst, stack);
