@@ -822,6 +822,18 @@ namespace mathpresso {
 					cc->haddpd(vr.getXmm(), vr.getXmm());
 					cc->divpd(ret.getXmm(), vr.getXmm());
 					return ret;
+
+				case kOpEq:
+					cc->cmppd(vl.getXmm(), vr.getXmm(), x86::kCmpEQ);
+					cc->haddpd(vl.getXmm(), vl.getXmm());
+					cc->andpd(vl.getXmm(), getConstantD64AsPD(1.0).getMem());
+					return vl;
+
+				case kOpNe:
+					cc->cmppd(vl.getXmm(), vr.getXmm(), x86::kCmpNEQ);
+					cc->haddpd(vl.getXmm(), vl.getXmm());
+					cc->andpd(vl.getXmm(), getConstantD64AsPD(1.0).getMem());
+					return vl;
 				
 				default:
 					MATHPRESSO_ASSERT_NOT_REACHED();

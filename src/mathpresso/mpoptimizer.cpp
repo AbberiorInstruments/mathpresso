@@ -559,7 +559,8 @@ namespace mathpresso {
 					case kOpSub: result = lNode->getValueCplx() - rNode->getValueCplx(); break;
 					case kOpMul: result = lNode->getValueCplx() * rNode->getValueCplx(); break;
 					case kOpDiv: result = lNode->getValueCplx() / rNode->getValueCplx(); break;
-
+					case kOpEq: result = lNode->getValueCplx() == rNode->getValueCplx(); break;
+					case kOpNe: result = lNode->getValueCplx() != rNode->getValueCplx(); break;
 
 					default:
 						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
