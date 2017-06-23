@@ -172,9 +172,11 @@ namespace mathpresso {
 	static MATHPRESSO_INLINE double mpGetImag(std::complex<double> *arg) { return arg->imag(); }
 
 	
-	static MATHPRESSO_INLINE std::complex<double> mpLog2C(std::complex<double> *x) { return log(*x) / log(2); }
+	static MATHPRESSO_INLINE std::complex<double> mpLog2C(std::complex<double> *x) { return std::log(*x) / std::log(2); }
 	
 	static MATHPRESSO_INLINE std::complex<double> mpRecipC(std::complex<double> *x) { return 1.0 / *x; }
+
+	static MATHPRESSO_INLINE double mpAbsC(std::complex<double> *x) { return std::abs(*x); }
 
 	// later eventually.....
 	//static MATHPRESSO_INLINE std::complex<double> mpAtan2C(std::complex<double> *x) { return atan2(x[0], x[1]); }

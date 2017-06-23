@@ -497,12 +497,12 @@ Error AstDump::onVar(AstVar* node)
 }
 
 Error AstDump::onImm(AstImm* node) {
-	auto v = node ->getValueComp();
+	auto v = node ->getValueCplx();
 
 	if (node ->returnsComplex())
-		return info("%lf%+lfi", v.real(), v.imag());
+		return info("%lf%+lfi, %s", v.real(), v.imag(), node_type(node));
 	else
-		return info("%lf", v.real());
+		return info("%lf, %s", v.real(), node_type(node));
 }
 
 

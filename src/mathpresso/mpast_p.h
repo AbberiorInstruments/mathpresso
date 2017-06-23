@@ -981,7 +981,7 @@ struct AstImm : public AstNode {
 	  return _value.real(); 
   }
 
-  MATHPRESSO_INLINE std::complex<double> getValueComp() const 
+  MATHPRESSO_INLINE std::complex<double> getValueCplx() const 
   { 
 	  return _value; 
   }

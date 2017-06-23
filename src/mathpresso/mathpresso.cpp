@@ -44,40 +44,40 @@ namespace mathpresso {
 #define LTR 0
 #define RTL kOpFlagRightToLeft
 #define F(flag) kOpFlag##flag
-#define CtoC (kOpFlagReturnsComplex | kOpFlagComplex| kOpFlagNoOther)
-#define DtoD (kOpFlagNoOther)
-#define CtoD (kOpFlagComplex | kOpFlagNoOther)
-#define DtoC (kOpFlagReturnsComplex | kOpFlagNoOther)
+#define CtoC (kOpFlagComplexToComplex)
+#define DtoD (kOpFlagRealToReal)
+#define CtoD (kOpFlagComplexToReal)
+#define DtoC (kOpFlagRealToComplex)
 	const OpInfo mpOpInfo[kOpCount] = {
 	  OpInfo("<none>", kOpNone, 0, LTR),
 	  OpInfo("-", kOpNeg, 3, RTL | DtoD | kOpFlagArithmetic | kOpFlagUnary),
 	  OpInfo("!", kOpNot, 3, RTL | DtoD | kOpFlagCondition | kOpFlagUnary),
-	  OpInfo("isnan", kOpIsNan, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary, mpIsNan),
-	  OpInfo("isinf", kOpIsInf, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary, mpIsInf),
-	  OpInfo("isfinite", kOpIsFinite, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary, mpIsFinite),
-	  OpInfo("signbit", kOpSignBit, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary, mpSignBit),
-	  OpInfo("round", kOpRound, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpRound),
-	  OpInfo("roundeven", kOpRoundEven, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpRoundEven),
-	  OpInfo("trunc", kOpTrunc, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpTrunc),
-	  OpInfo("floor", kOpFloor, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpFloor),
-	  OpInfo("ceil", kOpCeil, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpCeil),
-	  OpInfo("abs", kOpAbs, 0, LTR | DtoD | kOpFlagUnary, mpAbs),
-	  OpInfo("exp", kOpExp, 0, LTR | kOpFlagUnary, mpExp, mpFuncCtoC1<std::exp>),
-	  OpInfo("log", kOpLog, 0, LTR | kOpFlagUnary, mpLog, mpFuncCtoC1<std::log>),
-	  OpInfo("log2", kOpLog2, 0, LTR | kOpFlagUnary, mpLog2, mpLog2C),
-	  OpInfo("log10", kOpLog10, 0, LTR | kOpFlagUnary, mpLog10, mpFuncCtoC1<std::log10>),
-	  OpInfo("sqrt", kOpSqrt, 0, LTR | DtoD | kOpFlagUnary, mpSqrt),
-	  OpInfo("frac", kOpFrac, 0, LTR | DtoD | kOpFlagUnary, mpFrac),
-	  OpInfo("recip", kOpRecip, 0, LTR | kOpFlagUnary, mpRecip, mpRecipC),
-	  OpInfo("sin", kOpSin, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpSin, mpFuncCtoC1<std::sin>),
-	  OpInfo("cos", kOpCos, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpCos, mpFuncCtoC1<std::cos>),
-	  OpInfo("tan", kOpTan, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpTan, mpFuncCtoC1<std::tan>),
-	  OpInfo("sinh", kOpSinh, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpSinh, mpFuncCtoC1<std::sinh>),
-	  OpInfo("cosh", kOpCosh, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpCosh, mpFuncCtoC1<std::cosh>),
-	  OpInfo("tanh", kOpTanh, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpTanh, mpFuncCtoC1<std::tanh>),
-	  OpInfo("asin", kOpAsin, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpAsin, mpFuncCtoC1<std::asin>),
-	  OpInfo("acos", kOpAcos, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpAcos, mpFuncCtoC1<std::acos>),
-	  OpInfo("atan", kOpAtan, 0, LTR | kOpFlagTrigonometric | kOpFlagUnary, mpAtan, mpFuncCtoC1<std::atan>),
+	  OpInfo("isnan", kOpIsNan, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary, mpIsNan, nullptr, nullptr, nullptr),
+	  OpInfo("isinf", kOpIsInf, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary, mpIsInf, nullptr, nullptr, nullptr),
+	  OpInfo("isfinite", kOpIsFinite, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary, mpIsFinite, nullptr, nullptr, nullptr),
+	  OpInfo("signbit", kOpSignBit, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary, mpSignBit, nullptr, nullptr, nullptr),
+	  OpInfo("round", kOpRound, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpRound, nullptr, nullptr, nullptr),
+	  OpInfo("roundeven", kOpRoundEven, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpRoundEven, nullptr, nullptr, nullptr),
+	  OpInfo("trunc", kOpTrunc, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpTrunc, nullptr, nullptr, nullptr),
+	  OpInfo("floor", kOpFloor, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpFloor, nullptr, nullptr, nullptr),
+	  OpInfo("ceil", kOpCeil, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary, mpCeil, nullptr, nullptr, nullptr),
+	  OpInfo("abs", kOpAbs, 0, LTR | DtoD | CtoD | kOpFlagUnary, mpAbs, nullptr, mpAbsC, nullptr),
+	  OpInfo("exp", kOpExp, 0, LTR | DtoD | CtoC | kOpFlagUnary, mpExp, mpFuncCtoC1<std::exp>, nullptr, nullptr),
+	  OpInfo("log", kOpLog, 0, LTR | DtoD | CtoC | kOpFlagUnary, mpLog, mpFuncCtoC1<std::log>, nullptr, nullptr),
+	  OpInfo("log2", kOpLog2, 0, LTR | DtoD | CtoC | kOpFlagUnary, mpLog2, mpLog2C, nullptr, nullptr),
+	  OpInfo("log10", kOpLog10, 0, LTR | DtoD | CtoC | kOpFlagUnary, mpLog10, mpFuncCtoC1<std::log10>, nullptr, nullptr),
+	  OpInfo("sqrt", kOpSqrt, 0, LTR | DtoD | kOpFlagUnary, mpSqrt, nullptr, nullptr, nullptr),
+	  OpInfo("frac", kOpFrac, 0, LTR | DtoD | kOpFlagUnary, mpFrac, nullptr, nullptr, nullptr),
+	  OpInfo("recip", kOpRecip, 0, LTR | DtoD | CtoC | kOpFlagUnary, mpRecip, mpRecipC, nullptr, nullptr),
+	  OpInfo("sin", kOpSin, 0, LTR | DtoD | CtoC | kOpFlagTrigonometric | kOpFlagUnary, mpSin, mpFuncCtoC1<std::sin>, nullptr, nullptr),
+	  OpInfo("cos", kOpCos, 0, LTR | DtoD | CtoC | kOpFlagTrigonometric | kOpFlagUnary, mpCos, mpFuncCtoC1<std::cos>, nullptr, nullptr),
+	  OpInfo("tan", kOpTan, 0, LTR | DtoD | CtoC | kOpFlagTrigonometric | kOpFlagUnary, mpTan, mpFuncCtoC1<std::tan>, nullptr, nullptr),
+	  OpInfo("sinh", kOpSinh, 0, LTR | DtoD | CtoC | kOpFlagTrigonometric | kOpFlagUnary, mpSinh, mpFuncCtoC1<std::sinh>, nullptr, nullptr),
+	  OpInfo("cosh", kOpCosh, 0, LTR | DtoD | CtoC | kOpFlagTrigonometric | kOpFlagUnary, mpCosh, mpFuncCtoC1<std::cosh>, nullptr, nullptr),
+	  OpInfo("tanh", kOpTanh, 0, LTR | DtoD | CtoC | kOpFlagTrigonometric | kOpFlagUnary, mpTanh, mpFuncCtoC1<std::tanh>, nullptr, nullptr),
+	  OpInfo("asin", kOpAsin, 0, LTR | DtoD | CtoC | kOpFlagTrigonometric | kOpFlagUnary, mpAsin, mpFuncCtoC1<std::asin>, nullptr, nullptr),
+	  OpInfo("acos", kOpAcos, 0, LTR | DtoD | CtoC | kOpFlagTrigonometric | kOpFlagUnary, mpAcos, mpFuncCtoC1<std::acos>, nullptr, nullptr),
+	  OpInfo("atan", kOpAtan, 0, LTR | DtoD | CtoC | kOpFlagTrigonometric | kOpFlagUnary, mpAtan, mpFuncCtoC1<std::atan>, nullptr, nullptr),
 	  OpInfo("=", kOpAssign, 15, RTL | DtoD | kOpFlagAssign | kOpFlagBinary),
 	  OpInfo("==", kOpEq, 9, LTR | DtoD | kOpFlagCondition | kOpFlagBinary),
 	  OpInfo("!=", kOpNe, 9, LTR | DtoD | kOpFlagCondition | kOpFlagBinary),
@@ -85,24 +85,24 @@ namespace mathpresso {
 	  OpInfo("<=", kOpLe, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary),
 	  OpInfo(">", kOpGt, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary),
 	  OpInfo("<=", kOpGe, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary),
-	  OpInfo("+", kOpAdd, 6, LTR | kOpFlagArithmetic | kOpFlagNopIfZero | kOpFlagBinary),
-	  OpInfo("-", kOpSub, 6, LTR | kOpFlagArithmetic | kOpFlagNopIfRZero | kOpFlagBinary),
-	  OpInfo("*", kOpMul, 5, LTR | kOpFlagArithmetic | kOpFlagNopIfOne | kOpFlagBinary),
-	  OpInfo("/", kOpDiv, 5, LTR | kOpFlagArithmetic | kOpFlagNopIfROne | kOpFlagBinary),
-	  OpInfo("%", kOpMod, 5, LTR | DtoD | kOpFlagBinary, mpMod),
-	  OpInfo("avg", kOpAvg, 0, LTR | DtoD | kOpFlagBinary, mpAvg),
-	  OpInfo("min", kOpMin, 0, LTR | DtoD | kOpFlagBinary, mpMin<double>),
-	  OpInfo("max", kOpMax, 0, LTR | DtoD | kOpFlagBinary, mpMax<double>),
-	  OpInfo("pow", kOpPow, 0, LTR | kOpFlagBinary | kOpFlagNopIfROne, mpPow, mpFuncCtoC2<std::pow>),
-	  OpInfo("atan2", kOpAtan2, 0, LTR | DtoD | kOpFlagTrigonometric | kOpFlagBinary, mpAtan2),
-	  OpInfo("hypot", kOpHypot, 0, LTR | DtoD | kOpFlagTrigonometric | kOpFlagBinary, mpHypot),
-	  OpInfo("copysign", kOpCopySign, 0, LTR | DtoD | kOpFlagBinary, mpCopySign),
+	  OpInfo("+", kOpAdd, 6, LTR | DtoD | CtoC | kOpFlagArithmetic | kOpFlagNopIfZero | kOpFlagBinary),
+	  OpInfo("-", kOpSub, 6, LTR | DtoD | CtoC | kOpFlagArithmetic | kOpFlagNopIfRZero | kOpFlagBinary),
+	  OpInfo("*", kOpMul, 5, LTR | DtoD | CtoC | kOpFlagArithmetic | kOpFlagNopIfOne | kOpFlagBinary),
+	  OpInfo("/", kOpDiv, 5, LTR | DtoD | CtoC | kOpFlagArithmetic | kOpFlagNopIfROne | kOpFlagBinary),
+	  OpInfo("%", kOpMod, 5, LTR | DtoD | kOpFlagBinary, mpMod, nullptr, nullptr, nullptr),
+	  OpInfo("avg", kOpAvg, 0, LTR | DtoD | kOpFlagBinary, mpAvg, nullptr, nullptr, nullptr),
+	  OpInfo("min", kOpMin, 0, LTR | DtoD | kOpFlagBinary, mpMin<double>, nullptr, nullptr, nullptr),
+	  OpInfo("max", kOpMax, 0, LTR | DtoD | kOpFlagBinary, mpMax<double>, nullptr, nullptr, nullptr),
+	  OpInfo("pow", kOpPow, 0, LTR | DtoD | CtoC | kOpFlagBinary | kOpFlagNopIfROne, mpPow, mpFuncCtoC2<std::pow>, nullptr, nullptr),
+	  OpInfo("atan2", kOpAtan2, 0, LTR | DtoD | kOpFlagTrigonometric | kOpFlagBinary, mpAtan2, nullptr, nullptr, nullptr),
+	  OpInfo("hypot", kOpHypot, 0, LTR | DtoD | kOpFlagTrigonometric | kOpFlagBinary, mpHypot, nullptr, nullptr, nullptr),
+	  OpInfo("copysign", kOpCopySign, 0, LTR | DtoD | kOpFlagBinary, mpCopySign, nullptr, nullptr, nullptr),
 	  OpInfo("?", kOpQMark, 15, RTL | kOpFlagTernary),
 	  OpInfo(":", kOpColon, 15, RTL | kOpFlagTernary),
-	  OpInfo("real", kOpReal, 0, LTR | CtoD | kOpFlagUnary, nullptr, mpGetReal),
-	  OpInfo("imag", kOpImag, 0, LTR | CtoD | kOpFlagUnary, nullptr, mpGetImag),
+	  OpInfo("real", kOpReal, 0, LTR | CtoD | kOpFlagUnary, nullptr, nullptr, mpGetReal, nullptr),
+	  OpInfo("imag", kOpImag, 0, LTR | CtoD | kOpFlagUnary, nullptr, nullptr, mpGetImag, nullptr),
 	  OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary),
-	  OpInfo("sqrtC", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary, nullptr, mpFuncCtoC1<std::sqrt>)
+	  OpInfo("sqrtC", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary, nullptr, mpFuncCtoC1<std::sqrt>, nullptr, nullptr)
 	};
 #undef F
 #undef RTL
@@ -319,7 +319,7 @@ Error Context::addBuiltIns(void) {
     sym->setDeclared();
     sym->setOpType(op.type);
     sym->setFuncArgs(op.getOpCount());
-    sym->setFuncPtr(NULL);
+    sym->setFuncPtr(nullptr);
 
     d->_scope.putSymbol(sym);
   }
@@ -369,11 +369,11 @@ Error Context::addSymbol(AstSymbol* &sym, const char * name, int type)
 	size_t nlen = strlen(name); 
 	uint32_t hVal = HashUtils::hashString(name, nlen); 
 	sym = d->_scope.getSymbol(StringRef(name, nlen), hVal); 
-	if (sym != NULL) 
+	if (sym != nullptr) 
 		return MATHPRESSO_TRACE_ERROR(kErrorSymbolAlreadyExists); 
     
 	sym = d->_builder.newSymbol(StringRef(name, nlen), hVal, type, kAstScopeGlobal);
-	if (sym == NULL) 
+	if (sym == nullptr) 
 		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory); 
 	d->_scope.putSymbol(sym); 
 
@@ -486,7 +486,7 @@ Error Context::delSymbol(const char* name) {
   uint32_t hVal = HashUtils::hashString(name, nlen);
 
   AstSymbol* sym = d->_scope.getSymbol(StringRef(name, nlen), hVal);
-  if (sym == NULL)
+  if (sym == nullptr)
     return MATHPRESSO_TRACE_ERROR(kErrorSymbolNotFound);
 
   d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
@@ -515,7 +515,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	// Init options first.
 	options &= _kOptionsMask;
 
-	if (log != NULL)
+	if (log != nullptr)
 		options |= kInternalOptionLog;
 	else
 		options &= ~(kOptionVerbose | kOptionDebugAst | kOptionDebugAsm);
@@ -561,7 +561,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 
 	CompiledFunc fn = mpCompileFunction(&ast, options, log, _isComplex);
 
-	if (fn == NULL)
+	if (fn == nullptr)
 		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
 	_func = fn;
 

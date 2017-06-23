@@ -289,14 +289,14 @@ enum OpFlags {
   //! The operator 3 parameters (ternary node).
   kOpFlagTernary	   = 0x00000020,
 
-  //! this Operator returns a complex result.
-  kOpFlagReturnsComplex = 0x00001000,
-  //! this Operator wants complex parameters.
-  kOpFlagComplex = 0x00002000,
-  //! set to indicate, that no real version is available if kOpFlagComplex is set, etc.
-  //! Example: kOpFlagNoOther | kOpFlagComplex | kOpFlagReturnsComplex means that only 
-  //! a complex version is available.
-  kOpFlagNoOther = 0x00004000,
+  //! this Operator is complex -> complex.
+  kOpFlagComplexToComplex = 0x00001000,
+  //! this Operator is real -> real
+  kOpFlagRealToReal = 0x00002000,
+  //! this Operator is complex -> real
+  kOpFlagComplexToReal = 0x0004000,
+  //! this Operator is real -> complex
+  kOpFlagRealToComplex = 0x0008000,
 
   //! The operator performs an arithmetic operation.
   kOpFlagArithmetic    = 0x00000100,
@@ -365,16 +365,22 @@ struct OpInfo {
 		type(type_),
 		precedence(precedence_),
 		flags(flags_),
-		funcC(nullptr),
-		funcD(nullptr) {
+		funcCtoC(nullptr),
+		funcDtoD(nullptr),
+		funcCtoD(nullptr),
+		funcDtoC(nullptr) 
+	{
 	};
-	OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcReal, void* funcCplx = nullptr) :
+
+	OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcRealtoReal, void* funcCplxtoCplx, void* funcCplxtoReal, void* funcRealtoCplx) :
 		name(name_),
 		type(type_),
 		precedence(precedence_),
 		flags(flags_ | kOpFlagIntrinsic),
-		funcC(funcCplx),
-		funcD(funcReal) 
+		funcCtoC(funcCplxtoCplx),
+		funcDtoD(funcRealtoReal), 
+		funcCtoD(funcCplxtoReal),
+		funcDtoC(funcRealtoCplx)
 	{
 	};
 
@@ -404,10 +410,13 @@ struct OpInfo {
   MATHPRESSO_INLINE bool isRounding() const { return (flags & kOpFlagRounding) != 0; }
   MATHPRESSO_INLINE bool isTrigonometric() const { return (flags & kOpFlagTrigonometric) != 0; }
 
-  MATHPRESSO_INLINE bool returnsComplex() const { return (flags & kOpFlagReturnsComplex) != 0; }
-  MATHPRESSO_INLINE bool isComplex() const { return (flags & kOpFlagComplex) != 0; }
-  MATHPRESSO_INLINE bool allowsOtherSignature() const { return !((flags & kOpFlagNoOther) != 0); }
+  MATHPRESSO_INLINE bool returnsComplex() const { return hasDtoC() || hasDtoD(); }
+  MATHPRESSO_INLINE bool isComplex() const { return hasCtoC() || hasCtoD(); }
 
+  MATHPRESSO_INLINE bool hasCtoC() const { return (flags & kOpFlagComplexToComplex) != 0; }
+  MATHPRESSO_INLINE bool hasCtoD() const { return (flags & kOpFlagComplexToReal) != 0; }
+  MATHPRESSO_INLINE bool hasDtoC() const { return (flags & kOpFlagRealToComplex) != 0; }
+  MATHPRESSO_INLINE bool hasDtoD() const { return (flags & kOpFlagRealToReal) != 0; }
 
   MATHPRESSO_INLINE bool rightAssociate(uint32_t rPrec) const {
     return precedence > rPrec || (precedence == rPrec && isRightToLeft());
@@ -422,8 +431,10 @@ struct OpInfo {
   uint8_t precedence;
   uint8_t reserved;
   uint32_t flags;
-  void* funcC;
-  void* funcD;
+  void* funcCtoC;
+  void* funcDtoD;
+  void* funcCtoD;
+  void* funcDtoC;
   std::string name;
 };
 

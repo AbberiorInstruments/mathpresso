@@ -81,7 +81,7 @@ namespace mathpresso {
 				if (child ->returnsComplex())
 					sym->setValue(static_cast<AstImm*>(child)->getValue());
 				else
-					sym->setValue(static_cast<AstImm*>(child)->getValueComp());
+					sym->setValue(static_cast<AstImm*>(child)->getValueCplx());
 			}
 		}
 
@@ -117,35 +117,57 @@ namespace mathpresso {
 	{
 		const OpInfo& op = OpInfo::get(node->getOp());
 
-		if (op.isComplex())
-		{
-			node->addNodeFlags(kAstTakesComplex);
-		}
-
-		if (op.returnsComplex())
-		{	
-			node->addNodeFlags(kAstReturnsComplex);
-		}
+	
 
 		MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 		AstNode* child = node->getChild();
-		//if (child->hasNodeFlag(kAstComplex) && !node->hasNodeFlag(kAstComplex)) {
-	  //	  return _errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
-	  //		  "Operator '%s' wants a non-complex Parameter, but gets a complex one.", op.name);
-		//}
+		
+		if (child->returnsComplex()) 
+		{
+			if (op.hasCtoC())
+			{
+				node->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+			}
+			else if (op.hasCtoD())
+			{
+				node->addNodeFlags(kAstTakesComplex);
+			}
+		}
+		else 
+		{
+			if (op.hasDtoD()) 
+			{
+				//do nothing;
+			} 
+			else if (op.hasDtoC())
+			{
+				node->addNodeFlags(kAstReturnsComplex);
+			}
+			else if (op.hasCtoD()) 
+			{
+				node->addNodeFlags(kAstTakesComplex);
+			}
+			else if (op.hasCtoC()) 
+			{
+				node->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+			}
+		}
+
 
 		if (child->isImm())
 		{
 			AstImm* p_imm = static_cast<AstImm*>(node->getChild());
 
 			if (!p_imm ->returnsComplex())
-			{
-				if (!op.returnsComplex())
+			{// real parameter
+				if (op.hasDtoD())
 				{
 					double value = p_imm->getValue();
 
-					if (!op.isIntrinsic()) {
-						switch (node->getOp()) {
+					if (!op.isIntrinsic())
+					{
+						switch (node->getOp())
+						{
 						case kOpNeg: value = -value; break;
 						case kOpNot: value = (value == 0); break;
 
@@ -154,51 +176,87 @@ namespace mathpresso {
 								"Invalid unary operation '%s'.", op.name);
 						}
 					}
-					else {
-						if (op.funcD)
-							value = ((Arg1Func)op.funcD)(value);
-						else {
+					else 
+					{
+						if (op.funcDtoD)
+						{
+							value = ((Arg1Func)op.funcDtoD)(value);
+						}
+						else 
+						{
 							return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 								"Invalid unary operation '%s'.", op.name);
 						}
 					}
 
 					p_imm->setValue(value);
-
-					node->unlinkChild();
-					node->getParent()->replaceNode(node, p_imm);
 				}
-				else
+				else if (op.hasDtoC()) 
 				{
-					double operand = static_cast<AstImm*>(node->getChild())->getValue();
-					std::complex<double> value(0, 0);
-					if (op.funcC) {
-						value = ((mpFuncpCtoC)op.funcC)(&std::complex<double>(operand, 0));
-					} else {
-						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-							"invalid unary operation '%s'.", op.name);
-					}
-
-					AstImm* replacement = _ast->newNode<AstImm>(value);
-					node->getParent()->replaceNode(node, replacement);
-				}
-				_ast->deleteNode(node);
-			}
-			else
-			{
-				std::complex<double> value = p_imm->getValueComp();
-
-				if (op.funcC) 
-				{
-					if ((op.flags & kOpFlagComplex) != 0) 
+					double value = p_imm->getValue();
+					std::complex<double> ret(0, 0);
+					if (op.funcDtoD)
 					{
-						p_imm->setValue(((mpFuncpCtoD)op.funcC)(&value));
-						p_imm->removeNodeFlags(kAstReturnsComplex);
+						p_imm->setValue(((mpFuncpDtoC)op.funcDtoC)(&value));
 					}
 					else 
 					{
-						p_imm->setValue(((mpFuncpCtoC)op.funcC)(&value));
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid unary operation '%s'.", op.name);
 					}
+					node->addNodeFlags(kAstReturnsComplex);
+				}
+				else if (op.hasCtoD())
+				{
+					double operand = static_cast<AstImm*>(node->getChild())->getValue();
+					std::complex<double> value(0, 0);
+					if (op.funcCtoD)
+					{
+						p_imm->setValue(((mpFuncpCtoD)op.funcCtoD)(&std::complex<double>(operand, 0)));
+					}
+					else 
+					{
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"invalid unary operation '%s'.", op.name);
+					}
+				}
+				else if (op.hasCtoC()) 
+				{
+					double operand = static_cast<AstImm*>(node->getChild())->getValue();
+					std::complex<double> value(0, 0);
+					if (op.funcCtoC) 
+					{
+						p_imm->setValue(((mpFuncpCtoC)op.funcCtoC)(&std::complex<double>(operand, 0)));
+					}
+					else 
+					{
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"invalid unary operation '%s'.", op.name);
+					}
+					node->addNodeFlags(kAstReturnsComplex);
+				}
+				else {
+					return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+						"Invalid unary operation with complex parameters '%s'.", op.name);
+
+				}
+
+				node->unlinkChild();
+				node->getParent()->replaceNode(node, p_imm);
+				_ast->deleteNode(node);
+			}
+			else
+			{ // Complex parameter
+				std::complex<double> value = p_imm->getValueCplx();
+
+				if (op.hasCtoD()) 
+				{					
+					p_imm->setValue(((mpFuncpCtoD)op.funcCtoD)(&value));
+					p_imm->removeNodeFlags(kAstReturnsComplex);
+				}
+				else if (op.hasCtoC())
+				{
+					p_imm->setValue(((mpFuncpCtoC)op.funcCtoC)(&value));
 				}
 				else 
 				{
@@ -206,18 +264,9 @@ namespace mathpresso {
 						"Invalid unary operation with complex parameters '%s'.", op.name);
 				}
 				
-				if (p_imm->returnsComplex()) {
-					node->unlinkChild();
-					node->getParent()->replaceNode(node, p_imm);
-					_ast->deleteNode(node);
-					onNode(p_imm);
-				}
-				else {
-					AstImm* newChild = _ast->newNode<AstImm>(value.real());
-					node->getParent()->replaceNode(node, newChild);
-					_ast->deleteNode(node);
-					onNode(newChild);
-				}
+				node->unlinkChild();
+				node->getParent()->replaceNode(node, p_imm);
+				_ast->deleteNode(node);
 			}
 		}
 		else if (child->getNodeType() == kAstNodeUnaryOp && node->getOp() == child->getOp())
@@ -232,9 +281,15 @@ namespace mathpresso {
 		}
 		else if (node->getChild()->returnsComplex()) 
 		{
-			// unary operators which are available in CtoC and DtoD
-			if (!op.isComplex()&& !op.returnsComplex() && op.allowsOtherSignature())
-				node->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
+			if (op.hasCtoD()) 
+			{
+				node->addNodeFlags(kAstTakesComplex);
+			} 
+			else if (op.hasCtoC()) 
+			{
+				node->addNodeFlags(kAstTakesComplex);
+				node->addNodeFlags(kAstReturnsComplex);
+			}
 		}
 
 		return kErrorOk;
@@ -342,10 +397,6 @@ namespace mathpresso {
 
 		if (!needs_complex)
 		{
-			if (left->returnsComplex() || right->returnsComplex())
-				return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-					"Expect non-complex parameters for operation '%s'.", op.name); // should never be reached
-
 			// If both nodes are values it's easy, just fold them into a single one.
 			if (lIsImm && rIsImm)
 			{
@@ -354,31 +405,48 @@ namespace mathpresso {
 
 				double lVal = lNode->getValue();
 				double rVal = rNode->getValue();
-				double result = 0.0;
-				if (!op.isIntrinsic())
+				if (op.hasDtoD())
 				{
-					switch (node->getOp()) 
+					if (!op.isIntrinsic())
 					{
-					case kOpEq: result = lVal == rVal; break;
-					case kOpNe: result = lVal != rVal; break;
-					case kOpLt: result = lVal < rVal; break;
-					case kOpLe: result = lVal <= rVal; break;
-					case kOpGt: result = lVal > rVal; break;
-					case kOpGe: result = lVal >= rVal; break;
-					case kOpAdd: result = lVal + rVal; break;
-					case kOpSub: result = lVal - rVal; break;
-					case kOpMul: result = lVal * rVal; break;
-					case kOpDiv: result = lVal / rVal; break;
-					default:
-						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-							"Invalid binary operation '%s'.", op.name);
+						double result = 0.0;
+						switch (node->getOp())
+						{
+						case kOpEq: result = lVal == rVal; break;
+						case kOpNe: result = lVal != rVal; break;
+						case kOpLt: result = lVal < rVal; break;
+						case kOpLe: result = lVal <= rVal; break;
+						case kOpGt: result = lVal > rVal; break;
+						case kOpGe: result = lVal >= rVal; break;
+						case kOpAdd: result = lVal + rVal; break;
+						case kOpSub: result = lVal - rVal; break;
+						case kOpMul: result = lVal * rVal; break;
+						case kOpDiv: result = lVal / rVal; break;
+						default:
+							return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+								"Invalid binary operation '%s'.", op.name);
+						}
+						lNode->setValue(result);
+					}
+					else
+					{
+						if (op.funcDtoD)
+						{
+							lNode->setValue(((Arg2Func)op.funcDtoD)(lVal, rVal));
+						}
+						else
+						{
+							return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+								"Invalid binary operation '%s'.", op.name);
+						}
 					}
 				}
-				else
+				else if (op.hasDtoC())
 				{
-					if (op.funcD)
+					double args[] = { lVal, rVal };
+					if (op.funcDtoD)
 					{
-						result = ((Arg2Func)op.funcD)(lVal, rVal);
+						lNode->setValue(((mpFuncpDtoC)op.funcDtoC)(args));
 					}
 					else
 					{
@@ -386,7 +454,32 @@ namespace mathpresso {
 							"Invalid binary operation '%s'.", op.name);
 					}
 				}
-				lNode->setValue(result);
+				else if (op.hasCtoD())
+				{
+					std::complex<double> args[] = { {lVal,0}, {rVal,0} };
+					if (op.funcDtoD)
+					{
+						lNode->setValue(((mpFuncpCtoD)op.funcCtoD)(args));
+					}
+					else
+					{
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid binary operation '%s'.", op.name);
+					}
+				}
+				else if (op.hasCtoC())
+				{
+					std::complex<double> args[] = { { lVal,0 },{ rVal,0 } };
+					if (op.funcDtoD)
+					{
+						lNode->setValue(((mpFuncpCtoD)op.funcCtoD)(args));
+					}
+					else
+					{
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid binary operation '%s'.", op.name);
+					}
+				}
 				node->unlinkLeft();
 				node->getParent()->replaceNode(node, lNode);
 
@@ -437,47 +530,70 @@ namespace mathpresso {
 		else
 		{
 			node->addNodeFlags(kAstTakesComplex);
-			if (op.returnsComplex() || (!op.returnsComplex() && !op.isComplex()))
+			if (!op.hasCtoD() && op.hasCtoC()) 
+			{
 				node->addNodeFlags(kAstReturnsComplex);
-
-			// if we have to calculate in complex, and one of the operands is an immediate, it should be converted to complex.
-			if (left->isImm()&& !left->takesComplex()) {
-				left->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
 			}
-			if (right->isImm() && !right->takesComplex()) {
-				right->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+			
+			// if we have to calculate in complex, and one of the operands is an immediate, it should be converted to complex.
+			if (left->isImm()&& !left->returnsComplex()) 
+			{
+				left->addNodeFlags(kAstReturnsComplex);
+			} 
+			else if (right->isImm() && !right->returnsComplex())
+			{
+				right->addNodeFlags(kAstReturnsComplex);
 			}
 
 			// complex immediates.
-			if (left->isImm() && right->isImm() && left ->takesComplex() && right ->takesComplex()) {
+			if (left->isImm() && right->isImm() && left ->returnsComplex() && right ->returnsComplex()) // both should be complex, but who cares ;)
+			{
 				AstImm* lNode = static_cast<AstImm*>(left);
 				AstImm* rNode = static_cast<AstImm*>(right);
 
-				std::complex<double> result;
 				if (!op.isIntrinsic()) {
-					switch (node->getOp()) {
-					case kOpAdd: result = lNode->getValueComp() + rNode->getValueComp(); break;
-					case kOpSub: result = lNode->getValueComp() - rNode->getValueComp(); break;
-					case kOpMul: result = lNode->getValueComp() * rNode->getValueComp(); break;
-					case kOpDiv: result = lNode->getValueComp() / rNode->getValueComp(); break;
+					std::complex<double> result;
+					switch (node->getOp())
+					{
+					case kOpAdd: result = lNode->getValueCplx() + rNode->getValueCplx(); break;
+					case kOpSub: result = lNode->getValueCplx() - rNode->getValueCplx(); break;
+					case kOpMul: result = lNode->getValueCplx() * rNode->getValueCplx(); break;
+					case kOpDiv: result = lNode->getValueCplx() / rNode->getValueCplx(); break;
 
 
 					default:
 						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 							"Invalid complex binary operation '%s'.", op.name);
 					}
+					rNode->setValue(result);
 				}
-				else {
-					if (op.funcC) {
-						result = pow(lNode->getValueComp(), rNode->getValueComp());
+				else if (op.hasCtoD()) 
+				{
+					std::complex<double> args[] = { lNode->getValueCplx(), rNode->getValueCplx() };
+					if (op.funcCtoD) 
+					{
+						rNode->setValue(((mpFuncpCtoD)op.funcCtoD)(args));
 					}
-					else {
+					else 
+					{
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid complex binary operation '%s'.", op.name);
+					}
+				} 
+				else  if (op.hasCtoC())
+				{
+					std::complex<double> args[] = { lNode->getValueCplx(), rNode->getValueCplx() };
+					if (op.funcCtoC) 
+					{
+						rNode->setValue(((mpFuncpCtoC)op.funcCtoC)(args));
+					}
+					else 
+					{
 						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 							"Invalid complex binary operation '%s'.", op.name);
 					}
 				}
 
-				rNode->setValue(result);
 				node->unlinkRight();
 				node->getParent()->replaceNode(node, rNode);
 
@@ -488,7 +604,7 @@ namespace mathpresso {
 			else if (lIsImm)
 			{
 				AstImm* lNode = static_cast<AstImm*>(left);
-				std::complex<double> val = lNode->getValueComp();
+				std::complex<double> val = lNode->getValueCplx();
 
 				if ((val == std::complex<double>(0.0, 0.0) && (op.flags & kOpFlagNopIfLZero)) ||
 					(val == std::complex<double>(1.0, 0.0) && (op.flags & kOpFlagNopIfLOne)))
@@ -501,7 +617,7 @@ namespace mathpresso {
 			}
 			else if (rIsImm) {
 				AstImm* rNode = static_cast<AstImm*>(right);
-				std::complex<double> val = rNode->getValueComp();
+				std::complex<double> val = rNode->getValueCplx();
 
 				// Evaluate an assignment.
 				if (op.isAssignment() && left->isVar())
@@ -535,7 +651,7 @@ namespace mathpresso {
 		MATHPRESSO_PROPAGATE(onNode(node->getCondition()));
 		AstNode* branchCond = node->getCondition();
 		if (branchCond->isImm()) {
-			bool conditionIsTrue = static_cast<AstImm*>(branchCond)->getValueComp() != std::complex<double>({ 0, 0 });
+			bool conditionIsTrue = static_cast<AstImm*>(branchCond)->getValueCplx() != std::complex<double>({ 0, 0 });
 			
 			AstNode* newNode;
 
@@ -581,7 +697,7 @@ namespace mathpresso {
 		for (i = 0; i < count; i++)
 		{
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
-			b_need_cplx |= node->getAt(i)->takesComplex();
+			b_need_cplx |= node->getAt(i)->returnsComplex();
 		}
 		
 		// If we have a complex argument or no real function version, use the function
@@ -677,7 +793,7 @@ namespace mathpresso {
 			std::complex<double> argsComplex[9];
 			for (i = 0; i < count; i++) 
 			{
-				argsComplex[i] = static_cast<AstImm*>(node->getAt(i))->getValueComp();
+				argsComplex[i] = static_cast<AstImm*>(node->getAt(i))->getValueCplx();
 			}
 
 			AstImm* replacement = _ast->newNode<AstImm>(0);

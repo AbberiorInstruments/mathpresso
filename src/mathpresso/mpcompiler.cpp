@@ -32,11 +32,27 @@ namespace mathpresso {
 
 	struct JitUtils {
 		static void* getFuncByOp(uint32_t op, bool takesComplex, bool returnsComplex) {
-			if (takesComplex) {
-				return OpInfo::get(op).funcC;
+			if (takesComplex) 
+			{
+				if (returnsComplex)
+				{
+					return OpInfo::get(op).funcCtoC;
+				}
+				else 
+				{
+					return OpInfo::get(op).funcCtoD;
+				}
 			}
-			else {
-				return OpInfo::get(op).funcD;
+			else 
+			{
+				if (returnsComplex)
+				{
+					return OpInfo::get(op).funcDtoC;
+				}
+				else 
+				{
+					return OpInfo::get(op).funcDtoD;
+				}
 			}
 
 		}
@@ -417,7 +433,7 @@ namespace mathpresso {
 	
 	JitVar JitCompiler::onImm(AstImm* node) {
 		if (node->returnsComplex())
-			return getConstantD64Compl(node->getValueComp());
+			return getConstantD64Compl(node->getValueCplx());
 		else
 			return getConstantD64(node->getValue());
 	}
