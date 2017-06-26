@@ -56,7 +56,7 @@ namespace mathpresso {
 	  OpInfo("isnan", kOpIsNan, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, mpIsNan, nullptr),
 	  OpInfo("isinf", kOpIsInf, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, mpIsInf, nullptr),
 	  OpInfo("isfinite", kOpIsFinite, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, mpIsFinite, nullptr),
-	  OpInfo("signbit", kOpSignBit, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, mpSignBit, nullptr,
+	  OpInfo("signbit", kOpSignBit, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, mpSignBit, nullptr),
 	  OpInfo("round", kOpRound, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, mpRound, nullptr),
 	  OpInfo("roundeven", kOpRoundEven, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, mpRoundEven, nullptr),
 	  OpInfo("trunc", kOpTrunc, 0, LTR | DtoD | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, mpTrunc, nullptr),
