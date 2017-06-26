@@ -209,7 +209,7 @@ static ContextImpl* mpContextClone(ContextImpl* otherD_) {
         case kAstSymbolVariable:
           clonedSym->setVarSlotId(sym->getVarSlotId());
           clonedSym->setVarOffset(sym->getVarOffset());
-          clonedSym->_value = sym->getValue();
+          clonedSym->_valueComp = sym->getValueComp();
           break;
 
         case kAstSymbolIntrinsic:
@@ -555,7 +555,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 		sbTmp.clear();
 	}
 	
-	_isComplex = ast._programNode->takesComplex();
+	_isComplex = ast._programNode->returnsComplex();
 
 	// Compile the function to machine code.
 	reset();

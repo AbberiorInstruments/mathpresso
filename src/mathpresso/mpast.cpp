@@ -104,14 +104,7 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
 	{
       sym->_varSlotId = other->_varSlotId;
       sym->_varOffset = other->_varOffset;
-	  if (sym->hasSymbolFlag(kAstTakesComplex)) 
-	  {
-		  sym->_valueComp = other->_valueComp;
-	  }
-	  else 
-	  {
-		  sym->_value = other->_value;
-	  }
+	  sym->_valueComp = other->_valueComp;
       break;
     }
 

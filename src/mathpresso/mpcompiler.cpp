@@ -124,9 +124,6 @@ namespace mathpresso {
 		void beginFunction();
 		void endFunction();
 
-		// Function generator - complex.
-		void beginFunctionComp();
-
 		// Variable Management.
 		JitVar copyVar(const JitVar& other, uint32_t flags);
 		JitVar writableVar(const JitVar& other);
@@ -149,12 +146,11 @@ namespace mathpresso {
 		JitVar onBinaryOp(AstBinaryOp* node);
 		JitVar onTernaryOp(AstTernaryOp * node);
 		JitVar onCall(AstCall* node);
-		JitVar onCallComp(AstCall * node);
-
 
 		// Helpers.
 		void inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool takesComplex, bool returnsComplex);
 		void inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool takesComplex, bool returnsComplex);
+		void inlineCallAbstract(const X86Xmm & dst, const X86Xmm * args, uint32_t count, void * fp, bool takesComplex, bool returnsComplex);
 		void inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn);
 		void inlineCallDRetC(const X86Xmm & dst, const X86Xmm * args, uint32_t count, void * fn);
 		void inlineCallCRetD(const X86Xmm & dst, const X86Xmm * args, const uint32_t count, void * fn);
@@ -162,7 +158,6 @@ namespace mathpresso {
 
 		// Constants.
 		void prepareConstPool();
-		void prepareConstPoolComp();
 		JitVar getConstantU64(uint64_t value);
 		JitVar getConstantU64Compl(uint64_t real, uint64_t imag);
 		JitVar getConstantU64AsPD(uint64_t value);
@@ -185,7 +180,6 @@ namespace mathpresso {
 		ConstPool constPool;
 
 		bool enableSSE4_1;
-		bool complex = false;
 	};
 
 	JitCompiler::JitCompiler(ZoneHeap* heap, X86Compiler* cc)
@@ -200,21 +194,6 @@ namespace mathpresso {
 	JitCompiler::~JitCompiler() {}
 
 	void JitCompiler::beginFunction() {
-		cc->addFunc(FuncSignature2<void, double*, double*>(CallConv::kIdHostCDecl));
-
-		resultAddress = cc->newIntPtr("pResult");
-		variablesAddress = cc->newIntPtr("pVariables");
-		constPtr = cc->newIntPtr("pConst");
-
-		cc->setArg(0, resultAddress);
-		cc->setArg(1, variablesAddress);
-
-		functionBody = cc->getCursor();
-	}
-
-
-	//! not necessary, but for completeness.
-	void JitCompiler::beginFunctionComp() {
 		cc->addFunc(FuncSignature2<void, double*, double*>(CallConv::kIdHostCDecl));
 
 		resultAddress = cc->newIntPtr("pResult");
@@ -395,14 +374,17 @@ namespace mathpresso {
 		return result;
 	}
 
-	JitVar JitCompiler::onVar(AstVar* node) {
+	JitVar JitCompiler::onVar(AstVar* node)
+	{
 		AstSymbol* sym = node->getSymbol();
 		uint32_t slotId = sym->getVarSlotId();
 		bool b_complex = node ->returnsComplex();
 
 		JitVar result = varSlots[slotId];
-		if (result.isNone()) {
-			if (sym->isGlobal()) {
+		if (result.isNone())
+		{
+			if (sym->isGlobal()) 
+			{
 				result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAG_RO);
 				varSlots[slotId] = result;
 				if (sym->getWriteCount() > 0)
@@ -431,14 +413,16 @@ namespace mathpresso {
 		return result;
 	}
 	
-	JitVar JitCompiler::onImm(AstImm* node) {
+	JitVar JitCompiler::onImm(AstImm* node)
+	{
 		if (node->returnsComplex())
 			return getConstantD64Compl(node->getValueCplx());
 		else
 			return getConstantD64(node->getValue());
 	}
 
-	JitVar JitCompiler::onUnaryOp(AstUnaryOp* node) {
+	JitVar JitCompiler::onUnaryOp(AstUnaryOp* node)
+	{
 		uint32_t op = node->getOp();
 		JitVar var = onNode(node->getChild());
 
@@ -908,7 +892,7 @@ namespace mathpresso {
 
 		if (rIsVarOrImm)
 		{
-			if (right ->returnsComplex())
+			if (right->returnsComplex())
 			{
 				cc->movupd(regErg, ergRight.getXmm());
 			}
@@ -917,7 +901,7 @@ namespace mathpresso {
 				cc->xorpd(regErg, regErg);
 				cc->movsd(regErg, ergRight.getXmm());
 			}
-			}
+		}
 
 		cc->bind(lblEnd);
 
@@ -926,45 +910,29 @@ namespace mathpresso {
 
 	JitVar JitCompiler::onCall(AstCall* node)
 	{
+		uint32_t i, count = node->getLength();
+		AstSymbol* sym = node->getSymbol();
+
+		X86Xmm result = node->returnsComplex() ? cc->newXmmPd() : cc->newXmmSd();
+		X86Xmm args[8];
+
 		if (node->takesComplex())
 		{
-			return onCallComp(node);
+			for (i = 0; i < count; i++)
+			{
+				args[i] = registerVarComplex(onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
+			}
 		}
-		uint32_t i, count = node->getLength();
-		AstSymbol* sym = node->getSymbol();
-
-		X86Xmm result = node->returnsComplex() ? cc->newXmmPd() : cc->newXmmSd();
-		X86Xmm args[8];
-
-		for (i = 0; i < count; i++)
-		{
-			args[i] = registerVar(onNode(node->getAt(i))).getXmm();
-		}
-
-		if (node->returnsComplex())
-			inlineCallDRetC(result, args, count, sym->getFuncPtr());
 		else
-			inlineCall(result, args, count, sym->getFuncPtr());
-		return JitVar(result, JitVar::FLAG_NONE);
-	}
-
-	JitVar JitCompiler::onCallComp(AstCall* node)
-	{
-		uint32_t i, count = node->getLength();
-		AstSymbol* sym = node->getSymbol();
-
-		X86Xmm result = node->returnsComplex() ? cc->newXmmPd() : cc->newXmmSd();
-		X86Xmm args[8];
-
-		for (i = 0; i < count; i++) 
 		{
-			args[i] = registerVarComplex(onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
+			for (i = 0; i < count; i++)
+			{
+				args[i] = registerVar(onNode(node->getAt(i))).getXmm();
+			}
 		}
-		if (node->returnsComplex())
-			inlineCallComplex(result, args, count, sym->getFuncPtr(true));
-		else
-			inlineCallCRetD(result, args, count, sym->getFuncPtr(true));
 
+		inlineCallAbstract(result, args, count, sym->getFuncPtr(node->takesComplex()),  node->takesComplex(), node->returnsComplex());
+				
 		return JitVar(result, JitVar::FLAG_NONE);
 	}
 
@@ -1128,10 +1096,14 @@ namespace mathpresso {
 		inlineCallAbstract(dst, &src, 2, op, takesComplex, returnsComplex);
 	}
 
-	void JitCompiler::inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op, bool takesComplex, bool returnsComplex) 
+	void JitCompiler::inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, uint32_t op , bool takesComplex, bool returnsComplex) 
 	{
 		auto fp = JitUtils::getFuncByOp(op, takesComplex, returnsComplex);
+		inlineCallAbstract(dst, args, count, fp, takesComplex, returnsComplex);
+	}
 
+	void JitCompiler::inlineCallAbstract(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void * fp, bool takesComplex, bool returnsComplex) 
+	{
 		if (takesComplex) 
 		{
 			if (returnsComplex)
@@ -1262,16 +1234,6 @@ namespace mathpresso {
 		}
 	}
 
-	void JitCompiler::prepareConstPoolComp() {
-		if (!constLabel.isValid()) {
-			constLabel = cc->newLabel();
-
-			CBNode* prev = cc->setCursor(functionBody);
-			cc->lea(constPtr, x86::ptr(constLabel));
-			if (prev != functionBody) cc->setCursor(prev);
-		}
-	}
-
 	JitVar JitCompiler::getConstantU64(uint64_t value) {
 		prepareConstPool();
 
@@ -1283,7 +1245,7 @@ namespace mathpresso {
 	}
 
 	JitVar JitCompiler::getConstantU64Compl(uint64_t real, uint64_t imag) {
-		prepareConstPoolComp();
+		prepareConstPool();
 
 		uint64_t value[2] = { real, imag };
 		size_t offset;

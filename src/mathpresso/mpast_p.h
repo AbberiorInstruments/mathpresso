@@ -278,7 +278,6 @@ struct AstSymbol : public HashNode {
 		_symbolType(static_cast<uint8_t>(symbolType)),
 		_opType(kOpNone),
 		_symbolFlags(scopeType == kAstScopeGlobal ? (int)kAstSymbolIsGlobal : 0),
-		_value(),
 		_valueComp(),
 		_usedCount(0),
 		_writeCount(0),
@@ -388,10 +387,10 @@ struct AstSymbol : public HashNode {
   MATHPRESSO_INLINE void setAltered() { setSymbolFlag(kAstSymbolIsAltered); }
 
   //! Get the constant value, see `isAssigned()`.
-  MATHPRESSO_INLINE double getValue() const { return _value; }
+  MATHPRESSO_INLINE double getValue() const { return _valueComp.real(); }
   MATHPRESSO_INLINE std::complex<double> getValueComp() const { return _valueComp; }
   //! Set `_isAssigned` to true and `_value` to `value`.
-  MATHPRESSO_INLINE void setValue(double value) { _value = value; setAssigned(); }
+  MATHPRESSO_INLINE void setValue(double value) { _valueComp.real(value); setAssigned(); }
   MATHPRESSO_INLINE void setValue(std::complex<double> value) { _valueComp = value; setAssigned(); }
 
   MATHPRESSO_INLINE uint32_t getUsedCount() const { return _usedCount; }
@@ -429,15 +428,6 @@ struct AstSymbol : public HashNode {
   uint32_t _writeCount;
 
   union {
-    struct {
-      //! Variable slot id.
-      uint32_t _varSlotId;
-      //! Variable offset in data structure (in case the symbol is a global variable).
-      int32_t _varOffset;
-      //! The current value of the symbol (in case the symbol is an immediate).
-      double _value;
-    };
-
 	struct {
 		//! Variable slot id.
 		uint32_t _varSlotId;
@@ -650,8 +640,6 @@ struct AstNode {
   MATHPRESSO_INLINE void setPosition(uint32_t position) { _position = position; }
   //! Reset source code position of the node.
   MATHPRESSO_INLINE void resetPosition() { _position = ~static_cast<uint32_t>(0); }
-
-  MATHPRESSO_INLINE void setComplex(bool isComplex) {}
 
   // --------------------------------------------------------------------------
   // [Children]

@@ -180,10 +180,6 @@ namespace mathpresso {
 
 	static MATHPRESSO_INLINE std::complex<double> mpAvgC(std::complex<double> *x) { return (x[0] + x[1])*0.5; }
 
-	// later eventually.....
-	//static MATHPRESSO_INLINE std::complex<double> mpAtan2C(std::complex<double> *x) { return atan2(x[0], x[1]); }
-	//static MATHPRESSO_INLINE std::complex<double> mpHypotC(std::complex<double> *x) { return x[0] *  ; }
-
 } // mathpresso namespace
 
 #endif // _MATHPRESSO_MPEVAL_P_H
