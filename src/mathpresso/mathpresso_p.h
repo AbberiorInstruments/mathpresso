@@ -376,7 +376,7 @@ struct OpInfo {
 		name(name_),
 		type(type_),
 		precedence(precedence_),
-		flags(flags_ | kOpFlagIntrinsic),
+		flags(flags_),
 		funcCtoC(funcCplxtoCplx),
 		funcDtoD(funcRealtoReal), 
 		funcCtoD(funcCplxtoReal),
