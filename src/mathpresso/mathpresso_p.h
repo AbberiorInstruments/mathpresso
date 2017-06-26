@@ -372,7 +372,7 @@ struct OpInfo {
 	{
 	};
 
-	OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcRealtoReal, void* funcCplxtoCplx, void* funcCplxtoReal, void* funcRealtoCplx) :
+	OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcRealtoReal, void* funcCplxtoCplx, void* funcCplxtoReal = nullptr, void* funcRealtoCplx = nullptr) :
 		name(name_),
 		type(type_),
 		precedence(precedence_),

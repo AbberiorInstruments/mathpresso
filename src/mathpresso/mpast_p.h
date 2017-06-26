@@ -274,7 +274,7 @@ struct AstSymbol : public HashNode {
 		: HashNode(hVal),
 		_length(length),
 		_name(name),
-		_node(NULL),
+		_node(nullptr),
 		_symbolType(static_cast<uint8_t>(symbolType)),
 		_opType(kOpNone),
 		_symbolFlags(scopeType == kAstScopeGlobal ? (int)kAstSymbolIsGlobal : 0),

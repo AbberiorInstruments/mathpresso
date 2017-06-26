@@ -43,7 +43,7 @@ static const AstNodeSize mpAstNodeSize[] = {
   ROW(kAstNodeImm      , sizeof(AstImm)      ),
   ROW(kAstNodeUnaryOp  , sizeof(AstUnaryOp)  ),
   ROW(kAstNodeBinaryOp , sizeof(AstBinaryOp) ),
-  ROW(kAstNodeTernaryOp , sizeof(AstTernaryOp)),
+  ROW(kAstNodeTernaryOp, sizeof(AstTernaryOp)),
   ROW(kAstNodeCall     , sizeof(AstCall)     )
 };
 #undef ROW
@@ -54,8 +54,8 @@ static const AstNodeSize mpAstNodeSize[] = {
 
 AstBuilder::AstBuilder(ZoneHeap* heap)
   : _heap(heap),
-    _rootScope(NULL),
-    _programNode(NULL),
+    _rootScope(nullptr),
+    _programNode(nullptr),
     _numSlots(0) {}
 AstBuilder::~AstBuilder() {}
 
@@ -65,8 +65,8 @@ AstBuilder::~AstBuilder() {}
 
 AstScope* AstBuilder::newScope(AstScope* parent, uint32_t scopeType) {
   void* p = _heap->alloc(sizeof(AstScope));
-  if (p == NULL)
-    return NULL;
+  if (p == nullptr)
+    return nullptr;
   return new(p) AstScope(this, parent, scopeType);
 }
 
@@ -79,8 +79,8 @@ AstSymbol* AstBuilder::newSymbol(const StringRef& key, uint32_t hVal, uint32_t s
   size_t kLen = key.getLength();
   void* p = _heap->alloc(sizeof(AstSymbol) + kLen + 1);
 
-  if (p == NULL)
-    return NULL;
+  if (p == nullptr)
+    return nullptr;
 
   char* kStr = static_cast<char*>(p) + sizeof(AstSymbol);
   ::memcpy(kStr, key.getData(), kLen);
@@ -93,8 +93,8 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
   StringRef name(other->getName(), other->getLength());
   AstSymbol* sym = newSymbol(name, other->getHVal(), other->getSymbolType(), kAstScopeShadow);
 
-  if (sym == NULL)
-    return NULL;
+  if (sym == nullptr)
+    return nullptr;
 
   sym->_opType = other->_opType;
   sym->_symbolFlags = other->_symbolFlags;
@@ -144,7 +144,7 @@ void AstBuilder::deleteNode(AstNode* node) {
 
   for (uint32_t i = 0; i < length; i++) {
     AstNode* child = children[i];
-    if (child != NULL)
+    if (child != nullptr)
       deleteNode(child);
   }
 
@@ -156,12 +156,12 @@ void AstBuilder::deleteNode(AstNode* node) {
 // ============================================================================
 
 Error AstBuilder::initProgramScope() {
-  if (_rootScope == NULL) {
-    _rootScope = newScope(NULL, kAstScopeGlobal);
+  if (_rootScope == nullptr) {
+    _rootScope = newScope(nullptr, kAstScopeGlobal);
     MATHPRESSO_NULLCHECK(_rootScope);
   }
 
-  if (_programNode == NULL) {
+  if (_programNode == nullptr) {
     _programNode = newNode<AstProgram>();
     MATHPRESSO_NULLCHECK(_programNode);
   }
@@ -209,9 +209,9 @@ AstSymbol* AstScope::resolveSymbol(const StringRef& name, uint32_t hVal, AstScop
 
   do {
     symbol = scope->_symbols.get(name, hVal);
-  } while (symbol == NULL && (scope = scope->getParent()) != NULL);
+  } while (symbol == nullptr && (scope = scope->getParent()) != nullptr);
 
-  if (scopeOut != NULL)
+  if (scopeOut != nullptr)
     *scopeOut = scope;
 
   return symbol;
@@ -222,9 +222,9 @@ AstSymbol* AstScope::resolveSymbol(const StringRef& name, uint32_t hVal, AstScop
 // ============================================================================
 
 AstNode* AstNode::replaceNode(AstNode* refNode, AstNode* node) {
-  MATHPRESSO_ASSERT(refNode != NULL);
+  MATHPRESSO_ASSERT(refNode != nullptr);
   MATHPRESSO_ASSERT(refNode->getParent() == this);
-  MATHPRESSO_ASSERT(node == NULL || !node->hasParent());
+  MATHPRESSO_ASSERT(node == nullptr || !node->hasParent());
 
   uint32_t length = _length;
   AstNode** children = getChildren();
@@ -236,33 +236,33 @@ AstNode* AstNode::replaceNode(AstNode* refNode, AstNode* node) {
       continue;
 
     children[i] = node;
-    refNode->_parent = NULL;
+    refNode->_parent = nullptr;
 
-    if (node != NULL)
+    if (node != nullptr)
       node->_parent = this;
 
     return refNode;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 AstNode* AstNode::replaceAt(uint32_t index, AstNode* node) {
   AstNode* child = getAt(index);
   _children[index] = node;
 
-  if (child != NULL)
-    child->_parent = NULL;
+  if (child != nullptr)
+    child->_parent = nullptr;
 
-  if (node != NULL)
+  if (node != nullptr)
     node->_parent = this;
 
   return child;
 }
 
 AstNode* AstNode::injectNode(AstNode* refNode, AstUnary* node) {
-  MATHPRESSO_ASSERT(refNode != NULL && refNode->getParent() == this);
-  MATHPRESSO_ASSERT(node != NULL && node->getParent() == NULL);
+  MATHPRESSO_ASSERT(refNode != nullptr && refNode->getParent() == this);
+  MATHPRESSO_ASSERT(node != nullptr && node->getParent() == nullptr);
 
   uint32_t length = _length;
   AstNode** children = getChildren();
@@ -282,14 +282,14 @@ AstNode* AstNode::injectNode(AstNode* refNode, AstUnary* node) {
     return refNode;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 AstNode* AstNode::injectAt(uint32_t index, AstUnary* node) {
   AstNode* child = getAt(index);
 
-  MATHPRESSO_ASSERT(node != NULL && node->getParent() == NULL);
-  MATHPRESSO_ASSERT(child != NULL);
+  MATHPRESSO_ASSERT(node != nullptr && node->getParent() == nullptr);
+  MATHPRESSO_ASSERT(child != nullptr);
 
   _children[index] = node;
   child->_parent = node;
@@ -354,7 +354,7 @@ Error AstBlock::willAdd() {
 }
 
 AstNode* AstBlock::removeNode(AstNode* node) {
-  MATHPRESSO_ASSERT(node != NULL);
+  MATHPRESSO_ASSERT(node != nullptr);
   MATHPRESSO_ASSERT(node->getParent() == this);
 
   AstNode** p = getChildren();
@@ -369,13 +369,13 @@ AstNode* AstBlock::removeNode(AstNode* node) {
   // If removeNode() has been called we expect the node to be found. Otherwise
   // there is a bug somewhere.
   MATHPRESSO_ASSERT(!"Reached");
-  return NULL;
+  return nullptr;
 
 _Found:
   _length--;
   ::memmove(p, p + 1, static_cast<size_t>(pEnd - p - 1) * sizeof(AstNode*));
 
-  node->_parent = NULL;
+  node->_parent = nullptr;
   return node;
 }
 
@@ -383,7 +383,7 @@ AstNode* AstBlock::removeAt(uint32_t index) {
   MATHPRESSO_ASSERT(index < _length);
 
   if (index >= _length)
-    return NULL;
+    return nullptr;
 
   AstNode** p = getChildren() + index;
   AstNode* oldNode = p[0];
@@ -391,7 +391,7 @@ AstNode* AstBlock::removeAt(uint32_t index) {
   _length--;
   ::memmove(p, p + 1, static_cast<size_t>(_length - index) * sizeof(AstNode*));
 
-  oldNode->_parent = NULL;
+  oldNode->_parent = nullptr;
   return oldNode;
 }
 

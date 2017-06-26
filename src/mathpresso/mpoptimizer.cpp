@@ -117,8 +117,6 @@ namespace mathpresso {
 	{
 		const OpInfo& op = OpInfo::get(node->getOp());
 
-	
-
 		MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 		AstNode* child = node->getChild();
 		
@@ -152,7 +150,6 @@ namespace mathpresso {
 				node->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
 			}
 		}
-
 
 		if (child->isImm())
 		{
@@ -616,7 +613,8 @@ namespace mathpresso {
 					_ast->deleteNode(node);
 				}
 			}
-			else if (rIsImm) {
+			else if (rIsImm) 
+			{
 				AstImm* rNode = static_cast<AstImm*>(right);
 				std::complex<double> val = rNode->getValueCplx();
 
