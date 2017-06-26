@@ -159,10 +159,10 @@ namespace mathpresso {
 		// Constants.
 		void prepareConstPool();
 		JitVar getConstantU64(uint64_t value);
-		JitVar getConstantU64Compl(uint64_t real, uint64_t imag);
+		JitVar getConstantU64(uint64_t real, uint64_t imag);
 		JitVar getConstantU64AsPD(uint64_t value);
 		JitVar getConstantD64(double value);
-		JitVar getConstantD64Compl(std::complex<double> value);
+		JitVar getConstantD64(std::complex<double> value);
 		JitVar getConstantD64AsPD(double value);
 
 		// Members.
@@ -320,7 +320,7 @@ namespace mathpresso {
 		else
 		{
 			if (result.isNone())
-				var = registerVarComplex(getConstantD64Compl(mpGetNan())).getXmm();
+				var = registerVarComplex(getConstantD64(mpGetNan())).getXmm();
 			else
 				var = registerVarComplex(result, !node->returnsComplex()).getXmm();
 			cc->movupd(x86::ptr(resultAddress), var);
@@ -404,7 +404,7 @@ namespace mathpresso {
 				}
 				else
 				{
-					result = getConstantD64Compl(mpGetNan());
+					result = getConstantD64(mpGetNan());
 				}
 				varSlots[slotId] = result;
 			}
@@ -416,7 +416,7 @@ namespace mathpresso {
 	JitVar JitCompiler::onImm(AstImm* node)
 	{
 		if (node->returnsComplex())
-			return getConstantD64Compl(node->getValueCplx());
+			return getConstantD64(node->getValueCplx());
 		else
 			return getConstantD64(node->getValue());
 	}
@@ -580,7 +580,7 @@ namespace mathpresso {
 			{
 			case kOpConjug:
 				JitVar result = registerVarComplex(var, node->getChild()->returnsComplex());
-				cc->pxor(result.getXmm(), getConstantU64Compl(uint64_t(0), uint64_t(0x8000000000000000)).getMem());
+				cc->pxor(result.getXmm(), getConstantU64(uint64_t(0), uint64_t(0x8000000000000000)).getMem());
 				return result;
 			}
 
@@ -615,11 +615,7 @@ namespace mathpresso {
 			AstVar* varNode = reinterpret_cast<AstVar*>(left);
 			MATHPRESSO_ASSERT(varNode->getNodeType() == kAstNodeVar);
 
-			if (varNode->takesComplex()) 
-			{
-				;
-			}
-			else 
+			if (!varNode->takesComplex()) 
 			{
 				AstSymbol* sym = varNode->getSymbol();
 				uint32_t slotId = sym->getVarSlotId();
@@ -646,14 +642,6 @@ namespace mathpresso {
 		{
 			vl = onNode(node->getLeft());
 			vr = onNode(node->getRight());
-
-			// Commutativity.
-			if (!node->takesComplex() && (op == kOpAdd || op == kOpMul || op == kOpAvg || op == kOpMin || op == kOpMax))
-			{
-				if (vl.isRO() && !vr.isRO())
-					vl.swapWith(vr);
-			}
-		
 		}
 
 		uint32_t inst = 0;
@@ -661,6 +649,10 @@ namespace mathpresso {
 
 		if (!node->takesComplex())
 		{
+			// kommutativität
+			if (vl.isRO() && !vr.isRO() && (op == kOpAdd || op == kOpMul || op == kOpAvg || op == kOpMin || op == kOpMax))
+				vl.swapWith(vr);
+
 			vl = writableVar(vl);
 			switch (op)
 			{
@@ -755,11 +747,6 @@ namespace mathpresso {
 
 				if (!right->returnsComplex() && vr.isMem())
 					vr = registerVarAsComplex(vr);
-
-				if (vl.isRO() && !vr.isRO() && op == kOpAdd && op == kOpMul)
-					vl.swapWith(vr);
-				
-
 			}
 
 			if (vr.getOperand() == vl.getOperand())
@@ -773,7 +760,7 @@ namespace mathpresso {
 
 
 			JitVar ret(cc->newXmmPd(), JitVar::FLAG_NONE);
-			JitVar negateImag = getConstantU64Compl(uint64_t(0), uint64_t(0x8000000000000000));
+			JitVar negateImag = getConstantU64(uint64_t(0), uint64_t(0x8000000000000000));
 			
 			if (!OpInfo::get(op).isIntrinsic()) {
 				switch (op)
@@ -1244,7 +1231,7 @@ namespace mathpresso {
 		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
 	}
 
-	JitVar JitCompiler::getConstantU64Compl(uint64_t real, uint64_t imag) {
+	JitVar JitCompiler::getConstantU64(uint64_t real, uint64_t imag) {
 		prepareConstPool();
 
 		uint64_t value[2] = { real, imag };
@@ -1272,11 +1259,11 @@ namespace mathpresso {
 		return getConstantU64(bits.u);
 	}
 
-	JitVar JitCompiler::getConstantD64Compl(std::complex<double> value) {
+	JitVar JitCompiler::getConstantD64(std::complex<double> value) {
 		DoubleBitsComp bits;
 		bits.d[0] = value.real();
 		bits.d[1] = value.imag();
-		return getConstantU64Compl(bits.u[0], bits.u[1]);
+		return getConstantU64(bits.u[0], bits.u[1]);
 	}
 
 	JitVar JitCompiler::getConstantD64AsPD(double value) {

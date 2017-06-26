@@ -185,7 +185,7 @@ static MATHPRESSO_INLINE void mpContextRelease(ContextImpl* d) {
 
 static ContextImpl* mpContextClone(ContextImpl* otherD_) {
   ContextInternalImpl* d = new(std::nothrow) ContextInternalImpl();
-  if (MATHPRESSO_UNLIKELY(d == NULL)) return NULL;
+  if (MATHPRESSO_UNLIKELY(d == nullptr)) return nullptr;
 
   if (otherD_ != &mpContextNull) {
     ContextInternalImpl* otherD = static_cast<ContextInternalImpl*>(otherD_);
@@ -199,9 +199,9 @@ static ContextImpl* mpContextClone(ContextImpl* otherD_) {
       uint32_t type = sym->getSymbolType();
 
       AstSymbol* clonedSym = d->_builder.newSymbol(name, hVal, type, otherD->_scope.getScopeType());
-      if (MATHPRESSO_UNLIKELY(clonedSym == NULL)) {
+      if (MATHPRESSO_UNLIKELY(clonedSym == nullptr)) {
         delete d;
-        return NULL;
+        return nullptr;
       }
 
       clonedSym->_symbolFlags = sym->_symbolFlags;
@@ -240,7 +240,7 @@ static Error mpContextMutable(Context* self, ContextInternalImpl** out) {
   }
   else {
     d = mpContextClone(d);
-    if (MATHPRESSO_UNLIKELY(d == NULL))
+    if (MATHPRESSO_UNLIKELY(d == nullptr))
       return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
 
     mpContextRelease(
