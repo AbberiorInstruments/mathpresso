@@ -78,10 +78,15 @@ namespace mathpresso {
 
 			if (child->isImm())
 			{
-				if (child ->returnsComplex())
-					sym->setValue(static_cast<AstImm*>(child)->getValue());
-				else
+				if (child->returnsComplex())
+				{
 					sym->setValue(static_cast<AstImm*>(child)->getValueCplx());
+					node->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+					sym->setSymbolFlag(kAstSymbolIsComplex);
+				}
+				else {
+					sym->setValue(static_cast<AstImm*>(child)->getValue());
+				}
 			}
 		}
 
@@ -246,21 +251,36 @@ namespace mathpresso {
 			{ // Complex parameter
 				std::complex<double> value = p_imm->getValueCplx();
 
-				if (op.hasCtoD()) 
-				{					
-					p_imm->setValue(((mpFuncpCtoD)op.funcCtoD)(&value));
-					p_imm->removeNodeFlags(kAstReturnsComplex);
-				}
-				else if (op.hasCtoC())
+				if (!op.isIntrinsic()) 
 				{
-					p_imm->setValue(((mpFuncpCtoC)op.funcCtoC)(&value));
+					switch (node->getOp())
+					{
+					case kOpNeg: value = -value; break;
+					case kOpNot: value = (value == std::complex<double>(0, 0)); break;
+
+					default:
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid unary operation '%s'.", op.name);
+					}
+					p_imm->setValue(value);
 				}
-				else 
+				else
 				{
-					return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-						"Invalid unary operation with complex parameters '%s'.", op.name);
+					if (op.hasCtoD())
+					{
+						p_imm->setValue(((mpFuncpCtoD)op.funcCtoD)(&value));
+						p_imm->removeNodeFlags(kAstReturnsComplex);
+					}
+					else if (op.hasCtoC())
+					{
+						p_imm->setValue(((mpFuncpCtoC)op.funcCtoC)(&value));
+					}
+					else
+					{
+						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+							"Invalid unary operation with complex parameters '%s'.", op.name);
+					}
 				}
-				
 				node->unlinkChild();
 				node->getParent()->replaceNode(node, p_imm);
 				_ast->deleteNode(node);

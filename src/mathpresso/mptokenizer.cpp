@@ -76,6 +76,62 @@ enum TokenChar {
   kTokenCharSingleCharTokenEnd = kTokenCharRPa
 };
 
+bool isOperator(char c) {
+	for (auto p : "+-*/^<>=~%!&|") 
+	{
+		if (p == c) 
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool isNum(char c) {
+	for (auto p : "0123456789.")
+	{
+		if (p == c)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool isSymbolFirst(char c) {
+	for (auto p : "abcdefghijklmnopqrstuvwxyz_")
+	{
+		if (p == tolower(c))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool isSymbol(char c) {
+	for (auto p : ".")
+	{
+		if (p == tolower(c))
+		{
+			return true;
+		}
+	}
+	return isSymbolFirst;
+}
+
+bool isSeparator(char c) {
+	for (auto p : " ,()[]{};")
+	{
+		if (p == tolower(c))
+		{
+			return true;
+		}
+	}
+	return isSymbolFirst;
+}
+
+
 #define C(_Id_) kTokenChar##_Id_
 static const uint8_t mpCharClass[] = {
   C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), // 000-007 ........ | All invalid.

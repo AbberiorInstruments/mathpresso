@@ -434,6 +434,7 @@ struct AstSymbol : public HashNode {
 		//! Variable offset in data structure (in case the symbol is a global variable).
 		int32_t _varOffset;
 		//! The current value of the symbol (in case the symbol is an immediate).
+		//! if the symbol is real, _valueComp.imag() is set to 0.
 		std::complex<double> _valueComp;
 	};
 

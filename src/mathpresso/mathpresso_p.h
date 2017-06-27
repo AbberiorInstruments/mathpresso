@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <map>
 
 #include <new>
 
@@ -200,6 +201,24 @@ enum OpType {
   kOpNeg,               // -a
   kOpNot,               // !a
 
+  kOpAssign,            // a = b
+  kOpEq,                // a == b
+  kOpNe,                // a != b
+  kOpLt,                // a <  b
+  kOpLe,                // a <= b
+  kOpGt,                // a >  b
+  kOpGe,                // a >= b
+
+  kOpAdd,               // a + b
+  kOpSub,               // a - b
+  kOpMul,               // a * b
+  kOpDiv,               // a / b
+
+  kOpQMark,			    // b ? a : b
+  kOpColon,
+
+  kOpMod,               // a % b
+
   kOpIsNan,             // isnan(a)
   kOpIsInf,             // isinf(a)
   kOpIsFinite,          // isfinite(a)
@@ -230,20 +249,6 @@ enum OpType {
   kOpAcos,              // acos(a)
   kOpAtan,              // atan(a)
 
-  kOpAssign,            // a = b
-  kOpEq,                // a == b
-  kOpNe,                // a != b
-  kOpLt,                // a <  b
-  kOpLe,                // a <= b
-  kOpGt,                // a >  b
-  kOpGe,                // a >= b
-
-  kOpAdd,               // a + b
-  kOpSub,               // a - b
-  kOpMul,               // a * b
-  kOpDiv,               // a / b
-  kOpMod,               // a % b
-
   kOpAvg,               // avg(a, b)
   kOpMin,               // min(a, b)
   kOpMax,               // max(a, b)
@@ -251,10 +256,6 @@ enum OpType {
   kOpAtan2,             // atan2(a, b)
   kOpHypot,             // hypot(a, b)
   kOpCopySign,          // copysign(a, b)
-
-  
-  kOpQMark,			    // b ? a : b
-  kOpColon,
 
   kOpReal,				// real(std::complex<double> a)
   kOpImag,				// imag(std::complex<double> a)
@@ -439,6 +440,7 @@ struct OpInfo {
 };
 
 extern const OpInfo mpOpInfo[kOpCount];
+extern std::map<std::string, OpInfo> symbols_;
 
 MATHPRESSO_INLINE const OpInfo& OpInfo::get(uint32_t op) {
   MATHPRESSO_ASSERT(op < kOpCount);

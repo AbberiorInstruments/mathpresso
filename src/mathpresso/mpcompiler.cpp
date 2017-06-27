@@ -579,9 +579,17 @@ namespace mathpresso {
 			switch (op)
 			{
 			case kOpConjug:
-				JitVar result = registerVarComplex(var, node->getChild()->returnsComplex());
+			{
+				JitVar result = registerVarComplex(var, !node->getChild()->returnsComplex());
 				cc->pxor(result.getXmm(), getConstantU64(uint64_t(0), uint64_t(0x8000000000000000)).getMem());
 				return result;
+			}
+			case kOpNeg:		
+			{
+				JitVar result = registerVarComplex(var, !node->getChild()->returnsComplex());
+				cc->pxor(result.getXmm(), getConstantU64(uint64_t(0x8000000000000000), uint64_t(0x8000000000000000)).getMem());
+				return result;
+			}
 			}
 
 			X86Xmm result;
