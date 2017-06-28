@@ -62,15 +62,14 @@ void HashBase::_rehash(uint32_t newCount) {
     heap->allocZeroed(
       static_cast<size_t>(newCount + kExtraCount) * sizeof(void*)));
 
-  if (newData == NULL)
+  if (newData == nullptr)
     return;
 
-  uint32_t i;
   uint32_t oldCount = _bucketsCount;
 
-  for (i = 0; i < oldCount; i++) {
+  for (size_t i = 0; i < oldCount; i++) {
     HashNode* node = oldData[i];
-    while (node != NULL) {
+    while (node != nullptr) {
       HashNode* next = node->_next;
       uint32_t hMod = node->_hVal % newCount;
 
@@ -82,7 +81,7 @@ void HashBase::_rehash(uint32_t newCount) {
   }
 
   // Move extra entries.
-  for (i = 0; i < kExtraCount; i++) {
+  for (size_t i = 0; i < kExtraCount; i++) {
     newData[i + newCount] = oldData[i + oldCount];
   }
 
@@ -107,32 +106,32 @@ void HashBase::_mergeToInvisibleSlot(HashBase& other) {
   // Find the `first` node.
   for (i = 0; i < count; i++) {
     first = data[i];
-    if (first != NULL)
+    if (first != nullptr)
       break;
   }
 
-  if (first != NULL) {
+  if (first != nullptr) {
     // Initialize `first` and `last`.
     last = first;
-    while (last->_next != NULL)
+    while (last->_next != nullptr)
       last = last->_next;
-    data[i] = NULL;
+    data[i] = nullptr;
 
     // Iterate over the rest and append so `first` stay the same and `last`
     // is updated to the last node added.
     while (++i < count) {
       HashNode* node = data[i];
-      if (node != NULL) {
+      if (node != nullptr) {
         last->_next = node;
         last = node;
-        while (last->_next != NULL)
+        while (last->_next != nullptr)
           last = last->_next;
-        data[i] = NULL;
+        data[i] = nullptr;
       }
     }
 
     // Link with ours.
-    if (last != NULL) {
+    if (last != nullptr) {
       i = _bucketsCount + kExtraFirst;
       last->_next = _data[i];
       _data[i] = first;
@@ -151,7 +150,7 @@ HashNode* HashBase::_put(HashNode* node) {
   node->_next = next;
   _data[hMod] = node;
 
-  if (++_length >= _bucketsGrow && next != NULL) {
+  if (++_length >= _bucketsGrow && next != nullptr) {
     uint32_t newCapacity = HashUtils::closestPrime(_bucketsCount + kExtraCount);
     if (newCapacity != _bucketsCount)
       _rehash(newCapacity);
@@ -166,7 +165,7 @@ HashNode* HashBase::_del(HashNode* node) {
   HashNode** pPrev = &_data[hMod];
   HashNode* p = *pPrev;
 
-  while (p != NULL) {
+  while (p != nullptr) {
     if (p == node) {
       *pPrev = p->_next;
       return node;
@@ -176,7 +175,7 @@ HashNode* HashBase::_del(HashNode* node) {
     p = *pPrev;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 } // mathpresso namespace

@@ -30,20 +30,9 @@ namespace mathpresso {
 // on the C-language standard, but also adjusted to support MATHPRESSO specific
 // operators and rules. However, the associativity and precedence should be
 // fully compatible with C.
-#define ROW(opType, altType, params, precedence, assignment, intrinsic, flags, name) \
-  { \
-	name, \
-    static_cast<uint8_t>(kOp##opType), \
-    static_cast<uint8_t>(kOp##altType), \
-    static_cast<uint8_t>(precedence), \
-    static_cast<uint32_t>( \
-      flags | (assignment != 0 ? kOpFlagAssign : 0) \
-            | (params     == 1 ? kOpFlagUnary : (params == 2 ? kOpFlagBinary : (params == 3 ? kOpFlagTernary : 0))) \
-            | (intrinsic  == 1 ? kOpFlagIntrinsic : 0)), \
-  }
+
 #define LTR 0
 #define RTL kOpFlagRightToLeft
-#define F(flag) kOpFlag##flag
 #define CtoC (kOpFlagComplexToComplex)
 #define DtoD (kOpFlagRealToReal)
 #define CandD (DtoD | CtoC)
@@ -105,10 +94,13 @@ namespace mathpresso {
 		{ "conjug", OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic, nullptr, mpFuncCtoC1<std::conj>) },
 		{ "sqrtC", OpInfo("sqrtC", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic, nullptr, mpFuncCtoC1<std::sqrt>) }
 	};
-#undef F
+#undef DtoC
+#undef CtoD
+#undef CandD
+#undef DtoD
+#undef CtoC
 #undef RTL
 #undef LTR
-#undef ROW
 
 // ============================================================================
 // [mathpresso::mpAssertionFailure]

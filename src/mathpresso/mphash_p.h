@@ -47,9 +47,9 @@ namespace HashUtils {
 // ============================================================================
 
 struct HashNode {
-  MATHPRESSO_INLINE HashNode(uint32_t hVal = 0) : _next(NULL), _hVal(hVal) {}
+  MATHPRESSO_INLINE HashNode(uint32_t hVal = 0) : _next(nullptr), _hVal(hVal) {}
 
-  //! Next node in the chain, NULL if last node.
+  //! Next node in the chain, nullptr if last node.
   HashNode* _next;
   //! Hash code.
   uint32_t _hVal;
@@ -71,16 +71,15 @@ struct HashBase {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE HashBase(ZoneHeap* heap) {
-    _heap = heap;
-    _length = 0;
-
-    _bucketsCount = 1;
-    _bucketsGrow = 1;
-
-    _data = _embedded;
-    for (uint32_t i = 0; i <= kExtraCount; i++)
-      _embedded[i] = NULL;
+  MATHPRESSO_INLINE HashBase(ZoneHeap* heap) :
+	  _heap(heap),
+	  _length(0),
+	  _bucketsCount(1),
+	  _bucketsGrow(1) 
+  {
+	  _data = _embedded;
+	  for (uint32_t i = 0; i <= kExtraCount; i++)
+		  _embedded[i] = nullptr;
   }
 
   MATHPRESSO_INLINE ~HashBase() {
@@ -162,7 +161,7 @@ struct Hash : public HashBase {
     for (uint32_t i = 0; i < count; i++) {
       HashNode* node = data[i];
 
-      while (node != NULL) {
+      while (node != nullptr) {
         HashNode* next = node->_next;
         handler.release(static_cast<Node*>(node));
         node = next;
@@ -179,7 +178,7 @@ struct Hash : public HashBase {
     _data = _embedded;
 
     for (uint32_t i = 0; i <= kExtraCount; i++)
-      _embedded[i] = NULL;
+      _embedded[i] = nullptr;
   }
 
   MATHPRESSO_INLINE void mergeToInvisibleSlot(Hash<Key, Node>& other) {
@@ -190,13 +189,13 @@ struct Hash : public HashBase {
     uint32_t hMod = hVal % _bucketsCount;
     Node* node = static_cast<Node*>(_data[hMod]);
 
-    while (node != NULL) {
+    while (node != nullptr) {
       if (node->eq(key))
         return node;
       node = static_cast<Node*>(node->_next);
     }
 
-    return NULL;
+    return nullptr;
   }
 
   MATHPRESSO_INLINE Node* put(Node* node) { return static_cast<Node*>(_put(node)); }
@@ -218,7 +217,7 @@ struct HashIterator {
     uint32_t index = 0;
     uint32_t count = hash._bucketsCount;
 
-    while (node == NULL && ++index < count)
+    while (node == nullptr && ++index < count)
       node = buckets[index];
 
     _node = node;
@@ -227,7 +226,7 @@ struct HashIterator {
     _index = index;
     _count = count;
 
-    return node != NULL;
+    return node != nullptr;
   }
 
   MATHPRESSO_INLINE bool next() {
@@ -235,22 +234,22 @@ struct HashIterator {
     MATHPRESSO_ASSERT(has());
 
     Node* node = static_cast<Node*>(_node->_next);
-    if (node == NULL) {
+    if (node == nullptr) {
       uint32_t index = _index;
       uint32_t count = _count;
 
       while (++index < count) {
         node = _buckets[index];
-        if (node != NULL) break;
+        if (node != nullptr) break;
       }
       _index = index;
     }
 
     _node = node;
-    return node != NULL;
+    return node != nullptr;
   }
 
-  MATHPRESSO_INLINE bool has() const { return _node != NULL; }
+  MATHPRESSO_INLINE bool has() const { return _node != nullptr; }
   MATHPRESSO_INLINE Node* get() const { return _node; }
 
   Node* _node;
@@ -308,18 +307,18 @@ struct Map {
     uint32_t hMod = hVal % _hash._bucketsCount;
     Node* node = static_cast<Node*>(_hash._data[hMod]);
 
-    while (node != NULL) {
+    while (node != nullptr) {
       if (node->eq(key))
         return node->_value;
       node = static_cast<Node*>(node->_next);
     }
 
-    return NULL;
+    return nullptr;
   }
 
   MATHPRESSO_INLINE Error put(const Key& key, const Value& value) {
     Node* node = static_cast<Node*>(_hash._heap->alloc(sizeof(Node)));
-    if (node == NULL)
+    if (node == nullptr)
       return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
 
     uint32_t hVal = HashUtils::hashPointer(key);
