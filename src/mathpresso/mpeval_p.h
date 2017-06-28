@@ -10,6 +10,7 @@
 
 // [Dependencies]
 #include "./mathpresso_p.h"
+#include "./mathpresso/mpcompiler_p.h"
 #include <complex>
 #include <iostream>
 
@@ -50,7 +51,6 @@ namespace mathpresso {
 
 	//! DP-FP binary representation and utilities for complex numbers.
 	// If either the real or the imaginary part of the number is NaN or Inf, the whole Complex is NaN or Inf.
-	// Rounding, etc not yet implemented for this
 	union DoubleBitsComp {
 		// --------------------------------------------------------------------------
 		// [Construction / Destruction]
@@ -179,6 +179,25 @@ namespace mathpresso {
 	static MATHPRESSO_INLINE double mpAbsC(std::complex<double> *x) { return std::abs(*x); }
 
 	static MATHPRESSO_INLINE std::complex<double> mpAvgC(std::complex<double> *x) { return (x[0] + x[1])*0.5; }
+
+
+	static double mpAddOptD(double r, double l) {
+		return r + l;
+	}
+
+	static std::complex<double> mpAddOptC(std::complex<double> r, std::complex<double> l) {
+		return r + l;
+	}
+
+	static JitVar& compileAddD(asmjit::X86Compiler* cc, JitVar &rvar, JitVar &lvar) {
+		cc->addsd(rvar.getXmm(), lvar.getXmm());
+		return rvar;
+	}
+
+	static JitVar& compileAddC(asmjit::X86Compiler* cc, JitVar &rvar, JitVar &lvar) {
+		cc->addpd(rvar.getXmm(), lvar.getXmm());
+		return rvar;
+	}
 
 } // mathpresso namespace
 
