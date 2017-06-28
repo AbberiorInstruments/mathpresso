@@ -466,12 +466,22 @@ struct OpInfo {
   std::string name;
 };
 
-extern const OpInfo mpOpInfo[kOpCount];
-extern std::map<std::string, OpInfo> symbols_;
+//extern const OpInfo mpOpInfo[kOpCount];
+extern std::vector<std::pair<std::string, OpInfo>> _symbols;
+
+//MATHPRESSO_INLINE const OpInfo& OpInfo::get(uint32_t op) {
+//  MATHPRESSO_ASSERT(op < kOpCount);
+//  return mpOpInfo[op];
+//}
 
 MATHPRESSO_INLINE const OpInfo& OpInfo::get(uint32_t op) {
-  MATHPRESSO_ASSERT(op < kOpCount);
-  return mpOpInfo[op];
+	MATHPRESSO_ASSERT(op < kOpCount);
+	for (size_t i = 1; i < _symbols.size(); i++) {
+		if (_symbols[i].second.type == op) {
+			return _symbols[i].second;
+		}
+	}
+	return _symbols[0].second;
 }
 
 // ============================================================================

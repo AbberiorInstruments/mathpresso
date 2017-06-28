@@ -117,7 +117,7 @@ bool isSymbol(char c) {
 			return true;
 		}
 	}
-	return isSymbolFirst;
+	return isSymbolFirst(c);
 }
 
 bool isSeparator(char c) {
@@ -128,7 +128,7 @@ bool isSeparator(char c) {
 			return true;
 		}
 	}
-	return isSymbolFirst;
+	return false;
 }
 
 

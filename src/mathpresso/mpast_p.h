@@ -1025,7 +1025,7 @@ struct AstBinaryOp : public AstBinary {
     : AstBinary(ast, kAstNodeBinaryOp) { setOp(op); }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
-	if (mpOpInfo[getOp()].isAssignment() && hasLeft()) {
+	if (OpInfo::get(getOp()).isAssignment() && hasLeft()) {
       AstVar* var = static_cast<AstVar*>(getLeft());
       AstSymbol* sym = var->getSymbol();
 
