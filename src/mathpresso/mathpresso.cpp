@@ -55,6 +55,7 @@ namespace mathpresso {
 		{ "/", OpInfo("/", kOpDiv, 5, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfROne | kOpFlagBinary) },
 		{ "?", OpInfo("?", kOpQMark, 15, RTL | kOpFlagTernary) },
 		{ ":", OpInfo(":", kOpColon, 15, RTL | kOpFlagTernary) },
+
 		{ "%", OpInfo("%", kOpMod, 5, LTR | DtoD | kOpFlagBinary | kOpFlagIntrinsic, mpMod, nullptr) },
 		{ "isnan", OpInfo("isnan", kOpIsNan, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, mpIsNan, nullptr) },
 		{ "isinf", OpInfo("isinf", kOpIsInf, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, mpIsInf, nullptr) },
@@ -298,7 +299,8 @@ Error Context::addBuiltIns(void) {
   for (i = kOpNone + 1; i < kOpCount; i++) 
   {
     const OpInfo& op = OpInfo::get(i);
-    MATHPRESSO_ASSERT(op.type == i);
+    // to be removed:
+	MATHPRESSO_ASSERT(op.type == i);
 
     if (!op.isIntrinsic())
       continue;
@@ -315,6 +317,36 @@ Error Context::addBuiltIns(void) {
     sym->setFuncPtr(nullptr);
 
     d->_scope.putSymbol(sym);
+	continue; 
+	// until here.
+
+	auto flags = 0;
+	if (op.isComplex()) 
+	{
+		flags |= kAstTakesComplex;
+		if (op.hasCtoC()) 
+		{
+			flags |= kAstReturnsComplex;
+			this->addFunction(op.name.c_str(), op.funcCtoC, flags, op.funcCtoCAsm);
+		}
+		else if (op.hasCtoD())
+		{
+			this->addFunction(op.name.c_str(), op.funcCtoD, flags, op.funcCtoDAsm);
+		}
+	} 
+	
+	if (!op.isComplex())
+	{
+		if (op.hasDtoC())
+		{
+			flags |= kAstReturnsComplex;
+			this->addFunction(op.name.c_str(), op.funcDtoC, flags, op.funcDtoCAsm);
+		}
+		else if (op.hasDtoD())
+		{
+			this->addFunction(op.name.c_str(), op.funcDtoD, flags, op.funcDtoDAsm);
+		}
+	}
   }
 
   const GlobalConstant mpGlobalConstants[] = {
@@ -430,7 +462,7 @@ Error Context::listSymbols(std::vector<std::string> &syms)
 }
 
 
-Error Context::addFunction(const char* name, void* fn, unsigned int flags) 
+Error Context::addFunction(const char* name, void* fn, unsigned int flags, void *fnAsm) 
 {
 	AstSymbol * sym;
 	Error e = addSymbol(sym, name, kAstSymbolFunction);
@@ -451,6 +483,7 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags)
 			return kErrorSymbolAlreadyExists;
 
 		sym ->setFuncPtr(fn, true);
+		sym->setAsmPtr(fnAsm, true);
 		if (0 == (flags & kFunctionReturnsComplex))
 			sym ->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
 	}
@@ -460,6 +493,7 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags)
 			return kErrorSymbolAlreadyExists;
 
 		sym ->setFuncPtr(fn);
+		sym->setAsmPtr(fnAsm);
 		if (flags & kFunctionReturnsComplex)
 			sym ->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);
 	}

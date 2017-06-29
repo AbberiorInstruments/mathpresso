@@ -282,7 +282,9 @@ struct AstSymbol : public HashNode {
 		_usedCount(0),
 		_writeCount(0),
 		_funcPtr(nullptr),
-		_funcPtrCplx(nullptr)
+		_funcPtrCplx(nullptr),
+		_funcAsm(nullptr),
+		_funcAsmCplx(nullptr)
 	{}
 
   // --------------------------------------------------------------------------
@@ -360,6 +362,19 @@ struct AstSymbol : public HashNode {
 			_funcPtrCplx = ptr;
 		else
 			_funcPtr = ptr;
+  }
+  MATHPRESSO_INLINE void* getAsmPtr(bool args_complex = false) const {
+	  if (args_complex)
+		  return _funcAsmCplx;
+	  else
+		  return _funcAsm;
+  }
+
+  MATHPRESSO_INLINE void setAsmPtr(void* ptr, bool b_cplx = false) {
+	  if (b_cplx)
+		  _funcAsmCplx = ptr;
+	  else
+		  _funcAsm = ptr;
   }
 
   //! Get the number of function/intrinsic arguments
@@ -442,6 +457,8 @@ struct AstSymbol : public HashNode {
       //! Function pointer (in case the symbol is a function).
       void* _funcPtr;
 	  void* _funcPtrCplx;
+	  void* _funcAsm;
+	  void* _funcAsmCplx;
       //! Number of function arguments (in case the symbol is a function).
       uint32_t _funcArgs;
     };
