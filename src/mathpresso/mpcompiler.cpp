@@ -529,6 +529,13 @@ namespace mathpresso {
 				vl.swapWith(vr);
 
 			vl = writableVar(vl);
+
+			if (OpInfo::get(op).funcDtoDAsm) 
+			{
+				typedef JitVar& (*kopaddfnptr)(X86Compiler*, JitVar&, JitVar&);
+				return ((kopaddfnptr)OpInfo::get(op).funcDtoDAsm)(cc, vl, vr);
+			}
+
 			switch (op)
 			{
 			case kOpEq: predicate = x86::kCmpEQ; goto emitCompare;
@@ -544,7 +551,7 @@ namespace mathpresso {
 				cc->emit(X86Inst::kIdAndpd, vl.getXmm(), getConstantD64AsPD(1.0).getOperand());
 				return vl;
 			}
-
+			
 			case kOpAdd: inst = X86Inst::kIdAddsd; goto emitInst;
 			case kOpSub: inst = X86Inst::kIdSubsd; goto emitInst;
 			case kOpMul: inst = X86Inst::kIdMulsd; goto emitInst;
@@ -636,8 +643,14 @@ namespace mathpresso {
 
 			JitVar ret(cc->newXmmPd(), JitVar::FLAG_NONE);
 			JitVar negateImag = getConstantU64(uint64_t(0), uint64_t(0x8000000000000000));
-			
-			if (!OpInfo::get(op).isIntrinsic()) {
+			OpInfo opinf = OpInfo::get(op);
+
+			if (!opinf.isIntrinsic()) {
+				if (opinf.funcCtoCAsm) 
+				{
+					typedef JitVar& (*kopaddfnptr)(X86Compiler*, JitVar&, JitVar&);
+					return ((kopaddfnptr)opinf.funcCtoCAsm)(cc, vl, vr);
+				}
 				switch (op)
 				{
 				case kOpAdd:

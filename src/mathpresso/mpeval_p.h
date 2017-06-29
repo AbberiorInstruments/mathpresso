@@ -185,8 +185,8 @@ namespace mathpresso {
 		return r + l;
 	}
 
-	static std::complex<double> mpAddOptC(std::complex<double> r, std::complex<double> l) {
-		return r + l;
+	static std::complex<double> mpAddOptC(std::complex<double> *r) {
+		return r[0] + r[1];
 	}
 
 	static JitVar& compileAddD(asmjit::X86Compiler* cc, JitVar &rvar, JitVar &lvar) {
