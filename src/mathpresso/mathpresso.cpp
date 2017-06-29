@@ -50,9 +50,9 @@ namespace mathpresso {
 		{ ">", OpInfo(">", kOpGt, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) },
 		{ "<=", OpInfo("<=", kOpGe, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) },
 		{ "+", OpInfo("+", kOpAdd, 6, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfZero | kOpFlagBinary, mpAddOptD, mpAddOptC, nullptr, nullptr, compileAddD, compileAddC) },
-		{ "-", OpInfo("-", kOpSub, 6, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfRZero | kOpFlagBinary) },
-		{ "*", OpInfo("*", kOpMul, 5, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfOne | kOpFlagBinary) },
-		{ "/", OpInfo("/", kOpDiv, 5, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfROne | kOpFlagBinary) },
+		{ "-", OpInfo("-", kOpSub, 6, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfRZero | kOpFlagBinary, mpSubOptD, mpSubOptC, nullptr, nullptr, compileSubD, compileSubC) },
+		{ "*", OpInfo("*", kOpMul, 5, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfOne | kOpFlagBinary, mpMulOptD, mpMulOptC, nullptr, nullptr, compileMulD, compileMulC) },
+		{ "/", OpInfo("/", kOpDiv, 5, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfROne | kOpFlagBinary, mpDivOptD, mpDivOptC, nullptr, nullptr, compileDivD, compileDivC) },
 		{ "?", OpInfo("?", kOpQMark, 15, RTL | kOpFlagTernary) },
 		{ ":", OpInfo(":", kOpColon, 15, RTL | kOpFlagTernary) },
 

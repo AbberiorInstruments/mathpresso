@@ -533,7 +533,7 @@ namespace mathpresso {
 			if (OpInfo::get(op).funcDtoDAsm) 
 			{				
 				JitVar vars[] = { vl, vr };
-				return ((mpAsmFunc)OpInfo::get(op).funcDtoDAsm)(cc, vars);
+				return ((mpAsmFunc)OpInfo::get(op).funcDtoDAsm)(this, vars);
 			}
 
 			switch (op)
@@ -649,7 +649,7 @@ namespace mathpresso {
 				if (opinf.funcCtoCAsm) 
 				{
 					JitVar vars[] = { vl, vr };
-					return ((mpAsmFunc)opinf.funcCtoCAsm)(cc, vars);
+					return ((mpAsmFunc)opinf.funcCtoCAsm)(this, vars);
 				} 
 				
 				switch (op)

@@ -180,26 +180,79 @@ namespace mathpresso {
 
 	static MATHPRESSO_INLINE std::complex<double> mpAvgC(std::complex<double> *x) { return (x[0] + x[1])*0.5; }
 
+	// Functions for the Optimizer
+	static double mpAddOptD(double l, double r) { return l+ r; }
+	static std::complex<double> mpAddOptC(std::complex<double> *r) { return r[0] + r[1]; }
 
-	static double mpAddOptD(double r, double l) {
-		return r + l;
+	static double mpSubOptD(double l, double r) { return l - r; }
+	static std::complex<double> mpSubOptC(std::complex<double> *r) { return r[0] - r[1]; }
+
+	static double mpMulOptD(double l, double r) { return l * r; }
+	static std::complex<double> mpMulOptC(std::complex<double> *r) { return r[0] * r[1]; }
+
+	static double mpDivOptD(double l, double r) { return l / r; }
+	static std::complex<double> mpDivOptC(std::complex<double> *r) { 
+		return r[0] / r[1]; }
+
+	//! The second parameter contains the parameters from left to right.
+	//! ie: a binary function a-b -> {a,b}
+	typedef JitVar& (*mpAsmFunc)(JitCompiler*, JitVar*);
+
+	// the emitters for the different operators.
+	static JitVar& compileAddD(JitCompiler* jc, JitVar* vars ) {
+		jc->cc->addsd(vars[0].getXmm(), vars[1].getXmm());
+		return vars[0];
 	}
-
-	static std::complex<double> mpAddOptC(std::complex<double> *r) {
-		return r[0] + r[1];
-	}
-
-
-	typedef JitVar& (*mpAsmFunc)(asmjit::X86Compiler*, JitVar*);
-
-	static JitVar& compileAddD(asmjit::X86Compiler* cc, JitVar* vars ) {
-		cc->addsd(vars[0].getXmm(), vars[1].getXmm());
+	static JitVar& compileAddC(JitCompiler* jc, JitVar* vars) {
+		jc->cc->addpd(vars[0].getXmm(), vars[1].getXmm());
 		return vars[0];
 	}
 
-	static JitVar& compileAddC(asmjit::X86Compiler* cc, JitVar* vars) {
-		cc->addpd(vars[0].getXmm(), vars[1].getXmm());
+	static JitVar& compileSubD(JitCompiler* jc, JitVar* vars) {
+		jc->cc->subsd(vars[0].getXmm(), vars[1].getXmm());
 		return vars[0];
+	}
+	static JitVar& compileSubC(JitCompiler* jc, JitVar* vars) {
+		jc->cc->subpd(vars[0].getXmm(), vars[1].getXmm());
+		return vars[0];
+	}
+	
+	static JitVar& compileMulD(JitCompiler* jc, JitVar* vars) {
+		jc->cc->mulsd(vars[0].getXmm(), vars[1].getXmm());
+		return vars[0];
+	}
+	static JitVar& compileMulC(JitCompiler* jc, JitVar* vars) {
+		JitVar negateImag = jc->getConstantU64(uint64_t(0), uint64_t(0x8000000000000000));
+		JitVar ret(jc->cc->newXmmPd(), JitVar::FLAG_NONE);
+		jc->cc->movapd(ret.getXmm(), vars[0].getXmm());
+		jc->cc->mulpd(ret.getXmm(), vars[1].getXmm());
+		jc->cc->shufpd(vars[1].getXmm(), vars[1].getXmm(), 1);
+		jc->cc->pxor(vars[1].getXmm(), negateImag.getMem());
+		jc->cc->mulpd(vars[0].getXmm(), vars[1].getXmm());
+		jc->cc->hsubpd(ret.getXmm(), vars[0].getXmm());
+		return ret;
+	}
+
+	static JitVar& compileDivD(JitCompiler* jc, JitVar* vars) {
+		jc->cc->divsd(vars[0].getXmm(), vars[1].getXmm());
+		return vars[0];
+	}
+	static JitVar& compileDivC(JitCompiler* jc, JitVar* vars) {
+		JitVar negateImag = jc->getConstantU64(uint64_t(0), uint64_t(0x8000000000000000));
+		JitVar ret(jc->cc->newXmmPd(), JitVar::FLAG_NONE);
+		jc->cc->pxor(vars[1].getXmm(), negateImag.getMem());
+
+		jc->cc->movapd(ret.getXmm(), vars[0].getXmm());
+		jc->cc->mulpd(ret.getXmm(), vars[1].getXmm());
+		jc->cc->shufpd(vars[1].getXmm(), vars[1].getXmm(), 1);
+		jc->cc->pxor(vars[1].getXmm(), negateImag.getMem());
+		jc->cc->mulpd(vars[0].getXmm(), vars[1].getXmm());
+		jc->cc->hsubpd(ret.getXmm(), vars[0].getXmm());
+
+		jc->cc->mulpd(vars[1].getXmm(), vars[1].getXmm());
+		jc->cc->haddpd(vars[1].getXmm(), vars[1].getXmm());
+		jc->cc->divpd(ret.getXmm(), vars[1].getXmm());
+		return ret;
 	}
 
 } // mathpresso namespace
