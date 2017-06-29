@@ -196,32 +196,39 @@ namespace mathpresso {
 
 	//! The second parameter contains the parameters from left to right.
 	//! ie: a binary function a-b -> {a,b}
-	typedef JitVar& (*mpAsmFunc)(JitCompiler*, JitVar*);
+	typedef JitVar (*mpAsmFunc)(JitCompiler*, JitVar*);
 
 	// the emitters for the different operators.
-	static JitVar& compileAddD(JitCompiler* jc, JitVar* vars ) {
+	static JitVar compileAddD(JitCompiler* jc, JitVar* vars ) 
+	{
 		jc->cc->addsd(vars[0].getXmm(), vars[1].getXmm());
 		return vars[0];
 	}
-	static JitVar& compileAddC(JitCompiler* jc, JitVar* vars) {
+	static JitVar compileAddC(JitCompiler* jc, JitVar* vars) 
+	{
 		jc->cc->addpd(vars[0].getXmm(), vars[1].getXmm());
 		return vars[0];
 	}
 
-	static JitVar& compileSubD(JitCompiler* jc, JitVar* vars) {
+	static JitVar compileSubD(JitCompiler* jc, JitVar* vars) 
+	{
 		jc->cc->subsd(vars[0].getXmm(), vars[1].getXmm());
 		return vars[0];
 	}
-	static JitVar& compileSubC(JitCompiler* jc, JitVar* vars) {
+	static JitVar compileSubC(JitCompiler* jc, JitVar* vars) 
+	{
 		jc->cc->subpd(vars[0].getXmm(), vars[1].getXmm());
 		return vars[0];
 	}
 	
-	static JitVar& compileMulD(JitCompiler* jc, JitVar* vars) {
+	static JitVar compileMulD(JitCompiler* jc, JitVar* vars) 
+	{
 		jc->cc->mulsd(vars[0].getXmm(), vars[1].getXmm());
 		return vars[0];
 	}
-	static JitVar& compileMulC(JitCompiler* jc, JitVar* vars) {
+	
+	static JitVar compileMulC(JitCompiler* jc, JitVar* vars) 
+	{
 		JitVar negateImag = jc->getConstantU64(uint64_t(0), uint64_t(0x8000000000000000));
 		JitVar ret(jc->cc->newXmmPd(), JitVar::FLAG_NONE);
 		jc->cc->movapd(ret.getXmm(), vars[0].getXmm());
@@ -233,11 +240,13 @@ namespace mathpresso {
 		return ret;
 	}
 
-	static JitVar& compileDivD(JitCompiler* jc, JitVar* vars) {
+	static JitVar compileDivD(JitCompiler* jc, JitVar* vars) 
+	{
 		jc->cc->divsd(vars[0].getXmm(), vars[1].getXmm());
 		return vars[0];
 	}
-	static JitVar& compileDivC(JitCompiler* jc, JitVar* vars) {
+	static JitVar compileDivC(JitCompiler* jc, JitVar* vars) 
+	{
 		JitVar negateImag = jc->getConstantU64(uint64_t(0), uint64_t(0x8000000000000000));
 		JitVar ret(jc->cc->newXmmPd(), JitVar::FLAG_NONE);
 		jc->cc->pxor(vars[1].getXmm(), negateImag.getMem());
