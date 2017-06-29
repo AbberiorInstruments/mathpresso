@@ -270,7 +270,7 @@ Error Parser::parseExpression(AstNode** pNode, bool isNested) {
 
   // It's important that the given expression is parsed in a way that it can be
   // correctly evaluated. The `parseExpression()` function can handle expressions
-  // that contain unary and binary operators combined with terminals (variables,
+  // that contain lastUnaryNode and binary operators combined with terminals (variables,
   // constants or function calls).
   //
   // The most expression parsers usually use stack to handle operator precedence,
@@ -310,20 +310,18 @@ Error Parser::parseExpression(AstNode** pNode, bool isNested) {
 
   // Current binary operator node. Initial NULL value means that the parsing
   // just started and there is no binary operator yet. Once the first binary
-  // operator has been parsed `oNode` will be set accordingly.
-  AstBinaryOp* oNode = nullptr;
-  // The current ternary Operator node.
-  AstTernaryOp* nNode = nullptr;
+  // operator has been parsed `currentBinaryNode` will be set accordingly.
+  AstBinaryOp* currentBinaryNode = nullptr;
 
   // Currently parsed node.
-  AstNode* tNode = nullptr;
+  AstNode* currentNode = nullptr;
   
   for (;;) {
     // Last unary node. It's an optimization to prevent recursion in case that
     // we found two or more unary expressions after each other. For example the
     // expression "-!-1" contains only unary operators that will be parsed by
     // a single `parseExpression()` call.
-    AstUnary* unary = nullptr;
+    AstUnary* lastUnaryNode = nullptr;
 	bool b_complex = false;
 
 _Repeat1:
@@ -344,7 +342,7 @@ _Repeat1:
           MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %.*s.", static_cast<int>(str.getLength()), str.getData());
 
         uint32_t symType = sym->getSymbolType();
-        AstNode* zNode;
+        AstNode* newNode;
 
 		if (symType == kAstSymbolVariable) {
 			if (!sym->isDeclared())
@@ -361,26 +359,26 @@ _Repeat1:
 				symScope->putSymbol(sym);
 			}
 
-			zNode = _ast->newNode<AstVar>();
-			MATHPRESSO_NULLCHECK(zNode);
-			static_cast<AstVar*>(zNode)->setSymbol(sym);
+			newNode = _ast->newNode<AstVar>();
+			MATHPRESSO_NULLCHECK(newNode);
+			static_cast<AstVar*>(newNode)->setSymbol(sym);
 
 			if (sym->hasSymbolFlag(kAstSymbolIsComplex))
-				zNode ->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+				newNode ->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
 
-			zNode->setPosition(token.getPosAsUInt());
+			newNode->setPosition(token.getPosAsUInt());
 			sym->incUsedCount();
 		}
         else {
           // Will be parsed by `parseCall()` again.
           _tokenizer.set(&token);
-          MATHPRESSO_PROPAGATE(parseCall(&zNode));
+          MATHPRESSO_PROPAGATE(parseCall(&newNode));
         }
 
-        if (unary == nullptr)
-          tNode = zNode;
+        if (lastUnaryNode == nullptr)
+          currentNode = newNode;
         else
-          unary->setChild(zNode);
+          lastUnaryNode->setChild(newNode);
         break;
       }
 
@@ -388,23 +386,23 @@ _Repeat1:
 	  case kTokenComplex:
 		  b_complex = true;
       case kTokenNumber: {
-        AstImm* zNode = _ast->newNode<AstImm>();
-        MATHPRESSO_NULLCHECK(zNode);
+        AstImm* newNode = _ast->newNode<AstImm>();
+        MATHPRESSO_NULLCHECK(newNode);
 
-        zNode->setPosition(token.getPosAsUInt());
+        newNode->setPosition(token.getPosAsUInt());
 		if (!b_complex)
 		{
-			zNode->setValue(token.value);
+			newNode->setValue(token.value);
 		}
 		else
 		{
-			zNode->setValue({ 0, token.value });
+			newNode->setValue({ 0, token.value });
 		}
 			
-        if (unary == nullptr)
-          tNode = zNode;
+        if (lastUnaryNode == nullptr)
+          currentNode = newNode;
         else
-          unary->setChild(zNode);
+          lastUnaryNode->setChild(newNode);
         break;
       }
 
@@ -419,16 +417,16 @@ _Repeat1:
       case kTokenLParen: {
         uint32_t position = token.getPosAsUInt();
 
-        AstNode* zNode;
-        MATHPRESSO_PROPAGATE(parseExpression(&zNode, true));
+        AstNode* newNode;
+        MATHPRESSO_PROPAGATE(parseExpression(&newNode, true));
 
         if (_tokenizer.next(&token) != kTokenRParen)
           MATHPRESSO_PARSER_ERROR(token, "Expected a ')' token.");
 
-        if (unary == nullptr)
-          tNode = zNode;
+        if (lastUnaryNode == nullptr)
+          currentNode = newNode;
         else
-          unary->setChild(zNode);
+          lastUnaryNode->setChild(newNode);
 
         break;
       }
@@ -443,13 +441,13 @@ _Unary: {
         MATHPRESSO_NULLCHECK(opNode);
         opNode->setPosition(token.getPosAsUInt());
 
-        if (unary == nullptr)
-          tNode = opNode;
+        if (lastUnaryNode == nullptr)
+          currentNode = opNode;
         else
-          unary->setChild(opNode);
+          lastUnaryNode->setChild(opNode);
 
         isNested = true;
-        unary = opNode;
+        lastUnaryNode = opNode;
 
         goto _Repeat1;
       }
@@ -472,15 +470,15 @@ _Unary: {
       case kTokenEnd: {
         _tokenizer.set(&token);
 
-        if (oNode != nullptr) {
-          oNode->setRight(tNode);
+        if (currentBinaryNode != nullptr) {
+          currentBinaryNode->setRight(currentNode);
           // Iterate to the top-most node.
-          while (oNode->hasParent())
-            oNode = static_cast<AstBinaryOp*>(oNode->getParent());
-          tNode = oNode;
+          while (currentBinaryNode->hasParent())
+            currentBinaryNode = static_cast<AstBinaryOp*>(currentBinaryNode->getParent());
+          currentNode = currentBinaryNode;
         }
 
-        *pNode = tNode;
+        *pNode = currentNode;
         return kErrorOk;
       }
 
@@ -489,10 +487,10 @@ _Unary: {
         op = kOpAssign;
 
         // Check whether the assignment is valid.
-        if (tNode->getNodeType() != kAstNodeVar)
+        if (currentNode->getNodeType() != kAstNodeVar)
           MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
 
-        AstSymbol* sym = static_cast<AstVar*>(tNode)->getSymbol();
+        AstSymbol* sym = static_cast<AstVar*>(currentNode)->getSymbol();
         if (sym->hasSymbolFlag(kAstSymbolIsReadOnly))
           MATHPRESSO_PARSER_ERROR(token, "Can't assign to a read-only variable '%s'.", sym->getName());
 
@@ -518,84 +516,84 @@ _Unary: {
 	  case kTokenQMark       : op = kOpQMark       ; goto _Binary;
 	  case kTokenColon       : op = kOpColon       ; goto _Binary;
 _Binary: {
-        AstBinaryOp* zNode = _ast->newNode<AstBinaryOp>(op);
-        MATHPRESSO_NULLCHECK(zNode);
-        zNode->setPosition(token.getPosAsUInt());
+        AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>(op);
+        MATHPRESSO_NULLCHECK(newNode);
+        newNode->setPosition(token.getPosAsUInt());
 
-        if (oNode == nullptr) {
-          // oNode <------+
+        if (currentBinaryNode == nullptr) {
+          // currentBinaryNode <------+
           //              |
-          // +------------+------------+ First operand - oNode becomes the newly
-          // |         (zNode)         | created zNode; tNode is assigned to the
-          // |        /       \        | left side of zNode and will be referred
-          // |     (tNode)  (NULL)     | as (...) by the next operation.
+          // +------------+------------+ First operand - currentBinaryNode becomes the newly
+          // |        (newNode)        | created newNode; currentNode is assigned to the
+          // |        /       \        | left side of newNode and will be referred
+          // | (currentNode)  (NULL)   | as (...) by the next operation.
           // +-------------------------+
-          zNode->setLeft(tNode);
-          oNode = zNode;
+          newNode->setLeft(currentNode);
+          currentBinaryNode = newNode;
           break;
         }
 
-        uint32_t oPrec = OpInfo::get(oNode->getOp()).precedence;
-        uint32_t zPrec = OpInfo::get(op).precedence;
+        uint32_t currentBinaryPrec = OpInfo::get(currentBinaryNode->getOp()).precedence;
+        uint32_t newBinaryPrec = OpInfo::get(op).precedence;
 
-        if (oPrec > zPrec) {
-          // oNode <----------+
-          //                  |
-          // +----------------+--------+ The current operator (zPrec) has a
-          // |     (oNode)    |        | higher precedence than the previous one
-          // |    /       \   |        | (oPrec), so the zNode will be assigned
-          // | (...)       (zNode)     | to the right side of oNode and it will
+        if (currentBinaryPrec > newBinaryPrec) {
+          // currentBinaryNode <-+
+          //                     |
+          // +-------------------+-----+ The current operator (newBinaryPrec) has a
+          // |(currentBinaryNode)|     | higher precedence than the previous one
+          // |    /       \      |     | (currentBinaryPrec), so the newNode will be assigned
+          // | (...)      (newNode)    | to the right side of currentBinaryNode and it will
           // |            /       \    | function as a stack-like structure. We
-          // |         (tNode)  (NULL) | have to advance back at some point.
+          // |    (currentNode)  (NULL)| have to advance back at some point.
           // +-------------------------+
-          oNode->setRight(zNode);
-          zNode->setLeft(tNode);
-          oNode = zNode;
+          currentBinaryNode->setRight(newNode);
+          newNode->setLeft(currentNode);
+          currentBinaryNode = newNode;
           break;
         }
         else {
-          oNode->setRight(tNode);
+          currentBinaryNode->setRight(currentNode);
 
-          // Advance to the top-most oNode that has less or equal precedence
-          // than zPrec.
-          while (oNode->hasParent()) {
+          // Advance to the top-most binaryNode that has less or equal precedence
+          // than newBinaryPrec.
+          while (currentBinaryNode->hasParent()) {
             // Terminate conditions:
-            //   1. oNode has higher precedence than zNode.
-            //   2. oNode has equal precedence and right-to-left associativity.
-            if (OpInfo::get(oNode->getOp()).rightAssociate(zPrec))
+            //   1. currentBinaryNode has higher precedence than newNode.
+            //   2. currentBinaryNode has equal precedence and right-to-left associativity.
+            if (OpInfo::get(currentBinaryNode->getOp()).rightAssociate(newBinaryPrec))
               break;
-            oNode = static_cast<AstBinaryOp*>(oNode->getParent());
+            currentBinaryNode = static_cast<AstBinaryOp*>(currentBinaryNode->getParent());
           }
 
-          // oNode <------+
-          //              |
-          // +------------+------------+
-          // |         (zNode)         | Simple case - oNode becomes the left
-          // |        /       \        | node in the created zNode and zNode
-          // |     (oNode)  (NULL)     | becomes oNode for the next operator.
+          // currentBinaryNode <+
+          //                    |
+          // +------------------+------+
+          // |           (newNode)     | Simple case - currentBinaryNode becomes the left
+          // |           /       \     | node in the created newNode and newNode
+          // |(currentBinaryNode)(NULL)| becomes currentBinaryNode for the next operator.
           // |    /       \            |
-          // | (...)    (tNode)        | oNode will become a top-level node.
+          // | (...)    (currentNode)  | currentBinaryNode will become a top-level node.
           // +-------------------------+
-          if (!oNode->hasParent() && !OpInfo::get(oNode->getOp()).rightAssociate(zPrec)) {
-            zNode->setLeft(oNode);
+          if (!currentBinaryNode->hasParent() && !OpInfo::get(currentBinaryNode->getOp()).rightAssociate(newBinaryPrec)) {
+            newNode->setLeft(currentBinaryNode);
           }
-          // oNode <----------+
-          //                  |
-          // +----------------+--------+
-          // |     (oNode)    |        |
-          // |    /       \   |        | Complex case - inject node in place
-          // | (...)       (zNode)     | of oNode.right (because of higher
+          // currentBinaryNode <-+
+          //                     |
+          // +-------------------+-----+
+          // |(currentBinaryNode)|     |
+          // |    /       \      |     | Complex case - inject node in place
+          // | (...)      (newNode)    | of currentBinaryNode.right (because of higher
           // |            /       \    | precedence or RTL associativity).
-          // |        (tNode)   (NULL) |
+          // |  (currentNode)   (NULL) |
           // +-------------------------+
           else {
-            AstNode* pNode = oNode->unlinkRight();
-            oNode->setRight(zNode);
-            zNode->setLeft(pNode);
+            AstNode* pNode = currentBinaryNode->unlinkRight();
+            currentBinaryNode->setRight(newNode);
+            newNode->setLeft(pNode);
           }
 
           isNested = true;
-          oNode = zNode;
+          currentBinaryNode = newNode;
 
           break;
         }
