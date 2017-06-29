@@ -426,24 +426,31 @@ namespace mathpresso {
 				{
 					if (!op.isIntrinsic())
 					{
-						double result = 0.0;
-						switch (node->getOp())
+						if (op.funcDtoD) 
 						{
-						case kOpEq: result = lVal == rVal; break;
-						case kOpNe: result = lVal != rVal; break;
-						case kOpLt: result = lVal < rVal; break;
-						case kOpLe: result = lVal <= rVal; break;
-						case kOpGt: result = lVal > rVal; break;
-						case kOpGe: result = lVal >= rVal; break;
-						case kOpAdd: result = lVal + rVal; break;
-						case kOpSub: result = lVal - rVal; break;
-						case kOpMul: result = lVal * rVal; break;
-						case kOpDiv: result = lVal / rVal; break;
-						default:
-							return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-								"Invalid binary operation '%s'.", op.name);
+							lNode->setValue(((Arg2Func)op.funcDtoD)(lVal, rVal));
 						}
-						lNode->setValue(result);
+						else
+						{
+							double result = 0.0;
+							switch (node->getOp())
+							{
+							case kOpEq: result = lVal == rVal; break;
+							case kOpNe: result = lVal != rVal; break;
+							case kOpLt: result = lVal < rVal; break;
+							case kOpLe: result = lVal <= rVal; break;
+							case kOpGt: result = lVal > rVal; break;
+							case kOpGe: result = lVal >= rVal; break;
+							case kOpAdd: result = lVal + rVal; break;
+							case kOpSub: result = lVal - rVal; break;
+							case kOpMul: result = lVal * rVal; break;
+							case kOpDiv: result = lVal / rVal; break;
+							default:
+								return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+									"Invalid binary operation '%s'.", op.name);
+							}
+							lNode->setValue(result);
+						}
 					}
 					else
 					{
@@ -489,7 +496,7 @@ namespace mathpresso {
 					std::complex<double> args[] = { { lVal,0 },{ rVal,0 } };
 					if (op.funcDtoD)
 					{
-						lNode->setValue(((mpFuncpCtoD)op.funcCtoD)(args));
+						lNode->setValue(((mpFuncpCtoC)op.funcCtoD)(args));
 					}
 					else
 					{
@@ -569,21 +576,31 @@ namespace mathpresso {
 				AstImm* rNode = static_cast<AstImm*>(right);
 
 				if (!op.isIntrinsic()) {
-					std::complex<double> result;
-					switch (node->getOp())
+					std::complex<double> lVal = lNode->getValueCplx();
+					std::complex<double> rVal = rNode->getValueCplx();
+					if (op.funcDtoD)
 					{
-					case kOpAdd: result = lNode->getValueCplx() + rNode->getValueCplx(); break;
-					case kOpSub: result = lNode->getValueCplx() - rNode->getValueCplx(); break;
-					case kOpMul: result = lNode->getValueCplx() * rNode->getValueCplx(); break;
-					case kOpDiv: result = lNode->getValueCplx() / rNode->getValueCplx(); break;
-					case kOpEq: result = lNode->getValueCplx() == rNode->getValueCplx(); break;
-					case kOpNe: result = lNode->getValueCplx() != rNode->getValueCplx(); break;
-
-					default:
-						return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-							"Invalid complex binary operation '%s'.", op.name);
+						std::complex<double> args[] = { lVal, rVal};
+						rNode->setValue(((mpFuncpCtoC)op.funcCtoC)(args));
 					}
-					rNode->setValue(result);
+					else
+					{
+						std::complex<double> result;
+						switch (node->getOp())
+						{
+						case kOpAdd: result = lVal + rVal; break;
+						case kOpSub: result = lVal - rVal; break;
+						case kOpMul: result = lVal * rVal; break;
+						case kOpDiv: result = lVal / rVal; break;
+						case kOpEq: result = lVal == rVal; break;
+						case kOpNe: result = lVal != rVal; break;
+
+						default:
+							return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+								"Invalid complex binary operation '%s'.", op.name);
+						}
+						rNode->setValue(result);
+					}
 				}
 				else if (op.hasCtoD()) 
 				{

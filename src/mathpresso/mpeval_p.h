@@ -185,18 +185,21 @@ namespace mathpresso {
 		return r + l;
 	}
 
-	static std::complex<double> mpAddOptC(std::complex<double> r, std::complex<double> l) {
-		return r + l;
+	static std::complex<double> mpAddOptC(std::complex<double> *r) {
+		return r[0] + r[1];
 	}
 
-	static JitVar& compileAddD(asmjit::X86Compiler* cc, JitVar &rvar, JitVar &lvar) {
-		cc->addsd(rvar.getXmm(), lvar.getXmm());
-		return rvar;
+
+	typedef JitVar& (*mpAsmFunc)(asmjit::X86Compiler*, JitVar*);
+
+	static JitVar& compileAddD(asmjit::X86Compiler* cc, JitVar* vars ) {
+		cc->addsd(vars[0].getXmm(), vars[1].getXmm());
+		return vars[0];
 	}
 
-	static JitVar& compileAddC(asmjit::X86Compiler* cc, JitVar &rvar, JitVar &lvar) {
-		cc->addpd(rvar.getXmm(), lvar.getXmm());
-		return rvar;
+	static JitVar& compileAddC(asmjit::X86Compiler* cc, JitVar* vars) {
+		cc->addpd(vars[0].getXmm(), vars[1].getXmm());
+		return vars[0];
 	}
 
 } // mathpresso namespace
