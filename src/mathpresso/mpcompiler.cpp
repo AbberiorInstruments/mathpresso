@@ -984,7 +984,7 @@ namespace mathpresso {
 		if (takesComplex) 
 		{
 			if (returnsComplex)
-				inlineCallComplex(dst, args, count, fp);
+				inlineCallCRetC(dst, args, count, fp);
 			else
 				inlineCallCRetD(dst, args, count, fp);
 		}
@@ -993,11 +993,11 @@ namespace mathpresso {
 			if (returnsComplex)
 				inlineCallDRetC(dst, args, count, fp);
 			else
-				inlineCall(dst, args, count, fp);
+				inlineCallDRetD(dst, args, count, fp);
 		}
 	}
 
-	void JitCompiler::inlineCall(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn) {
+	void JitCompiler::inlineCallDRetD(const X86Xmm& dst, const X86Xmm* args, uint32_t count, void* fn) {
 		// Use function builder to build a function prototype.
 		FuncSignatureX signature;
 		signature.setRetT<double>();
@@ -1073,7 +1073,7 @@ namespace mathpresso {
 
 	}
 
-	void JitCompiler::inlineCallComplex(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
+	void JitCompiler::inlineCallCRetC(const X86Xmm& dst, const X86Xmm* args, const uint32_t count, void* fn) {
 		// copy the data to Memory.
 		X86Mem stack(cc->newStack((count + 1) * 16, 16));
 		X86Gp dataPointerReg(cc->newUIntPtr());

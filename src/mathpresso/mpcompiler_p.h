@@ -126,10 +126,10 @@ namespace mathpresso
 		void inlineRound(const asmjit::X86Xmm& dst, const asmjit::X86Xmm& src, uint32_t op, bool takesComplex, bool returnsComplex);
 		void inlineCallAbstract(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, uint32_t count, uint32_t op, bool takesComplex, bool returnsComplex);
 		void inlineCallAbstract(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, uint32_t count, void * fp, bool takesComplex, bool returnsComplex);
-		void inlineCall(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, uint32_t count, void* fn);
+		void inlineCallDRetD(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, uint32_t count, void* fn);
 		void inlineCallDRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, uint32_t count, void * fn);
 		void inlineCallCRetD(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, const uint32_t count, void * fn);
-		void inlineCallComplex(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, uint32_t count, void * fn);
+		void inlineCallCRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, uint32_t count, void * fn);
 
 		// Constants.
 		void prepareConstPool();
