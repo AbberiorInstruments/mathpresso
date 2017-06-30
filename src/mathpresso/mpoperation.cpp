@@ -13,10 +13,6 @@ namespace mathpresso {
 
 	JitVar MpOperationFunc::compile(JitCompiler* jc, AstNode * node) 
 	{
-		// TODO: error handling?
-		// TODO: switch to other fnXtoX, if initial not found? not necessary, because of optimize?
-		// TODO: compile directly to assembler if asmXToX is found?
-
 		asmjit::X86Xmm result = node->returnsComplex() ? jc->cc->newXmmPd() : jc->cc->newXmmSd();
 		asmjit::X86Xmm args[8];
 
