@@ -89,6 +89,8 @@ cxx_add_source(mathpresso MATHPRESSO_SRC mathpresso
   mpeval_p.h
   mphash.cpp
   mphash_p.h
+  mpoperation.cpp
+  mpoperation_p.h
   mpoptimizer.cpp
   mpoptimizer_p.h
   mpparser.cpp

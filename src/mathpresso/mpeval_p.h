@@ -191,11 +191,10 @@ namespace mathpresso {
 	static std::complex<double> mpMulOptC(std::complex<double> *r) { return r[0] * r[1]; }
 
 	static double mpDivOptD(double l, double r) { return l / r; }
-	static std::complex<double> mpDivOptC(std::complex<double> *r) { 
-		return r[0] / r[1]; }
+	static std::complex<double> mpDivOptC(std::complex<double> *r) { return r[0] / r[1]; }
 
 	//! The second parameter contains the parameters from left to right.
-	//! ie: a binary function a-b -> {a,b}
+	//! ie: a binary function a-b --> {param[0] - param[1]}
 	typedef JitVar (*mpAsmFunc)(JitCompiler*, JitVar*);
 
 	// the emitters for the different operators.
