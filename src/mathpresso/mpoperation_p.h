@@ -17,7 +17,8 @@ namespace mathpresso {
 
 	typedef JitVar(*mpAsmFunc)(JitCompiler*, JitVar*);
 
-	enum OperationFlags {
+	enum OperationFlags 
+	{
 		OpFlagNone = 0,
 		OpFlagisOperator = 0x00000001,
 
@@ -41,7 +42,7 @@ namespace mathpresso {
 		OpFlagNopIfROne = 0x80000000,
 
 		OpFlagNopIfZero = OpFlagNopIfLZero | OpFlagNopIfRZero,
-		OpFlagNopIfOne = OpFlagNopIfLOne | OpFlagNopIfROne
+		OpFlagNopIfOne = OpFlagNopIfLOne  | OpFlagNopIfROne
 	};
 
 	class OperationGeneric {
@@ -72,7 +73,7 @@ namespace mathpresso {
 		virtual double evaluateCtoD(std::complex<double> *args);
 		virtual double evaluateDtoD(double *args);
 
-		uint32_t getflags() { return flags_; }
+		uint32_t flags() { return flags_; }
 
 	private:
 		// Members:
