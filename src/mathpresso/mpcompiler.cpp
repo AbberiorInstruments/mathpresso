@@ -11,6 +11,7 @@
 #include "./mpast_p.h"
 #include "./mpcompiler_p.h"
 #include "./mpeval_p.h"
+#include "./mpoperation_p.h"
 
 
 namespace mathpresso {
@@ -437,7 +438,6 @@ namespace mathpresso {
 				args[0] = registerVar(var).getXmm();
 			}
 
-
 			inlineCallAbstract(result, args, 1, op, node->takesComplex(), node->returnsComplex());
 			return JitVar(result, JitVar::FLAG_NONE);
 		
@@ -787,30 +787,7 @@ namespace mathpresso {
 
 	JitVar JitCompiler::onCall(AstCall* node)
 	{
-		size_t count = node->getLength();
-		AstSymbol* sym = node->getSymbol();
-
-		X86Xmm result = node->returnsComplex() ? cc->newXmmPd() : cc->newXmmSd();
-		X86Xmm args[8];
-
-		if (node->takesComplex())
-		{
-			for (size_t i = 0; i < count; i++)
-			{
-				args[i] = registerVarComplex(onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
-			}
-		}
-		else
-		{
-			for (size_t i = 0; i < count; i++)
-			{
-				args[i] = registerVar(onNode(node->getAt(i))).getXmm();
-			}
-		}
-
-		inlineCallAbstract(result, args, count, sym->getFuncPtr(node->takesComplex()),  node->takesComplex(), node->returnsComplex());
-				
-		return JitVar(result, JitVar::FLAG_NONE);
+		return std::static_pointer_cast<MpOperationFunc>(node->getSymbol()->_op)->compile(this, node);
 	}
 
 	void JitCompiler::inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool takesComplex, bool returnsComplex) {

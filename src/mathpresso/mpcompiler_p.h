@@ -10,6 +10,7 @@
 
 // [Dependencies]
 #include "./mpast_p.h"
+#include <memory>
 
 namespace mathpresso
 {

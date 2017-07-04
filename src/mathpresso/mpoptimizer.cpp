@@ -11,6 +11,7 @@
 #include "./mpast_p.h"
 #include "./mpeval_p.h"
 #include "./mpoptimizer_p.h"
+#include "./mpoperation_p.h"
 
 namespace mathpresso {
 
@@ -723,126 +724,9 @@ namespace mathpresso {
 
 	}
 
-	// TODO: functions that have two versions with different parameter types: 
 	Error AstOptimizer::onCall(AstCall* node) 
 	{
-		AstSymbol* sym = node->getSymbol();
-		size_t count = node->getLength();
-
-		bool b_need_cplx = false;
-		for (size_t i = 0; i < count; i++)
-		{
-			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
-			b_need_cplx |= node->getAt(i)->returnsComplex();
-		}
-		
-		// If we have a complex argument or no real function version, use the function
-		// version that takes complex arguments
-		if (b_need_cplx || !sym ->getFuncPtr()) 
-		{
-			node->addNodeFlags(kAstTakesComplex);
-
-			// Need function that takes complex arguments here!
-			if (!sym ->getFuncPtr(true))
-				return kErrorInvalidArgument;
-
-			if (!sym->hasSymbolFlag(kAstSymbolComplexFunctionReturnsReal))
-			{
-				node->addNodeFlags(kAstReturnsComplex);
-			}
-		}
-		else
-		{
-			if (sym->hasSymbolFlag(kAstSymbolRealFunctionReturnsComplex))
-			{
-				node->addNodeFlags(kAstReturnsComplex);
-			}
-		}
-
-
-		bool allConst = false;
-		bool allConstComplex = false;
-
-		if (!sym ->hasSymbolFlag(kAstSymbolHasState))
-		{
-			allConst = true;
-			allConstComplex = true;
-
-			for (size_t i = 0; i < count; i++)
-			{
-				auto n = node->getAt(i);
-
-				allConst &= n->isImm() && !n->returnsComplex();
-				allConstComplex &= allConst &= n->isImm() && n->returnsComplex();
-			}
-		}
-
-		if (allConst && count <= 8) 
-		{
-			AstImm** args = reinterpret_cast<AstImm**>(node->getChildren());
-
-			void* fn = sym->getFuncPtr();
-			if (!sym->hasSymbolFlag(kAstSymbolRealFunctionReturnsComplex))
-			{
-				double result = 0.0;
-#define ARG(n) args[n]->getValue()
-				switch (count) 
-				{
-				case 0: result = ((Arg0Func)fn)(); break;
-				case 1: result = ((Arg1Func)fn)(ARG(0)); break;
-				case 2: result = ((Arg2Func)fn)(ARG(0), ARG(1)); break;
-				case 3: result = ((Arg3Func)fn)(ARG(0), ARG(1), ARG(2)); break;
-				case 4: result = ((Arg4Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3)); break;
-				case 5: result = ((Arg5Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4)); break;
-				case 6: result = ((Arg6Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5)); break;
-				case 7: result = ((Arg7Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5), ARG(6)); break;
-				case 8: result = ((Arg8Func)fn)(ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5), ARG(6), ARG(7)); break;
-				}
-#undef ARG
-
-				AstNode* replacement = _ast->newNode<AstImm>(result);
-				node->getParent()->replaceNode(node, replacement);
-				onNode(replacement);
-			}
-			else
-			{
-				double argsDouble[9];
-				for (size_t i = 0; i < count; i++) {
-					argsDouble[i] = static_cast<AstImm*>(node->getAt(i))->getValue();
-				}
-				std::complex<double> result(0.0, 0.0);
-				result = ((mpFuncpDtoC)sym->getFuncPtr())(argsDouble);
-				AstNode* replacement = _ast->newNode<AstImm>(result);
-				node->getParent()->replaceNode(node, replacement);
-				onNode(replacement);
-			}
-			_ast->deleteNode(node);
-		}
-		else if (allConstComplex && count < 9) 
-		{
-			std::complex<double> argsComplex[9];
-			for (size_t i = 0; i < count; i++) 
-			{
-				argsComplex[i] = static_cast<AstImm*>(node->getAt(i))->getValueCplx();
-			}
-
-			AstImm* replacement = _ast->newNode<AstImm>(0);
-			if (!sym->hasSymbolFlag(kAstSymbolComplexFunctionReturnsReal)) 
-			{
-				replacement->setValue(((mpFuncpCtoC)sym->getFuncPtr(true))(argsComplex));
-			} 
-			else 
-			{
-				replacement->setValue(((mpFuncpCtoD)sym->getFuncPtr(true))(argsComplex));
-			}
-			node->getParent()->replaceNode(node, replacement);
-			onNode(replacement);
-			
-			_ast->deleteNode(node);
-			
-		}
-
-		return kErrorOk;
+		return std::static_pointer_cast<MpOperationFunc>(node->getSymbol()->_op)->optimize(this, node);
 	}
 
 

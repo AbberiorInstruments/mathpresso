@@ -6,7 +6,9 @@
 
 #include "mpoperation_p.h"
 #include "asmjit\x86\x86operand.h"
-
+#include "mpast_p.h"
+#include "mpcompiler_p.h"
+#include "mpoptimizer_p.h"
 
 namespace mathpresso {
 
@@ -71,11 +73,12 @@ namespace mathpresso {
 		bool b_need_cplx = false;
 		bool b_all_imm = true;
 
+		// Gather Information about the child-nodes.
 		for (size_t i = 0; i < count; i++)
 		{
-			opt->onNode(node->getAt(i));
+			MATHPRESSO_PROPAGATE(opt->onNode(node->getAt(i)));
 			b_need_cplx |= node->getAt(i)->returnsComplex();
-			b_all_imm |= node->getAt(i)->isImm();
+			b_all_imm &= node->getAt(i)->isImm();
 		}
 
 		bool b_returns_complex;
@@ -87,7 +90,7 @@ namespace mathpresso {
 				return ErrorCode::kErrorInvalidArgument;
 
 			node->addNodeFlags(AstNodeFlags::kAstTakesComplex);
-			b_returns_complex = flags_ & OpFlagCReturnsD;
+			b_returns_complex = (flags_ & OpFlagCReturnsD) == 0;
 		}
 		else
 		{
@@ -116,10 +119,10 @@ namespace mathpresso {
 			node->removeNodeFlags(AstNodeFlags::kAstReturnsComplex);
 		}
 
-
+		// optimize all-immediate calls:
 		if (b_all_imm) 
 		{
-			AstImm* ret = static_cast<AstImm*>(node->getAt(0));
+			AstImm* ret = opt->getAst()->newNode<AstImm>(0);
 			if (node->takesComplex())
 			{
 				std::complex<double> args[8];
@@ -154,6 +157,10 @@ namespace mathpresso {
 					ret->setValue(evaluateDRetD(args));
 				}
 			}
+			node->getParent()->replaceNode(node, ret);
+			opt->onNode(ret);
+
+			opt->getAst()->deleteNode(node);
 		}
 
 		return ErrorCode::kErrorOk;

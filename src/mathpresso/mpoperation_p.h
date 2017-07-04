@@ -9,11 +9,15 @@
 #define _MP_OPERATION_P_H
 
 #include <complex>
-#include "mpast_p.h"
-#include "mpcompiler_p.h"
-#include "mpoptimizer_p.h"
+
 
 namespace mathpresso {
+
+	// Forward Declarations:
+	struct JitCompiler;
+	struct AstNode;
+	struct AstOptimizer;
+	struct JitVar;
 
 	typedef JitVar(*mpAsmFunc)(JitCompiler*, JitVar*);
 
@@ -53,7 +57,7 @@ namespace mathpresso {
 		// Add ASM code to compiler stack 
 		virtual JitVar compile(JitCompiler *jc, AstNode * node)  = 0;
 		// Optimize AST 
-		virtual Error optimize(AstOptimizer *opt, AstNode *node) = 0;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) = 0;
 
 		uint32_t flags() 
 		{ 
@@ -85,7 +89,7 @@ namespace mathpresso {
 		}
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-		virtual Error optimize(AstOptimizer *opt, AstNode *node) override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 		virtual void setFn(void * fn, bool isComplex = false);
 	protected:
 		virtual double evaluateDRetD(double *args);
@@ -105,7 +109,7 @@ namespace mathpresso {
 		}
 		
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-		virtual Error optimize(AstOptimizer *opt, AstNode *node) override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
 	protected:
 		mpAsmFunc asmC_;

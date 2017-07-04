@@ -291,8 +291,6 @@ struct GlobalConstant {
   double value;
 };
 
-//class MpOperationFunc;
-
 Error Context::addBuiltIns(void) {
   ContextInternalImpl* d;
   MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
@@ -328,32 +326,27 @@ Error Context::addBuiltIns(void) {
 	continue; 
 	// until here.
 	
-	auto flags = 0;
-	if (op.isComplex()) 
-	{
-		flags |= kAstTakesComplex;
-		if (op.hasCtoC()) 
-		{
-			flags |= kAstReturnsComplex;
-			this->addFunction(op.name.c_str(), op.funcCtoC, flags, op.funcCtoCAsm);
-		}
-		else if (op.hasCtoD())
-		{
-			this->addFunction(op.name.c_str(), op.funcCtoD, flags, op.funcCtoDAsm);
-		}
-	} 
+	auto flags = op.getOpCount();
 	
-	if (!op.isComplex())
+	if (op.hasDtoC())
 	{
-		if (op.hasDtoC())
-		{
-			flags |= kAstReturnsComplex;
-			this->addFunction(op.name.c_str(), op.funcDtoC, flags, op.funcDtoCAsm);
-		}
-		else if (op.hasDtoD())
-		{
-			this->addFunction(op.name.c_str(), op.funcDtoD, flags, op.funcDtoDAsm);
-		}
+		flags |= kFunctionReturnsComplex;
+		this->addFunction(op.name.c_str(), op.funcDtoC, flags, op.funcDtoCAsm);
+	}
+	else if (op.hasDtoD())
+	{
+		this->addFunction(op.name.c_str(), op.funcDtoD, flags, op.funcDtoDAsm);
+	}
+
+	flags |= kFunctionTakesComplex;
+	if (op.hasCtoC())
+	{
+		flags |= kFunctionReturnsComplex;
+		this->addFunction(op.name.c_str(), op.funcCtoC, flags, op.funcCtoCAsm);
+	}
+	else if (op.hasCtoD())
+	{
+		this->addFunction(op.name.c_str(), op.funcCtoD, flags, op.funcCtoDAsm);
 	}
   }
 
@@ -483,9 +476,10 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 	{
 		sym->setSymbolFlag(kAstSymbolIsDeclared);
 	}
+
 	std::string name_decorated(name);
 	name_decorated += "$" + std::to_string(flags & _kFunctionArgMask);
-	_symbols.try_emplace(name_decorated, std::make_shared<MpOperationFunc>(1, 0, nullptr, nullptr));
+	_symbols.try_emplace(name_decorated, std::make_shared<MpOperationFunc>(flags & _kFunctionArgMask, 0, nullptr, nullptr));
 	if (!sym->_op)
 		sym->_op = _symbols[name_decorated];
 
