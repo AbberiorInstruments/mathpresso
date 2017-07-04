@@ -746,12 +746,6 @@ namespace mathpresso {
 			if (!sym ->getFuncPtr(true))
 				return kErrorInvalidArgument;
 
-			for (size_t i = 0; i < count; i++) 
-			{
-				AstNode *tmp = node->getAt(i);
-				tmp->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
-			}
-
 			if (!sym->hasSymbolFlag(kAstSymbolComplexFunctionReturnsReal))
 			{
 				node->addNodeFlags(kAstReturnsComplex);
