@@ -20,7 +20,8 @@ namespace mathpresso {
 	enum OperationFlags 
 	{
 		OpFlagNone = 0,
-		OpFlagisOperator = 0x00000001,
+		OpFlagIsOperator = 0x00000001,
+		OpFlagHasState = 0x00000002,
 
 		// Types of Operation that are allowed.
 		OpFlagCReturnsD = 0x0000010,
@@ -63,6 +64,11 @@ namespace mathpresso {
 			return nargs_; 
 		}
 
+		void addFlags(uint32_t flags)
+		{
+			flags_ |= flags;
+		}
+
 	protected:
 		uint32_t nargs_;
 		uint32_t flags_;
@@ -80,6 +86,7 @@ namespace mathpresso {
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual Error optimize(AstOptimizer *opt, AstNode *node) override;
+		virtual void setFn(void * fn, bool isComplex = false);
 	protected:
 		virtual double evaluateDRetD(double *args);
 		// Function-pointer:
@@ -91,7 +98,7 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationOp(uint32_t nargs, uint32_t flags, void * fnD, void * fnC, mpAsmFunc asmC, mpAsmFunc asmD) :
-			MpOperationFunc(nargs, flags | OperationFlags::OpFlagisOperator, fnD, fnC),
+			MpOperationFunc(nargs, flags | OperationFlags::OpFlagIsOperator, fnD, fnC),
 			asmC_(asmC),
 			asmD_(asmD)
 		{

@@ -327,7 +327,7 @@ Error Context::addBuiltIns(void) {
     d->_scope.putSymbol(sym);
 	continue; 
 	// until here.
-
+	
 	auto flags = 0;
 	if (op.isComplex()) 
 	{
@@ -483,7 +483,14 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 	{
 		sym->setSymbolFlag(kAstSymbolIsDeclared);
 	}
-  
+	std::string name_decorated(name);
+	name_decorated += "$" + std::to_string(flags & _kFunctionArgMask);
+	_symbols.try_emplace(name_decorated, std::make_shared<MpOperationFunc>(1, 0, nullptr, nullptr));
+	if (!sym->_op)
+		sym->_op = _symbols[name_decorated];
+
+	auto symOp = std::static_pointer_cast<MpOperationFunc>(sym->_op);
+
 	// Declaring complex part?
 	if (flags & kFunctionTakesComplex)
 	{
@@ -492,8 +499,12 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 
 		sym ->setFuncPtr(fn, true);
 		sym->setAsmPtr(fnAsm, true);
+		symOp->setFn(fn, true);
 		if (0 == (flags & kFunctionReturnsComplex))
-			sym ->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
+		{
+			sym->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
+			symOp->addFlags(OperationFlags::OpFlagCReturnsD);
+		}
 	}
 	else
 	{
@@ -502,12 +513,19 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 
 		sym ->setFuncPtr(fn);
 		sym->setAsmPtr(fnAsm);
+		symOp->setFn(fn);
 		if (flags & kFunctionReturnsComplex)
-			sym ->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);
+		{
+			sym->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);
+			symOp->addFlags(OperationFlags::OpFlagDReturnsC);
+		}
 	}
 
 	if (flags & kFunctionHasState)
-	  sym->setSymbolFlag(kAstSymbolHasState);
+	{
+		sym->setSymbolFlag(kAstSymbolHasState);
+		symOp->addFlags(OperationFlags::OpFlagHasState);
+	}
 
 	sym->setFuncArgs(flags & _kFunctionArgMask);
 	return kErrorOk;

@@ -329,7 +329,7 @@ struct Context {
   ContextImpl* _d;
 
 
-private:
+//private:
   //! The string contains the name of the function described decorated with the 
   //! number of arguments.
   std::map<std::string, std::shared_ptr<MpOperation>> _symbols;

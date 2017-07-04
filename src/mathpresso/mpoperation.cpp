@@ -159,6 +159,17 @@ namespace mathpresso {
 		return ErrorCode::kErrorOk;
 	}
 
+	void MpOperationFunc::setFn(void* fn, bool isComplex) {
+		if (isComplex)
+		{
+			fnC_ = fn;
+		}
+		else
+		{
+			fnD_ = fn;
+		}
+	}
+
 
 	
 	double MpOperationFunc::evaluateDRetD(double * args) 
