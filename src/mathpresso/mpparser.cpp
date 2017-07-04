@@ -308,7 +308,7 @@ Error Parser::parseExpression(AstNode** pNode, bool isNested) {
   Token token;
   uint32_t op;
 
-  // Current binary operator node. Initial NULL value means that the parsing
+  // Current binary operator node. Initial nullptr value means that the parsing
   // just started and there is no binary operator yet. Once the first binary
   // operator has been parsed `currentBinaryNode` will be set accordingly.
   AstBinaryOp* currentBinaryNode = nullptr;
@@ -668,7 +668,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   _tokenizer.consume();
 
   // Validate the number of function arguments.
-  uint32_t n = callNode->getLength();
+  size_t n = callNode->getLength();
   uint32_t reqArgs = sym->getFuncArgs();
 
   if (n != reqArgs) {

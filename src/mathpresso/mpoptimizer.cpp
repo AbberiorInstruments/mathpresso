@@ -32,11 +32,11 @@ namespace mathpresso {
 		// function call inherits from `AstBlock`, but it needs each expression passed.
 		bool alterable = node->getNodeType() == kAstNodeBlock;
 
-		uint32_t i = 0;
-		uint32_t curCount = node->getLength();
-		uint32_t oldCount;
+		size_t curCount = node->getLength();
+		size_t oldCount;
 		bool isComplex = false;
 
+		size_t i = 0;
 		while (i < curCount) 
 		{
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
@@ -727,10 +727,10 @@ namespace mathpresso {
 	Error AstOptimizer::onCall(AstCall* node) 
 	{
 		AstSymbol* sym = node->getSymbol();
-		uint32_t i, count = node->getLength();
+		size_t count = node->getLength();
 
 		bool b_need_cplx = false;
-		for (i = 0; i < count; i++)
+		for (size_t i = 0; i < count; i++)
 		{
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
 			b_need_cplx |= node->getAt(i)->returnsComplex();
@@ -746,7 +746,7 @@ namespace mathpresso {
 			if (!sym ->getFuncPtr(true))
 				return kErrorInvalidArgument;
 
-			for (i = 0; i < count; i++) 
+			for (size_t i = 0; i < count; i++) 
 			{
 				AstNode *tmp = node->getAt(i);
 				tmp->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
@@ -774,7 +774,7 @@ namespace mathpresso {
 			allConst = true;
 			allConstComplex = true;
 
-			for (i = 0; i < count; i++)
+			for (size_t i = 0; i < count; i++)
 			{
 				auto n = node->getAt(i);
 
@@ -813,7 +813,7 @@ namespace mathpresso {
 			else
 			{
 				double argsDouble[9];
-				for (i = 0; i < count; i++) {
+				for (size_t i = 0; i < count; i++) {
 					argsDouble[i] = static_cast<AstImm*>(node->getAt(i))->getValue();
 				}
 				std::complex<double> result(0.0, 0.0);
@@ -827,7 +827,7 @@ namespace mathpresso {
 		else if (allConstComplex && count < 9) 
 		{
 			std::complex<double> argsComplex[9];
-			for (i = 0; i < count; i++) 
+			for (size_t i = 0; i < count; i++) 
 			{
 				argsComplex[i] = static_cast<AstImm*>(node->getAt(i))->getValueCplx();
 			}

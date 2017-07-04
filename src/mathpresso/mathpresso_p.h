@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <map>
+#include <memory>
 
 #include <new>
 
@@ -466,13 +467,9 @@ struct OpInfo {
   std::string name;
 };
 
-//extern const OpInfo mpOpInfo[kOpCount];
+// The string is the symbolname decorated with the number of arguments. 
+// Delimiter for decoration is '$'.
 extern std::vector<std::pair<std::string, OpInfo>> _symbols;
-
-//MATHPRESSO_INLINE const OpInfo& OpInfo::get(uint32_t op) {
-//  MATHPRESSO_ASSERT(op < kOpCount);
-//  return mpOpInfo[op];
-//}
 
 MATHPRESSO_INLINE const OpInfo& OpInfo::get(uint32_t op) {
 	MATHPRESSO_ASSERT(op < kOpCount);
@@ -499,7 +496,7 @@ struct StringRef {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE StringRef()
-    : _data(NULL),
+    : _data(nullptr),
       _length(0) {}
 
   explicit MATHPRESSO_INLINE StringRef(const char* data)
@@ -515,7 +512,7 @@ struct StringRef {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE void reset() {
-    set(NULL, 0);
+    set(nullptr, 0);
   }
 
   MATHPRESSO_INLINE void set(const char* s) {
@@ -577,8 +574,8 @@ struct ErrorReporter {
       _log(log) {
 
     // These should be handled by MATHPRESSO before the `ErrorReporter` is created.
-    MATHPRESSO_ASSERT((log == NULL && (_options & kInternalOptionLog) == 0) ||
-                      (log != NULL && (_options & kInternalOptionLog) != 0) );
+    MATHPRESSO_ASSERT((log == nullptr && (_options & kInternalOptionLog) == 0) ||
+                      (log != nullptr && (_options & kInternalOptionLog) != 0) );
   }
 
   // --------------------------------------------------------------------------

@@ -12,6 +12,8 @@
 #include <iostream>
 #include <complex>
 #include <vector>
+#include <map>
+#include <memory>
 
 #if !defined(_MSC_VER)
 #include <stdint.h>
@@ -96,6 +98,7 @@ public:
 
 struct OutputLog;
 struct Expression;
+class MpOperation;
 
 // ============================================================================
 // [mathpresso::TypeDefs]
@@ -324,6 +327,12 @@ struct Context {
 
   //! Private data not available to the MathPresso public API.
   ContextImpl* _d;
+
+
+private:
+  //! The string contains the name of the function described decorated with the 
+  //! number of arguments.
+  std::map<std::string, std::shared_ptr<MpOperation>> _symbols;
 };
 
 

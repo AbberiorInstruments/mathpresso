@@ -40,7 +40,7 @@ namespace mathpresso {
 	{
 	public:
 		// Con-/Destructor
-		MpOperation(size_t nargs, uint32_t flags) :
+		MpOperation(uint32_t nargs, uint32_t flags) :
 			nargs_(nargs),
 			flags_(flags)
 		{}
@@ -62,8 +62,9 @@ namespace mathpresso {
 		{ 
 			return nargs_; 
 		}
+
 	protected:
-		size_t nargs_;
+		uint32_t nargs_;
 		uint32_t flags_;
 	};
 
@@ -71,19 +72,37 @@ namespace mathpresso {
 	{
 	public:
 		// Con-/Destructor
-		MpOperationFunc(size_t nargs, uint32_t flags, void * fnD, void * fnC) : MpOperation(nargs, flags),
+		MpOperationFunc(uint32_t nargs, uint32_t flags, void * fnD, void * fnC) : MpOperation(nargs, flags),
 			fnD_(fnD),
 			fnC_(fnC)
 		{
 		}
 
-		virtual JitVar compile(JitCompiler *jc, AstNode * node) override;
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual Error optimize(AstOptimizer *opt, AstNode *node) override;
 	protected:
 		virtual double evaluateDRetD(double *args);
 		// Function-pointer:
 		void * fnC_;
 		void * fnD_;
+	};
+
+	class MpOperationOp : public MpOperationFunc
+	{
+	public:
+		MpOperationOp(uint32_t nargs, uint32_t flags, void * fnD, void * fnC, mpAsmFunc asmC, mpAsmFunc asmD) :
+			MpOperationFunc(nargs, flags | OperationFlags::OpFlagisOperator, fnD, fnC),
+			asmC_(asmC),
+			asmD_(asmD)
+		{
+		}
+		
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+		virtual Error optimize(AstOptimizer *opt, AstNode *node) override;
+
+	protected:
+		mpAsmFunc asmC_;
+		mpAsmFunc asmD_;
 	};
 }
 

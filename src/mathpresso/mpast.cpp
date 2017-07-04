@@ -102,15 +102,16 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
   switch (sym->getSymbolType()) {
     case kAstSymbolVariable: 
 	{
-      sym->_varSlotId = other->_varSlotId;
-      sym->_varOffset = other->_varOffset;
-	  sym->_valueComp = other->_valueComp;
+      sym->setVarSlotId(other->getVarSlotId());
+      sym->setVarOffset(other->getVarOffset());
+	  sym->setValue(other->getValueComp());
       break;
     }
 
     case kAstSymbolFunction: {
-      sym->_funcPtr = other->_funcPtr;
-      sym->_funcArgs = other->_funcArgs;
+      sym->setFuncPtr(other->getFuncPtr());
+	  sym->setFuncPtr(other->getFuncPtr(true), true);
+      sym->setFuncArgs(other->getFuncArgs());
       break;
     }
   }
@@ -125,7 +126,7 @@ void AstBuilder::deleteSymbol(AstSymbol* symbol) {
 }
 
 void AstBuilder::deleteNode(AstNode* node) {
-  uint32_t length = node->getLength();
+  size_t length = node->getLength();
   AstNode** children = node->getChildren();
 
   uint32_t nodeType = node->getNodeType();
@@ -226,7 +227,7 @@ AstNode* AstNode::replaceNode(AstNode* refNode, AstNode* node) {
   MATHPRESSO_ASSERT(refNode->getParent() == this);
   MATHPRESSO_ASSERT(node == nullptr || !node->hasParent());
 
-  uint32_t length = _length;
+  size_t length = _length;
   AstNode** children = getChildren();
 
   for (uint32_t i = 0; i < length; i++) {
@@ -264,7 +265,7 @@ AstNode* AstNode::injectNode(AstNode* refNode, AstUnary* node) {
   MATHPRESSO_ASSERT(refNode != nullptr && refNode->getParent() == this);
   MATHPRESSO_ASSERT(node != nullptr && node->getParent() == nullptr);
 
-  uint32_t length = _length;
+  size_t length = _length;
   AstNode** children = getChildren();
 
   for (uint32_t i = 0; i < length; i++) {
@@ -379,7 +380,7 @@ _Found:
   return node;
 }
 
-AstNode* AstBlock::removeAt(uint32_t index) {
+AstNode* AstBlock::removeAt(size_t index) {
   MATHPRESSO_ASSERT(index < _length);
 
   if (index >= _length)
@@ -444,7 +445,7 @@ AstDump::~AstDump() {}
 
 Error AstDump::onBlock(AstBlock* node) {
   AstNode** children = node->getChildren();
-  uint32_t i, count = node->getLength();
+  size_t i, count = node->getLength();
 
   for (i = 0; i < count; i++)
     onNode(children[i]);

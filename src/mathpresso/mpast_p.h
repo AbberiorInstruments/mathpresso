@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <complex>
+#include <memory>
 
 namespace mathpresso {
 
@@ -27,6 +28,8 @@ struct AstSymbol;
 struct AstNode;
 struct AstProgram;
 struct AstUnary;
+
+class MpOperation;
 
 // ============================================================================
 // [mathpresso::AstScopeType]
@@ -264,13 +267,13 @@ struct AstBuilder {
 // ============================================================================
 
 struct AstSymbol : public HashNode {
-	MATHPRESSO_NO_COPY(AstSymbol)
+	MATHPRESSO_NO_COPY(AstSymbol);
 
-		// --------------------------------------------------------------------------
-		// [Construction / Destruction]
-		// --------------------------------------------------------------------------
+	// --------------------------------------------------------------------------
+	// [Construction / Destruction]
+	// --------------------------------------------------------------------------
 
-		MATHPRESSO_INLINE AstSymbol(const char* name, uint32_t length, uint32_t hVal, uint32_t symbolType, uint32_t scopeType)
+	MATHPRESSO_INLINE AstSymbol(const char* name, uint32_t length, uint32_t hVal, uint32_t symbolType, uint32_t scopeType)
 		: HashNode(hVal),
 		_length(length),
 		_name(name),
@@ -284,7 +287,8 @@ struct AstSymbol : public HashNode {
 		_funcPtr(nullptr),
 		_funcPtrCplx(nullptr),
 		_funcAsm(nullptr),
-		_funcAsmCplx(nullptr)
+		_funcAsmCplx(nullptr),
+		_op(nullptr)
 	{}
 
   // --------------------------------------------------------------------------
@@ -405,8 +409,8 @@ struct AstSymbol : public HashNode {
   MATHPRESSO_INLINE double getValue() const { return _valueComp.real(); }
   MATHPRESSO_INLINE std::complex<double> getValueComp() const { return _valueComp; }
   //! Set `_isAssigned` to true and `_value` to `value`.
-  MATHPRESSO_INLINE void setValue(double value) { _valueComp.real(value); setAssigned(); }
-  MATHPRESSO_INLINE void setValue(std::complex<double> value) { _valueComp = value; setAssigned(); }
+  MATHPRESSO_INLINE void setValue(double value) { _valueComp.real(value); }
+  MATHPRESSO_INLINE void setValue(std::complex<double> value) { _valueComp = value; }
 
   MATHPRESSO_INLINE uint32_t getUsedCount() const { return _usedCount; }
   MATHPRESSO_INLINE uint32_t getReadCount() const { return _usedCount - _writeCount; }
@@ -442,27 +446,26 @@ struct AstSymbol : public HashNode {
   //! Number of times the variable is written.
   uint32_t _writeCount;
 
-  union {
-	struct {
-		//! Variable slot id.
-		uint32_t _varSlotId;
-		//! Variable offset in data structure (in case the symbol is a global variable).
-		int32_t _varOffset;
-		//! The current value of the symbol (in case the symbol is an immediate).
-		//! if the symbol is real, _valueComp.imag() is set to 0.
-		std::complex<double> _valueComp;
-	};
+  std::shared_ptr<MpOperation> _op;
 
-    struct {
-      //! Function pointer (in case the symbol is a function).
-      void* _funcPtr;
-	  void* _funcPtrCplx;
-	  void* _funcAsm;
-	  void* _funcAsmCplx;
-      //! Number of function arguments (in case the symbol is a function).
-      uint32_t _funcArgs;
-    };
-  };
+  // the following parts could be packed into a std::variant (c++17)
+private:
+	//! Variable slot id.
+	uint32_t _varSlotId;
+	//! Variable offset in data structure (in case the symbol is a global variable).
+	int32_t _varOffset;
+	//! The current value of the symbol (in case the symbol is an immediate).
+	//! if the symbol is real, _valueComp.imag() is set to 0.
+	std::complex<double> _valueComp;
+
+	//! Function pointer (in case the symbol is a function).
+	void* _funcPtr;
+	void* _funcPtrCplx;
+	void* _funcAsm;
+	void* _funcAsmCplx;
+	//! Number of function arguments (in case the symbol is a function).
+	uint32_t _funcArgs;
+	  
 };
 
 typedef Hash<StringRef, AstSymbol> AstSymbolHash;
@@ -619,7 +622,7 @@ struct AstNode {
   //! Get children array.
   MATHPRESSO_INLINE AstNode** getChildren() const { return reinterpret_cast<AstNode**>(_children); }
   //! Get length of the children array.
-  MATHPRESSO_INLINE uint32_t getLength() const { return _length; }
+  MATHPRESSO_INLINE size_t getLength() const { return _length; }
 
   //! Get node type.
   MATHPRESSO_INLINE uint32_t getNodeType() const { return _nodeType; }
@@ -663,7 +666,7 @@ struct AstNode {
   // [Children]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE AstNode* getAt(uint32_t index) const {
+  MATHPRESSO_INLINE AstNode* getAt(size_t index) const {
     MATHPRESSO_ASSERT(index < _length);
     return _children[index];
   }
@@ -702,7 +705,7 @@ struct AstNode {
   uint32_t _position;
 
   //! Count of child-nodes.
-  uint32_t _length;
+  size_t _length;
 };
 
 // ============================================================================
@@ -753,7 +756,7 @@ struct AstBlock : public AstNode {
   //!
   //! NOTE: You have to call `willAdd()` before you use `insertAt()` for every
   //! node you want to add to the block.
-  MATHPRESSO_INLINE void insertAt(uint32_t i, AstNode* node) {
+  MATHPRESSO_INLINE void insertAt(size_t i, AstNode* node) {
     MATHPRESSO_ASSERT(node != NULL);
     MATHPRESSO_ASSERT(node->getParent() == NULL);
 
@@ -763,7 +766,7 @@ struct AstBlock : public AstNode {
     AstNode** p = getChildren();
     node->_parent = this;
 
-    uint32_t j = _length;
+    size_t j = _length;
     while (i < j) {
       p[j] = p[j - 1];
       j--;
@@ -776,7 +779,7 @@ struct AstBlock : public AstNode {
   //! Remove the given `node`.
   AstNode* removeNode(AstNode* node);
   //! Remove the node at index `index`.
-  AstNode* removeAt(uint32_t index);
+  AstNode* removeAt(size_t index);
 
   // --------------------------------------------------------------------------
   // [Members]

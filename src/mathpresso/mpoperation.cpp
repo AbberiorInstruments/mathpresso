@@ -10,7 +10,6 @@
 
 namespace mathpresso {
 
-
 	JitVar MpOperationFunc::compile(JitCompiler* jc, AstNode * node) 
 	{
 		asmjit::X86Xmm result = node->returnsComplex() ? jc->cc->newXmmPd() : jc->cc->newXmmSd();
@@ -68,7 +67,7 @@ namespace mathpresso {
 
 	Error MpOperationFunc::optimize(AstOptimizer * opt, AstNode * node) 
 	{
-		uint32_t count = node->getLength();
+		size_t count = node->getLength();
 		bool b_need_cplx = false;
 		bool b_all_imm = true;
 

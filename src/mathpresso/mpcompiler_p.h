@@ -124,12 +124,12 @@ namespace mathpresso
 
 		// Helpers.
 		void inlineRound(const asmjit::X86Xmm& dst, const asmjit::X86Xmm& src, uint32_t op, bool takesComplex, bool returnsComplex);
-		void inlineCallAbstract(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, uint32_t count, uint32_t op, bool takesComplex, bool returnsComplex);
-		void inlineCallAbstract(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, uint32_t count, void * fp, bool takesComplex, bool returnsComplex);
-		void inlineCallDRetD(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, uint32_t count, void* fn);
-		void inlineCallDRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, uint32_t count, void * fn);
-		void inlineCallCRetD(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, const uint32_t count, void * fn);
-		void inlineCallCRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, uint32_t count, void * fn);
+		void inlineCallAbstract(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, size_t count, uint32_t op, bool takesComplex, bool returnsComplex);
+		void inlineCallAbstract(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fp, bool takesComplex, bool returnsComplex);
+		void inlineCallDRetD(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, size_t count, void* fn);
+		void inlineCallDRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
+		void inlineCallCRetD(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
+		void inlineCallCRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
 
 		// Constants.
 		void prepareConstPool();
