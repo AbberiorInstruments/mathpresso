@@ -5,10 +5,13 @@
 // Zlib - See LICENSE.md file in the package.
 
 #include "mpoperation_p.h"
-#include "asmjit\x86\x86operand.h"
 #include "mpast_p.h"
 #include "mpcompiler_p.h"
 #include "mpoptimizer_p.h"
+#include "asmjit\x86\x86operand.h"
+#include "asmjit\x86\x86inst.h"
+
+#include <complex>
 
 namespace mathpresso {
 
@@ -196,4 +199,137 @@ namespace mathpresso {
 			throw std::runtime_error("Too many arguments.");
 		}
 	}
-}
+
+	// -- MpOperationFuncAsm
+
+	JitVar mathpresso::MpOperationFuncAsm::compile(JitCompiler * jc, AstNode * node) {
+		if (!hasFlag(MpOperationFlags::OpFlagHasAsm))
+		{
+			return MpOperationFunc::compile(jc, node);
+		}
+		else
+		{
+			if (!node->takesComplex())
+			{
+				bool returnsComplex = hasFlag(MpOperationFlags::OpFlagDReturnsC);
+				if (node->returnsComplex() != returnsComplex || !fnD_)
+				{
+					// Should never happen, as the optimizer should have taken care of that. Remove later
+					throw std::runtime_error("Implementation error!");
+				}
+
+				std::vector<JitVar> args;
+
+				for (size_t i = 0; i < node->getLength(); i++)
+				{
+					args.push_back(jc->registerVar(jc->onNode(node->getAt(i))));
+				}
+
+				return asmD_(jc, args.data());
+				
+			}
+			else
+			{
+				bool returnsComplex = (flags_ & OpFlagCReturnsD) == 0;
+				if (node->returnsComplex() != returnsComplex || !fnC_)
+				{
+					// Should never happen, as the optimizer should have taken care of that. Remove later
+					throw std::runtime_error("Implementation error!");
+				}
+
+				std::vector<JitVar> args;
+
+				for (size_t i = 0; i < node->getLength(); i++)
+				{
+					args.push_back(jc->registerVarComplex(jc->onNode(node->getAt(i))));
+				}
+
+				return asmC_(jc, args.data());
+				
+			}
+		}
+	}
+
+	//-- MpOperationAdd
+
+	JitVar MpOperationAdd::compile(JitCompiler* jc, AstNode * node) 
+	{
+		JitVar vl, vr;
+		AstNode* left = static_cast<AstBinaryOp*>(node)->getLeft();
+		AstNode* right = static_cast<AstBinaryOp*>(node)->getRight();
+
+		if (node->takesComplex())
+		{
+			// check whether the vars are the same, to reduce memory-operations
+			if (left->isVar() && right->isVar() &&
+				static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
+			{
+				vl = vr = jc->writableVarComplex(jc->onNode(left));
+			}
+			else
+			{
+				// check that every node has onNode called on it and that they are registered as complex.
+				if (!left->returnsComplex())
+					vl = jc->registerVarAsComplex(jc->onNode(left));
+				else
+					vl = jc->onNode(left);
+
+				if (!right->returnsComplex())
+					vr = jc->registerVarAsComplex(jc->onNode(right));
+				else
+					vr = jc->onNode(right);
+			}
+
+			// make sure vl is not marked RO.
+			if (vl.isRO() && !vr.isRO())
+				vl.swapWith(vr);
+			else 
+				vl = jc->writableVarComplex(vl);
+
+			// call the correct instruction.
+			if (vr.getOperand().isMem())
+			{
+				jc->cc->addpd(vl.getXmm(), vr.getMem());
+			}
+			else
+			{
+				jc->cc->addpd(vl.getXmm(), vr.getXmm());
+			}
+
+			return vl;
+		}
+		else
+		{
+			// check whether the vars are the same, to reduce memory-operations
+			if (left->isVar() && right->isVar() &&
+				static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
+			{
+				vl = vr = jc->writableVar(jc->onNode(left));
+			}
+			else
+			{
+				// check that every node has onNode called on it
+				vl = jc->onNode(left);
+				vr = jc->onNode(right);
+			}
+			// make sure vl is not marked RO.
+			if (vl.isRO() && !vr.isRO())
+				vl.swapWith(vr);
+			else 
+				vl = jc->writableVar(vl);
+
+			// call the correct instruction. could be exchanged for a one call to emit
+			if (vr.getOperand().isMem())
+			{
+				jc->cc->addsd(vl.getXmm(), vr.getMem());
+			}
+			else
+			{
+				jc->cc->addsd(vl.getXmm(), vr.getXmm());
+			}
+
+			return vl;
+		}
+	}
+
+} // end namespace mathpresso

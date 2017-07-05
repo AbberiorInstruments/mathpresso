@@ -19,13 +19,16 @@ namespace mathpresso {
 	struct AstOptimizer;
 	struct JitVar;
 
+
 	typedef JitVar(*mpAsmFunc)(JitCompiler*, JitVar*);
 
-	enum OperationFlags 
+	enum MpOperationFlags 
 	{
 		OpFlagNone = 0,
 		OpFlagIsOperator = 0x00000001,
 		OpFlagHasState = 0x00000002,
+		OpFlagHasAsm = 0x00000004,
+		OpIsRighttoLeft= 0x00000008,
 
 		// Types of Operation that are allowed.
 		OpFlagCReturnsD = 0x0000010,
@@ -47,7 +50,8 @@ namespace mathpresso {
 		// Con-/Destructor
 		MpOperation(uint32_t nargs, uint32_t flags) :
 			nargs_(nargs),
-			flags_(flags)
+			flags_(flags),
+			priority_(0)
 		{}
 
 		virtual ~MpOperation() 
@@ -68,6 +72,11 @@ namespace mathpresso {
 			return nargs_; 
 		}
 
+		bool hasFlag(uint32_t flag) 
+		{
+			return flag & flags_;
+		}
+
 		void addFlags(uint32_t flags)
 		{
 			flags_ |= flags;
@@ -76,6 +85,7 @@ namespace mathpresso {
 	protected:
 		uint32_t nargs_;
 		uint32_t flags_;
+		uint32_t priority_;
 	};
 
 	class MpOperationFunc : public MpOperation
@@ -90,6 +100,8 @@ namespace mathpresso {
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
+
+
 		virtual void setFn(void * fn, bool isComplex = false);
 	protected:
 		virtual double evaluateDRetD(double *args);
@@ -98,22 +110,45 @@ namespace mathpresso {
 		void * fnD_;
 	};
 
-	class MpOperationOp : public MpOperationFunc
+	class MpOperationFuncAsm : public MpOperationFunc
 	{
 	public:
-		MpOperationOp(uint32_t nargs, uint32_t flags, void * fnD, void * fnC, mpAsmFunc asmC, mpAsmFunc asmD) :
-			MpOperationFunc(nargs, flags | OperationFlags::OpFlagIsOperator, fnD, fnC),
+		MpOperationFuncAsm(uint32_t nargs, uint32_t flags, void * fnD, void * fnC, mpAsmFunc asmC, mpAsmFunc asmD) :
+			MpOperationFunc(nargs, flags | MpOperationFlags::OpFlagHasAsm, fnD, fnC),
 			asmC_(asmC),
 			asmD_(asmD)
 		{
 		}
 		
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
 	protected:
 		mpAsmFunc asmC_;
 		mpAsmFunc asmD_;
+	};
+
+	class MpOperationOp : public MpOperation
+	{
+	public:
+		MpOperationOp(uint32_t nargs, uint32_t flags, uint32_t priority) :
+			MpOperation(nargs, flags)
+		{ 
+			priority_ = priority;
+		}
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override = 0;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override = 0;
+
+	protected:
+	};
+
+	class MpOperationAdd : public MpOperationOp
+	{
+		MpOperationAdd() : MpOperationOp(2, MpOperationFlags::OpFlagNopIfZero, 6)
+		{
+		}
+		virtual JitVar compile(JitCompiler* jc, AstNode * node) override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 	};
 }
 

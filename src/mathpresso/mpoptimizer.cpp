@@ -726,7 +726,7 @@ namespace mathpresso {
 
 	Error AstOptimizer::onCall(AstCall* node) 
 	{
-		return std::static_pointer_cast<MpOperationFunc>(node->getSymbol()->_op)->optimize(this, node);
+		return std::static_pointer_cast<MpOperationFunc>(node->getSymbol()->getOp())->optimize(this, node);
 	}
 
 

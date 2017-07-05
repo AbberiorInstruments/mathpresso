@@ -112,6 +112,7 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
       sym->setFuncPtr(other->getFuncPtr());
 	  sym->setFuncPtr(other->getFuncPtr(true), true);
       sym->setFuncArgs(other->getFuncArgs());
+	  sym->setOp(other->getOp());
       break;
     }
   }

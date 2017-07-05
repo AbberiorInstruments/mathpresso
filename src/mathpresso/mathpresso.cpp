@@ -300,34 +300,10 @@ Error Context::addBuiltIns(void) {
   for (i = kOpNone + 1; i < kOpCount; i++) 
   {
     const OpInfo& op = OpInfo::get(i);
-    // to be removed:
-	MATHPRESSO_ASSERT(op.type == i);
-
-    if (!op.isIntrinsic())
-      continue;
-
-	std::string name_decorated = op.name + "$" + std::to_string(op.getOpCount());
-	_symbols[name_decorated] = std::make_shared<MpOperationFunc>(1, op.flags, op.funcDtoD, op.funcCtoC);
-
-	StringRef name(op.name.data());
-    uint32_t hVal = HashUtils::hashString(name.getData(), name.getLength());
-
-    AstSymbol* sym = d->_builder.newSymbol(name, hVal, kAstSymbolIntrinsic, kAstScopeGlobal);
-    MATHPRESSO_NULLCHECK(sym);
-
-    sym->setDeclared();
-    sym->setOpType(op.type);
-    sym->setFuncArgs(op.getOpCount());
-    sym->setFuncPtr(nullptr);
-
-	sym->_op = _symbols[name_decorated];
-
-    d->_scope.putSymbol(sym);
-	continue; 
-	// until here.
 	
 	auto flags = op.getOpCount();
 	
+	// add the noncomplex Version, if available
 	if (op.hasDtoC())
 	{
 		flags |= kFunctionReturnsComplex;
@@ -338,6 +314,7 @@ Error Context::addBuiltIns(void) {
 		this->addFunction(op.name.c_str(), op.funcDtoD, flags, op.funcDtoDAsm);
 	}
 
+	// add complex version, if available
 	flags |= kFunctionTakesComplex;
 	if (op.hasCtoC())
 	{
@@ -480,10 +457,10 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 	std::string name_decorated(name);
 	name_decorated += "$" + std::to_string(flags & _kFunctionArgMask);
 	_symbols.try_emplace(name_decorated, std::make_shared<MpOperationFunc>(flags & _kFunctionArgMask, 0, nullptr, nullptr));
-	if (!sym->_op)
-		sym->_op = _symbols[name_decorated];
+	if (!sym->getOp())
+		sym->setOp(_symbols[name_decorated]);
 
-	auto symOp = std::static_pointer_cast<MpOperationFunc>(sym->_op);
+	auto symOp = std::static_pointer_cast<MpOperationFunc>(sym->getOp());
 
 	// Declaring complex part?
 	if (flags & kFunctionTakesComplex)
@@ -497,7 +474,7 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 		if (0 == (flags & kFunctionReturnsComplex))
 		{
 			sym->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
-			symOp->addFlags(OperationFlags::OpFlagCReturnsD);
+			symOp->addFlags(MpOperationFlags::OpFlagCReturnsD);
 		}
 	}
 	else
@@ -511,14 +488,14 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 		if (flags & kFunctionReturnsComplex)
 		{
 			sym->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);
-			symOp->addFlags(OperationFlags::OpFlagDReturnsC);
+			symOp->addFlags(MpOperationFlags::OpFlagDReturnsC);
 		}
 	}
 
 	if (flags & kFunctionHasState)
 	{
 		sym->setSymbolFlag(kAstSymbolHasState);
-		symOp->addFlags(OperationFlags::OpFlagHasState);
+		symOp->addFlags(MpOperationFlags::OpFlagHasState);
 	}
 
 	sym->setFuncArgs(flags & _kFunctionArgMask);

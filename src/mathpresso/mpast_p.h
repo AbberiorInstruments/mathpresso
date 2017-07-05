@@ -206,7 +206,7 @@ struct AstBuilder {
 
 #define MATHPRESSO_ALLOC_AST_OBJECT(_Size_) \
   void* obj = _heap->alloc(_Size_); \
-  if (MATHPRESSO_UNLIKELY(obj == NULL)) return NULL
+  if (MATHPRESSO_UNLIKELY(obj == nullptr)) return nullptr
 
   template<typename T>
   MATHPRESSO_INLINE T* newNode() {
@@ -310,7 +310,7 @@ struct AstSymbol : public HashNode {
   MATHPRESSO_INLINE const char* getName() const { return _name; }
 
   //! Check if the symbol has associated node with it.
-  MATHPRESSO_INLINE bool hasNode() const { return _node != NULL; }
+  MATHPRESSO_INLINE bool hasNode() const { return _node != nullptr; }
   //! Get node associated with the symbol (can be `NULL` for built-ins).
   MATHPRESSO_INLINE AstNode* getNode() const { return _node; }
   //! Associate node with the symbol (basically the node that declares it).
@@ -422,6 +422,9 @@ struct AstSymbol : public HashNode {
   MATHPRESSO_INLINE void decUsedCount(uint32_t n = 1) { _usedCount -= n; }
   MATHPRESSO_INLINE void decWriteCount(uint32_t n = 1) { _writeCount -= n; }
 
+  MATHPRESSO_INLINE std::shared_ptr<MpOperation> getOp() const { return _op; }
+  MATHPRESSO_INLINE void setOp(std::shared_ptr<MpOperation> op) { _op = op; }
+
   // --------------------------------------------------------------------------
   // [Members]
   // --------------------------------------------------------------------------
@@ -446,7 +449,6 @@ struct AstSymbol : public HashNode {
   //! Number of times the variable is written.
   uint32_t _writeCount;
 
-  std::shared_ptr<MpOperation> _op;
 
   // the following parts could be packed into a std::variant (c++17)
 private:
@@ -465,6 +467,7 @@ private:
 	void* _funcAsmCplx;
 	//! Number of function arguments (in case the symbol is a function).
 	uint32_t _funcArgs;
+	std::shared_ptr<MpOperation> _op;
 	  
 };
 
@@ -529,7 +532,7 @@ struct AstScope {
   //! Resolve the symbol by traversing all parent scopes if not found in this
   //! one. An optional `scopeOut` argument can be used to get scope where the
   //! `name` has been found.
-  MATHPRESSO_NOAPI AstSymbol* resolveSymbol(const StringRef& name, uint32_t hVal, AstScope** scopeOut = NULL);
+  MATHPRESSO_NOAPI AstSymbol* resolveSymbol(const StringRef& name, uint32_t hVal, AstScope** scopeOut = nullptr);
 
   MATHPRESSO_INLINE AstSymbol* resolveSymbol(const StringRef& name) {
     return resolveSymbol(name, HashUtils::hashString(name.getData(), name.getLength()));
@@ -560,7 +563,7 @@ struct AstScope {
 // ============================================================================
 
 #define MATHPRESSO_AST_CHILD(_Index_, _Type_, _Name_, _Memb_) \
-  MATHPRESSO_INLINE bool has##_Name_() const { return _Memb_ != NULL; } \
+  MATHPRESSO_INLINE bool has##_Name_() const { return _Memb_ != nullptr; } \
   MATHPRESSO_INLINE _Type_* get##_Name_() const { return _Memb_; } \
   \
   MATHPRESSO_INLINE _Type_* set##_Name_(_Type_* node) { \
@@ -570,11 +573,11 @@ struct AstScope {
   MATHPRESSO_INLINE _Type_* unlink##_Name_() { \
     _Type_* node = _Memb_; \
     \
-    MATHPRESSO_ASSERT(node != NULL); \
+    MATHPRESSO_ASSERT(node != nullptr); \
     MATHPRESSO_ASSERT(node->_parent == this); \
     \
-    node->_parent = NULL; \
-    _Memb_ = NULL; \
+    node->_parent = nullptr; \
+    _Memb_ = nullptr; \
     \
     return node; \
   } \
@@ -588,7 +591,7 @@ struct AstNode {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE AstNode(AstBuilder* ast, uint32_t nodeType, AstNode** children = NULL, uint32_t length = 0)
+  MATHPRESSO_INLINE AstNode(AstBuilder* ast, uint32_t nodeType, AstNode** children = nullptr, uint32_t length = 0)
     : _ast(ast),
       _parent(NULL),
       _children(children),
@@ -609,7 +612,7 @@ struct AstNode {
   MATHPRESSO_INLINE AstBuilder* getAst() const { return _ast; }
 
   //! Check if the node has a parent.
-  MATHPRESSO_INLINE bool hasParent() const { return _parent != NULL; }
+  MATHPRESSO_INLINE bool hasParent() const { return _parent != nullptr; }
   //! Get the parent node.
   MATHPRESSO_INLINE AstNode* getParent() const { return _parent; }
 
@@ -740,8 +743,8 @@ struct AstBlock : public AstNode {
   //! NOTE: You have to call `willAdd()` before you use `appendNode()` for every
   //! node you want to add to the block.
   MATHPRESSO_INLINE void appendNode(AstNode* node) {
-    MATHPRESSO_ASSERT(node != NULL);
-    MATHPRESSO_ASSERT(node->getParent() == NULL);
+    MATHPRESSO_ASSERT(node != nullptr);
+    MATHPRESSO_ASSERT(node->getParent() == nullptr);
 
     // We expect `willAdd()` to be called before `appendNode()`.
     MATHPRESSO_ASSERT(_length < _capacity);
@@ -757,8 +760,8 @@ struct AstBlock : public AstNode {
   //! NOTE: You have to call `willAdd()` before you use `insertAt()` for every
   //! node you want to add to the block.
   MATHPRESSO_INLINE void insertAt(size_t i, AstNode* node) {
-    MATHPRESSO_ASSERT(node != NULL);
-    MATHPRESSO_ASSERT(node->getParent() == NULL);
+    MATHPRESSO_ASSERT(node != nullptr);
+    MATHPRESSO_ASSERT(node->getParent() == nullptr);
 
     // We expect `willAdd()` to be called before `insertAt()`.
     MATHPRESSO_ASSERT(_length < _capacity);
@@ -801,7 +804,7 @@ struct AstUnary : public AstNode {
 
   MATHPRESSO_INLINE AstUnary(AstBuilder* ast, uint32_t nodeType)
     : AstNode(ast, nodeType, &_child, 1),
-      _child(NULL) {}
+      _child(nullptr) {}
 
   // --------------------------------------------------------------------------
   // [Accessors]
@@ -829,8 +832,8 @@ struct AstBinary : public AstNode {
 
   MATHPRESSO_INLINE AstBinary(AstBuilder* ast, uint32_t nodeType)
     : AstNode(ast, nodeType, &_left, 2),
-      _left(NULL),
-      _right(NULL) {}
+      _left(nullptr),
+      _right(nullptr) {}
 
   // --------------------------------------------------------------------------
   // [Accessors]
@@ -860,9 +863,9 @@ struct AstTernary : public AstNode {
 
 		MATHPRESSO_INLINE AstTernary(AstBuilder* ast, uint32_t nodeType)
 		: AstNode(ast, nodeType, &_condition, 3),
-		_condition(NULL),
-		_left(NULL),
-		_right(NULL) {}
+		_condition(nullptr),
+		_left(nullptr),
+		_right(nullptr) {}
 
 	// --------------------------------------------------------------------------
 	// [Accessors]
@@ -907,11 +910,11 @@ struct AstVarDecl : public AstUnary {
 
   MATHPRESSO_INLINE AstVarDecl(AstBuilder* ast)
     : AstUnary(ast, kAstNodeVarDecl),
-      _symbol(NULL) {}
+      _symbol(nullptr) {}
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
     AstSymbol* sym = getSymbol();
-    if (sym != NULL)
+    if (sym != nullptr)
       sym->decUsedCount();
   }
 
@@ -942,7 +945,7 @@ struct AstVar : public AstNode {
 
   MATHPRESSO_INLINE AstVar(AstBuilder* ast)
     : AstNode(ast, kAstNodeVar),
-      _symbol(NULL) {}
+      _symbol(nullptr) {}
 
   // --------------------------------------------------------------------------
   // [Accessors]
@@ -1028,6 +1031,8 @@ struct AstUnaryOp : public AstUnary {
 
   MATHPRESSO_INLINE AstUnaryOp(AstBuilder* ast, uint32_t op)
     : AstUnary(ast, kAstNodeUnaryOp) { setOp(op); }
+
+  std::shared_ptr<MpOperation> mpOp_;
 };
 
 // ============================================================================
@@ -1049,10 +1054,12 @@ struct AstBinaryOp : public AstBinary {
       AstVar* var = static_cast<AstVar*>(getLeft());
       AstSymbol* sym = var->getSymbol();
 
-      if (sym != NULL)
+      if (sym != nullptr)
         sym->decWriteCount();
     }
   }
+
+  std::shared_ptr<MpOperation> mpOp_;
 };
 
 // ============================================================================
@@ -1070,6 +1077,8 @@ struct AstTernaryOp : public AstTernary {
 		: AstTernary(ast, kAstNodeTernaryOp) {
 		setOp(op);
 	}
+
+	std::shared_ptr<MpOperation> mpOp_;
 };
 
 // ============================================================================
@@ -1085,7 +1094,7 @@ struct AstCall : public AstBlock {
 
   MATHPRESSO_INLINE AstCall(AstBuilder* ast)
     : AstBlock(ast, kAstNodeCall),
-      _symbol(NULL) {}
+      _symbol(nullptr) {}
 
   // --------------------------------------------------------------------------
   // [Accessors]
