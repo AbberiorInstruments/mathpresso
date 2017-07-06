@@ -518,6 +518,10 @@ _Unary: {
 _Binary: {
         AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>(op);
         MATHPRESSO_NULLCHECK(newNode);
+		if (op == kOpAdd)
+		{
+			newNode->mpOp_ = this->_ops->at("+$2").get();
+		}
         newNode->setPosition(token.getPosAsUInt());
 
         if (currentBinaryNode == nullptr) {

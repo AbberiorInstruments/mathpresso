@@ -320,6 +320,11 @@ namespace mathpresso {
 		AstNode* left = node->getLeft();
 		AstNode* right = node->getRight();
 
+		if (op.type == OpType::kOpAdd && node->mpOp_ != nullptr)
+		{
+			return node->mpOp_->optimize(this, node);
+		}
+
 		if (op.isAssignment())
 			left->addNodeFlags(kAstNodeHasSideEffect);
 

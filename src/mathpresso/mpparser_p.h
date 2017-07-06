@@ -41,11 +41,12 @@ struct Parser {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len)
+  MATHPRESSO_INLINE Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const symbolMap * ops)
     : _ast(ast),
       _errorReporter(errorReporter),
       _currentScope(ast->getRootScope()),
-      _tokenizer(body, len) {}
+      _tokenizer(body, len),
+	  _ops(ops) {}
   MATHPRESSO_INLINE ~Parser() {}
 
   // --------------------------------------------------------------------------
@@ -76,6 +77,7 @@ struct Parser {
 
   AstScope* _currentScope;
   Tokenizer _tokenizer;
+  const symbolMap * _ops;
 };
 
 } // mathpresso namespace

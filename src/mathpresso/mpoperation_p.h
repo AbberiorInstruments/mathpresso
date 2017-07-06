@@ -52,7 +52,8 @@ namespace mathpresso {
 			nargs_(nargs),
 			flags_(flags),
 			priority_(0)
-		{}
+		{
+		}
 
 		virtual ~MpOperation() 
 		{
@@ -98,6 +99,10 @@ namespace mathpresso {
 		{
 		}
 
+		virtual ~MpOperationFunc()
+		{
+		}
+
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
@@ -119,6 +124,10 @@ namespace mathpresso {
 			asmD_(asmD)
 		{
 		}
+
+		virtual ~MpOperationFuncAsm()
+		{
+		}
 		
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 
@@ -136,6 +145,10 @@ namespace mathpresso {
 			priority_ = priority;
 		}
 
+		virtual ~MpOperationOp() 
+		{
+		}
+
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override = 0;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override = 0;
 
@@ -144,9 +157,16 @@ namespace mathpresso {
 
 	class MpOperationAdd : public MpOperationOp
 	{
-		MpOperationAdd() : MpOperationOp(2, MpOperationFlags::OpFlagNopIfZero, 6)
+	public:
+		MpOperationAdd() :
+			MpOperationOp(2, MpOperationFlags::OpFlagNopIfZero, 6)
 		{
 		}
+
+		virtual ~MpOperationAdd() 
+		{
+		}
+
 		virtual JitVar compile(JitCompiler* jc, AstNode * node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 	};

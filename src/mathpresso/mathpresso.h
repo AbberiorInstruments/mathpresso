@@ -270,6 +270,8 @@ struct ContextImpl {
 
 struct AstSymbol;
 
+typedef std::map<std::string, std::shared_ptr<MpOperation>> symbolMap;
+
 //! MathPresso context.
 //!
 //! Context is an environment where you can add/remove constants, variables and
@@ -332,7 +334,7 @@ struct Context {
 //private:
   //! The string contains the name of the function described decorated with the 
   //! number of arguments.
-  std::map<std::string, std::shared_ptr<MpOperation>> _symbols;
+  symbolMap _symbols;
 };
 
 

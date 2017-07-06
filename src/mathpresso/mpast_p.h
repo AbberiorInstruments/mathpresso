@@ -408,7 +408,7 @@ struct AstSymbol : public HashNode {
   //! Get the constant value, see `isAssigned()`.
   MATHPRESSO_INLINE double getValue() const { return _valueComp.real(); }
   MATHPRESSO_INLINE std::complex<double> getValueComp() const { return _valueComp; }
-  //! Set `_isAssigned` to true and `_value` to `value`.
+ 
   MATHPRESSO_INLINE void setValue(double value) { _valueComp.real(value); }
   MATHPRESSO_INLINE void setValue(std::complex<double> value) { _valueComp = value; }
 
@@ -1032,7 +1032,7 @@ struct AstUnaryOp : public AstUnary {
   MATHPRESSO_INLINE AstUnaryOp(AstBuilder* ast, uint32_t op)
     : AstUnary(ast, kAstNodeUnaryOp) { setOp(op); }
 
-  std::shared_ptr<MpOperation> mpOp_;
+  MpOperation* mpOp_;
 };
 
 // ============================================================================
@@ -1057,9 +1057,10 @@ struct AstBinaryOp : public AstBinary {
       if (sym != nullptr)
         sym->decWriteCount();
     }
+	mpOp_ = nullptr;
   }
 
-  std::shared_ptr<MpOperation> mpOp_;
+ MpOperation* mpOp_;
 };
 
 // ============================================================================
@@ -1078,7 +1079,7 @@ struct AstTernaryOp : public AstTernary {
 		setOp(op);
 	}
 
-	std::shared_ptr<MpOperation> mpOp_;
+	MpOperation* mpOp_;
 };
 
 // ============================================================================

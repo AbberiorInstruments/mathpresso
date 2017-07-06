@@ -332,4 +332,64 @@ namespace mathpresso {
 		}
 	}
 
+	uint32_t MpOperationAdd::optimize(AstOptimizer *opt, AstNode *node) 
+	{
+		MATHPRESSO_PROPAGATE(opt->onNode(node->getAt(0)));
+		AstNode* left = node->getAt(0);
+
+		MATHPRESSO_PROPAGATE(opt->onNode(node->getAt(1)));
+		AstNode* right = node->getAt(1);
+
+		bool lIsImm = left->isImm();
+		bool rIsImm = right->isImm();
+		bool needs_complex = left->returnsComplex() || right->returnsComplex();
+		if (needs_complex)
+		{
+			node->addNodeFlags(AstNodeFlags::kAstReturnsComplex | AstNodeFlags::kAstTakesComplex);
+		}
+
+		if (lIsImm && rIsImm)
+		{
+			// clear an immediate addition.
+			AstImm* lNode = static_cast<AstImm*>(left);
+			AstImm* rNode = static_cast<AstImm*>(right);
+			if (needs_complex)
+			{
+				lNode->setValue(lNode->getValueCplx() + rNode->getValueCplx());
+			}
+			else
+			{
+				lNode->setValue(lNode->getValue() + rNode->getValue());
+			}
+			// setValue sets the correct flags automaticaly.
+
+			static_cast<AstBinaryOp*>(node)->unlinkLeft();
+			node->getParent()->replaceNode(node, lNode);
+			opt->getAst()->deleteNode(node);
+		}
+		else if (lIsImm)
+		{
+			AstImm* lNode = static_cast<AstImm*>(left);
+			// if the node is real, the imaginary part is set to zero by default.
+			if (lNode->getValueCplx() == std::complex<double>(0.0, 0.0))
+			{
+				static_cast<AstBinaryOp*>(node)->unlinkRight();
+				node->getParent()->replaceNode(node, right);
+				opt->getAst()->deleteNode(node);
+			}
+		}
+		else if (rIsImm) {
+			AstImm* rNode = static_cast<AstImm*>(right);
+			
+			if (rNode->getValueCplx() == std::complex<double>(0.0, 0.0))
+			{
+				static_cast<AstBinaryOp*>(node)->unlinkLeft();
+				node->getParent()->replaceNode(node, left);
+				opt->getAst()->deleteNode(node);
+			}
+			
+		}
+		return ErrorCode::kErrorOk;
+	}
+
 } // end namespace mathpresso

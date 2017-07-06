@@ -302,6 +302,9 @@ Error Context::addBuiltIns(void) {
     const OpInfo& op = OpInfo::get(i);
 	
 	auto flags = op.getOpCount();
+
+	if (!op.isIntrinsic())
+		continue;
 	
 	// add the noncomplex Version, if available
 	if (op.hasDtoC())
@@ -326,6 +329,8 @@ Error Context::addBuiltIns(void) {
 		this->addFunction(op.name.c_str(), op.funcCtoD, flags, op.funcCtoDAsm);
 	}
   }
+
+  _symbols.try_emplace("+$2", std::make_shared<MpOperationAdd>());
 
   const GlobalConstant mpGlobalConstants[] = {
     { "NaN", mpGetNan() },
@@ -561,7 +566,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	ErrorReporter errorReporter(body, len, options, log);
 
 	// Parse the expression into AST.
-	{ MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len).parseProgram(ast.getProgramNode())); }
+	{ MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len, &ctx._symbols).parseProgram(ast.getProgramNode())); }
 
 	if (options & kOptionDebugAst) {
 		ast.dump(sbTmp);
