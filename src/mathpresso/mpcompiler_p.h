@@ -49,6 +49,11 @@ namespace mathpresso
 			flags = other.flags;
 			return *this;
 		}
+		
+		// Operator Overload.
+		MATHPRESSO_INLINE const bool operator==(const JitVar& other) {
+			return this->flags == other.flags && this->op.isEqual(other.op);
+		}
 
 		// Swap.
 		MATHPRESSO_INLINE void swapWith(JitVar& other)

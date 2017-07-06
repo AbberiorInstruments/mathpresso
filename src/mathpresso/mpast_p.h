@@ -1030,7 +1030,9 @@ struct AstUnaryOp : public AstUnary {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstUnaryOp(AstBuilder* ast, uint32_t op)
-    : AstUnary(ast, kAstNodeUnaryOp) { setOp(op); }
+    : AstUnary(ast, kAstNodeUnaryOp),
+	mpOp_(nullptr)
+	{ setOp(op); }
 
   MpOperation* mpOp_;
 };
@@ -1048,8 +1050,10 @@ struct AstBinaryOp : public AstBinary {
 
   MATHPRESSO_INLINE AstBinaryOp(AstBuilder* ast, uint32_t op)
     : AstBinary(ast, kAstNodeBinaryOp),
-		mpOp_(nullptr)
-	{ setOp(op); }
+	mpOp_(nullptr)
+  {
+	setOp(op); 
+  }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
 	if (OpInfo::get(getOp()).isAssignment() && hasLeft()) {
@@ -1076,8 +1080,10 @@ struct AstTernaryOp : public AstTernary {
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_INLINE AstTernaryOp(AstBuilder* ast, uint32_t op)
-		: AstTernary(ast, kAstNodeTernaryOp) {
+	MATHPRESSO_INLINE AstTernaryOp(AstBuilder* ast, uint32_t op) :
+		AstTernary(ast, kAstNodeTernaryOp),
+		mpOp_(nullptr) 
+	{
 		setOp(op);
 	}
 

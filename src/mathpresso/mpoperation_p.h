@@ -28,11 +28,13 @@ namespace mathpresso {
 		OpFlagIsOperator = 0x00000001,
 		OpFlagHasState = 0x00000002,
 		OpFlagHasAsm = 0x00000004,
-		OpIsRighttoLeft= 0x00000008,
+		OpIsRighttoLeft = 0x00000008,
+
+		OpIsCommutativ = 0x00000010,
 
 		// Types of Operation that are allowed.
-		OpFlagCReturnsD = 0x0000010,
-		OpFlagDReturnsC = 0x0000020,
+		OpFlagCReturnsD = 0x0000100,
+		OpFlagDReturnsC = 0x0000200,
 		
 		// binary Flags:
 		OpFlagNopIfLZero = 0x10000000,
@@ -136,39 +138,92 @@ namespace mathpresso {
 		mpAsmFunc asmD_;
 	};
 
-	class MpOperationOp : public MpOperation
+	class MpOperationBinary : public MpOperation
 	{
 	public:
-		MpOperationOp(uint32_t nargs, uint32_t flags, uint32_t priority) :
-			MpOperation(nargs, flags)
-		{ 
+		MpOperationBinary(uint32_t nargs, uint32_t  flags, uint32_t priority) :
+			MpOperation(nargs, flags) {
 			priority_ = priority;
 		}
 
-		virtual ~MpOperationOp() 
-		{
+		virtual ~MpOperationBinary() {
 		}
 
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) override = 0;
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override = 0;
+		// calls compReal() and comppComplex() after setting up.
+		virtual JitVar compile(JitCompiler* jc, AstNode * node) override;
+
+		// uses optReal() and optComplex() to calculate immediate values.
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
 	protected:
+		// These are called by compile() and should only contain the asm-statements.
+		// vl will always be in a register, vr can be in Register or in Memory.
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) = 0;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) = 0;
+
+		// Used to calculate optimization of immediates.
+		virtual double optReal(double vl, double vr) = 0;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) = 0;
 	};
 
-	class MpOperationAdd : public MpOperationOp
+	// Addition
+	class MpOperationAdd : public MpOperationBinary
 	{
 	public:
 		MpOperationAdd() :
-			MpOperationOp(2, MpOperationFlags::OpFlagNopIfZero, 6)
-		{
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ, 6) {
 		}
 
-		virtual ~MpOperationAdd() 
-		{
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	//Subtraction
+	class MpOperationSub : public MpOperationBinary
+	{
+	public:
+		MpOperationSub() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfRZero, 6) {
 		}
 
-		virtual JitVar compile(JitCompiler* jc, AstNode * node) override;
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Multiplication
+	class MpOperationMul : public MpOperationBinary
+	{
+	public:
+		MpOperationMul() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ, 5) {
+		}
+
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Division
+	class MpOperationDiv : public MpOperationBinary
+	{
+	public:
+		MpOperationDiv() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne, 5) {
+		}
+
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
 	};
 }
 

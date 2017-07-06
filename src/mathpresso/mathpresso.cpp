@@ -330,7 +330,11 @@ Error Context::addBuiltIns(void) {
 	}
   }
 
+  // add some symbols as MpOperations:
   _symbols.try_emplace("+$2", std::make_shared<MpOperationAdd>());
+  _symbols.try_emplace("-$2", std::make_shared<MpOperationSub>());
+  _symbols.try_emplace("*$2", std::make_shared<MpOperationMul>());
+  _symbols.try_emplace("/$2", std::make_shared<MpOperationDiv>());
 
   const GlobalConstant mpGlobalConstants[] = {
     { "NaN", mpGetNan() },

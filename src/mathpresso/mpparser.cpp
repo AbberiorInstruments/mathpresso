@@ -522,6 +522,18 @@ _Binary: {
 		{
 			newNode->mpOp_ = this->_ops->at("+$2").get();
 		}
+		else if (op == kOpSub)
+		{
+			newNode->mpOp_ = this->_ops->at("-$2").get();
+		}
+		else if (op == kOpMul)
+		{
+			newNode->mpOp_ = this->_ops->at("*$2").get();
+		}
+		else if (op == kOpDiv)
+		{
+			newNode->mpOp_ = this->_ops->at("/$2").get();
+		}
         newNode->setPosition(token.getPosAsUInt());
 
         if (currentBinaryNode == nullptr) {

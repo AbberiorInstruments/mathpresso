@@ -19,10 +19,10 @@ namespace mathpresso {
 // [mathpresso::Token]
 // ============================================================================
 
+
 //! \internal
 //!
 //! Token type.
-	
 enum TokenType {
   kTokenInvalid = 0,  // <invalid>
 
@@ -95,6 +95,100 @@ enum TokenType {
 
   kTokenEnd           // <end>
 };
+//! \internal
+//!
+//! Character classes used by tokenizer.
+enum TokenChar {
+	// Digit.
+	kTokenChar0x0, kTokenChar0x1, kTokenChar0x2, kTokenChar0x3,
+	kTokenChar0x4, kTokenChar0x5, kTokenChar0x6, kTokenChar0x7,
+	kTokenChar0x8, kTokenChar0x9,
+
+	// Digit-Hex.
+	kTokenChar0xA, kTokenChar0xB, kTokenChar0xC, kTokenChar0xD,
+	kTokenChar0xE, kTokenChar0xF,
+
+	// imaginary
+	kTokenCharImg,
+
+	// Non-Hex ASCII [A-Z] Letter and Underscore [_].
+	kTokenCharSym,
+
+	// Punctuation.
+	kTokenCharDot = kTokenDot,          // .
+	kTokenCharCom = kTokenComma,        // ,
+	kTokenCharSem = kTokenSemicolon,    // ;
+	kTokenCharQue = kTokenQMark,        // ?
+	kTokenCharCol = kTokenColon,        // :
+	kTokenCharLCu = kTokenLCurl,        // {
+	kTokenCharRCu = kTokenRCurl,        // }
+	kTokenCharLBr = kTokenLBracket,     // [
+	kTokenCharRBr = kTokenRBracket,     // ]
+	kTokenCharLPa = kTokenLParen,       // (
+	kTokenCharRPa = kTokenRParen,       // )
+
+	kTokenCharAdd = kTokenAdd,          // +
+	kTokenCharSub = kTokenSub,          // -
+	kTokenCharMul = kTokenMul,          // *
+	kTokenCharDiv = kTokenDiv,          // /
+	kTokenCharMod = kTokenMod,          // %
+	kTokenCharNot = kTokenNot,          // !
+	kTokenCharAnd = kTokenBitAnd,       // &
+	kTokenCharOr = kTokenBitOr,        // |
+	kTokenCharXor = kTokenBitXor,       // ^
+	kTokenCharNeg = kTokenBitNeg,       // ~
+	kTokenCharEq = kTokenAssign,       // =
+	kTokenCharLt = kTokenLt,           // <
+	kTokenCharGt = kTokenGt,           // >
+
+	// Space.
+	kTokenCharSpc = 63,
+
+	// Extended ASCII character (0x80 and above), acts as non-recognized.
+	kTokenCharExt,
+	// Invalid (non-recognized) character.
+	kTokenCharInv,
+
+	kTokenCharSingleCharTokenEnd = kTokenCharRPa
+};
+
+#define C(_Id_) kTokenChar##_Id_
+static const uint8_t mpCharClass[] = {
+	C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), // 000-007 ........ | All invalid.
+	C(Inv), C(Spc), C(Spc), C(Spc), C(Spc), C(Spc), C(Inv), C(Inv), // 008-015 .     .. | Spaces: 0x9-0xD.
+	C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), // 016-023 ........ | All invalid.
+	C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), // 024-031 ........ | All invalid.
+	C(Spc), C(Not), C(Inv), C(Inv), C(Inv), C(Mod), C(And), C(Inv), // 032-039  !"#$%&' | Unassigned: "#$'.
+	C(LPa), C(RPa), C(Mul), C(Add), C(Com), C(Sub), C(Dot), C(Div), // 040-047 ()*+,-./ |
+	C(0x0), C(0x1), C(0x2), C(0x3), C(0x4), C(0x5), C(0x6), C(0x7), // 048-055 01234567 |
+	C(0x8), C(0x9), C(Col), C(Sem), C(Lt),  C(Eq),  C(Gt),  C(Que), // 056-063 89:;<=>? |
+	C(Inv), C(0xA), C(0xB), C(0xC), C(0xD), C(0xE), C(0xF), C(Sym), // 064-071 @ABCDEFG | Unassigned: @.
+	C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 072-079 HIJKLMNO |
+	C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 080-087 PQRSTUVW |
+	C(Sym), C(Sym), C(Sym), C(LBr), C(Inv), C(RBr), C(Xor), C(Sym), // 088-095 XYZ[\]^_ | Unassigned: \.
+	C(Inv), C(0xA), C(0xB), C(0xC), C(0xD), C(0xE), C(0xF), C(Sym), // 096-103 `abcdefg | Unassigned: `.
+	C(Sym), C(Img), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 104-111 hijklmno |
+	C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 112-119 pqrstuvw |
+	C(Sym), C(Sym), C(Sym), C(LCu), C(Or),  C(RCu), C(Neg), C(Inv), // 120-127 xyz{|}~  |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 128-135 ........ | Extended.
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 136-143 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 144-151 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 152-159 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 160-167 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 168-175 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 176-183 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 184-191 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 192-199 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 200-207 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 208-215 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 216-223 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 224-231 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 232-239 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 240-247 ........ |
+	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext)  // 248-255 ........ |
+};
+#undef C
+
 
 // ============================================================================
 // [mathpresso::Token]
