@@ -125,13 +125,16 @@ namespace mathpresso {
 			return other;
 	}
 
-	JitVar JitCompiler::registerVarAsComplex(const JitVar& other) {
+	JitVar JitCompiler::registerVarAsComplex(const JitVar& other)
+	{
 		JitVar v(cc->newXmmPd(), other.flags);
 		cc->pxor(v.getXmm(), v.getXmm());
-		if (other.isMem()) {
+		if (other.isMem()) 
+		{
 			cc->movlpd(v.getXmm(), other.getMem());
 		}
-		else {
+		else
+		{
 			cc->movsd(v.getXmm(), other.getXmm());
 		}
 		return v;
@@ -483,6 +486,11 @@ namespace mathpresso {
 		AstNode* left = node->getLeft();
 		AstNode* right = node->getRight();
 
+		if (node->mpOp_)
+		{
+			return node->mpOp_->compile(this, node);
+		}
+
 
 
 		// Compile assignment. Should never be reached.
@@ -524,7 +532,7 @@ namespace mathpresso {
 
 		if (!node->takesComplex())
 		{
-			// kommutativität
+			// kommutativitï¿½t
 			if (vl.isRO() && !vr.isRO() && (op == kOpAdd || op == kOpMul || op == kOpAvg || op == kOpMin || op == kOpMax))
 				vl.swapWith(vr);
 

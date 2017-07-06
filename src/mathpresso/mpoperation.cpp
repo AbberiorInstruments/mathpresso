@@ -269,10 +269,11 @@ namespace mathpresso {
 			else
 			{
 				// check that every node has onNode called on it and that they are registered as complex.
+				// also make sure, vl is in a register.
 				if (!left->returnsComplex())
 					vl = jc->registerVarAsComplex(jc->onNode(left));
 				else
-					vl = jc->onNode(left);
+					vl = jc->writableVarComplex(jc->onNode(left));
 
 				if (!right->returnsComplex())
 					vr = jc->registerVarAsComplex(jc->onNode(right));
@@ -280,14 +281,8 @@ namespace mathpresso {
 					vr = jc->onNode(right);
 			}
 
-			// make sure vl is not marked RO.
-			if (vl.isRO() && !vr.isRO())
-				vl.swapWith(vr);
-			else 
-				vl = jc->writableVarComplex(vl);
-
 			// call the correct instruction.
-			if (vr.getOperand().isMem())
+			if (vr.isMem())
 			{
 				jc->cc->addpd(vl.getXmm(), vr.getMem());
 			}
@@ -308,15 +303,10 @@ namespace mathpresso {
 			}
 			else
 			{
-				// check that every node has onNode called on it
-				vl = jc->onNode(left);
+				// check that every node has onNode called on it and vl is in a register
+				vl = jc->writableVar(jc->onNode(left));
 				vr = jc->onNode(right);
 			}
-			// make sure vl is not marked RO.
-			if (vl.isRO() && !vr.isRO())
-				vl.swapWith(vr);
-			else 
-				vl = jc->writableVar(vl);
 
 			// call the correct instruction. could be exchanged for a one call to emit
 			if (vr.getOperand().isMem())

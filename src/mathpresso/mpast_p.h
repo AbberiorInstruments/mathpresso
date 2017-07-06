@@ -1047,7 +1047,9 @@ struct AstBinaryOp : public AstBinary {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstBinaryOp(AstBuilder* ast, uint32_t op)
-    : AstBinary(ast, kAstNodeBinaryOp) { setOp(op); }
+    : AstBinary(ast, kAstNodeBinaryOp),
+		mpOp_(nullptr)
+	{ setOp(op); }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
 	if (OpInfo::get(getOp()).isAssignment() && hasLeft()) {
