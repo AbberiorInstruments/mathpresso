@@ -542,6 +542,22 @@ _Binary: {
 		{
 			newNode->mpOp_ = this->_ops->at("!=$2").get();
 		}
+		else if (op == kOpLe)
+		{
+			newNode->mpOp_ = this->_ops->at("<=$2").get();
+		}
+		else if (op == kOpLt)
+		{
+			newNode->mpOp_ = this->_ops->at("<$2").get();
+		}
+		else if (op == kOpGe)
+		{
+			newNode->mpOp_ = this->_ops->at(">=$2").get();
+		}
+		else if (op == kOpGt)
+		{
+			newNode->mpOp_ = this->_ops->at(">$2").get();
+		}
         newNode->setPosition(token.getPosAsUInt());
 
         if (currentBinaryNode == nullptr) {

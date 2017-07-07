@@ -44,19 +44,22 @@ namespace mathpresso {
 		{ "-$1", OpInfo("-", kOpNeg, 3, RTL | CandD | kOpFlagArithmetic | kOpFlagUnary) },
 		{ "!$1", OpInfo("!", kOpNot, 3, RTL | DtoD | kOpFlagCondition | kOpFlagUnary) },
 		{ "=$2", OpInfo("=", kOpAssign, 15, RTL | CandD | kOpFlagAssign | kOpFlagBinary) },
-		{ "==$2", OpInfo("==", kOpEq, 9, LTR | CandD | kOpFlagCondition | kOpFlagBinary) },
-		{ "!=$2", OpInfo("!=", kOpNe, 9, LTR | CandD | kOpFlagCondition | kOpFlagBinary) },
-		{ "<$2", OpInfo("<", kOpLt, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) },
-		{ "<=$2", OpInfo("<=", kOpLe, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) },
-		{ ">$2", OpInfo(">", kOpGt, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) },
-		{ "<=$2", OpInfo("<=", kOpGe, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) },
-		{ "+$2", OpInfo("+", kOpAdd, 6, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfZero | kOpFlagBinary, mpAddOptD, mpAddOptC, nullptr, nullptr, compileAddD, compileAddC) },
-		{ "-$2", OpInfo("-", kOpSub, 6, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfRZero | kOpFlagBinary, mpSubOptD, mpSubOptC, nullptr, nullptr, compileSubD, compileSubC) },
-		{ "*$2", OpInfo("*", kOpMul, 5, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfOne | kOpFlagBinary, mpMulOptD, mpMulOptC, nullptr, nullptr, compileMulD, compileMulC) },
-		{ "/$2", OpInfo("/", kOpDiv, 5, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfROne | kOpFlagBinary, mpDivOptD, mpDivOptC, nullptr, nullptr, compileDivD, compileDivC) },
+		
+		{ "==$2", OpInfo("==", kOpEq, 9, LTR | CandD | kOpFlagCondition | kOpFlagBinary) }, //done
+		{ "!=$2", OpInfo("!=", kOpNe, 9, LTR | CandD | kOpFlagCondition | kOpFlagBinary) }, //done
+		{ "<$2", OpInfo("<", kOpLt, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) }, //done
+		{ "<=$2", OpInfo("<=", kOpLe, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) }, //done
+		{ ">$2", OpInfo(">", kOpGt, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) }, //done
+		{ "<=$2", OpInfo("<=", kOpGe, 8, LTR | DtoD | kOpFlagCondition | kOpFlagBinary) }, //done
+		{ "+$2", OpInfo("+", kOpAdd, 6, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfZero | kOpFlagBinary, mpAddOptD, mpAddOptC, nullptr, nullptr, compileAddD, compileAddC) }, //done
+		{ "-$2", OpInfo("-", kOpSub, 6, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfRZero | kOpFlagBinary, mpSubOptD, mpSubOptC, nullptr, nullptr, compileSubD, compileSubC) }, //done
+		{ "*$2", OpInfo("*", kOpMul, 5, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfOne | kOpFlagBinary, mpMulOptD, mpMulOptC, nullptr, nullptr, compileMulD, compileMulC) }, //done
+		{ "/$2", OpInfo("/", kOpDiv, 5, LTR | CandD | kOpFlagArithmetic | kOpFlagNopIfROne | kOpFlagBinary, mpDivOptD, mpDivOptC, nullptr, nullptr, compileDivD, compileDivC) }, //done
+
 		{ "?$3", OpInfo("?", kOpQMark, 15, RTL | kOpFlagTernary) },
 		{ ":$3", OpInfo(":", kOpColon, 15, RTL | kOpFlagTernary) },
 
+		// done without assembler:
 		{ "%$2", OpInfo("%", kOpMod, 5, LTR | DtoD | kOpFlagBinary | kOpFlagIntrinsic, mpMod, nullptr) },
 		{ "isnan$1", OpInfo("isnan", kOpIsNan, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, mpIsNan, nullptr) },
 		{ "isinf$1", OpInfo("isinf", kOpIsInf, 0, LTR | DtoD | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, mpIsInf, nullptr) },
@@ -337,6 +340,10 @@ Error Context::addBuiltIns(void) {
   _symbols.try_emplace("/$2", std::make_shared<MpOperationDiv>());
   _symbols.try_emplace("==$2", std::make_shared<MpOperationEq>());
   _symbols.try_emplace("!=$2", std::make_shared<MpOperationNe>());
+  _symbols.try_emplace(">=$2", std::make_shared<MpOperationGe>());
+  _symbols.try_emplace(">$2", std::make_shared<MpOperationGt>());
+  _symbols.try_emplace("<=$2", std::make_shared<MpOperationLe>());
+  _symbols.try_emplace("<$2", std::make_shared<MpOperationLt>());
 
   const GlobalConstant mpGlobalConstants[] = {
     { "NaN", mpGetNan() },
@@ -467,7 +474,15 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 
 	std::string name_decorated(name);
 	name_decorated += "$" + std::to_string(flags & _kFunctionArgMask);
-	_symbols.try_emplace(name_decorated, std::make_shared<MpOperationFunc>(flags & _kFunctionArgMask, 0, nullptr, nullptr));
+	if (fnAsm)
+	{
+		_symbols.try_emplace(name_decorated, std::make_shared<MpOperationFuncAsm>(flags & _kFunctionArgMask, 0, nullptr, nullptr, nullptr, nullptr));
+	}
+	else
+	{
+		_symbols.try_emplace(name_decorated, std::make_shared<MpOperationFunc>(flags & _kFunctionArgMask, 0, nullptr, nullptr));
+	}
+	
 	if (!sym->getOp())
 		sym->setOp(_symbols[name_decorated]);
 
@@ -482,6 +497,11 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 		sym ->setFuncPtr(fn, true);
 		sym->setAsmPtr(fnAsm, true);
 		symOp->setFn(fn, true);
+		if (fnAsm && symOp->hasFlag(MpOperationFlags::OpFlagHasAsm))
+		{
+			std::static_pointer_cast<MpOperationFuncAsm>(symOp)->setFnAsm((mpAsmFunc)fnAsm, true);
+		}
+
 		if (0 == (flags & kFunctionReturnsComplex))
 		{
 			sym->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
@@ -496,6 +516,11 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 		sym ->setFuncPtr(fn);
 		sym->setAsmPtr(fnAsm);
 		symOp->setFn(fn);
+		if (fnAsm && symOp->hasFlag(MpOperationFlags::OpFlagHasAsm))
+		{
+			std::static_pointer_cast<MpOperationFuncAsm>(symOp)->setFnAsm((mpAsmFunc)fnAsm);
+		}
+
 		if (flags & kFunctionReturnsComplex)
 		{
 			sym->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);

@@ -101,6 +101,14 @@ namespace mathpresso {
 			fnD_(fnD),
 			fnC_(fnC)
 		{
+			if (!fnD) 
+			{
+				flags_ |= OpHasNoReal;
+			}
+			if (!fnC)
+			{
+				flags_ |= OpHasNoComplex;
+			}
 		}
 
 		virtual ~MpOperationFunc()
@@ -135,6 +143,8 @@ namespace mathpresso {
 		
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 
+		virtual void setFnAsm(mpAsmFunc fn, bool isComplex = false);
+
 	protected:
 		mpAsmFunc asmC_;
 		mpAsmFunc asmD_;
@@ -144,11 +154,13 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationBinary(uint32_t nargs, uint32_t  flags, uint32_t priority) :
-			MpOperation(nargs, flags) {
+			MpOperation(nargs, flags)
+		{
 			priority_ = priority;
 		}
 
-		virtual ~MpOperationBinary() {
+		virtual ~MpOperationBinary()
+		{
 		}
 
 		// calls compReal() and comppComplex() after setting up.
@@ -173,7 +185,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationAdd() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ, 6) {
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ, 6)
+		{
 		}
 
 	protected:
@@ -188,7 +201,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationSub() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfRZero, 6) {
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfRZero, 6)
+		{
 		}
 
 	protected:
@@ -203,7 +217,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationMul() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ, 5) {
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ, 5)
+		{
 		}
 
 	protected:
@@ -218,7 +233,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationDiv() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne, 5) {
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne, 5) 
+		{
 		}
 
 	protected:
@@ -233,7 +249,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationEq() :
-			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ, 9) {
+			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ, 9) 
+		{
 		}
 
 	protected:
@@ -248,7 +265,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationNe() :
-			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ, 9) {
+			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ, 9)
+		{
 		}
 
 	protected:
@@ -257,6 +275,71 @@ namespace mathpresso {
 		virtual double optReal(double vl, double vr) override;
 		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
 	};
+
+	// Lesser than
+	class MpOperationLt : public MpOperationBinary
+	{
+	public:
+		MpOperationLt() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex, 8)
+		{
+		}
+
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Lesser Equal
+	class MpOperationLe : public MpOperationBinary
+	{
+	public:
+		MpOperationLe() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex, 8)
+		{
+		}
+
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Greater than
+	class MpOperationGt : public MpOperationBinary
+	{
+	public:
+		MpOperationGt() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex, 8)
+		{
+		}
+
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Greater equal
+	class MpOperationGe : public MpOperationBinary
+	{
+	public:
+		MpOperationGe() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex, 8)
+		{
+		}
+
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
 }
 
 
