@@ -22,7 +22,7 @@ namespace mathpresso {
 
 	typedef JitVar(*mpAsmFunc)(JitCompiler*, JitVar*);
 
-	enum MpOperationFlags 
+	enum MpOperationFlags
 	{
 		OpFlagNone = 0,
 		OpFlagIsOperator = 0x00000001,
@@ -31,6 +31,8 @@ namespace mathpresso {
 		OpIsRighttoLeft = 0x00000008,
 
 		OpIsCommutativ = 0x00000010,
+		OpHasNoComplex = 0x00000020,
+		OpHasNoReal = 0x00000040,
 
 		// Types of Operation that are allowed.
 		OpFlagCReturnsD = 0x0000100,
@@ -217,6 +219,36 @@ namespace mathpresso {
 	public:
 		MpOperationDiv() :
 			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne, 5) {
+		}
+
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Equality
+	class MpOperationEq : public MpOperationBinary
+	{
+	public:
+		MpOperationEq() :
+			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ, 9) {
+		}
+
+	protected:
+		virtual JitVar compReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar compComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double optReal(double vl, double vr) override;
+		virtual std::complex<double> optComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Inequality
+	class MpOperationNe : public MpOperationBinary
+	{
+	public:
+		MpOperationNe() :
+			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ, 9) {
 		}
 
 	protected:

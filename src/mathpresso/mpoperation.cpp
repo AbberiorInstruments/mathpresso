@@ -392,7 +392,6 @@ namespace mathpresso {
 	}
 
 	double MpOperationAdd::optReal(double vl, double vr) {	return vl + vr;	}
-
 	std::complex<double> MpOperationAdd::optComplex(std::complex<double> vl, std::complex<double> vr) { return vl + vr; }
 
 
@@ -423,7 +422,6 @@ namespace mathpresso {
 	}
 
 	double MpOperationSub::optReal(double vl, double vr) { return vl - vr; }
-
 	std::complex<double> MpOperationSub::optComplex(std::complex<double> vl, std::complex<double> vr) { return vl - vr; }
 
 	// Multiplication
@@ -464,7 +462,6 @@ namespace mathpresso {
 	}
 
 	double MpOperationMul::optReal(double vl, double vr) { return vl * vr; }
-
 	std::complex<double> MpOperationMul::optComplex(std::complex<double> vl, std::complex<double> vr) { return vl * vr; }
 
 	// Division
@@ -509,7 +506,70 @@ namespace mathpresso {
 	}
 
 	double MpOperationDiv::optReal(double vl, double vr) { return vl / vr; }
-
 	std::complex<double> MpOperationDiv::optComplex(std::complex<double> vl, std::complex<double> vr) { return vl / vr; }
+
+	// Equality
+	JitVar MpOperationEq::compReal(JitCompiler * jc, JitVar vl, JitVar vr) {
+		if (vr.getOperand().isMem())
+		{
+			jc->cc->cmpsd(vl.getXmm(), vr.getMem(), asmjit::x86::kCmpEQ);
+		}
+		else
+		{
+			jc->cc->cmpsd(vl.getXmm(), vr.getXmm(), asmjit::x86::kCmpEQ);
+		}
+		jc->cc->andpd(vl.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+		return vl;
+
+	}
+
+	JitVar MpOperationEq::compComplex(JitCompiler * jc, JitVar vl, JitVar vr) {
+		if (vr.isMem())
+		{
+			jc->cc->cmppd(vl.getXmm(), vr.getMem(), asmjit::x86::kCmpEQ);
+		}
+		else
+		{
+			jc->cc->cmppd(vl.getXmm(), vr.getXmm(), asmjit::x86::kCmpEQ);
+		}
+		jc->cc->haddpd(vl.getXmm(), vl.getXmm());
+		jc->cc->andpd(vl.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+		return vl;
+	}
+
+	double MpOperationEq::optReal(double vl, double vr) { return vl == vr ? 1.0 : 0.0; }
+	std::complex<double> MpOperationEq::optComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(vl == vr ? 1.0 : 0.0, 0.0); }
+
+	// Inequality
+	JitVar MpOperationNe::compReal(JitCompiler * jc, JitVar vl, JitVar vr) {
+		if (vr.getOperand().isMem())
+		{
+			jc->cc->cmpsd(vl.getXmm(), vr.getMem(), asmjit::x86::kCmpNEQ);
+		}
+		else
+		{
+			jc->cc->cmpsd(vl.getXmm(), vr.getXmm(), asmjit::x86::kCmpNEQ);
+		}
+		jc->cc->andpd(vl.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+		return vl;
+
+	}
+
+	JitVar MpOperationNe::compComplex(JitCompiler * jc, JitVar vl, JitVar vr) {
+		if (vr.isMem())
+		{
+			jc->cc->cmppd(vl.getXmm(), vr.getMem(), asmjit::x86::kCmpNEQ);
+		}
+		else
+		{
+			jc->cc->cmppd(vl.getXmm(), vr.getXmm(), asmjit::x86::kCmpNEQ);			
+		}
+		jc->cc->haddpd(vl.getXmm(), vl.getXmm());
+		jc->cc->andpd(vl.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+		return vl;
+	}
+
+	double MpOperationNe::optReal(double vl, double vr) { return vl != vr ? 1.0: 0.0; }
+	std::complex<double> MpOperationNe::optComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(vl != vr ? 1.0 : 0.0, 0.0); }
 
 } // end namespace mathpresso

@@ -335,6 +335,8 @@ Error Context::addBuiltIns(void) {
   _symbols.try_emplace("-$2", std::make_shared<MpOperationSub>());
   _symbols.try_emplace("*$2", std::make_shared<MpOperationMul>());
   _symbols.try_emplace("/$2", std::make_shared<MpOperationDiv>());
+  _symbols.try_emplace("==$2", std::make_shared<MpOperationEq>());
+  _symbols.try_emplace("!=$2", std::make_shared<MpOperationNe>());
 
   const GlobalConstant mpGlobalConstants[] = {
     { "NaN", mpGetNan() },
