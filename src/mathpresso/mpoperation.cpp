@@ -128,36 +128,36 @@ namespace mathpresso {
 			AstImm* ret = opt->getAst()->newNode<AstImm>(0);
 			if (node->takesComplex())
 			{
-				std::complex<double> args[8];
+				std::vector<std::complex<double>> args;
 				for (size_t i = 0; i < nargs_; i++)
 				{
-					args[i] = (static_cast<AstImm*>(node->getAt(i)))->getValueCplx();
+					args.push_back((static_cast<AstImm*>(node->getAt(i)))->getValueCplx());
 				}
 
 				if (b_returns_complex)
 				{
-					ret->setValue(((mpFuncpCtoC)fnC_)(args));
+					ret->setValue(((mpFuncpCtoC)fnC_)(args.data()));
 				}
 				else
 				{
-					ret->setValue(((mpFuncpCtoD)fnC_)(args));
+					ret->setValue(((mpFuncpCtoD)fnC_)(args.data()));
 				}
 			}
 			else
 			{
-				double args[8];
+				std::vector<double> args;
 				for (size_t i = 0; i < nargs_; i++)
 				{
-					args[i] = (static_cast<AstImm*>(node->getAt(i)))->getValue();
+					args.push_back((static_cast<AstImm*>(node->getAt(i)))->getValue());
 				}
 
 				if (b_returns_complex)
 				{
-					ret->setValue(((mpFuncpDtoC)fnD_)(args));
+					ret->setValue(((mpFuncpDtoC)fnD_)(args.data()));
 				}
 				else
 				{
-					ret->setValue(evaluateDRetD(args));
+					ret->setValue(evaluateDRetD(args.data()));
 				}
 			}
 			node->getParent()->replaceNode(node, ret);
@@ -167,6 +167,14 @@ namespace mathpresso {
 		}
 
 		return ErrorCode::kErrorOk;
+	}
+
+	double MpOperationFunc::fnDouble(AstOptimizer * opt, AstNode * node) {
+		return 0.0;
+	}
+
+	std::complex<double> MpOperationFunc::fnComplex(AstOptimizer * opt, AstNode * node) {
+		return std::complex<double>();
 	}
 
 	void MpOperationFunc::setFn(void* fn, bool isComplex) {
@@ -182,8 +190,6 @@ namespace mathpresso {
 		}
 	}
 
-
-	
 	double MpOperationFunc::evaluateDRetD(double * args) 
 	{
 		switch (nargs_)
@@ -201,9 +207,8 @@ namespace mathpresso {
 			throw std::runtime_error("Too many arguments.");
 		}
 	}
-
+	
 	// -- MpOperationFuncAsm
-
 	JitVar mathpresso::MpOperationFuncAsm::compile(JitCompiler * jc, AstNode * node) {
 		if (!hasFlag(MpOperationFlags::OpFlagHasAsm))
 		{
@@ -318,7 +323,7 @@ namespace mathpresso {
 		if (node->takesComplex())
 		{
 			// check whether the vars are the same, to reduce memory-operations
-			if (left->isVar() && right->isVar() && hasFlag(OpIsCommutativ) &&
+			if (left->isVar() && right->isVar() &&
 				static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
 			{
 				vl = vr = jc->writableVarComplex(jc->onNode(left));
@@ -342,7 +347,7 @@ namespace mathpresso {
 		else
 		{
 			// check whether the vars are the same, to reduce memory-operations
-			if (left->isVar() && right->isVar() && hasFlag(OpIsCommutativ) &&
+			if (left->isVar() && right->isVar() &&
 				static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
 			{
 				vl = vr = jc->writableVar(jc->onNode(left));
@@ -746,4 +751,167 @@ namespace mathpresso {
 	double MpOperationGe::calculateReal(double vl, double vr) { return vl >= vr ? 1.0 : 0.0; }
 	std::complex<double> MpOperationGe::calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(NAN, NAN); }
 
+	JitVar MpOperationTernary::compile(JitCompiler* jc, AstNode * node)
+	{
+		asmjit::Label lblElse = jc->cc->newLabel();
+		asmjit::Label lblEnd = jc->cc->newLabel();
+		JitVar erg;
+		AstNode* left = static_cast<AstTernaryOp*>(node)->getLeft();
+		AstNode* right = static_cast<AstTernaryOp*>(node)->getRight();
+		AstNode* condition = static_cast<AstTernaryOp*>(node)->getCondition();
+
+		JitVar ret = jc->onNode(condition);
+
+		if (condition->returnsComplex())
+			jc->cc->haddpd(ret.getXmm(), ret.getXmm());
+
+		jc->cc->ucomisd(ret.getXmm(), jc->getConstantD64(0).getMem());
+		jc->cc->je(lblElse);
+
+		asmjit::X86Xmm regErg = jc->cc->newXmmPd();
+		JitVar ergLeft = jc->onNode(left);
+
+		bool lIsVarOrImm = left->getNodeType() == kAstNodeVar || left->getNodeType() == kAstNodeImm;
+		bool rIsVarOrImm = right->getNodeType() == kAstNodeVar || right->getNodeType() == kAstNodeImm;
+
+		if (lIsVarOrImm)
+		{
+			if (left->returnsComplex())
+			{
+				jc->cc->movupd(regErg, ergLeft.getXmm());
+			}
+			else
+			{
+				jc->cc->xorpd(regErg, regErg);
+				jc->cc->movsd(regErg, ergLeft.getXmm());
+			}
+		}
+
+		jc->cc->jmp(lblEnd);
+		jc->cc->bind(lblElse);
+
+		JitVar ergRight = jc->onNode(right);
+
+		if (rIsVarOrImm)
+		{
+			if (right->returnsComplex())
+			{
+				jc->cc->movupd(regErg, ergRight.getXmm());
+			}
+			else
+			{
+				jc->cc->xorpd(regErg, regErg);
+				jc->cc->movsd(regErg, ergRight.getXmm());
+			}
+		}
+
+		jc->cc->bind(lblEnd);
+
+		return jc->copyVarComplex(JitVar(regErg, JitVar::FLAG_NONE), JitVar::FLAG_NONE);
+	}
+
+	uint32_t MpOperationTernary::optimize(AstOptimizer *opt, AstNode *node) 	
+	{
+		AstBinaryOp* lastColon = static_cast<AstBinaryOp*>(node);
+		// go to the last Colon after question-marks.
+		while (lastColon->getOp() == kOpQMark) {
+			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
+		}
+		while (lastColon->getRight()->getOp() == kOpColon) {
+			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
+		}
+
+		if (lastColon->getOp() != kOpColon) {
+			return opt->_errorReporter->onError(kErrorInvalidSyntax, node->getPosition(),
+				"Invalid ternary operation. Expected a ':', found '%s' instead.", OpInfo::get(lastColon->getOp()).name);
+		}
+
+		AstNode* branchCondition = static_cast<AstBinaryOp*>(node)->getLeft();
+		AstNode* branchLeft = lastColon->getLeft();
+		AstNode* branchRight = lastColon->getRight();
+
+		// remove branchCondition from the AST
+		static_cast<AstBinaryOp*>(node)->setLeft(nullptr);
+		branchCondition->_parent = nullptr;
+
+		// remove the right path from the AST.
+		lastColon->setRight(nullptr);
+		branchRight->_parent = nullptr;
+
+
+		// Distinguish between a complex and a non-complex case:
+		// i.e.: cond1 ? cond2 ? a : b : c
+		if (static_cast<AstBinaryOp*>(node)->getRight() != lastColon) {
+			// remove left branch from the AST.
+			branchLeft = static_cast<AstBinaryOp*>(node)->getRight();
+			static_cast<AstBinaryOp*>(node)->setRight(nullptr);
+			branchLeft->_parent = nullptr;
+
+			// correct the right path.
+			AstBinaryOp* preLastColon = static_cast<AstBinaryOp*>(lastColon->getParent());
+			preLastColon->replaceAt(1, lastColon->getLeft());
+
+		}
+		// i.e.: cond1 ? a : b
+		else {
+			// remove left branch from the AST.
+			lastColon->setLeft(nullptr);
+			branchLeft->_parent = nullptr;
+		}
+
+		// create the new Ternary Node.
+		AstTernaryOp* newNodeTernary = node->getAst()->newNode<AstTernaryOp>(kOpQMark);
+		newNodeTernary->setCondition(branchCondition);
+		newNodeTernary->setLeft(branchLeft);
+		newNodeTernary->setRight(branchRight);
+
+		AstBinaryOp* oldNode = static_cast<AstBinaryOp*>(node);
+
+		// add the new node to the AST.
+		node->getParent()->replaceNode(node, newNodeTernary);
+
+		// clean up:
+		lastColon->setLeft(nullptr);
+		opt->_ast->deleteNode(lastColon);
+		opt->_ast->deleteNode(node);
+
+
+		MATHPRESSO_PROPAGATE(opt->onNode(newNodeTernary->getCondition()));
+		AstNode* branchCond = newNodeTernary->getCondition();
+		if (branchCond->isImm()) {
+			bool conditionIsTrue = static_cast<AstImm*>(branchCond)->getValueCplx() != std::complex<double>({ 0, 0 });
+
+			AstNode* newNode;
+
+			if (conditionIsTrue) {
+				newNode = newNodeTernary->getLeft();
+				newNodeTernary->setLeft(nullptr);
+			}
+			else {
+				newNode = newNodeTernary->getRight();
+				newNodeTernary->setRight(nullptr);
+			}
+
+			newNode->_parent = nullptr;
+			newNodeTernary->getParent()->replaceNode(newNodeTernary, newNode);
+			newNodeTernary->setCondition(nullptr);
+			newNodeTernary->setLeft(nullptr);
+			newNodeTernary->setRight(nullptr);
+			opt->_ast->deleteNode(newNodeTernary);
+			MATHPRESSO_PROPAGATE(opt->onNode(newNode));
+
+		}
+		else {
+			newNodeTernary->removeNodeFlags(kAstTakesComplex);
+			MATHPRESSO_PROPAGATE(opt->onNode(newNodeTernary->getLeft()));
+			MATHPRESSO_PROPAGATE(opt->onNode(newNodeTernary->getRight()));
+			bool needs_complex = newNodeTernary->getLeft()->returnsComplex() | newNodeTernary->getRight()->returnsComplex();
+			if (needs_complex)
+			{
+				newNodeTernary->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
+			}
+		}
+		return kErrorOk;
+
+	}
 } // end namespace mathpresso

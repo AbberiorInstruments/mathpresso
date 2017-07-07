@@ -31,6 +31,8 @@ namespace mathpresso {
 		OpIsRighttoLeft = 0x00000008,
 
 		OpIsCommutativ = 0x00000010,
+
+		// Set, if no (complex|real) function is available.
 		OpHasNoComplex = 0x00000020,
 		OpHasNoReal = 0x00000040,
 
@@ -38,12 +40,11 @@ namespace mathpresso {
 		OpFlagCReturnsD = 0x0000100,
 		OpFlagDReturnsC = 0x0000200,
 		
-		// binary Flags:
+		// Set for optimization of binary operations
 		OpFlagNopIfLZero = 0x10000000,
 		OpFlagNopIfRZero = 0x20000000,
 		OpFlagNopIfLOne  = 0x40000000,
 		OpFlagNopIfROne  = 0x80000000,
-
 		OpFlagNopIfZero = OpFlagNopIfLZero | OpFlagNopIfRZero,
 		OpFlagNopIfOne  = OpFlagNopIfLOne  | OpFlagNopIfROne
 	};
@@ -122,6 +123,10 @@ namespace mathpresso {
 		virtual void setFn(void * fn, bool isComplex = false);
 	protected:
 		virtual double evaluateDRetD(double *args);
+		
+		double fnDouble(AstOptimizer * opt, AstNode *node);
+		std::complex<double> fnComplex(AstOptimizer * opt, AstNode *node);
+
 		// Function-pointer:
 		void * fnC_;
 		void * fnD_;
@@ -150,6 +155,26 @@ namespace mathpresso {
 		mpAsmFunc asmD_;
 	};
 
+
+	//class MpOprationUnary :public MpOperationFuncAsm
+	//{
+	//public:
+	//	//MpOprationUnary() :
+	//	//	MpOperationFuncAsm(1, 0, (void*)calculateReal, (void)calculateComplex, generateAsmReal, generateAsmComplex)
+	//	//{
+	//	//}
+
+	//	virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
+	//private:
+	//	JitVar generateAsmComplex(JitCompiler *jc, AstNode * node);
+	//	 JitVar generateAsmReal(JitCompiler *jc, AstNode * node);
+	//	double calculateReal(double* args);
+	//	std::complex<double> calculateComplex(std::complex<double>* args);
+	//};
+
+	// ============================================================================
+	// Binary operations
+	// ============================================================================
 	class MpOperationBinary : public MpOperation
 	{
 	public:
@@ -179,7 +204,7 @@ namespace mathpresso {
 		virtual double calculateReal(double vl, double vr) = 0;
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) = 0;
 	};
-
+		
 	// Addition
 	class MpOperationAdd : public MpOperationBinary
 	{
@@ -196,7 +221,7 @@ namespace mathpresso {
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
 	};
 
-	//Subtraction
+	// Subtraction
 	class MpOperationSub : public MpOperationBinary
 	{
 	public:
@@ -340,6 +365,18 @@ namespace mathpresso {
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
 	};
 
+	class MpOperationTernary : public MpOperation
+	{
+	public:
+		MpOperationTernary() : MpOperation(3, MpOperationFlags::OpIsRighttoLeft)
+		{
+			priority_ = 15;
+		}
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
+
+	};
 }
 
 

@@ -344,6 +344,7 @@ Error Context::addBuiltIns(void) {
   _symbols.try_emplace(">$2", std::make_shared<MpOperationGt>());
   _symbols.try_emplace("<=$2", std::make_shared<MpOperationLe>());
   _symbols.try_emplace("<$2", std::make_shared<MpOperationLt>());
+  _symbols.try_emplace("?$2", std::make_shared<MpOperationTernary>());
 
   const GlobalConstant mpGlobalConstants[] = {
     { "NaN", mpGetNan() },

@@ -354,10 +354,10 @@ namespace mathpresso {
 			AstNode* branchLeft = lastColon->getLeft();
 			AstNode* branchRight = lastColon->getRight();
 
-			if (!OpInfo::get(branchCondition->getOp()).isCondition()) {
+			/*if (!OpInfo::get(branchCondition->getOp()).isCondition()) {
 				return _errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
 					"Not a condition.");
-			}
+			}*/
 			// remove branchCondition from the AST
 			node->setLeft(nullptr);
 			branchCondition->_parent = nullptr;
@@ -690,6 +690,12 @@ namespace mathpresso {
 	}
 
 	Error AstOptimizer::onTernaryOp(AstTernaryOp* node) {
+
+		if (node->mpOp_ != nullptr)
+		{
+			return node->mpOp_->optimize(this, node);
+		}
+
 		MATHPRESSO_PROPAGATE(onNode(node->getCondition()));
 		AstNode* branchCond = node->getCondition();
 		if (branchCond->isImm()) {

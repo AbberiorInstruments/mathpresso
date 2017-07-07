@@ -518,46 +518,14 @@ _Unary: {
 _Binary: {
         AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>(op);
         MATHPRESSO_NULLCHECK(newNode);
-		if (op == kOpAdd)
+
+		std::string opNameDecorated(std::string(_tokenizer._start).substr(token.position, token.length) + "$2");
+		
+		if (_ops->find(opNameDecorated) != _ops->end())
 		{
-			newNode->mpOp_ = this->_ops->at("+$2").get();
+			newNode->mpOp_ = _ops->at(opNameDecorated).get();
 		}
-		else if (op == kOpSub)
-		{
-			newNode->mpOp_ = this->_ops->at("-$2").get();
-		}
-		else if (op == kOpMul)
-		{
-			newNode->mpOp_ = this->_ops->at("*$2").get();
-		}
-		else if (op == kOpDiv)
-		{
-			newNode->mpOp_ = this->_ops->at("/$2").get();
-		}
-		else if (op == kOpEq)
-		{
-			newNode->mpOp_ = this->_ops->at("==$2").get();
-		}
-		else if (op == kOpNe)
-		{
-			newNode->mpOp_ = this->_ops->at("!=$2").get();
-		}
-		else if (op == kOpLe)
-		{
-			newNode->mpOp_ = this->_ops->at("<=$2").get();
-		}
-		else if (op == kOpLt)
-		{
-			newNode->mpOp_ = this->_ops->at("<$2").get();
-		}
-		else if (op == kOpGe)
-		{
-			newNode->mpOp_ = this->_ops->at(">=$2").get();
-		}
-		else if (op == kOpGt)
-		{
-			newNode->mpOp_ = this->_ops->at(">$2").get();
-		}
+
         newNode->setPosition(token.getPosAsUInt());
 
         if (currentBinaryNode == nullptr) {
@@ -658,7 +626,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   uint32_t position = token.getPosAsUInt();
 
   StringRef str(_tokenizer._start + token.position, token.length);
-  AstSymbol* sym = _currentScope->resolveSymbol(str, token.hVal);
+  AstSymbol* sym = _currentScope->resolveSymbol(str, token.hVal); // resolve the Symbol.
 
   if (sym == nullptr)
     MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %.*s.", static_cast<int>(str.getLength()), str.getData());
@@ -674,11 +642,11 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   AstCall* callNode = _ast->newNode<AstCall>();
   MATHPRESSO_NULLCHECK(callNode);
 
-  callNode->setSymbol(sym);
+  callNode->setSymbol(sym); // set symbol as part of the node.
   callNode->setPosition(position);
 
   uToken = _tokenizer.peek(&token);
-  if (uToken != kTokenRParen) {
+  if (uToken != kTokenRParen) { // append parameters as children (sym not necessary)
     for (;;) {
       // Parse the argument expression.
       AstNode* expression;
@@ -708,7 +676,8 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   _tokenizer.consume();
 
   // Validate the number of function arguments.
-  size_t n = callNode->getLength();
+  size_t n = callNode->getLength(); 
+  // lookup symbol here? _crrentScope wrong value? 
   uint32_t reqArgs = sym->getFuncArgs();
 
   if (n != reqArgs) {
