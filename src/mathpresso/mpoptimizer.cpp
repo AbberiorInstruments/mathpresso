@@ -19,9 +19,10 @@ namespace mathpresso {
 	// [mpsl::AstOptimizer - Construction / Destruction]
 	// ============================================================================
 
-	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter)
+	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const symbolMap* syms)
 		: AstVisitor(ast),
-		_errorReporter(errorReporter) {}
+		_errorReporter(errorReporter),
+		_symbols(syms) {}
 	AstOptimizer::~AstOptimizer() {}
 
 	// ============================================================================
@@ -72,8 +73,8 @@ namespace mathpresso {
 
 	Error AstOptimizer::onVarDecl(AstVarDecl* node) {
 		AstSymbol* sym = node->getSymbol();
-
-		if (node->hasChild()) {
+		
+			if (node->hasChild()) {
 			MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 			AstNode* child = node->getChild();
 
@@ -88,6 +89,7 @@ namespace mathpresso {
 				else {
 					sym->setValue(static_cast<AstImm*>(child)->getValue());
 				}
+				sym->setAssigned();
 			}
 		}
 
@@ -96,7 +98,7 @@ namespace mathpresso {
 
 	Error AstOptimizer::onVar(AstVar* node) {
 		AstSymbol* sym = node->getSymbol();
-		bool b_complex = node ->returnsComplex();
+		bool b_complex = node->returnsComplex() || sym->hasSymbolFlag(kAstSymbolIsComplex);
 
 		if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) 
 		{
@@ -121,6 +123,10 @@ namespace mathpresso {
 
 	Error AstOptimizer::onUnaryOp(AstUnaryOp* node)
 	{
+		if (node->mpOp_)
+		{
+			node->mpOp_->optimize(this, node);
+		}
 		const OpInfo& op = OpInfo::get(node->getOp());
 
 		MATHPRESSO_PROPAGATE(onNode(node->getChild()));

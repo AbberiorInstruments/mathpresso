@@ -233,6 +233,8 @@ namespace mathpresso {
 	JitVar JitCompiler::onVarDecl(AstVarDecl* node) {
 		JitVar result;
 
+		return _symbols->at("=$2")->compile(this, node);
+
 		if (node->hasChild())
 			result = onNode(node->getChild());
 
@@ -265,18 +267,10 @@ namespace mathpresso {
 					else
 						result = copyVarComplex(result, JitVar::FLAG_NONE);
 				}
-
 			}
 			else 
 			{
-				if (!b_complex)
-				{
-					result = getConstantD64(mpGetNan());
-				}
-				else
-				{
-					result = getConstantD64(mpGetNan());
-				}
+				result = getConstantD64(mpGetNan());
 				varSlots[slotId] = result;
 			}
 		}
@@ -294,6 +288,10 @@ namespace mathpresso {
 
 	JitVar JitCompiler::onUnaryOp(AstUnaryOp* node)
 	{
+		if (node->mpOp_) {
+			return node->mpOp_->compile(this, node);
+		}
+
 		uint32_t op = node->getOp();
 		JitVar var = onNode(node->getChild());
 
@@ -1147,7 +1145,7 @@ namespace mathpresso {
 		return getConstantU64AsPD(bits.u);
 	}
 
-	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, bool b_complex) {
+	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const symbolMap * syms, bool b_complex) {
 		StringLogger logger;
 
 		CodeHolder code;
@@ -1161,7 +1159,7 @@ namespace mathpresso {
 			code.setLogger(&logger);
 		}
 
-		JitCompiler jitCompiler(ast->getHeap(), &c);
+		JitCompiler jitCompiler(ast->getHeap(), &c, syms);
 		if ((options & kOptionDisableSSE4_1) != 0)
 			jitCompiler.enableSSE4_1 = false;
 

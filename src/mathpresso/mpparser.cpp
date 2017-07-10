@@ -236,7 +236,7 @@ Error Parser::parseVariableDecl(AstBlock* block) {
     if (isAssigned) {
       AstNode* expression;
       MATHPRESSO_PROPAGATE_(parseExpression(&expression, false), { _ast->deleteNode(decl); });
-
+	
       decl->setChild(expression);
       vSym->incWriteCount();
 
@@ -436,10 +436,18 @@ _Repeat1:
       case kTokenSub         : op = kOpNeg   ; goto _Unary;
       case kTokenNot         : op = kOpNot   ; goto _Unary;
 _Unary: {
+
         // Parse the unary operator.
         AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>(op);
         MATHPRESSO_NULLCHECK(opNode);
         opNode->setPosition(token.getPosAsUInt());
+
+		std::string opNameDecorated(std::string(_tokenizer._start).substr(token.position, token.length) + "$1");
+
+		if (_ops->find(opNameDecorated) != _ops->end())
+		{
+			opNode->mpOp_ = _ops->at(opNameDecorated).get();
+		}
 
         if (lastUnaryNode == nullptr)
           currentNode = opNode;
@@ -485,7 +493,7 @@ _Unary: {
       // Parse a binary operator.
       case kTokenAssign: {
         op = kOpAssign;
-
+		
         // Check whether the assignment is valid.
         if (currentNode->getNodeType() != kAstNodeVar)
           MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
@@ -695,12 +703,16 @@ Error Parser::parseCall(AstNode** pNodeOut) {
       AstUnaryOp* unary = _ast->newNode<AstUnaryOp>(op.type);
       MATHPRESSO_NULLCHECK(unary);
 
+	  unary->mpOp_ = callNode->getSymbol()->getOp().get();
+	  
       unary->setChild(callNode->removeAt(0));
       opNode = unary;
     }
     else {
       AstBinaryOp* binary = _ast->newNode<AstBinaryOp>(op.type);
       MATHPRESSO_NULLCHECK(binary);
+
+	  binary->mpOp_ = callNode->getSymbol()->getOp().get();
 
       binary->setRight(callNode->removeAt(1));
       binary->setLeft(callNode->removeAt(0));

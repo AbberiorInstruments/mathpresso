@@ -377,6 +377,20 @@ namespace mathpresso {
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
 	};
+
+	class MpOperationAssignment : public MpOperation
+	{
+	public:
+		MpOperationAssignment() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft) 
+		{
+			priority_ = 15; 
+		}
+
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
+	};
+
 }
 
 

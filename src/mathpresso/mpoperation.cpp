@@ -15,6 +15,7 @@
 
 namespace mathpresso {
 
+	// MpOperationFunc
 	JitVar MpOperationFunc::compile(JitCompiler* jc, AstNode * node) 
 	{
 		asmjit::X86Xmm result = node->returnsComplex() ? jc->cc->newXmmPd() : jc->cc->newXmmSd();
@@ -208,7 +209,7 @@ namespace mathpresso {
 		}
 	}
 	
-	// -- MpOperationFuncAsm
+	// MpOperationFuncAsm
 	JitVar mathpresso::MpOperationFuncAsm::compile(JitCompiler * jc, AstNode * node) {
 		if (!hasFlag(MpOperationFlags::OpFlagHasAsm))
 		{
@@ -313,7 +314,7 @@ namespace mathpresso {
 		}
 	}
 
-	//-- mpOperationBinary
+	// mpOperationBinary
 	JitVar MpOperationBinary::compile(JitCompiler* jc, AstNode * node) 
 	{
 		JitVar vl, vr;
@@ -814,14 +815,17 @@ namespace mathpresso {
 	{
 		AstBinaryOp* lastColon = static_cast<AstBinaryOp*>(node);
 		// go to the last Colon after question-marks.
-		while (lastColon->getOp() == kOpQMark) {
+		while (lastColon->getOp() == kOpQMark) 
+		{
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 		}
-		while (lastColon->getRight()->getOp() == kOpColon) {
+		while (lastColon->getRight()->getOp() == kOpColon) 
+		{
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 		}
 
-		if (lastColon->getOp() != kOpColon) {
+		if (lastColon->getOp() != kOpColon)
+		{
 			return opt->_errorReporter->onError(kErrorInvalidSyntax, node->getPosition(),
 				"Invalid ternary operation. Expected a ':', found '%s' instead.", OpInfo::get(lastColon->getOp()).name);
 		}
@@ -860,58 +864,113 @@ namespace mathpresso {
 		}
 
 		// create the new Ternary Node.
-		AstTernaryOp* newNodeTernary = node->getAst()->newNode<AstTernaryOp>(kOpQMark);
-		newNodeTernary->setCondition(branchCondition);
-		newNodeTernary->setLeft(branchLeft);
-		newNodeTernary->setRight(branchRight);
+		AstTernaryOp* ternaryNode = node->getAst()->newNode<AstTernaryOp>(kOpQMark);
+		ternaryNode->setCondition(branchCondition);
+		ternaryNode->setLeft(branchLeft);
+		ternaryNode->setRight(branchRight);
 
 		AstBinaryOp* oldNode = static_cast<AstBinaryOp*>(node);
 
 		// add the new node to the AST.
-		node->getParent()->replaceNode(node, newNodeTernary);
+		node->getParent()->replaceNode(node, ternaryNode);
 
 		// clean up:
 		lastColon->setLeft(nullptr);
 		opt->_ast->deleteNode(lastColon);
 		opt->_ast->deleteNode(node);
 
-
-		MATHPRESSO_PROPAGATE(opt->onNode(newNodeTernary->getCondition()));
-		AstNode* branchCond = newNodeTernary->getCondition();
+		MATHPRESSO_PROPAGATE(opt->onNode(ternaryNode->getCondition()));
+		AstNode* branchCond = ternaryNode->getCondition();
 		if (branchCond->isImm()) {
+			// optimize an immediate condition
 			bool conditionIsTrue = static_cast<AstImm*>(branchCond)->getValueCplx() != std::complex<double>({ 0, 0 });
 
-			AstNode* newNode;
+			AstNode* nodeOptimized;
 
 			if (conditionIsTrue) {
-				newNode = newNodeTernary->getLeft();
-				newNodeTernary->setLeft(nullptr);
+				nodeOptimized = ternaryNode->getLeft();
+				ternaryNode->setLeft(nullptr);
 			}
 			else {
-				newNode = newNodeTernary->getRight();
-				newNodeTernary->setRight(nullptr);
+				nodeOptimized = ternaryNode->getRight();
+				ternaryNode->setRight(nullptr);
 			}
 
-			newNode->_parent = nullptr;
-			newNodeTernary->getParent()->replaceNode(newNodeTernary, newNode);
-			newNodeTernary->setCondition(nullptr);
-			newNodeTernary->setLeft(nullptr);
-			newNodeTernary->setRight(nullptr);
-			opt->_ast->deleteNode(newNodeTernary);
-			MATHPRESSO_PROPAGATE(opt->onNode(newNode));
+			nodeOptimized->_parent = nullptr;
+			ternaryNode->getParent()->replaceNode(ternaryNode, nodeOptimized);
+			ternaryNode->setCondition(nullptr);
+			ternaryNode->setLeft(nullptr);
+			ternaryNode->setRight(nullptr);
+			opt->_ast->deleteNode(ternaryNode);
+			MATHPRESSO_PROPAGATE(opt->onNode(nodeOptimized));
 
 		}
 		else {
-			newNodeTernary->removeNodeFlags(kAstTakesComplex);
-			MATHPRESSO_PROPAGATE(opt->onNode(newNodeTernary->getLeft()));
-			MATHPRESSO_PROPAGATE(opt->onNode(newNodeTernary->getRight()));
-			bool needs_complex = newNodeTernary->getLeft()->returnsComplex() | newNodeTernary->getRight()->returnsComplex();
+			ternaryNode->removeNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+			MATHPRESSO_PROPAGATE(opt->onNode(ternaryNode->getLeft()));
+			MATHPRESSO_PROPAGATE(opt->onNode(ternaryNode->getRight()));
+			bool needs_complex = ternaryNode->getLeft()->returnsComplex() | ternaryNode->getRight()->returnsComplex();
 			if (needs_complex)
 			{
-				newNodeTernary->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
+				ternaryNode->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
 			}
 		}
 		return kErrorOk;
 
 	}
+	
+	// Assignment
+	JitVar mathpresso::MpOperationAssignment::compile(JitCompiler * jc, AstNode * node) {
+		JitVar result;
+		AstVarDecl * varDecl = static_cast<AstVarDecl*>(node);
+		
+		if (varDecl->hasChild())
+			result = jc->onNode(varDecl->getChild());
+
+		AstSymbol* sym = varDecl->getSymbol();
+		uint32_t slotId = sym->getVarSlotId();
+
+		result.setRO();
+		jc->varSlots[slotId] = result;
+
+		return result;
+	}
+
+	uint32_t mathpresso::MpOperationAssignment::optimize(AstOptimizer * opt, AstNode * node) 
+	{
+		AstVarDecl * varDecl;
+		if (node->getNodeType() == kAstNodeVarDecl)
+		{
+			varDecl = static_cast<AstVarDecl*>(node);
+		}
+		else
+		{
+			return kErrorInvalidState;
+		}
+
+		AstSymbol* sym = varDecl->getSymbol();
+
+		if (varDecl->hasChild()) {
+			MATHPRESSO_PROPAGATE(opt->onNode(varDecl->getChild()));
+			AstNode* child = varDecl->getChild();
+
+			if (child->isImm())
+			{
+				if (child->returnsComplex())
+				{
+					sym->setValue(static_cast<AstImm*>(child)->getValueCplx());
+					varDecl->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+					sym->setSymbolFlag(kAstSymbolIsComplex);
+				}
+				else {
+					sym->setValue(static_cast<AstImm*>(child)->getValue());
+				}
+				sym->setAssigned();
+			}
+		}
+
+		return kErrorOk;
+	}
+
+
 } // end namespace mathpresso
