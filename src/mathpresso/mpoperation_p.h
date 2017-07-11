@@ -119,13 +119,14 @@ namespace mathpresso {
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
-
 		virtual void setFn(void * fn, bool isComplex = false);
+
+
 	protected:
 		virtual double evaluateDRetD(double *args);
-		
-		double fnDouble(AstOptimizer * opt, AstNode *node);
-		std::complex<double> fnComplex(AstOptimizer * opt, AstNode *node);
+		virtual std::complex<double> evaluateDRetC(double *args);
+		virtual double evaluateCRetD(std::complex<double> *args);
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args);
 
 		// Function-pointer:
 		void * fnC_;
@@ -156,21 +157,39 @@ namespace mathpresso {
 	};
 
 
-	//class MpOprationUnary :public MpOperationFuncAsm
-	//{
-	//public:
-	//	//MpOprationUnary() :
-	//	//	MpOperationFuncAsm(1, 0, (void*)calculateReal, (void)calculateComplex, generateAsmReal, generateAsmComplex)
-	//	//{
-	//	//}
+	class MpOprationIsFinite :public MpOperationFuncAsm
+	{
+	public:
+		MpOprationIsFinite() :
+			MpOperationFuncAsm(uint32_t(1), uint32_t(0), nullptr, nullptr, nullptr, nullptr)
+		{
+			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
+		}
 
-	//	virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
-	//private:
-	//	JitVar generateAsmComplex(JitCompiler *jc, AstNode * node);
-	//	 JitVar generateAsmReal(JitCompiler *jc, AstNode * node);
-	//	double calculateReal(double* args);
-	//	std::complex<double> calculateComplex(std::complex<double>* args);
-	//};
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	private:
+		virtual double evaluateDRetD(double *args) override ;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+		
+	};
+
+	class MpOprationIsInfinite :public MpOperationFuncAsm
+	{
+	public:
+		MpOprationIsInfinite() :
+			MpOperationFuncAsm(uint32_t(1), uint32_t(0), nullptr, nullptr, nullptr, nullptr) 
+		{
+			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
+		}
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	private:
+		virtual double evaluateDRetD(double *args) override;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+
+	};
 
 	// ============================================================================
 	// Binary operations

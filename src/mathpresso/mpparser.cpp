@@ -693,6 +693,13 @@ Error Parser::parseCall(AstNode** pNodeOut) {
     MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires %u argument(s) (%u provided).", sym->getName(), reqArgs, n);
   }
 
+  std::string opNameDecorated(std::string(_tokenizer._start).substr(token.position, token.length) + "$" + std::to_string(n));
+
+  if (_ops->find(opNameDecorated) != _ops->end())
+  {
+	  callNode->_symbol->setOp(_ops->at(opNameDecorated));
+  }
+
   // Transform an intrinsic function into unary or binary operator.
   if (sym->getSymbolType() == kAstSymbolIntrinsic) {
     const OpInfo& op = OpInfo::get(sym->getOpType());

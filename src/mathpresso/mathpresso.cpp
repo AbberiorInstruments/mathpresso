@@ -294,13 +294,16 @@ struct GlobalConstant {
   double value;
 };
 
+#define TRY_EMPLACE(key, val) if (_symbols.find(key) == _symbols.end()) \
+_symbols.emplace(key, val);
+#define EMPLACE(key, val) _symbols.erase(key); \
+_symbols.emplace(key, val);
+
 Error Context::addBuiltIns(void) {
   ContextInternalImpl* d;
   MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
 
-  uint32_t i;
-
-  for (i = kOpNone + 1; i < kOpCount; i++) 
+  for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {
     const OpInfo& op = OpInfo::get(i);
 	
@@ -331,21 +334,28 @@ Error Context::addBuiltIns(void) {
 	{
 		this->addFunction(op.name.c_str(), op.funcCtoD, flags, op.funcCtoDAsm);
 	}
-  }
+  } 
 
   // add some symbols as MpOperations:
-  _symbols.try_emplace("+$2", std::make_shared<MpOperationAdd>());
-  _symbols.try_emplace("-$2", std::make_shared<MpOperationSub>());
-  _symbols.try_emplace("*$2", std::make_shared<MpOperationMul>());
-  _symbols.try_emplace("/$2", std::make_shared<MpOperationDiv>());
-  _symbols.try_emplace("==$2", std::make_shared<MpOperationEq>());
-  _symbols.try_emplace("!=$2", std::make_shared<MpOperationNe>());
-  _symbols.try_emplace(">=$2", std::make_shared<MpOperationGe>());
-  _symbols.try_emplace(">$2", std::make_shared<MpOperationGt>());
-  _symbols.try_emplace("<=$2", std::make_shared<MpOperationLe>());
-  _symbols.try_emplace("<$2", std::make_shared<MpOperationLt>());
-  _symbols.try_emplace("?$2", std::make_shared<MpOperationTernary>());
-  _symbols.try_emplace("=$2", std::make_shared<MpOperationAssignment>());
+  TRY_EMPLACE("+$2", std::make_shared<MpOperationAdd>());
+  TRY_EMPLACE("-$2", std::make_shared<MpOperationSub>());
+  TRY_EMPLACE("*$2", std::make_shared<MpOperationMul>());
+  TRY_EMPLACE("/$2", std::make_shared<MpOperationDiv>());
+  TRY_EMPLACE("==$2", std::make_shared<MpOperationEq>());
+  TRY_EMPLACE("!=$2", std::make_shared<MpOperationNe>());
+  TRY_EMPLACE(">=$2", std::make_shared<MpOperationGe>());
+  TRY_EMPLACE(">$2", std::make_shared<MpOperationGt>());
+  TRY_EMPLACE("<=$2", std::make_shared<MpOperationLe>());
+  TRY_EMPLACE("<$2", std::make_shared<MpOperationLt>());
+  TRY_EMPLACE("?$2", std::make_shared<MpOperationTernary>());
+  TRY_EMPLACE("=$2", std::make_shared<MpOperationAssignment>());
+  
+  // exchange the builtin symbols with their counterpart.
+  EMPLACE("isfinite$1", std::make_shared<MpOprationIsFinite>());
+  d->_scope.resolveSymbol(StringRef("isfinite"))->setOp(_symbols["isfinite$1"]);
+
+  EMPLACE("isinf$1", std::make_shared<MpOprationIsInfinite>());
+  d->_scope.resolveSymbol(StringRef("isinf"))->setOp(_symbols["isinf$1"]);
 
   const GlobalConstant mpGlobalConstants[] = {
     { "NaN", mpGetNan() },
@@ -354,7 +364,7 @@ Error Context::addBuiltIns(void) {
     { "E"  , 2.7182818284590452354  }
   };
 
-  for (i = 0; i < MATHPRESSO_ARRAY_SIZE(mpGlobalConstants); i++) {
+  for (size_t i = 0; i < MATHPRESSO_ARRAY_SIZE(mpGlobalConstants); i++) {
     const GlobalConstant& c = mpGlobalConstants[i];
 
     StringRef name(c.name, ::strlen(c.name));
@@ -476,13 +486,16 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 
 	std::string name_decorated(name);
 	name_decorated += "$" + std::to_string(flags & _kFunctionArgMask);
+	bool existst = false;
 	if (fnAsm)
 	{
-		_symbols.try_emplace(name_decorated, std::make_shared<MpOperationFuncAsm>(flags & _kFunctionArgMask, 0, nullptr, nullptr, nullptr, nullptr));
+		if (_symbols.find(name_decorated) == _symbols.end())
+			_symbols.emplace(name_decorated, std::make_shared<MpOperationFuncAsm>(flags & _kFunctionArgMask, 0, nullptr, nullptr, nullptr, nullptr));
 	}
 	else
 	{
-		_symbols.try_emplace(name_decorated, std::make_shared<MpOperationFunc>(flags & _kFunctionArgMask, 0, nullptr, nullptr));
+		if (_symbols.find(name_decorated) == _symbols.end())
+			_symbols.emplace(name_decorated, std::make_shared<MpOperationFunc>(flags & _kFunctionArgMask, 0, nullptr, nullptr));
 	}
 	
 	if (!sym->getOp())
@@ -498,6 +511,7 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 
 		sym ->setFuncPtr(fn, true);
 		sym->setAsmPtr(fnAsm, true);
+		
 		symOp->setFn(fn, true);
 		if (fnAsm && symOp->hasFlag(MpOperationFlags::OpFlagHasAsm))
 		{
@@ -512,11 +526,12 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 	}
 	else
 	{
-		if (sym ->getFuncPtr())
+		if (sym->getFuncPtr())
 			return kErrorSymbolAlreadyExists;
 
-		sym ->setFuncPtr(fn);
+		sym->setFuncPtr(fn);
 		sym->setAsmPtr(fnAsm);
+
 		symOp->setFn(fn);
 		if (fnAsm && symOp->hasFlag(MpOperationFlags::OpFlagHasAsm))
 		{
