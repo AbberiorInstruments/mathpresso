@@ -221,7 +221,8 @@ namespace mathpresso {
 					std::complex<double> value(0, 0);
 					if (op.funcCtoD)
 					{
-						p_imm->setValue(((mpFuncpCtoD)op.funcCtoD)(&std::complex<double>(operand, 0)));
+						std::complex<double> tmp(operand, 0);
+						p_imm->setValue(((mpFuncpCtoD)op.funcCtoD)(&tmp));
 					}
 					else 
 					{
@@ -235,7 +236,8 @@ namespace mathpresso {
 					std::complex<double> value(0, 0);
 					if (op.funcCtoC) 
 					{
-						p_imm->setValue(((mpFuncpCtoC)op.funcCtoC)(&std::complex<double>(operand, 0)));
+						std::complex<double> tmp(operand, 0);
+						p_imm->setValue(((mpFuncpCtoC)op.funcCtoC)(&tmp));
 					}
 					else 
 					{
