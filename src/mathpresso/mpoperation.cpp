@@ -8,8 +8,8 @@
 #include "mpast_p.h"
 #include "mpcompiler_p.h"
 #include "mpoptimizer_p.h"
-#include "asmjit\x86\x86operand.h"
-#include "asmjit\x86\x86inst.h"
+#include "asmjit/x86/x86operand.h"
+#include "asmjit/x86/x86inst.h"
 
 #include <complex>
 
