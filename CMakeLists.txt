@@ -48,7 +48,7 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(GNU|Clang)$")
   cxx_detect_standard(MATHPRESSO_PRIVATE_CFLAGS)
   cxx_detect_cflags(MATHPRESSO_PRIVATE_CFLAGS
     "-fvisibility=hidden"
-    "-fno-exceptions"
+    #"-fno-exceptions"
     "-fno-tree-vectorize"
     "-Winconsistent-missing-override")
   list(APPEND MATHPRESSO_PRIVATE_CFLAGS_REL -fmerge-all-constants)
