@@ -332,9 +332,10 @@ namespace mathpresso {
 			jc->cc->orpd(var.getXmm(), jc->getConstantU64AsPD(MATHPRESSO_UINT64_C(0x8000000000000000)).getMem());
 			jc->cc->cmpsd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0xFFF0000000000000)).getMem(), int(asmjit::x86::kCmpEQ));
 			jc->cc->andpd(var.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
-		}
+		}	
 		return var;
 	}
+
 
 	double MpOprationIsInfinite::evaluateDRetD(double * args) {
 		return std::isinf(args[0]) ? 1.0 : 0.0;
