@@ -365,7 +365,7 @@ struct OpInfo {
   // --------------------------------------------------------------------------
   // [Constructor]
   // --------------------------------------------------------------------------
-	OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_) :
+	OpInfo(std::string name_, uint8_t type_, uint8_t precedence_, uint32_t flags_) :
 		name(name_),
 		type(type_),
 		precedence(precedence_),
@@ -381,7 +381,7 @@ struct OpInfo {
 	{
 	};
 
-	OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcRealtoReal, void* funcCplxtoCplx, void* funcCplxtoReal = nullptr, void* funcRealtoCplx = nullptr) :
+	OpInfo(std::string name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcRealtoReal, void* funcCplxtoCplx, void* funcCplxtoReal = nullptr, void* funcRealtoCplx = nullptr) :
 		name(name_),
 		type(type_),
 		precedence(precedence_),
@@ -395,7 +395,9 @@ struct OpInfo {
 		funcCtoDAsm(nullptr),
 		funcDtoCAsm(nullptr)
 	{
-	}; OpInfo(char* name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcRealtoReal, void* funcCplxtoCplx, void* funcCplxtoReal, void* funcRealtoCplx, void* fnRtoRasm, void* fnCtoCAsm) :
+	};
+	
+	OpInfo(std::string name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcRealtoReal, void* funcCplxtoCplx, void* funcCplxtoReal, void* funcRealtoCplx, void* fnRtoRasm, void* fnCtoCAsm) :
 		name(name_),
 		type(type_),
 		precedence(precedence_),
