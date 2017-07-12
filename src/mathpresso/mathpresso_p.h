@@ -309,6 +309,9 @@ enum OpFlags {
   //! The operator calculates a trigonometric function.
   kOpFlagTrigonometric = 0x00000800,
 
+  // set if there is an object for this function.
+  _kOpFlagHasobject = 0x00010000,
+
   kOpFlagNopIfLZero    = 0x10000000,
   kOpFlagNopIfRZero    = 0x20000000,
   kOpFlagNopIfLOne     = 0x40000000,

@@ -252,7 +252,9 @@ enum FunctionFlags {
 
   //! Function doesn't have side-effects and can be evaluated (i.e. optimized
   //! out) during a constant folding phase.
-  kFunctionNoSideEffects = 0x80000000
+  kFunctionNoSideEffects = 0x20000000,
+
+  _kFunctionHasObject = 0x20000000
 };
 
 // ============================================================================

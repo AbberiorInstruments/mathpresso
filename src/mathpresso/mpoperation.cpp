@@ -23,7 +23,7 @@ namespace mathpresso {
 
 		if (!node->takesComplex())
 		{
-			bool returnsComplex = (flags_ & OpFlagDReturnsC) != 0;
+			bool returnsComplex = hasFlag(MpOperationFlags::OpFlagDReturnsC);
 			if (node->returnsComplex() != returnsComplex  || !fnD_)
 			{
 				// Should never happen, as the optimizer should have taken care of that. Remove later
@@ -46,7 +46,7 @@ namespace mathpresso {
 		}
 		else
 		{
-			bool returnsComplex = (flags_ & OpFlagCReturnsD) == 0;
+			bool returnsComplex = !hasFlag(MpOperationFlags::OpFlagCReturnsD);
 			if (node->returnsComplex() != returnsComplex || !fnC_)
 			{
 				// Should never happen, as the optimizer should have taken care of that. Remove later
@@ -89,24 +89,24 @@ namespace mathpresso {
 		// set flags according to the available functions.
 		if (b_need_cplx)
 		{
-			if (flags_ & OpHasNoComplex)
+			if (hasFlag(MpOperationFlags::OpHasNoComplex))
 				return opt->_errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
 					"No complex function available.");
 
 			node->addNodeFlags(AstNodeFlags::kAstTakesComplex);
-			b_returns_complex = (flags_ & OpFlagCReturnsD) == 0;
+			b_returns_complex = !hasFlag(MpOperationFlags::OpFlagCReturnsD);
 		}
 		else
 		{
-			if (!(flags_ & OpHasNoReal))
+			if (!hasFlag(MpOperationFlags::OpHasNoReal))
 			{
 				node->removeNodeFlags(AstNodeFlags::kAstTakesComplex);
-				b_returns_complex = flags_ & OpFlagDReturnsC;
+				b_returns_complex = hasFlag(MpOperationFlags::OpFlagDReturnsC);
 			}
-			else if (!(flags_ & OpHasNoComplex))
+			else if (!hasFlag(MpOperationFlags::OpHasNoComplex))
 			{
 				node->addNodeFlags(AstNodeFlags::kAstTakesComplex);
-				b_returns_complex = (flags_ & OpFlagCReturnsD) == 0;
+				b_returns_complex = !hasFlag(MpOperationFlags::OpFlagCReturnsD);
 			}
 			else
 			{
@@ -256,7 +256,7 @@ namespace mathpresso {
 			}
 			else
 			{
-				bool returnsComplex = (flags_ & OpFlagCReturnsD) == 0;
+				bool returnsComplex = !hasFlag(MpOperationFlags::OpFlagCReturnsD);
 				if (node->returnsComplex() != returnsComplex || !fnC_)
 				{
 					// Should never happen, as the optimizer should have taken care of that. Remove later
@@ -336,13 +336,34 @@ namespace mathpresso {
 		return var;
 	}
 
-
 	double MpOprationIsInfinite::evaluateDRetD(double * args) {
 		return std::isinf(args[0]) ? 1.0 : 0.0;
 	}
 
 	std::complex<double> MpOprationIsInfinite::evaluateCRetC(std::complex<double>* args) {
 		return std::complex<double>(std::isinf(args[0].real()) ? 1.0 : 0.0, std::isinf(args[0].imag()) ? 1.0 : 0.0);
+	}
+	
+	// MpOprationGetReal
+	JitVar MpOprationGetReal::compile(JitCompiler * jc, AstNode * node) {
+		JitVar var(jc->onNode(node->getAt(0)));
+		JitVar varRet(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);;
+
+		if (node->takesComplex())
+		{
+			varRet = jc->writableVar(var);
+			jc->cc->xorpd(varRet.getXmm(), varRet.getXmm());
+			jc->cc->movsd(var.getXmm(), varRet.getXmm());
+		}
+		else
+		{
+			throw std::runtime_error("should not be reached");
+		}
+		return var;
+	}
+
+	double MpOprationGetReal::evaluateCRetD(std::complex<double>* args) {
+		return args->real();
 	}
 
 
@@ -408,7 +429,7 @@ namespace mathpresso {
 		bool needs_complex = left->returnsComplex() || right->returnsComplex();
 
 		// set the flags according to the operands and the capability's of the MpOperationbinary.
-		if ((needs_complex || hasFlag(OpHasNoReal)) && !hasFlag(OpHasNoComplex))
+		if ((needs_complex || hasFlag(MpOperationFlags::OpHasNoReal)) && !hasFlag(MpOperationFlags::OpHasNoComplex))
 		{
 			node->addNodeFlags(AstNodeFlags::kAstReturnsComplex | AstNodeFlags::kAstTakesComplex);
 		}
@@ -418,15 +439,15 @@ namespace mathpresso {
 			// optimize a calculation with two immediates.
 			AstImm* lNode = static_cast<AstImm*>(left);
 			AstImm* rNode = static_cast<AstImm*>(right);
-			if (needs_complex && !hasFlag(OpHasNoComplex))
+			if (needs_complex && !hasFlag(MpOperationFlags::OpHasNoComplex))
 			{
 				lNode->setValue(calculateComplex(lNode->getValueCplx(), rNode->getValueCplx()));
 			}
-			else if (!needs_complex && !hasFlag(OpHasNoReal))
+			else if (!needs_complex && !hasFlag(MpOperationFlags::OpHasNoReal))
 			{
 				lNode->setValue(calculateReal(lNode->getValue(), rNode->getValue()));
 			}
-			else if (!needs_complex && !hasFlag(OpHasNoComplex))
+			else if (!needs_complex && !hasFlag(MpOperationFlags::OpHasNoComplex))
 			{
 				lNode->setValue(calculateComplex(lNode->getValueCplx(), rNode->getValueCplx()));
 			}
@@ -444,8 +465,8 @@ namespace mathpresso {
 		{
 			AstImm* lNode = static_cast<AstImm*>(left);
 			// if the node is real, the imaginary part is set to zero by default.
-			if ((hasFlag(OpFlagNopIfLZero) && lNode->getValueCplx() == std::complex<double>(0.0, 0.0)) ||
-				(hasFlag(OpFlagNopIfLOne) && lNode->getValueCplx() == std::complex<double>(1.0, 0.0)))
+			if ((hasFlag(MpOperationFlags::OpFlagNopIfLZero) && lNode->getValueCplx() == std::complex<double>(0.0, 0.0)) ||
+				(hasFlag(MpOperationFlags::OpFlagNopIfLOne) && lNode->getValueCplx() == std::complex<double>(1.0, 0.0)))
 			{
 				static_cast<AstBinaryOp*>(node)->unlinkRight();
 				node->getParent()->replaceNode(node, right);
@@ -456,8 +477,8 @@ namespace mathpresso {
 		{
 			AstImm* rNode = static_cast<AstImm*>(right);
 			
-			if ((hasFlag(OpFlagNopIfRZero) && rNode->getValueCplx() == std::complex<double>(0.0, 0.0)) ||
-				(hasFlag(OpFlagNopIfROne) &&  rNode->getValueCplx() == std::complex<double>(1.0, 0.0)))
+			if ((hasFlag(MpOperationFlags::OpFlagNopIfRZero) && rNode->getValueCplx() == std::complex<double>(0.0, 0.0)) ||
+				(hasFlag(MpOperationFlags::OpFlagNopIfROne) &&  rNode->getValueCplx() == std::complex<double>(1.0, 0.0)))
 			{
 				static_cast<AstBinaryOp*>(node)->unlinkLeft();
 				node->getParent()->replaceNode(node, left);

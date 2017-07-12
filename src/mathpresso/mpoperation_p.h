@@ -161,7 +161,7 @@ namespace mathpresso {
 	{
 	public:
 		MpOprationIsFinite() :
-			MpOperationFuncAsm(uint32_t(1), uint32_t(0), nullptr, nullptr, nullptr, nullptr)
+			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr)
 		{
 			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
 		}
@@ -178,7 +178,7 @@ namespace mathpresso {
 	{
 	public:
 		MpOprationIsInfinite() :
-			MpOperationFuncAsm(uint32_t(1), uint32_t(0), nullptr, nullptr, nullptr, nullptr) 
+			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr) 
 		{
 			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
 		}
@@ -188,6 +188,22 @@ namespace mathpresso {
 	private:
 		virtual double evaluateDRetD(double *args) override;
 		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+
+	};
+
+	class MpOprationGetReal :public MpOperationFuncAsm
+	{
+	public:
+		MpOprationGetReal() :
+			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr) {
+			flags_ &= ~OpHasNoComplex;
+		}
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	private:
+		
+		virtual double evaluateCRetD(std::complex<double> *args) override;
 
 	};
 
