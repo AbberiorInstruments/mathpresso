@@ -112,7 +112,7 @@ namespace mathpresso
 
 		JitVar copyVarComplex(const JitVar & other, uint32_t flags);
 		JitVar writableVarComplex(const JitVar & other);
-		JitVar registerVarComplex(const JitVar & other, bool otherIsComplex = false);
+		JitVar registerVarComplex(const JitVar & other, bool otherIsNonComplex = false);
 		JitVar registerVarAsComplex(const JitVar & other);
 
 		// Compiler.

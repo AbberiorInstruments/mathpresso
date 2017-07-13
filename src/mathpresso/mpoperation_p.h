@@ -120,13 +120,15 @@ namespace mathpresso {
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
 		virtual void setFn(void * fn, bool isComplex = false);
-
-
 	protected:
 		virtual double evaluateDRetD(double *args);
 		virtual std::complex<double> evaluateDRetC(double *args);
 		virtual double evaluateCRetD(std::complex<double> *args);
 		virtual std::complex<double> evaluateCRetC(std::complex<double> *args);
+
+		// Should be overridden, if there is a special opportunity for optimization.
+		// Will be called by optimize as the last operation.
+		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node);
 
 		// Function-pointer:
 		void * fnC_;
@@ -155,8 +157,7 @@ namespace mathpresso {
 		mpAsmFunc asmC_;
 		mpAsmFunc asmD_;
 	};
-
-
+	
 	class MpOprationIsFinite :public MpOperationFuncAsm
 	{
 	public:
@@ -197,16 +198,26 @@ namespace mathpresso {
 		MpOprationGetReal() :
 			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr) {
 			flags_ &= ~OpHasNoComplex;
+			flags_ |= OpFlagCReturnsD;
 		}
-
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-
-	private:
-		
+	private:		
 		virtual double evaluateCRetD(std::complex<double> *args) override;
-
 	};
 
+	class MpOprationGetImag :public MpOperationFuncAsm
+	{
+	public:
+		MpOprationGetImag() :
+			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr) {
+			flags_ &= ~OpHasNoComplex;
+			flags_ |= OpFlagCReturnsD;
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	private:
+		virtual double evaluateCRetD(std::complex<double> *args) override;
+	};
+	
 	// ============================================================================
 	// Binary operations
 	// ============================================================================
@@ -232,12 +243,12 @@ namespace mathpresso {
 	protected:
 		// These are called by compile() and should only contain the asm-statements.
 		// vl will always be in a register, vr can be in Register or in Memory.
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) = 0;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) = 0;
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr);
+		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr);
 
 		// Used to calculate optimization of immediates.
-		virtual double calculateReal(double vl, double vr) = 0;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) = 0;
+		virtual double calculateReal(double vl, double vr) { return NAN; };
+		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(NAN, NAN); };
 	};
 		
 	// Addition
@@ -347,9 +358,7 @@ namespace mathpresso {
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
 	};
 
 	// Lesser Equal
@@ -363,9 +372,7 @@ namespace mathpresso {
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
 	};
 
 	// Greater than
@@ -379,9 +386,7 @@ namespace mathpresso {
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
 	};
 
 	// Greater equal
@@ -395,9 +400,7 @@ namespace mathpresso {
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
 	};
 
 	class MpOperationTernary : public MpOperation

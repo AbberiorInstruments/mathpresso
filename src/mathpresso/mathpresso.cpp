@@ -94,8 +94,8 @@ namespace mathpresso {
 		{ "atan2$2", OpInfo("atan2", kOpAtan2, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpAtan2), nullptr) },
 		{ "hypot$2", OpInfo("hypot", kOpHypot, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpHypot), nullptr) },
 		{ "copysign$2", OpInfo("copysign", kOpCopySign, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpCopySign), nullptr) },
-		{ "real$1", OpInfo("real", kOpReal, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic, nullptr, nullptr, reinterpret_cast<void*>(mpGetReal), nullptr) },
-		{ "imag$1", OpInfo("imag", kOpImag, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic, nullptr, nullptr, reinterpret_cast<void*>(mpGetImag), nullptr) },
+		{ "real$1", OpInfo("real", kOpReal, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, nullptr, reinterpret_cast<void*>(mpGetReal), nullptr) },
+		{ "imag$1", OpInfo("imag", kOpImag, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, nullptr, reinterpret_cast<void*>(mpGetImag), nullptr) },
 		{ "conjug$1", OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::conj>)) },
 		{ "sqrtC$1", OpInfo("sqrtC", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::sqrt>)) }
 	};
@@ -318,6 +318,8 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("=$2", std::make_shared<MpOperationAssignment>());
   TRY_EMPLACE("isfinite$1", std::make_shared<MpOprationIsFinite>());
   TRY_EMPLACE("isinf$1", std::make_shared<MpOprationIsInfinite>());
+  TRY_EMPLACE("real$1", std::make_shared<MpOprationGetReal>());
+  TRY_EMPLACE("imag$1", std::make_shared<MpOprationGetImag>());
  
   for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {

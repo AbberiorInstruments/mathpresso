@@ -120,7 +120,7 @@ namespace mathpresso {
 		if (otherIsNonComplex) 
 			return registerVarAsComplex(other);
 		else if (other.isMem())
-			return copyVarComplex(other, other.flags);
+			return copyVarComplex(other, JitVar::FLAGS::FLAG_NONE);
 		else
 			return other;
 	}

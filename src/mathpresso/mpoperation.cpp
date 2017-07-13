@@ -166,7 +166,7 @@ namespace mathpresso {
 
 			opt->getAst()->deleteNode(node);
 		}
-		return ErrorCode::kErrorOk;
+		return optimizeSpecial(opt, node);
 	}
 
 	void MpOperationFunc::setFn(void* fn, bool isComplex) {
@@ -227,6 +227,10 @@ namespace mathpresso {
 			throw std::runtime_error("Function does not exist.");
 		}
 		return ((mpFuncpCtoC)fnC_)(args);
+	}
+
+	uint32_t MpOperationFunc::optimizeSpecial(AstOptimizer * opt, AstNode * node) {
+		return mathpresso::ErrorCode::kErrorOk;
 	}
 	
 	// MpOperationFuncAsm
@@ -351,9 +355,37 @@ namespace mathpresso {
 
 		if (node->takesComplex())
 		{
-			varRet = jc->writableVar(var);
 			jc->cc->xorpd(varRet.getXmm(), varRet.getXmm());
-			jc->cc->movsd(var.getXmm(), varRet.getXmm());
+			if (var.isXmm())
+			{
+				jc->cc->movsd(varRet.getXmm(), var.getXmm());
+			}
+			else
+			{
+				jc->cc->movsd(varRet.getXmm(), var.getMem());
+			}
+		}
+		else
+		{
+			throw std::runtime_error("should not be reached");
+		}
+		return varRet;
+	}
+
+	double MpOprationGetReal::evaluateCRetD(std::complex<double>* args) {
+		return args->real();
+	}
+
+	// MpOprationGetImag
+	JitVar MpOprationGetImag::compile(JitCompiler * jc, AstNode * node) {
+		JitVar var(jc->onNode(node->getAt(0)));
+
+		JitVar varRet(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);;
+		if (node->takesComplex())
+		{
+			var = jc->registerVarComplex(var, !node->getAt(0)->hasNodeFlag(kAstReturnsComplex));
+			jc->cc->xorpd(varRet.getXmm(), varRet.getXmm());
+			jc->cc->shufpd(var.getXmm(), varRet.getXmm(), 1);
 		}
 		else
 		{
@@ -362,10 +394,9 @@ namespace mathpresso {
 		return var;
 	}
 
-	double MpOprationGetReal::evaluateCRetD(std::complex<double>* args) {
-		return args->real();
+	double MpOprationGetImag::evaluateCRetD(std::complex<double>* args) {
+		return args->imag();
 	}
-
 
 	// mpOperationBinary
 	JitVar MpOperationBinary::compile(JitCompiler* jc, AstNode * node) 
@@ -487,6 +518,14 @@ namespace mathpresso {
 			
 		}
 		return ErrorCode::kErrorOk;
+	}
+
+	JitVar MpOperationBinary::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) {
+		throw std::runtime_error("No Override available!");
+	}
+
+	JitVar MpOperationBinary::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) {
+		throw std::runtime_error("No Override available!");
 	}
 
 
@@ -725,14 +764,8 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationLt::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
-	{
-		throw std::runtime_error("Wrong implementation of MpOperationbinary!");
-	}
-
 	double MpOperationLt::calculateReal(double vl, double vr) { return vl < vr ? 1.0 : 0.0; }
-	std::complex<double> MpOperationLt::calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(NAN, NAN); }
-
+	
 	// Lesser equal
 	JitVar MpOperationLe::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
 	{
@@ -749,14 +782,8 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationLe::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
-	{
-		throw std::runtime_error("Wrong implementation of MpOperationbinary!");
-	}
-
 	double MpOperationLe::calculateReal(double vl, double vr) { return vl <= vr ? 1.0 : 0.0; }
-	std::complex<double> MpOperationLe::calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(NAN, NAN); }
-
+	
 	// Greater than
 	JitVar MpOperationGt::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
 	{
@@ -773,14 +800,8 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationGt::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
-	{
-		throw std::runtime_error("Wrong implementation of MpOperationbinary!");
-	}
-
 	double MpOperationGt::calculateReal(double vl, double vr) { return vl > vr ? 1.0 : 0.0; }
-	std::complex<double> MpOperationGt::calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(NAN, NAN); }
-
+	
 	// Greater equal
 	JitVar MpOperationGe::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
 	{
@@ -797,14 +818,9 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationGe::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
-	{
-		throw std::runtime_error("Wrong implementation of MpOperationbinary!");
-	}
-
 	double MpOperationGe::calculateReal(double vl, double vr) { return vl >= vr ? 1.0 : 0.0; }
-	std::complex<double> MpOperationGe::calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(NAN, NAN); }
-
+	
+	// Ternary operation
 	JitVar MpOperationTernary::compile(JitCompiler* jc, AstNode * node)
 	{
 		asmjit::Label lblElse = jc->cc->newLabel();
