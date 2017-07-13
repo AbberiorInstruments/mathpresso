@@ -192,6 +192,22 @@ namespace mathpresso {
 
 	};
 
+	class MpOprationIsNan :public MpOperationFuncAsm
+	{
+	public:
+		MpOprationIsNan() :
+			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr) {
+			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
+		}
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	private:
+		virtual double evaluateDRetD(double *args) override;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+
+	};
+
 	class MpOprationGetReal :public MpOperationFuncAsm
 	{
 	public:
@@ -313,6 +329,32 @@ namespace mathpresso {
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Minimum
+	class MpOperationMin : public MpOperationBinary
+	{
+	public:
+		MpOperationMin() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0) {
+		}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+	};
+
+	// Maximum
+	class MpOperationMax : public MpOperationBinary
+	{
+	public:
+		MpOperationMax() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0) {
+		}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
 	};
 
 	// Equality
