@@ -43,7 +43,7 @@ namespace mathpresso {
 		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR) },
 		{ "-$1", OpInfo("-", kOpNeg, 3, RTL | CandR | kOpFlagArithmetic | kOpFlagUnary) },
 		{ "!$1", OpInfo("!", kOpNot, 3, RTL | RtoR | kOpFlagCondition | kOpFlagUnary) },
-		{ "=$2", OpInfo("=", kOpAssign, 15, RTL | CandR | kOpFlagAssign | kOpFlagBinary) },
+		{ "=$2", OpInfo("=", kOpAssign, 15, RTL | CandR | kOpFlagAssign | kOpFlagBinary | _kOpFlagHasobject) }, // done
 		
 		{ "==$2", OpInfo("==", kOpEq, 9, LTR | CandR | kOpFlagCondition | kOpFlagBinary | _kOpFlagHasobject) }, // done
 		{ "!=$2", OpInfo("!=", kOpNe, 9, LTR | CandR | kOpFlagCondition | kOpFlagBinary | _kOpFlagHasobject) }, // done
@@ -323,6 +323,7 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("imag$1", std::make_shared<MpOprationGetImag>());
   TRY_EMPLACE("min$2", std::make_shared<MpOperationMin>());
   TRY_EMPLACE("max$2", std::make_shared<MpOperationMax>());
+  TRY_EMPLACE("=$2", std::make_shared<MpOperationAssignment>());
 
   for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {

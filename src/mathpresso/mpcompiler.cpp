@@ -233,7 +233,8 @@ namespace mathpresso {
 	JitVar JitCompiler::onVarDecl(AstVarDecl* node) {
 		JitVar result;
 
-		return _symbols->at("=$2")->compile(this, node);
+		if (node->mpOp_)
+			return node->mpOp_->compile(this, node);
 
 		if (node->hasChild())
 			result = onNode(node->getChild());
@@ -479,18 +480,16 @@ namespace mathpresso {
 	}
 
 	JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
-		uint32_t op = node->getOp();
-
-		AstNode* left = node->getLeft();
-		AstNode* right = node->getRight();
-
 		if (node->mpOp_)
 		{
 			return node->mpOp_->compile(this, node);
 		}
+		
+		uint32_t op = node->getOp();
 
-
-
+		AstNode* left = node->getLeft();
+		AstNode* right = node->getRight();
+		
 		// Compile assignment. Should never be reached.
 		if (op == kOpAssign) {
 			AstVar* varNode = reinterpret_cast<AstVar*>(left);
@@ -509,7 +508,6 @@ namespace mathpresso {
 				return result;
 			}
 		}
-
 
 		JitVar vl, vr;
 

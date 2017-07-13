@@ -1082,15 +1082,20 @@ namespace mathpresso {
 			MATHPRESSO_PROPAGATE(opt->onNode(varDecl->getChild()));
 			AstNode* child = varDecl->getChild();
 
+			if (child->returnsComplex())
+			{
+				varDecl->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+				sym->setSymbolFlag(kAstSymbolIsComplex);
+			}
+
 			if (child->isImm())
 			{
 				if (child->returnsComplex())
 				{
 					sym->setValue(static_cast<AstImm*>(child)->getValueCplx());
-					varDecl->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
-					sym->setSymbolFlag(kAstSymbolIsComplex);
 				}
-				else {
+				else 
+				{
 					sym->setValue(static_cast<AstImm*>(child)->getValue());
 				}
 				sym->setAssigned();

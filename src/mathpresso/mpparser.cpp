@@ -220,6 +220,7 @@ Error Parser::parseVariableDecl(AstBlock* block) {
 
     AstVarDecl* decl = _ast->newNode<AstVarDecl>();
     MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
+	decl->mpOp_ = _ops->at("=$2").get();
 
     decl->setPosition(position);
     decl->setSymbol(vSym);

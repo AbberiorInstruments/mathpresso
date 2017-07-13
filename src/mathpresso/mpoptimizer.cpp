@@ -72,9 +72,12 @@ namespace mathpresso {
 	}
 
 	Error AstOptimizer::onVarDecl(AstVarDecl* node) {
+		if (node->mpOp_)
+			return node->mpOp_->optimize(this, node);
+
 		AstSymbol* sym = node->getSymbol();
 		
-			if (node->hasChild()) {
+		if (node->hasChild()) {
 			MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 			AstNode* child = node->getChild();
 

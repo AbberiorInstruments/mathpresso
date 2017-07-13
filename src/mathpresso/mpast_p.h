@@ -910,7 +910,8 @@ struct AstVarDecl : public AstUnary {
 
   MATHPRESSO_INLINE AstVarDecl(AstBuilder* ast)
     : AstUnary(ast, kAstNodeVarDecl),
-      _symbol(nullptr) {}
+      _symbol(nullptr),
+	  mpOp_(nullptr) {}
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
     AstSymbol* sym = getSymbol();
@@ -930,6 +931,7 @@ struct AstVarDecl : public AstUnary {
   // --------------------------------------------------------------------------
 
   AstSymbol* _symbol;
+  MpOperation * mpOp_;
 };
 
 // ============================================================================
