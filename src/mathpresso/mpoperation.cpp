@@ -447,7 +447,8 @@ namespace mathpresso {
 	std::complex<double> _coshC(std::complex<double>* arg) { return std::cosh(arg[0]); }
 	std::complex<double> _tanhC(std::complex<double>* arg) { return std::tanh(arg[0]); }
 
-	JitVar MpOperationTrigonometrie::compile(JitCompiler * jc, AstNode * node) {
+	JitVar MpOperationTrigonometrie::compile(JitCompiler * jc, AstNode * node)
+	{
 		void* tmpC = fnC_;
 		void* tmpD = fnD_;
 		switch (type_)
@@ -494,11 +495,11 @@ namespace mathpresso {
 		JitVar ret =  MpOperationFunc::compile(jc, node);
 		fnD_ = tmpD;
 		fnC_ = tmpC;
-		return ret;
-		
+		return ret;		
 	}
 
-	double mathpresso::MpOperationTrigonometrie::evaluateDRetD(double * args) {
+	double mathpresso::MpOperationTrigonometrie::evaluateDRetD(double * args) 
+	{
 		switch (type_)
 		{
 		case trigonometrieFunc::sin: return _sin(args[0]);
@@ -509,13 +510,14 @@ namespace mathpresso {
 		case trigonometrieFunc::atan: return _atan(args[0]);
 		case trigonometrieFunc::sinh: return _sinh(args[0]);
 		case trigonometrieFunc::cosh: return _cosh(args[0]);
-		case trigonometrieFunc::tanh: return std::tanh(args[0]);
+		case trigonometrieFunc::tanh: return _tanh(args[0]);
 		default:
 			throw std::runtime_error("no function of this type available.");
 		}
 	}
 
-	std::complex<double> MpOperationTrigonometrie::evaluateCRetC(std::complex<double>* args) {
+	std::complex<double> MpOperationTrigonometrie::evaluateCRetC(std::complex<double>* args) 
+	{
 		switch (type_)
 		{
 		case trigonometrieFunc::sin: return _sinC(args);

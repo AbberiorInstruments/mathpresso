@@ -196,7 +196,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOprationIsNan() :
-			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr) {
+			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr)
+		{
 			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
 		}
 
@@ -242,9 +243,10 @@ namespace mathpresso {
 		};
 
 		MpOperationTrigonometrie(uint32_t type) : 
-			MpOperationFunc(1, OpFlagNone, nullptr, nullptr),
+			MpOperationFunc(1, OpFlagHasAsm, nullptr, nullptr),
 			type_(type)
 		{
+			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
 		}
 		virtual ~MpOperationTrigonometrie() {}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
