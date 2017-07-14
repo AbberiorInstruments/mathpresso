@@ -324,6 +324,15 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("min$2", std::make_shared<MpOperationMin>());
   TRY_EMPLACE("max$2", std::make_shared<MpOperationMax>());
   TRY_EMPLACE("=$2", std::make_shared<MpOperationAssignment>());
+  TRY_EMPLACE("sin$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::sin));
+  TRY_EMPLACE("cos$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::cos));
+  TRY_EMPLACE("tan$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::tan));
+  TRY_EMPLACE("sinh$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::sinh));
+  TRY_EMPLACE("cosh$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::cosh));
+  TRY_EMPLACE("tanh$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::tanh));
+  TRY_EMPLACE("asin$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::asin));
+  TRY_EMPLACE("acos$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::acos));
+  TRY_EMPLACE("atan$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::atan));
 
   for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {

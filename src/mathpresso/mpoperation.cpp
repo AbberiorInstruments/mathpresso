@@ -425,6 +425,113 @@ namespace mathpresso {
 		return args->imag();
 	}
 
+
+	// MpOperationTrigonometrie
+	// helpers:
+	double _sin(double arg) { return std::sin(arg); }
+	double _cos(double arg) { return std::cos(arg); }
+	double _tan(double arg) { return std::tan(arg); }
+	double _asin(double arg) { return std::asin(arg); }
+	double _acos(double arg) { return std::acos(arg); }
+	double _atan(double arg) { return std::atan(arg); }
+	double _sinh(double arg) { return std::sinh(arg); }
+	double _cosh(double arg) { return std::cosh(arg); }
+	double _tanh(double arg) { return std::tanh(arg); }
+	std::complex<double> _sinC(std::complex<double>* arg) { return std::sin(arg[0]); }
+	std::complex<double> _cosC(std::complex<double>* arg) { return std::cos(arg[0]); }
+	std::complex<double> _tanC(std::complex<double>* arg) { return std::tan(arg[0]); }
+	std::complex<double> _asinC(std::complex<double>* arg) { return std::asin(arg[0]); }
+	std::complex<double> _acosC(std::complex<double>* arg) { return std::acos(arg[0]); }
+	std::complex<double> _atanC(std::complex<double>* arg) { return std::atan(arg[0]); }
+	std::complex<double> _sinhC(std::complex<double>* arg) { return std::sinh(arg[0]); }
+	std::complex<double> _coshC(std::complex<double>* arg) { return std::cosh(arg[0]); }
+	std::complex<double> _tanhC(std::complex<double>* arg) { return std::tanh(arg[0]); }
+
+	JitVar MpOperationTrigonometrie::compile(JitCompiler * jc, AstNode * node) {
+		void* tmpC = fnC_;
+		void* tmpD = fnD_;
+		switch (type_)
+		{
+		case trigonometrieFunc::sin: 
+			fnD_ = reinterpret_cast<void*>(_sin);
+			fnC_ = reinterpret_cast<void*>(_sinC);
+			break;
+		case trigonometrieFunc::cos:
+			fnD_ = reinterpret_cast<void*>(_cos);
+			fnC_ = reinterpret_cast<void*>(_cosC);
+			break;
+		case trigonometrieFunc::tan:
+			fnD_ = reinterpret_cast<void*>(_tan);
+			fnC_ = reinterpret_cast<void*>(_tanC);
+			break;
+		case trigonometrieFunc::asin:
+			fnD_ = reinterpret_cast<void*>(_asin);
+			fnC_ = reinterpret_cast<void*>(_asinC);
+			break;
+		case trigonometrieFunc::acos:
+			fnD_ = reinterpret_cast<void*>(_acos);
+			fnC_ = reinterpret_cast<void*>(_acosC);
+			break;
+		case trigonometrieFunc::atan:
+			fnD_ = reinterpret_cast<void*>(_atan);
+			fnC_ = reinterpret_cast<void*>(_atanC);
+			break;
+		case trigonometrieFunc::sinh:
+			fnD_ = reinterpret_cast<void*>(_sinh);
+			fnC_ = reinterpret_cast<void*>(_sinhC);
+			break;
+		case trigonometrieFunc::cosh:
+			fnD_ = reinterpret_cast<void*>(_cosh);
+			fnC_ = reinterpret_cast<void*>(_coshC);
+			break;
+		case trigonometrieFunc::tanh:
+			fnD_ = reinterpret_cast<void*>(_tanh);
+			fnC_ = reinterpret_cast<void*>(_tanhC);
+			break;
+		default:
+			throw std::runtime_error("no function of this type available.");
+		}
+		JitVar ret =  MpOperationFunc::compile(jc, node);
+		fnD_ = tmpD;
+		fnC_ = tmpC;
+		return ret;
+		
+	}
+
+	double mathpresso::MpOperationTrigonometrie::evaluateDRetD(double * args) {
+		switch (type_)
+		{
+		case trigonometrieFunc::sin: return _sin(args[0]);
+		case trigonometrieFunc::cos: return _cos(args[0]);
+		case trigonometrieFunc::tan: return _tan(args[0]);
+		case trigonometrieFunc::asin: return _asin(args[0]);
+		case trigonometrieFunc::acos: return _acos(args[0]);
+		case trigonometrieFunc::atan: return _atan(args[0]);
+		case trigonometrieFunc::sinh: return _sinh(args[0]);
+		case trigonometrieFunc::cosh: return _cosh(args[0]);
+		case trigonometrieFunc::tanh: return std::tanh(args[0]);
+		default:
+			throw std::runtime_error("no function of this type available.");
+		}
+	}
+
+	std::complex<double> MpOperationTrigonometrie::evaluateCRetC(std::complex<double>* args) {
+		switch (type_)
+		{
+		case trigonometrieFunc::sin: return _sinC(args);
+		case trigonometrieFunc::cos: return _cosC(args);
+		case trigonometrieFunc::tan: return _tanC(args);
+		case trigonometrieFunc::asin: return _asinC(args);
+		case trigonometrieFunc::acos: return _acosC(args);
+		case trigonometrieFunc::atan: return _atanC(args);
+		case trigonometrieFunc::sinh: return _sinhC(args);
+		case trigonometrieFunc::cosh: return _coshC(args);
+		case trigonometrieFunc::tanh: return _tanhC(args);
+		default:
+			throw std::runtime_error("no function of this type available.");
+		}
+	}
+
 	// mpOperationBinary
 	JitVar MpOperationBinary::compile(JitCompiler* jc, AstNode * node) 
 	{

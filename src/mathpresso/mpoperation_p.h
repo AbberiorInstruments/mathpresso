@@ -234,6 +234,27 @@ namespace mathpresso {
 		virtual double evaluateCRetD(std::complex<double> *args) override;
 	};
 	
+	class MpOperationTrigonometrie : public MpOperationFunc
+	{
+	public:
+		enum trigonometrieFunc {
+			sin, cos, tan, asin, acos, atan, sinh, cosh, tanh
+		};
+
+		MpOperationTrigonometrie(uint32_t type) : 
+			MpOperationFunc(1, OpFlagNone, nullptr, nullptr),
+			type_(type)
+		{
+		}
+		virtual ~MpOperationTrigonometrie() {}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+	private:
+		uint32_t type_;
+	};
+
 	// ============================================================================
 	// Binary operations
 	// ============================================================================
