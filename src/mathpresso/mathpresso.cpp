@@ -73,7 +73,19 @@ namespace mathpresso {
 		{ "max$2", OpInfo("max", kOpMax, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpMax<double>), nullptr) }, // done
 		{ "real$1", OpInfo("real", kOpReal, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, nullptr, reinterpret_cast<void*>(mpGetReal), nullptr) }, // done
 		{ "imag$1", OpInfo("imag", kOpImag, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, nullptr, reinterpret_cast<void*>(mpGetImag), nullptr) }, // done
+		{ "conjug$1", OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::conj>)) }, // done
+		{ "avg$2", OpInfo("avg", kOpAvg, 0, LTR | CandR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpAvg), reinterpret_cast<void*>(mpAvgC)) }, // done
+		{ "abs$1", OpInfo("abs", kOpAbs, 0, LTR | RtoR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpAbs), nullptr, reinterpret_cast<void*>(mpAbsC), nullptr) }, // done
+
+		//done by fucntioncalls
 		{ "sqrtc$1", OpInfo("sqrtc", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::sqrt>)) }, // done
+		{ "exp$1", OpInfo("exp", kOpExp, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpExp), reinterpret_cast<void*>(mpFuncCtoC1<std::exp>)) },
+		{ "log$1", OpInfo("log", kOpLog, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpLog), reinterpret_cast<void*>(mpFuncCtoC1<std::log>)) },
+		{ "log2$1", OpInfo("log2", kOpLog2, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpLog2), reinterpret_cast<void*>(mpLog2C)) },
+		{ "log10$1", OpInfo("log10", kOpLog10, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpLog10), reinterpret_cast<void*>(mpFuncCtoC1<std::log10>)) },
+		{ "pow$2", OpInfo("pow", kOpPow, 0, LTR | CandR | kOpFlagBinary | kOpFlagNopIfROne | kOpFlagIntrinsic, reinterpret_cast<void*>(mpPow), reinterpret_cast<void*>(mpFuncCtoC2<std::pow>)) },
+		{ "atan2$2", OpInfo("atan2", kOpAtan2, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpAtan2), nullptr) },
+		{ "hypot$2", OpInfo("hypot", kOpHypot, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpHypot), nullptr) },
 
 		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR) },
 		{ "signbit$1", OpInfo("signbit", kOpSignBit, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpSignBit), nullptr) },
@@ -82,19 +94,9 @@ namespace mathpresso {
 		{ "trunc$1", OpInfo("trunc", kOpTrunc, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpTrunc), nullptr) },
 		{ "floor$1", OpInfo("floor", kOpFloor, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpFloor), nullptr) },
 		{ "ceil$1", OpInfo("ceil", kOpCeil, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpCeil), nullptr) },
-		{ "abs$1", OpInfo("abs", kOpAbs, 0, LTR | RtoR | CtoR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpAbs), nullptr, reinterpret_cast<void*>(mpAbsC), nullptr) },
-		{ "exp$1", OpInfo("exp", kOpExp, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpExp), reinterpret_cast<void*>(mpFuncCtoC1<std::exp>)) },
-		{ "log$1", OpInfo("log", kOpLog, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpLog), reinterpret_cast<void*>(mpFuncCtoC1<std::log>)) },
-		{ "log2$1", OpInfo("log2", kOpLog2, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpLog2), reinterpret_cast<void*>(mpLog2C)) },
-		{ "log10$1", OpInfo("log10", kOpLog10, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpLog10), reinterpret_cast<void*>(mpFuncCtoC1<std::log10>)) },
 		{ "frac$1", OpInfo("frac", kOpFrac, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpFrac), nullptr) },
 		{ "recip$1", OpInfo("recip", kOpRecip, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpRecip), reinterpret_cast<void*>(mpRecipC)) },
-		{ "avg$2", OpInfo("avg", kOpAvg, 0, LTR | CandR | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpAvg), reinterpret_cast<void*>(mpAvgC)) },
-		{ "pow$2", OpInfo("pow", kOpPow, 0, LTR | CandR | kOpFlagBinary | kOpFlagNopIfROne | kOpFlagIntrinsic, reinterpret_cast<void*>(mpPow), reinterpret_cast<void*>(mpFuncCtoC2<std::pow>)) },
-		{ "atan2$2", OpInfo("atan2", kOpAtan2, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpAtan2), nullptr) },
-		{ "hypot$2", OpInfo("hypot", kOpHypot, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpHypot), nullptr) },
-		{ "copysign$2", OpInfo("copysign", kOpCopySign, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpCopySign), nullptr) },
-		{ "conjug$1", OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::conj>)) }
+		{ "copysign$2", OpInfo("copysign", kOpCopySign, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpCopySign), nullptr) }
 	};
 #undef RtoC
 #undef CtoR
@@ -335,6 +337,9 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("!$1", std::make_shared<MpOperationNot>());
   TRY_EMPLACE("sqrt$1", std::make_shared<MpOperationSqrt>());
   TRY_EMPLACE("sqrtc$1", std::make_shared<MpOperationSqrtC>());
+  TRY_EMPLACE("conjug$1", std::make_shared<MpOperationConjug>());
+  TRY_EMPLACE("avg$2", std::make_shared<MpOperationAvg>());
+  TRY_EMPLACE("abs$1", std::make_shared<MpOperationAbs>());
 
   for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {

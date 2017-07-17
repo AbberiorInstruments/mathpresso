@@ -293,6 +293,20 @@ namespace mathpresso {
 		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
 	};
 
+	// conjugate
+	class MpOperationConjug :public MpOperationFuncAsm
+	{
+	public:
+		MpOperationConjug() :
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+			flags_ &= ~OpHasNoComplex;
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	private:
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node) override;
+	};
+
 	class MpOperationTrigonometrie : public MpOperationFunc
 	{
 	public:
@@ -315,6 +329,33 @@ namespace mathpresso {
 		uint32_t type_;
 	};
 	
+	class MpOperationAvg : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationAvg() : MpOperationFuncAsm(2, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr) 
+		{
+			flags_ &= ~(OpHasNoComplex | OpHasNoReal);
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	private:
+		virtual double evaluateDRetD(double *args) override;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+	};
+
+	class MpOperationAbs : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationAbs() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, nullptr, nullptr, nullptr, nullptr) {
+			flags_ &= ~(OpHasNoComplex | OpHasNoReal);
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	private:
+		virtual double evaluateDRetD(double *args) override;
+		virtual double evaluateCRetD(std::complex<double> *args) override;
+	};
+
 	// ============================================================================
 	// Binary operations
 	// ============================================================================

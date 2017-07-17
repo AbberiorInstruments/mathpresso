@@ -791,7 +791,7 @@ namespace mathpresso {
 
 	JitVar JitCompiler::onCall(AstCall* node)
 	{
-		return std::static_pointer_cast<MpOperationFunc>(node->getSymbol()->getOp())->compile(this, node);
+		return node->getSymbol()->getOp()->compile(this, node);
 	}
 
 	void JitCompiler::inlineRound(const X86Xmm& dst, const X86Xmm& src, uint32_t op, bool takesComplex, bool returnsComplex) {

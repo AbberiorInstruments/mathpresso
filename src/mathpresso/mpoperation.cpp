@@ -517,6 +517,30 @@ namespace mathpresso {
 		return std::complex<double>(args[0] == std::complex<double>(0, 0) ? 1.0 : 0.0, 0.0);
 	}
 
+	// Conjugate
+	JitVar MpOperationConjug::compile(JitCompiler * jc, AstNode * node) {
+		JitVar tmp = jc->onNode(node->getAt(0));
+		JitVar result = jc->registerVarComplex(tmp, !node->getAt(0)->returnsComplex());
+		jc->cc->pxor(result.getXmm(), jc->getConstantU64(uint64_t(0), uint64_t(0x8000000000000000)).getMem());
+		return result;
+	}
+
+	std::complex<double> MpOperationConjug::evaluateCRetC(std::complex<double>* args) {
+		return std::complex<double>(args->real(), -args->imag());
+	}
+
+	uint32_t MpOperationConjug::optimizeSpecial(AstOptimizer * opt, AstNode * node) {
+		// conj(conj(x)) = x
+		if (node->getAt(0)->getNodeType() == kAstNodeUnaryOp
+			&& static_cast<AstUnaryOp*>(node)->mpOp_ == static_cast<AstUnaryOp*>(node->getAt(0))->mpOp_)
+		{
+			AstNode* childOfChild = static_cast<AstUnaryOp*>(node->getAt(0))->unlinkChild();
+			node->getParent()->replaceNode(node, childOfChild);
+			opt->getAst()->deleteNode(node);
+		}
+		return kErrorOk;
+	}
+
 	// MpOperationTrigonometrie
 	// helpers:
 	double _sin(double arg) { return std::sin(arg); }
@@ -623,6 +647,79 @@ namespace mathpresso {
 		default:
 			throw std::runtime_error("no function of this type available.");
 		}
+	}
+
+	// Average
+	JitVar MpOperationAvg::compile(JitCompiler * jc, AstNode * node) 
+	{
+		JitVar vl = jc->onNode(node->getAt(0));;
+		JitVar vr = jc->onNode(node->getAt(1));
+
+		if (node->takesComplex()) 
+		{
+			if (!node->getAt(0)->returnsComplex())
+				vl = jc->registerVarAsComplex(vl);
+			else
+				vl = jc->writableVarComplex(vl);
+
+			if (!node->getAt(1)->returnsComplex())
+				vr = jc->registerVarAsComplex(vr);
+			
+			if (vr.isMem())
+				jc->cc->addpd(vl.getXmm(), vr.getMem());
+			else
+				jc->cc->addpd(vl.getXmm(), vr.getXmm());
+			jc->cc->mulpd(vl.getXmm(), jc->getConstantD64(std::complex<double>(0.5, 0.5)).getXmm());
+		}
+		else
+		{
+			vl = jc->writableVar(jc->onNode(node->getAt(0)));
+			vr = jc->onNode(node->getAt(1));
+			if (vr.isMem())
+				jc->cc->addsd(vl.getXmm(), vr.getMem());
+			else
+				jc->cc->addsd(vl.getXmm(), vr.getXmm());
+			jc->cc->mulsd(vl.getXmm(), jc->getConstantD64(0.5).getXmm());
+		}
+		return vl;
+	}
+
+	double MpOperationAvg::evaluateDRetD(double * args) {
+		return (args[0] + args[1]) * 0.5;
+	}
+
+	std::complex<double> MpOperationAvg::evaluateCRetC(std::complex<double>* args) {
+		return (args[0] + args[1]) * 0.5;
+	}
+
+	// Absolute
+	double absc(std::complex<double>* arg) { return std::abs(arg[0]); }
+	JitVar MpOperationAbs::compile(JitCompiler * jc, AstNode * node) 
+	{
+		JitVar var(jc->onNode(node->getAt(0)));
+		JitVar result;
+		if (node->takesComplex())
+		{
+			fnC_ = reinterpret_cast<void*>(absc);
+			result = MpOperationFunc::compile(jc, node);
+		}
+		else
+		{
+			var = jc->writableVar(var);
+			result = JitVar(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			jc->cc->xorpd(result.getXmm(), result.getXmm());
+			jc->cc->subsd(result.getXmm(), var.getXmm());
+			jc->cc->maxsd(result.getXmm(), var.getXmm());
+		}
+		return result;
+	}
+
+	double MpOperationAbs::evaluateDRetD(double * args) {
+		return std::abs(args[0]);
+	}
+
+	double MpOperationAbs::evaluateCRetD(std::complex<double>* args) {
+		return std::abs(args[0]);
 	}
 
 	// mpOperationBinary
