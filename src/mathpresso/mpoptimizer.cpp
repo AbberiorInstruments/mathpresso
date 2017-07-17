@@ -128,7 +128,7 @@ namespace mathpresso {
 	{
 		if (node->mpOp_)
 		{
-			node->mpOp_->optimize(this, node);
+			return node->mpOp_->optimize(this, node);
 		}
 		const OpInfo& op = OpInfo::get(node->getOp());
 

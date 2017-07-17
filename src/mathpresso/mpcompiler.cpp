@@ -361,7 +361,7 @@ namespace mathpresso {
 			case kOpCeil:
 			{
 				var = writableVar(var);
-				inlineRound(var.getXmm(), var.getXmm(), op, node->takesComplex(), node->getChild()->returnsComplex());
+				inlineRound(var.getXmm(), var.getXmm(), op, node->takesComplex(), node->returnsComplex());
 				return var;
 			}
 

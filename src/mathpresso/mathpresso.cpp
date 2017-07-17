@@ -41,8 +41,8 @@ namespace mathpresso {
 #define RtoC (kOpFlagRealToComplex)
 	std::vector<std::pair<std::string, OpInfo>> _symbols = {
 		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR) },
-		{ "-$1", OpInfo("-", kOpNeg, 3, RTL | CandR | kOpFlagArithmetic | kOpFlagUnary) },
-		{ "!$1", OpInfo("!", kOpNot, 3, RTL | RtoR | kOpFlagCondition | kOpFlagUnary) },
+		{ "-$1", OpInfo("-", kOpNeg, 3, RTL | CandR | kOpFlagArithmetic | kOpFlagUnary | _kOpFlagHasobject) },
+		{ "!$1", OpInfo("!", kOpNot, 3, RTL | RtoR | kOpFlagCondition | kOpFlagUnary | _kOpFlagHasobject) },
 		{ "=$2", OpInfo("=", kOpAssign, 15, RTL | CandR | kOpFlagAssign | kOpFlagBinary | _kOpFlagHasobject) }, // done
 		
 		{ "==$2", OpInfo("==", kOpEq, 9, LTR | CandR | kOpFlagCondition | kOpFlagBinary | _kOpFlagHasobject) }, // done
@@ -58,7 +58,7 @@ namespace mathpresso {
 
 		{ "?$3", OpInfo("?", kOpQMark, 15, RTL | kOpFlagTernary | _kOpFlagHasobject) }, // done
 		{ ":$3", OpInfo(":", kOpColon, 15, RTL | kOpFlagTernary | _kOpFlagHasobject) }, // done
-		{ "%$2", OpInfo("%", kOpMod, 5, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpMod), nullptr) },
+		{ "%$2", OpInfo("%", kOpMod, 5, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpMod), nullptr) }, // done
 		
 		{ "isnan$1", OpInfo("isnan", kOpIsNan, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpIsNan), nullptr) }, // done
 		{ "isinf$1", OpInfo("isinf", kOpIsInf, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpIsInf), nullptr) }, // done
@@ -332,6 +332,9 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("asin$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::asin));
   TRY_EMPLACE("acos$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::acos));
   TRY_EMPLACE("atan$1", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::atan));
+  TRY_EMPLACE("%$2", std::make_shared<MpOperationModulo>());
+  TRY_EMPLACE("-$1", std::make_shared<MpOperationNeg>());
+  TRY_EMPLACE("!$1", std::make_shared<MpOperationNot>());
 
   for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {

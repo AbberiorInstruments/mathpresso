@@ -257,6 +257,38 @@ namespace mathpresso {
 		uint32_t type_;
 	};
 
+	// Negation
+	class MpOperationNeg : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationNeg() : MpOperationFuncAsm(1, OpFlagHasAsm, nullptr, nullptr, nullptr, nullptr)
+		{
+			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
+			priority_ = 3;
+		}
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node) override;
+	};
+
+	// Not
+	class MpOperationNot : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationNot() : MpOperationFuncAsm(1, OpFlagHasAsm, nullptr, nullptr, nullptr, nullptr) {
+			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
+			priority_ = 3;
+		}
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+	};
+
 	// ============================================================================
 	// Binary operations
 	// ============================================================================
@@ -461,6 +493,19 @@ namespace mathpresso {
 		MpOperationGe() :
 			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
 		{
+		}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+	};
+
+	// Modulo
+	class MpOperationModulo : public MpOperationBinary
+	{
+	public:
+		MpOperationModulo() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 5) {
 		}
 
 	protected:
