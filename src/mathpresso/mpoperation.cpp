@@ -426,16 +426,26 @@ namespace mathpresso {
 		return args->imag();
 	}
 
-	double sqrt(double x) { return std::sqrt(x); }
-	std::complex<double> sqrtRC(double  * x) { return std::sqrt(std::complex<double>(x[0], 0)); }
-	std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
 
 	// Square root
-	MpOperationSqrt::MpOperationSqrt() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(sqrt), nullptr)
-	{
+	JitVar mathpresso::MpOperationSqrt::compile(JitCompiler * jc, AstNode * node) {
+		JitVar var = jc->onNode(node->getAt(0));
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+		if (var.isXmm())
+			jc->cc->sqrtsd(result.getXmm(), var.getXmm());
+		else
+			jc->cc->sqrtsd(result.getXmm(), var.getMem());
+		return result;
+	}
+
+	double MpOperationSqrt::evaluateDRetD(double * args) {
+		return std::sqrt(args[0]);
 	}
 
 	// Square root, complex result
+	std::complex<double> sqrtRC(double  * x) { return std::sqrt(std::complex<double>(x[0], 0)); }
+	std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
+	
 	MpOperationSqrtC::MpOperationSqrtC() : MpOperationFunc(1, MpOperationFlags::OpFlagDReturnsC, reinterpret_cast<void*>(sqrtRC), reinterpret_cast<void*>(sqrtCC)) 
 	{
 	}

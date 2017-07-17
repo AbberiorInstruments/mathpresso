@@ -239,11 +239,18 @@ namespace mathpresso {
 	};
 	
 	// Square root
-	class MpOperationSqrt : public MpOperationFunc
+	class MpOperationSqrt : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationSqrt();
-	private:
+		MpOperationSqrt() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
+			flags_ &= ~OpHasNoReal;
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+
 	};
 
 	// Square root, complex result
