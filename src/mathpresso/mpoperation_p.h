@@ -158,11 +158,12 @@ namespace mathpresso {
 		mpAsmFunc asmD_;
 	};
 	
-	class MpOprationIsFinite :public MpOperationFuncAsm
+	// isfinite
+	class MpOperationIsFinite :public MpOperationFuncAsm
 	{
 	public:
-		MpOprationIsFinite() :
-			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr)
+		MpOperationIsFinite() :
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr)
 		{
 			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
 		}
@@ -175,11 +176,12 @@ namespace mathpresso {
 		
 	};
 
-	class MpOprationIsInfinite :public MpOperationFuncAsm
+	// isinf
+	class MpOperationIsInfinite :public MpOperationFuncAsm
 	{
 	public:
-		MpOprationIsInfinite() :
-			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr) 
+		MpOperationIsInfinite() :
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr)
 		{
 			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
 		}
@@ -192,11 +194,12 @@ namespace mathpresso {
 
 	};
 
-	class MpOprationIsNan :public MpOperationFuncAsm
+	// isnan
+	class MpOperationIsNan :public MpOperationFuncAsm
 	{
 	public:
-		MpOprationIsNan() :
-			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr)
+		MpOperationIsNan() :
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr)
 		{
 			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
 		}
@@ -209,52 +212,46 @@ namespace mathpresso {
 
 	};
 
-	class MpOprationGetReal :public MpOperationFuncAsm
+	// real
+	class MpOperationGetReal :public MpOperationFuncAsm
 	{
 	public:
-		MpOprationGetReal() :
-			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationGetReal() :
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, nullptr, nullptr, nullptr, nullptr) {
 			flags_ &= ~OpHasNoComplex;
-			flags_ |= OpFlagCReturnsD;
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 	private:		
 		virtual double evaluateCRetD(std::complex<double> *args) override;
 	};
 
-	class MpOprationGetImag :public MpOperationFuncAsm
+	// imag
+	class MpOperationGetImag :public MpOperationFuncAsm
 	{
 	public:
-		MpOprationGetImag() :
-			MpOperationFuncAsm(1, 0, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationGetImag() :
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, nullptr, nullptr, nullptr, nullptr) {
 			flags_ &= ~OpHasNoComplex;
-			flags_ |= OpFlagCReturnsD;
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 	private:
 		virtual double evaluateCRetD(std::complex<double> *args) override;
 	};
 	
-	class MpOperationTrigonometrie : public MpOperationFunc
+	// Square root
+	class MpOperationSqrt : public MpOperationFunc
 	{
 	public:
-		enum trigonometrieFunc {
-			sin, cos, tan, asin, acos, atan, sinh, cosh, tanh
-		};
-
-		MpOperationTrigonometrie(uint32_t type) : 
-			MpOperationFunc(1, OpFlagHasAsm, nullptr, nullptr),
-			type_(type)
-		{
-			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
-		}
-		virtual ~MpOperationTrigonometrie() {}
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-	protected:
-		virtual double evaluateDRetD(double *args) override;
-		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+		MpOperationSqrt();
 	private:
-		uint32_t type_;
+	};
+
+	// Square root, complex result
+	class MpOperationSqrtC : public MpOperationFunc
+	{
+	public:
+		MpOperationSqrtC();
+	private:
 	};
 
 	// Negation
@@ -289,6 +286,28 @@ namespace mathpresso {
 		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
 	};
 
+	class MpOperationTrigonometrie : public MpOperationFunc
+	{
+	public:
+		enum trigonometrieFunc {
+			sin, cos, tan, asin, acos, atan, sinh, cosh, tanh
+		};
+
+		MpOperationTrigonometrie(uint32_t type) : 
+			MpOperationFunc(1, OpFlagHasAsm, nullptr, nullptr),
+			type_(type)
+		{
+			flags_ &= ~(OpHasNoReal | OpHasNoComplex);
+		}
+		virtual ~MpOperationTrigonometrie() {}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+	private:
+		uint32_t type_;
+	};
+	
 	// ============================================================================
 	// Binary operations
 	// ============================================================================

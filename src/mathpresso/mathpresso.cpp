@@ -41,8 +41,8 @@ namespace mathpresso {
 #define RtoC (kOpFlagRealToComplex)
 	std::vector<std::pair<std::string, OpInfo>> _symbols = {
 		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR) },
-		{ "-$1", OpInfo("-", kOpNeg, 3, RTL | CandR | kOpFlagArithmetic | kOpFlagUnary | _kOpFlagHasobject) },
-		{ "!$1", OpInfo("!", kOpNot, 3, RTL | RtoR | kOpFlagCondition | kOpFlagUnary | _kOpFlagHasobject) },
+		{ "-$1", OpInfo("-", kOpNeg, 3, RTL | CandR | kOpFlagArithmetic | kOpFlagUnary | _kOpFlagHasobject) }, // done
+		{ "!$1", OpInfo("!", kOpNot, 3, RTL | RtoR | kOpFlagCondition | kOpFlagUnary | _kOpFlagHasobject) }, // done
 		{ "=$2", OpInfo("=", kOpAssign, 15, RTL | CandR | kOpFlagAssign | kOpFlagBinary | _kOpFlagHasobject) }, // done
 		
 		{ "==$2", OpInfo("==", kOpEq, 9, LTR | CandR | kOpFlagCondition | kOpFlagBinary | _kOpFlagHasobject) }, // done
@@ -74,7 +74,7 @@ namespace mathpresso {
 		{ "log$1", OpInfo("log", kOpLog, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpLog), reinterpret_cast<void*>(mpFuncCtoC1<std::log>)) },
 		{ "log2$1", OpInfo("log2", kOpLog2, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpLog2), reinterpret_cast<void*>(mpLog2C)) },
 		{ "log10$1", OpInfo("log10", kOpLog10, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpLog10), reinterpret_cast<void*>(mpFuncCtoC1<std::log10>)) },
-		{ "sqrt$1", OpInfo("sqrt", kOpSqrt, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpSqrt), nullptr) },
+		{ "sqrt$1", OpInfo("sqrt", kOpSqrt, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpSqrt), nullptr) }, // done
 		{ "frac$1", OpInfo("frac", kOpFrac, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpFrac), nullptr) },
 		{ "recip$1", OpInfo("recip", kOpRecip, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpRecip), reinterpret_cast<void*>(mpRecipC)) },
 		{ "sin$1", OpInfo("sin", kOpSin, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpSin), reinterpret_cast<void*>(mpFuncCtoC1<std::sin>)) }, // done
@@ -96,7 +96,7 @@ namespace mathpresso {
 		{ "real$1", OpInfo("real", kOpReal, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, nullptr, reinterpret_cast<void*>(mpGetReal), nullptr) }, // done
 		{ "imag$1", OpInfo("imag", kOpImag, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, nullptr, reinterpret_cast<void*>(mpGetImag), nullptr) }, // done
 		{ "conjug$1", OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::conj>)) },
-		{ "sqrtC$1", OpInfo("sqrtC", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::sqrt>)) }
+		{ "sqrtc$1", OpInfo("sqrtc", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::sqrt>)) } // done
 	};
 #undef RtoC
 #undef CtoR
@@ -315,11 +315,11 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("<$2", std::make_shared<MpOperationLt>());
   TRY_EMPLACE("?$2", std::make_shared<MpOperationTernary>());
   TRY_EMPLACE("=$2", std::make_shared<MpOperationAssignment>());
-  TRY_EMPLACE("isfinite$1", std::make_shared<MpOprationIsFinite>());
-  TRY_EMPLACE("isinf$1", std::make_shared<MpOprationIsInfinite>());
-  TRY_EMPLACE("isnan$1", std::make_shared<MpOprationIsNan>());
-  TRY_EMPLACE("real$1", std::make_shared<MpOprationGetReal>());
-  TRY_EMPLACE("imag$1", std::make_shared<MpOprationGetImag>());
+  TRY_EMPLACE("isfinite$1", std::make_shared<MpOperationIsFinite>());
+  TRY_EMPLACE("isinf$1", std::make_shared<MpOperationIsInfinite>());
+  TRY_EMPLACE("isnan$1", std::make_shared<MpOperationIsNan>());
+  TRY_EMPLACE("real$1", std::make_shared<MpOperationGetReal>());
+  TRY_EMPLACE("imag$1", std::make_shared<MpOperationGetImag>());
   TRY_EMPLACE("min$2", std::make_shared<MpOperationMin>());
   TRY_EMPLACE("max$2", std::make_shared<MpOperationMax>());
   TRY_EMPLACE("=$2", std::make_shared<MpOperationAssignment>());
@@ -335,6 +335,8 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("%$2", std::make_shared<MpOperationModulo>());
   TRY_EMPLACE("-$1", std::make_shared<MpOperationNeg>());
   TRY_EMPLACE("!$1", std::make_shared<MpOperationNot>());
+  TRY_EMPLACE("sqrt$1", std::make_shared<MpOperationSqrt>());
+  TRY_EMPLACE("sqrtc$1", std::make_shared<MpOperationSqrtC>());
 
   for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {

@@ -292,7 +292,7 @@ namespace mathpresso {
 	}
 
 	// MpOperationIsFinite
-	JitVar MpOprationIsFinite::compile(JitCompiler * jc, AstNode * node) {
+	JitVar MpOperationIsFinite::compile(JitCompiler * jc, AstNode * node) {
 		JitVar var = jc->onNode(node->getAt(0));
 
 		if (node->takesComplex())
@@ -312,16 +312,16 @@ namespace mathpresso {
 		return var;
 	}	
 
-	double MpOprationIsFinite::evaluateDRetD(double * args) {
+	double MpOperationIsFinite::evaluateDRetD(double * args) {
 		return std::isfinite(args[0]) ? 1.0 : 0.0;
 	}
 
-	std::complex<double> MpOprationIsFinite::evaluateCRetC(std::complex<double>* args) {
+	std::complex<double> MpOperationIsFinite::evaluateCRetC(std::complex<double>* args) {
 		return std::complex<double>(std::isfinite(args[0].real()) ? 1.0 : 0.0, std::isfinite(args[0].imag()) ? 1.0 : 0.0);
 	}
 
 	// MpOperationIsInFinite
-	JitVar MpOprationIsInfinite::compile(JitCompiler * jc, AstNode * node) {
+	JitVar MpOperationIsInfinite::compile(JitCompiler * jc, AstNode * node) {
 		JitVar var = jc->onNode(node->getAt(0));
 
 		if (node->takesComplex())
@@ -341,16 +341,16 @@ namespace mathpresso {
 		return var;
 	}
 
-	double MpOprationIsInfinite::evaluateDRetD(double * args) {
+	double MpOperationIsInfinite::evaluateDRetD(double * args) {
 		return std::isinf(args[0]) ? 1.0 : 0.0;
 	}
 
-	std::complex<double> MpOprationIsInfinite::evaluateCRetC(std::complex<double>* args) {
+	std::complex<double> MpOperationIsInfinite::evaluateCRetC(std::complex<double>* args) {
 		return std::complex<double>(std::isinf(args[0].real()) ? 1.0 : 0.0, std::isinf(args[0].imag()) ? 1.0 : 0.0);
 	}
 	
 	// MpOperationIsNan
-	JitVar MpOprationIsNan::compile(JitCompiler * jc, AstNode * node) {
+	JitVar MpOperationIsNan::compile(JitCompiler * jc, AstNode * node) {
 		JitVar var = jc->onNode(node->getAt(0));
 
 		if (node->takesComplex())
@@ -368,16 +368,16 @@ namespace mathpresso {
 		return var;
 	}
 
-	double MpOprationIsNan::evaluateDRetD(double * args) {
+	double MpOperationIsNan::evaluateDRetD(double * args) {
 		return std::isnan(args[0]) ? 1.0 : 0.0;
 	}
 
-	std::complex<double> MpOprationIsNan::evaluateCRetC(std::complex<double>* args) {
+	std::complex<double> MpOperationIsNan::evaluateCRetC(std::complex<double>* args) {
 		return std::complex<double>(std::isnan(args[0].real()) ? 1.0 : 0.0, std::isnan(args[0].imag()) ? 1.0 : 0.0);
 	}
 
-	// MpOprationGetReal
-	JitVar MpOprationGetReal::compile(JitCompiler * jc, AstNode * node) {
+	// MpOperationGetReal
+	JitVar MpOperationGetReal::compile(JitCompiler * jc, AstNode * node) {
 		JitVar var(jc->onNode(node->getAt(0)));
 		JitVar varRet(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);;
 
@@ -400,12 +400,12 @@ namespace mathpresso {
 		return varRet;
 	}
 
-	double MpOprationGetReal::evaluateCRetD(std::complex<double>* args) {
+	double MpOperationGetReal::evaluateCRetD(std::complex<double>* args) {
 		return args->real();
 	}
 
-	// MpOprationGetImag
-	JitVar MpOprationGetImag::compile(JitCompiler * jc, AstNode * node) {
+	// MpOperationGetImag
+	JitVar MpOperationGetImag::compile(JitCompiler * jc, AstNode * node) {
 		JitVar var(jc->onNode(node->getAt(0)));
 
 		JitVar varRet(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);;
@@ -422,35 +422,22 @@ namespace mathpresso {
 		return var;
 	}
 
-	double MpOprationGetImag::evaluateCRetD(std::complex<double>* args) {
+	double MpOperationGetImag::evaluateCRetD(std::complex<double>* args) {
 		return args->imag();
 	}
 
-	// Not
-	JitVar MpOperationNot::compile(JitCompiler * jc, AstNode * node) {
-		JitVar var = jc->onNode(node->getAt(0));
+	double sqrt(double x) { return std::sqrt(x); }
+	std::complex<double> sqrtRC(double  * x) { return std::sqrt(std::complex<double>(x[0], 0)); }
+	std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
 
-		if (hasFlag(kAstReturnsComplex))
-		{
-			var = jc->writableVarComplex(var);
-			jc->cc->cmppd(var.getXmm(), jc->getConstantD64(std::complex<double>(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpEQ));
-			jc->cc->andpd(var.getXmm(), jc->getConstantD64(std::complex<double>(1.0, 0.0)).getMem());
-		}
-		else
-		{
-			var = jc->writableVar(var);
-			jc->cc->cmpsd(var.getXmm(), jc->getConstantD64AsPD(0.0).getMem(), int(asmjit::x86::kCmpEQ));
-			jc->cc->andpd(var.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
-		}
-		return var;
+	// Square root
+	MpOperationSqrt::MpOperationSqrt() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(sqrt), nullptr)
+	{
 	}
 
-	double MpOperationNot::evaluateDRetD(double * args) {
-		return args[0] == 0 ? 1.0 : 0.0;
-	}
-
-	std::complex<double> MpOperationNot::evaluateCRetC(std::complex<double>* args) {
-		return std::complex<double>(args[0] == std::complex<double>(0, 0) ? 1.0 : 0.0, 0.0);
+	// Square root, complex result
+	MpOperationSqrtC::MpOperationSqrtC() : MpOperationFunc(1, MpOperationFlags::OpFlagDReturnsC, reinterpret_cast<void*>(sqrtRC), reinterpret_cast<void*>(sqrtCC)) 
+	{
 	}
 
 	// Negation
@@ -491,6 +478,33 @@ namespace mathpresso {
 
 		}
 		return kErrorOk;
+	}
+
+	// Not
+	JitVar MpOperationNot::compile(JitCompiler * jc, AstNode * node) {
+		JitVar var = jc->onNode(node->getAt(0));
+
+		if (hasFlag(kAstReturnsComplex))
+		{
+			var = jc->writableVarComplex(var);
+			jc->cc->cmppd(var.getXmm(), jc->getConstantD64(std::complex<double>(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpEQ));
+			jc->cc->andpd(var.getXmm(), jc->getConstantD64(std::complex<double>(1.0, 0.0)).getMem());
+		}
+		else
+		{
+			var = jc->writableVar(var);
+			jc->cc->cmpsd(var.getXmm(), jc->getConstantD64AsPD(0.0).getMem(), int(asmjit::x86::kCmpEQ));
+			jc->cc->andpd(var.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+		}
+		return var;
+	}
+
+	double MpOperationNot::evaluateDRetD(double * args) {
+		return args[0] == 0 ? 1.0 : 0.0;
+	}
+
+	std::complex<double> MpOperationNot::evaluateCRetC(std::complex<double>* args) {
+		return std::complex<double>(args[0] == std::complex<double>(0, 0) ? 1.0 : 0.0, 0.0);
 	}
 
 	// MpOperationTrigonometrie
