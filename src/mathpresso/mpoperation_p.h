@@ -93,6 +93,7 @@ namespace mathpresso {
 		}
 
 	protected:
+		std::string description_ = "No description given.";
 		uint32_t nargs_;
 		uint32_t flags_;
 		uint32_t priority_;
@@ -401,6 +402,35 @@ namespace mathpresso {
 	private:
 		virtual double evaluateDRetD(double *args) override;
 		virtual double evaluateCRetD(std::complex<double> *args) override;
+	};
+
+	// round
+	class MpOperationRound : public MpOperationFuncAsm
+	{
+	public: 
+		MpOperationRound() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) 	
+		{
+			removeFlags(OpHasNoReal);
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	protected:
+		std::string description_ = "Rounds *.5 towards infinity.";
+		virtual double evaluateDRetD(double *args) override;
+	};
+
+	// roundeven
+	class MpOperationRoundEven : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationRoundEven() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+			removeFlags(OpHasNoReal);
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	protected:
+		std::string description_ = "Rounds *.5 towards nearest even integer.";
+		virtual double evaluateDRetD(double *args) override;
 	};
 
 	// ============================================================================

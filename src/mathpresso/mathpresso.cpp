@@ -91,8 +91,8 @@ namespace mathpresso {
 		{ "hypot$2", OpInfo("hypot", kOpHypot, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpHypot), nullptr) },
 
 		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR) },
-		{ "round$1", OpInfo("round", kOpRound, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpRound), nullptr) },
-		{ "roundeven$1", OpInfo("roundeven", kOpRoundEven, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpRoundEven), nullptr) },
+		{ "round$1", OpInfo("round", kOpRound, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic, reinterpret_cast<void*>(mpRound), nullptr) },
+		{ "roundeven$1", OpInfo("roundeven", kOpRoundEven, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic, reinterpret_cast<void*>(mpRoundEven), nullptr) },
 		{ "trunc$1", OpInfo("trunc", kOpTrunc, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpTrunc), nullptr) },
 		{ "floor$1", OpInfo("floor", kOpFloor, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpFloor), nullptr) },
 		{ "ceil$1", OpInfo("ceil", kOpCeil, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpCeil), nullptr) },
@@ -343,6 +343,8 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("recip$1", std::make_shared<MpOperationRecip>());
   TRY_EMPLACE("signbit$1", std::make_shared<MpOperationSignBit>());
   TRY_EMPLACE("copysign$2", std::make_shared<MpOperationCopySign>());
+  TRY_EMPLACE("round$1", std::make_shared<MpOperationRound>());
+  TRY_EMPLACE("roundeven$1", std::make_shared<MpOperationRoundEven>());
 
   for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {
