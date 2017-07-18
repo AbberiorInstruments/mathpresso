@@ -307,6 +307,21 @@ namespace mathpresso {
 		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node) override;
 	};
 
+	// Reciprocate
+	class MpOperationRecip :public MpOperationFuncAsm
+	{
+	public:
+		MpOperationRecip() :
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+			flags_ &= ~(OpHasNoComplex | OpHasNoReal);
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	private:
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+		virtual double evaluateDRetD(double * args) override;
+	};
+
+	// trigonometric functions (sin, cos, tan, etc)
 	class MpOperationTrigonometrie : public MpOperationFunc
 	{
 	public:
@@ -329,6 +344,7 @@ namespace mathpresso {
 		uint32_t type_;
 	};
 	
+	// Average
 	class MpOperationAvg : public MpOperationFuncAsm
 	{
 	public:
@@ -343,6 +359,7 @@ namespace mathpresso {
 		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
 	};
 
+	// Absolute
 	class MpOperationAbs : public MpOperationFuncAsm
 	{
 	public:
@@ -580,6 +597,7 @@ namespace mathpresso {
 		virtual double calculateReal(double vl, double vr) override;
 	};
 
+	// Ternary Operation
 	class MpOperationTernary : public MpOperation
 	{
 	public:
@@ -593,6 +611,7 @@ namespace mathpresso {
 
 	};
 
+	// Assignment
 	class MpOperationAssignment : public MpOperation
 	{
 	public:
