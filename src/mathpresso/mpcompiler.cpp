@@ -95,6 +95,7 @@ namespace mathpresso {
 			return other;
 	}
 
+	// copies a non-complex var to a register, if necessary
 	JitVar JitCompiler::registerVar(const JitVar& other) {
 		if (other.isMem())
 			return copyVar(other, other.flags);
@@ -116,6 +117,7 @@ namespace mathpresso {
 			return other;
 	}
 
+	// copies a var to a register, and makes sure its a complex value.
 	JitVar JitCompiler::registerVarComplex(const JitVar& other, bool otherIsNonComplex) {
 		if (otherIsNonComplex) 
 			return registerVarAsComplex(other);
@@ -125,6 +127,7 @@ namespace mathpresso {
 			return other;
 	}
 
+	// makes a non-complex var complex
 	JitVar JitCompiler::registerVarAsComplex(const JitVar& other)
 	{
 		JitVar v(cc->newXmmPd(), other.flags);

@@ -422,8 +422,7 @@ namespace mathpresso {
 	double MpOperationGetImag::evaluateCRetD(std::complex<double>* args) {
 		return args->imag();
 	}
-
-
+	
 	// Square root
 	JitVar mathpresso::MpOperationSqrt::compile(JitCompiler * jc, AstNode * node) {
 		JitVar var = jc->onNode(node->getAt(0));
@@ -641,7 +640,7 @@ namespace mathpresso {
 		return ret;
 	}
 
-	double mathpresso::MpOperationTrigonometrie::evaluateDRetD(double * args) {
+	double MpOperationTrigonometrie::evaluateDRetD(double * args) {
 		switch (type_)
 		{
 		case trigonometrieFunc::sin: return _sin(args[0]);
@@ -674,6 +673,37 @@ namespace mathpresso {
 			throw std::runtime_error("no function of this type available.");
 		}
 	}
+
+	// sign bit
+	JitVar MpOperationSignBit::compile(JitCompiler * jc, AstNode * node) {
+		JitVar var(jc->onNode(node->getAt(0)));
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		jc->cc->pshufd(result.getXmm(), jc->registerVar(var).getXmm(), asmjit::x86::shufImm(3, 2, 1, 1));
+		jc->cc->psrad(result.getXmm(), 31);
+		jc->cc->andpd(result.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+		return result;
+	}
+
+	double MpOperationSignBit::evaluateDRetD(double * args) {
+		return std::signbit(args[0]) ? 1.0 : 0.0;
+	}
+
+	// Copy sign
+	JitVar MpOperationCopySign::compile(JitCompiler * jc, AstNode * node) {
+		JitVar vl = jc->writableVar(jc->onNode(node->getAt(0)));
+		JitVar vr = jc->writableVar(jc->onNode(node->getAt(1)));
+
+		jc->cc->andpd(vl.getXmm(), jc->getConstantU64AsPD(MATHPRESSO_UINT64_C(0x7FFFFFFFFFFFFFFF)).getMem());
+		jc->cc->andpd(vr.getXmm(), jc->getConstantU64AsPD(MATHPRESSO_UINT64_C(0x8000000000000000)).getMem());
+		jc->cc->orpd(vl.getXmm(), vr.getXmm());
+
+		return vl;
+	}
+
+	double MpOperationCopySign::evaluateDRetD(double * args) {
+		return std::copysign(args[0], args[1]);
+	}
+
 
 	// Average
 	JitVar MpOperationAvg::compile(JitCompiler * jc, AstNode * node) {
