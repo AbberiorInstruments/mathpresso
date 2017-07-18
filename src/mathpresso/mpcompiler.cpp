@@ -732,6 +732,9 @@ namespace mathpresso {
 
 	JitVar JitCompiler::onTernaryOp(AstTernaryOp* node)
 	{
+		if (node->mpOp_)
+			return node->mpOp_->compile(this, node);
+
 		Label lblElse = cc->newLabel();
 		Label lblEnd = cc->newLabel();
 		JitVar erg;
