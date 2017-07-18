@@ -433,6 +433,58 @@ namespace mathpresso {
 		virtual double evaluateDRetD(double *args) override;
 	};
 
+	// trunc
+	class MpOperationTrunc : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationTrunc() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+			removeFlags(OpHasNoReal);
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+	};
+
+	// frac
+	class MpOperationFrac : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationFrac() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+			removeFlags(OpHasNoReal);
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+	};
+
+	// floor
+	class MpOperationFloor : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationFloor() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+			removeFlags(OpHasNoReal);
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+	};
+
+	// ceil
+	class MpOperationcCeil : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationcCeil() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+			removeFlags(OpHasNoReal);
+		}
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+	};
+
 	// ============================================================================
 	// Binary operations
 	// ============================================================================

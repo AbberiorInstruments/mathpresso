@@ -804,20 +804,15 @@ namespace mathpresso {
 
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
 			jc->cc->movsd(t3.getXmm(), var.getXmm());
-
 			if (!(result == var))
 				jc->cc->movsd(result.getXmm(), var.getXmm());
-
 			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
 			jc->cc->addsd(t3.getXmm(), jc->getConstantD64(magic1).getMem());
-
 			jc->cc->movsd(t1.getXmm(), var.getXmm());
 			jc->cc->subsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
 			jc->cc->subsd(t3.getXmm(), jc->getConstantD64(magic1).getMem());
-
 			jc->cc->cmpsd(t1.getXmm(), jc->getConstantD64(maxn).getMem(), asmjit::x86::kCmpNLT);
 			jc->cc->maxsd(t2.getXmm(), t3.getXmm());
-
 			jc->cc->andpd(result.getXmm(), t1.getXmm());
 			jc->cc->andnpd(t1.getXmm(), t2.getXmm());
 			jc->cc->orpd(result.getXmm(), t1.getXmm());
@@ -839,28 +834,200 @@ namespace mathpresso {
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
 
-		JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-		JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-
-		jc->cc->movsd(t1.getXmm(), var.getXmm());
-		jc->cc->movsd(t2.getXmm(), var.getXmm());
-
-		jc->cc->addsd(t1.getXmm(), jc->getConstantD64(magic0).getMem());
-		jc->cc->cmpsd(t2.getXmm(), jc->getConstantD64(maxn).getMem(), asmjit::x86::kCmpNLT);
-		jc->cc->subsd(t1.getXmm(), jc->getConstantD64(magic0).getMem());
-
-		if (!(result == var))
-			jc->cc->movsd(result.getXmm(), var.getXmm());
-
-		jc->cc->andpd(result.getXmm(), t2.getXmm());
-		jc->cc->andnpd(t2.getXmm(), t1.getXmm());
-		jc->cc->orpd(result.getXmm(), t2.getXmm());
-
+		if (jc->enableSSE4_1)
+		{
+			jc->cc->roundsd(result.getXmm(), var.getXmm(), asmjit::x86::kRoundNearest | asmjit::x86::kRoundInexact);
+		}
+		else
+		{
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			jc->cc->movsd(t1.getXmm(), var.getXmm());
+			jc->cc->movsd(t2.getXmm(), var.getXmm());
+			jc->cc->addsd(t1.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->cmpsd(t2.getXmm(), jc->getConstantD64(maxn).getMem(), asmjit::x86::kCmpNLT);
+			jc->cc->subsd(t1.getXmm(), jc->getConstantD64(magic0).getMem());
+			if (!(result == var))
+				jc->cc->movsd(result.getXmm(), var.getXmm());
+			jc->cc->andpd(result.getXmm(), t2.getXmm());
+			jc->cc->andnpd(t2.getXmm(), t1.getXmm());
+			jc->cc->orpd(result.getXmm(), t2.getXmm());
+		}
 		return result;
 	}
 
 	double MpOperationRoundEven::evaluateDRetD(double * args) {
 		return std::rint(args[0]);
+	}
+
+
+	// trunc
+	JitVar MpOperationTrunc::compile(JitCompiler * jc, AstNode * node) {
+		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+
+		if (jc->enableSSE4_1)
+		{
+			jc->cc->roundsd(result.getXmm(), var.getXmm(), asmjit::x86::kRoundTrunc | asmjit::x86::kRoundInexact);
+		}
+		else
+		{
+			const double maxn = 4503599627370496.0;
+			const double magic0 = 6755399441055744.0;
+			const double magic1 = 6755399441055745.0;
+
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+
+			jc->cc->movsd(t2.getXmm(), jc->getConstantU64(ASMJIT_UINT64_C(0x7FFFFFFFFFFFFFFF)).getMem());
+			jc->cc->andpd(t2.getXmm(), var.getXmm());
+			if (!(result == var))
+				jc->cc->movsd(result.getXmm(), var.getXmm());
+			jc->cc->movsd(t1.getXmm(), t2.getXmm());
+			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->movsd(t3.getXmm(), t1.getXmm());
+			jc->cc->subsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->cmpsd(t1.getXmm(), jc->getConstantD64(maxn).getMem(), asmjit::x86::kCmpNLT);
+			jc->cc->cmpsd(t3.getXmm(), t2.getXmm(), asmjit::x86::kCmpLT);
+			jc->cc->orpd(t1.getXmm(), jc->getConstantU64AsPD(ASMJIT_UINT64_C(0x8000000000000000)).getMem());
+			jc->cc->andpd(t3.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+			jc->cc->andpd(result.getXmm(), t1.getXmm());
+			jc->cc->subpd(t2.getXmm(), t3.getXmm());
+			jc->cc->andnpd(t1.getXmm(), t2.getXmm());
+			jc->cc->orpd(result.getXmm(), t1.getXmm());
+		}
+		return result;
+	}
+
+	double MpOperationTrunc::evaluateDRetD(double * args) {
+		return std::trunc(args[0]);
+	}
+
+	// frac
+	JitVar MpOperationFrac::compile(JitCompiler * jc, AstNode * node) {
+		const double maxn = 4503599627370496.0;
+		const double magic0 = 6755399441055744.0;
+		const double magic1 = 6755399441055745.0;
+		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
+		JitVar tmp(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+
+		if (jc->enableSSE4_1)
+		{
+			jc->cc->roundsd( tmp.getXmm(), var.getXmm(), int(asmjit::x86::kRoundDown | asmjit::x86::kRoundInexact));
+			jc->cc->subsd( var.getXmm(), tmp.getXmm());
+			return var;
+		}
+		else
+		{
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+
+			jc->cc->movsd(t2.getXmm(), var.getXmm());
+			jc->cc->movsd(t3.getXmm(), var.getXmm());
+			if (!(tmp == var))
+				jc->cc->movsd(tmp.getXmm(), var.getXmm());
+			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->movsd(t1.getXmm(), var.getXmm());
+			jc->cc->subsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->cmpsd(t1.getXmm(), jc->getConstantD64(maxn).getMem(), asmjit::x86::kCmpNLT);
+			jc->cc->cmpsd(t3.getXmm(), t2.getXmm(), asmjit::x86::kCmpLT);
+			jc->cc->andpd(t3.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+			jc->cc->andpd(tmp.getXmm(), t1.getXmm());
+			jc->cc->subpd(t2.getXmm(), t3.getXmm());
+			jc->cc->andnpd(t1.getXmm(), t2.getXmm());
+			jc->cc->orpd(tmp.getXmm(), t1.getXmm());
+			
+			jc->cc->subsd(var.getXmm(), tmp.getXmm());
+		}
+		return var;
+	}
+
+	double MpOperationFrac::evaluateDRetD(double * args) {
+		return args[0] - std::floor(args[0]);
+	}
+
+	// floor
+	JitVar MpOperationFloor::compile(JitCompiler * jc, AstNode * node) {
+		const double maxn = 4503599627370496.0;
+		const double magic0 = 6755399441055744.0;
+		const double magic1 = 6755399441055745.0;
+		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+
+		if (jc->enableSSE4_1)
+		{
+			jc->cc->roundsd(result.getXmm(), var.getXmm(), asmjit::x86::kRoundDown | asmjit::x86::kRoundInexact);
+		}
+		else
+		{
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+
+			jc->cc->movsd(t2.getXmm(), var.getXmm());
+			jc->cc->movsd(t3.getXmm(), var.getXmm());
+			if (!(result == var))
+				jc->cc->movsd(result.getXmm(), var.getXmm());
+			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->movsd(t1.getXmm(), var.getXmm());
+			jc->cc->subsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->cmpsd(t1.getXmm(), jc->getConstantD64(maxn).getMem(), asmjit::x86::kCmpNLT);
+			jc->cc->cmpsd(t3.getXmm(), t2.getXmm(), asmjit::x86::kCmpLT);
+			jc->cc->andpd(t3.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+			jc->cc->andpd(result.getXmm(), t1.getXmm());
+			jc->cc->subpd(t2.getXmm(), t3.getXmm());
+			jc->cc->andnpd(t1.getXmm(), t2.getXmm());
+			jc->cc->orpd(result.getXmm(), t1.getXmm());
+		}
+
+		return result;
+	}
+
+	double MpOperationFloor::evaluateDRetD(double * args) {
+		return std::floor(args[0]);
+	}
+
+	// ceil
+	JitVar MpOperationcCeil::compile(JitCompiler * jc, AstNode * node) {
+		const double maxn = 4503599627370496.0;
+		const double magic0 = 6755399441055744.0;
+		const double magic1 = 6755399441055745.0;
+		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+
+		if (jc->enableSSE4_1)
+		{
+			jc->cc->roundsd(result.getXmm(), var.getXmm(), asmjit::x86::kRoundUp | asmjit::x86::kRoundInexact);
+		}
+		else
+		{
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+
+			jc->cc->movsd(t2.getXmm(), var.getXmm());
+			jc->cc->movsd(t3.getXmm(), var.getXmm());
+			if (!(result == var))
+				jc->cc->movsd(result.getXmm(), var.getXmm());
+			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->movsd(t1.getXmm(), var.getXmm());
+			jc->cc->subsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->cmpsd(t1.getXmm(), jc->getConstantD64(maxn).getMem(), asmjit::x86::kCmpNLT);
+			jc->cc->cmpsd(t3.getXmm(), t2.getXmm(), asmjit::x86::kCmpNLE);
+			jc->cc->andpd(t3.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+			jc->cc->andpd(result.getXmm(), t1.getXmm());
+			jc->cc->addpd(t2.getXmm(), t3.getXmm());
+			jc->cc->andnpd(t1.getXmm(), t2.getXmm());
+			jc->cc->orpd(result.getXmm(), t1.getXmm());
+		}
+
+		return result;
+	}
+
+	double MpOperationcCeil::evaluateDRetD(double * args) {
+		return std::ceil(args[0]);
 	}
 
 	// mpOperationBinary

@@ -78,6 +78,12 @@ namespace mathpresso {
 		{ "recip$1", OpInfo("recip", kOpRecip, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpRecip), reinterpret_cast<void*>(mpRecipC)) }, // done
 		{ "signbit$1", OpInfo("signbit", kOpSignBit, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpSignBit), nullptr) }, // done
 		{ "copysign$2", OpInfo("copysign", kOpCopySign, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpCopySign), nullptr) }, // done
+		{ "round$1", OpInfo("round", kOpRound, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpRound), nullptr) }, // done
+		{ "roundeven$1", OpInfo("roundeven", kOpRoundEven, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpRoundEven), nullptr) }, // done
+		{ "trunc$1", OpInfo("trunc", kOpTrunc, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpTrunc), nullptr) }, // done
+		{ "floor$1", OpInfo("floor", kOpFloor, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpFloor), nullptr) }, // done
+		{ "ceil$1", OpInfo("ceil", kOpCeil, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpCeil), nullptr) }, // done
+		{ "frac$1", OpInfo("frac", kOpFrac, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpFrac), nullptr) }, // done
 
 		//done by function calls
 		{ "sqrtc$1", OpInfo("sqrtc", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::sqrt>)) }, // done
@@ -90,13 +96,7 @@ namespace mathpresso {
 		{ "atan2$2", OpInfo("atan2", kOpAtan2, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpAtan2), nullptr) },
 		{ "hypot$2", OpInfo("hypot", kOpHypot, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpHypot), nullptr) },
 
-		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR) },
-		{ "round$1", OpInfo("round", kOpRound, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic, reinterpret_cast<void*>(mpRound), nullptr) },
-		{ "roundeven$1", OpInfo("roundeven", kOpRoundEven, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic, reinterpret_cast<void*>(mpRoundEven), nullptr) },
-		{ "trunc$1", OpInfo("trunc", kOpTrunc, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpTrunc), nullptr) },
-		{ "floor$1", OpInfo("floor", kOpFloor, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpFloor), nullptr) },
-		{ "ceil$1", OpInfo("ceil", kOpCeil, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpCeil), nullptr) },
-		{ "frac$1", OpInfo("frac", kOpFrac, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic, reinterpret_cast<void*>(mpFrac), nullptr) }
+		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR) }
 	};
 #undef RtoC
 #undef CtoR
@@ -345,6 +345,10 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("copysign$2", std::make_shared<MpOperationCopySign>());
   TRY_EMPLACE("round$1", std::make_shared<MpOperationRound>());
   TRY_EMPLACE("roundeven$1", std::make_shared<MpOperationRoundEven>());
+  TRY_EMPLACE("floor$1", std::make_shared<MpOperationFloor>());
+  TRY_EMPLACE("ceil$1", std::make_shared<MpOperationcCeil>());
+  TRY_EMPLACE("frac$1", std::make_shared<MpOperationFrac>());
+  TRY_EMPLACE("trunc$1", std::make_shared<MpOperationTrunc>());
 
   for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {
