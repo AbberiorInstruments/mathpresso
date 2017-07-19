@@ -485,6 +485,56 @@ namespace mathpresso {
 		virtual double evaluateDRetD(double *args) override;
 	};
 
+	// Log
+	class MpOperationLog : public MpOperationFunc
+	{
+	public:
+		MpOperationLog();
+	};
+
+	// Log2
+	class MpOperationLog2 : public MpOperationFunc
+	{
+	public:
+		MpOperationLog2();
+	};
+
+	// Log10
+	class MpOperationLog10 : public MpOperationFunc
+	{
+	public:
+		MpOperationLog10();
+	};
+
+	// exp
+	class MpOperationExp : public MpOperationFunc
+	{
+	public:
+		MpOperationExp();
+	private:
+	};
+
+	// pow
+	class MpOperationPow : public MpOperationFunc
+	{
+	public:
+		MpOperationPow();
+	};
+
+	// atan2
+	class MpOperationAtan2 : public MpOperationFunc
+	{
+	public:
+		MpOperationAtan2();
+	};
+
+	// hypot
+	class MpOperationHypot : public MpOperationFunc
+	{
+	public:
+		MpOperationHypot();
+	};
+
 	// ============================================================================
 	// Binary operations
 	// ============================================================================

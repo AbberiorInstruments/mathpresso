@@ -1030,6 +1030,53 @@ namespace mathpresso {
 		return std::ceil(args[0]);
 	}
 
+	// Log
+	double logRR(double x) { return std::log(x); }
+	std::complex<double> logCC(std::complex<double> *  x) { return std::log(x[0]); }
+
+	MpOperationLog::MpOperationLog() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(logRR), reinterpret_cast<void*>(logCC)) {
+	}
+
+	// Log2
+	double log2RR(double x) { return std::log2(x); }
+	std::complex<double> log2CC(std::complex<double> *  x) { return std::log(x[0]) / log(2); }
+
+	MpOperationLog2::MpOperationLog2() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(log2RR), reinterpret_cast<void*>(log2CC)) {
+	}
+
+	// Log10
+	double log10RR(double x) { return std::log10(x); }
+	std::complex<double> log10CC(std::complex<double> *  x) { return std::log10(x[0]); }
+
+	MpOperationLog10::MpOperationLog10() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(log10RR), reinterpret_cast<void*>(log10CC)) {
+	}
+
+	// exp
+	double expRR(double x) { return std::exp(x); }
+	std::complex<double> expCC(std::complex<double> *  x) { return std::exp(x[0]); }
+
+	MpOperationExp::MpOperationExp() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(expRR), reinterpret_cast<void*>(expCC)) {
+	}
+
+	// pow
+	double powRR(double x, double y) { return std::pow(x, y); }
+	std::complex<double> powCC(std::complex<double> *  x) { return std::pow(x[0], x[1]); }
+
+	MpOperationPow::MpOperationPow() : MpOperationFunc(2, MpOperationFlags::OpFlagNopIfROne, reinterpret_cast<void*>(powRR), reinterpret_cast<void*>(powCC)) {
+	}
+
+	// Atan2
+	double atan2RR(double x, double y) { return std::atan2(x, y); }
+
+	MpOperationAtan2::MpOperationAtan2() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(powRR), nullptr) {
+	}
+
+	// hypot
+	double HypotRR(double x, double y) { return std::pow(x, y); }
+
+	MpOperationHypot::MpOperationHypot() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(powRR), nullptr) {
+	}
+
 	// mpOperationBinary
 	JitVar MpOperationBinary::compile(JitCompiler* jc, AstNode * node) {
 		JitVar vl, vr;
