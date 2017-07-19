@@ -1068,13 +1068,13 @@ namespace mathpresso {
 	// Atan2
 	double atan2RR(double x, double y) { return std::atan2(x, y); }
 
-	MpOperationAtan2::MpOperationAtan2() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(powRR), nullptr) {
+	MpOperationAtan2::MpOperationAtan2() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(atan2RR), nullptr) {
 	}
 
 	// hypot
-	double HypotRR(double x, double y) { return std::pow(x, y); }
+	double hypotRR(double x, double y) { return std::hypot(x, y); }
 
-	MpOperationHypot::MpOperationHypot() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(powRR), nullptr) {
+	MpOperationHypot::MpOperationHypot() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(hypotRR), nullptr) {
 	}
 
 	// mpOperationBinary
