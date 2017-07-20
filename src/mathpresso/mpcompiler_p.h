@@ -55,6 +55,10 @@ namespace mathpresso
 			return this->flags == other.flags && this->op.isEqual(other.op);
 		}
 
+		MATHPRESSO_INLINE const bool operator!=(const JitVar& other) {
+			return !(this->operator==(other));
+		}
+
 		// Swap.
 		MATHPRESSO_INLINE void swapWith(JitVar& other)
 		{

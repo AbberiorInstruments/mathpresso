@@ -787,10 +787,8 @@ namespace mathpresso {
 		{
 			JitVar tmp(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
 			jc->cc->roundsd(tmp.getXmm(), var.getXmm(), asmjit::x86::kRoundDown | asmjit::x86::kRoundInexact);
-
-			if (!(result == var))
+			if (result.getXmm().getId() != var.getXmm().getId())
 				jc->cc->movsd(result.getXmm(), var.getXmm());
-
 			jc->cc->subsd(result.getXmm(), tmp.getXmm());
 			jc->cc->cmpsd(result.getXmm(), jc->getConstantD64(0.5).getMem(), asmjit::x86::kCmpNLT);
 			jc->cc->andpd(result.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
@@ -804,7 +802,7 @@ namespace mathpresso {
 
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
 			jc->cc->movsd(t3.getXmm(), var.getXmm());
-			if (!(result == var))
+			if (result.getXmm().getId() != var.getXmm().getId())
 				jc->cc->movsd(result.getXmm(), var.getXmm());
 			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
 			jc->cc->addsd(t3.getXmm(), jc->getConstantD64(magic1).getMem());
@@ -847,7 +845,7 @@ namespace mathpresso {
 			jc->cc->addsd(t1.getXmm(), jc->getConstantD64(magic0).getMem());
 			jc->cc->cmpsd(t2.getXmm(), jc->getConstantD64(maxn).getMem(), asmjit::x86::kCmpNLT);
 			jc->cc->subsd(t1.getXmm(), jc->getConstantD64(magic0).getMem());
-			if (!(result == var))
+			if (result.getXmm().getId() != var.getXmm().getId())
 				jc->cc->movsd(result.getXmm(), var.getXmm());
 			jc->cc->andpd(result.getXmm(), t2.getXmm());
 			jc->cc->andnpd(t2.getXmm(), t1.getXmm());
@@ -882,7 +880,7 @@ namespace mathpresso {
 
 			jc->cc->movsd(t2.getXmm(), jc->getConstantU64(ASMJIT_UINT64_C(0x7FFFFFFFFFFFFFFF)).getMem());
 			jc->cc->andpd(t2.getXmm(), var.getXmm());
-			if (!(result == var))
+			if (result.getXmm().getId() != var.getXmm().getId())
 				jc->cc->movsd(result.getXmm(), var.getXmm());
 			jc->cc->movsd(t1.getXmm(), t2.getXmm());
 			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
@@ -926,7 +924,7 @@ namespace mathpresso {
 
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
 			jc->cc->movsd(t3.getXmm(), var.getXmm());
-			if (!(tmp == var))
+			if (tmp.getXmm().getId() != var.getXmm().getId())
 				jc->cc->movsd(tmp.getXmm(), var.getXmm());
 			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
 			jc->cc->movsd(t1.getXmm(), var.getXmm());
@@ -968,7 +966,7 @@ namespace mathpresso {
 
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
 			jc->cc->movsd(t3.getXmm(), var.getXmm());
-			if (!(result == var))
+			if (result.getXmm().getId() != var.getXmm().getId())
 				jc->cc->movsd(result.getXmm(), var.getXmm());
 			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
 			jc->cc->movsd(t1.getXmm(), var.getXmm());
@@ -1009,7 +1007,7 @@ namespace mathpresso {
 
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
 			jc->cc->movsd(t3.getXmm(), var.getXmm());
-			if (!(result == var))
+			if (result.getXmm().getId() != var.getXmm().getId())
 				jc->cc->movsd(result.getXmm(), var.getXmm());
 			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
 			jc->cc->movsd(t1.getXmm(), var.getXmm());
@@ -1514,9 +1512,9 @@ namespace mathpresso {
 
 	// Modulo
 	JitVar MpOperationModulo::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) {
-		asmjit::X86Xmm result = jc->cc->newXmmSd();
-		asmjit::X86Xmm tmp = jc->cc->newXmmSd();
-
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		JitVar tmp(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		
 		vl = jc->writableVar(vl);
 		if (vl == vr)
 		{
@@ -1527,13 +1525,49 @@ namespace mathpresso {
 			vr = jc->registerVar(vr);
 		}
 
-		jc->cc->movsd(result, vl.getXmm());
+		jc->cc->movsd(result.getXmm(), vl.getXmm());
 		jc->cc->divsd(vl.getXmm(), vr.getXmm());
-		jc->inlineRound(vl.getXmm(), vl.getXmm(), kOpTrunc, false, false);
-		jc->cc->mulsd(vl.getXmm(), vr.getXmm());
-		jc->cc->subsd(result, vl.getXmm());
+		
+		if (jc->enableSSE4_1)
+		{
+			jc->cc->roundsd(tmp.getXmm(), vl.getXmm(), asmjit::x86::kRoundTrunc | asmjit::x86::kRoundInexact);
+		}
+		else
+		{
+			JitVar var = vl;
+			
+			const double maxn = 4503599627370496.0;
+			const double magic0 = 6755399441055744.0;
+			const double magic1 = 6755399441055745.0;
 
-		return JitVar(result, JitVar::FLAG_NONE);
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+
+			jc->cc->movsd(t2.getXmm(), jc->getConstantU64(ASMJIT_UINT64_C(0x7FFFFFFFFFFFFFFF)).getMem());
+			jc->cc->andpd(t2.getXmm(), var.getXmm());
+			if (result.getXmm().getId() != var.getXmm().getId())
+				jc->cc->movsd(tmp.getXmm(), var.getXmm());
+			jc->cc->movsd(t1.getXmm(), t2.getXmm());
+			jc->cc->addsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->movsd(t3.getXmm(), t1.getXmm());
+			jc->cc->subsd(t2.getXmm(), jc->getConstantD64(magic0).getMem());
+			jc->cc->cmpsd(t1.getXmm(), jc->getConstantD64(maxn).getMem(), asmjit::x86::kCmpNLT);
+			jc->cc->cmpsd(t3.getXmm(), t2.getXmm(), asmjit::x86::kCmpLT);
+			jc->cc->orpd(t1.getXmm(), jc->getConstantU64AsPD(ASMJIT_UINT64_C(0x8000000000000000)).getMem());
+			jc->cc->andpd(t3.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
+			jc->cc->andpd(tmp.getXmm(), t1.getXmm());
+			jc->cc->subpd(t2.getXmm(), t3.getXmm());
+			jc->cc->andnpd(t1.getXmm(), t2.getXmm());
+			jc->cc->orpd(tmp.getXmm(), t1.getXmm());
+			
+
+		}
+		
+		jc->cc->mulsd(tmp.getXmm(), vr.getXmm());
+		jc->cc->subsd(result.getXmm(), tmp.getXmm());
+
+		return result;
 	}
 
 	double MpOperationModulo::calculateReal(double vl, double vr) { return fmod(vl, vr); }

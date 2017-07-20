@@ -84,8 +84,6 @@ namespace mathpresso {
 		{ "floor$1", OpInfo("floor", kOpFloor, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpFloor), nullptr) }, // done
 		{ "ceil$1", OpInfo("ceil", kOpCeil, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpCeil), nullptr) }, // done
 		{ "frac$1", OpInfo("frac", kOpFrac, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpFrac), nullptr) }, // done
-
-		// done by function calls
 		{ "sqrtc$1", OpInfo("sqrtc", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::sqrt>)) }, // done
 		{ "sqrt$1", OpInfo("sqrt", kOpSqrt, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpSqrt), nullptr) }, // done
 		{ "log$1", OpInfo("log", kOpLog, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpLog), reinterpret_cast<void*>(mpFuncCtoC1<std::log>)) }, // done
@@ -96,7 +94,7 @@ namespace mathpresso {
 		{ "atan2$2", OpInfo("atan2", kOpAtan2, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpAtan2), nullptr) }, // done
 		{ "hypot$2", OpInfo("hypot", kOpHypot, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpHypot), nullptr) }, // done
 
-		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR) }
+		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR | _kOpFlagHasobject) }
 	};
 #undef RtoC
 #undef CtoR
@@ -356,6 +354,8 @@ Error Context::addBuiltIns(void) {
   TRY_EMPLACE("pow$2", std::make_shared<MpOperationPow>());
   TRY_EMPLACE("atan2$2", std::make_shared<MpOperationAtan2>());
   TRY_EMPLACE("hypot$2", std::make_shared<MpOperationHypot>());
+
+  TRY_EMPLACE("_none_$0", nullptr);
 
   for (size_t i = kOpNone + 1; i < kOpCount; i++) 
   {
