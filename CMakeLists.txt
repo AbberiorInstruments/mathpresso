@@ -125,7 +125,7 @@ if(NOT MATHPRESSO_EMBED)
     "${MATHPRESSO_PRIVATE_CFLAGS}"
     "${MATHPRESSO_PRIVATE_CFLAGS_REL}"
     "${MATHPRESSO_PRIVATE_CFLAGS_DBG}")
-  message("II=${ASMJIT_INCLUDE_DIR}")
+  message(STATUS "Including asmjit from: ${ASMJIT_INCLUDE_DIR}")
   target_include_directories(mathpresso PRIVATE BEFORE ${ASMJIT_INCLUDE_DIR})
   target_include_directories(mathpresso PUBLIC
 	$<BUILD_INTERFACE:${MATHPRESSO_SOURCE_DIR}>

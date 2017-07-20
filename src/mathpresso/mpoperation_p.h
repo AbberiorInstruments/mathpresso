@@ -88,10 +88,27 @@ namespace mathpresso {
 			flags_ |= flags;
 		}
 
-		void removeFlags(uint32_t flags) {
+		void removeFlags(uint32_t flags) 
+		{
 			flags_ &= ~flags;
 		}
 
+		virtual std::complex<double> evaluateDRetC(double * args)
+		{
+			return{ NAN, NAN };
+		};
+		virtual std::complex<double> evaluateCRetC(std::complex<double> * args)
+		{
+			return{ NAN, NAN };
+		};
+		virtual double evaluateDRetD(double * args)
+		{
+			return NAN;
+		};
+		virtual double evaluateCRetD(std::complex<double> * args)
+		{
+			return NAN;
+		};
 	protected:
 		std::string description_ = "No description given.";
 		uint32_t nargs_;

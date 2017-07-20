@@ -220,7 +220,7 @@ Error Parser::parseVariableDecl(AstBlock* block) {
 
     AstVarDecl* decl = _ast->newNode<AstVarDecl>();
     MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
-	decl->mpOp_ = _ops->at("=$2").get();
+	decl->mpOp_ = _ops->at(std::make_pair("=$2", 2)).get();
 
     decl->setPosition(position);
     decl->setSymbol(vSym);
@@ -445,7 +445,7 @@ _Unary: {
 
 		std::string opNameDecorated(std::string(_tokenizer._start).substr(token.position, token.length) + "$1");
 
-		if (_ops->find(opNameDecorated) != _ops->end())
+		if (_ops->find(std::make_pair(opNameDecorated, 1)) != _ops->end())
 		{
 			opNode->mpOp_ = _ops->at(opNameDecorated).get();
 		}
