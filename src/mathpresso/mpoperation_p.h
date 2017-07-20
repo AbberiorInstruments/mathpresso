@@ -39,17 +39,17 @@ namespace mathpresso {
 		// Types of Operation that are allowed.
 		OpFlagCReturnsD = 0x0000100,
 		OpFlagDReturnsC = 0x0000200,
-		
+
 		// Set for optimization of binary operations
 		OpFlagNopIfLZero = 0x10000000,
 		OpFlagNopIfRZero = 0x20000000,
-		OpFlagNopIfLOne  = 0x40000000,
-		OpFlagNopIfROne  = 0x80000000,
+		OpFlagNopIfLOne = 0x40000000,
+		OpFlagNopIfROne = 0x80000000,
 		OpFlagNopIfZero = OpFlagNopIfLZero | OpFlagNopIfRZero,
-		OpFlagNopIfOne  = OpFlagNopIfLOne  | OpFlagNopIfROne
+		OpFlagNopIfOne = OpFlagNopIfLOne | OpFlagNopIfROne
 	};
 
-	class MpOperation 
+	class MpOperation
 	{
 	public:
 		// Con-/Destructor
@@ -57,28 +57,26 @@ namespace mathpresso {
 			nargs_(nargs),
 			flags_(flags),
 			priority_(0)
-		{
-		}
+		{}
 
-		virtual ~MpOperation() 
-		{
-		}
+		virtual ~MpOperation()
+		{}
 
 		// Add ASM code to compiler stack 
-		virtual JitVar compile(JitCompiler *jc, AstNode * node)  = 0;
+		virtual JitVar compile(JitCompiler *jc, AstNode * node) = 0;
 		// Optimize AST 
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) = 0;
 
-		uint32_t flags() 
-		{ 
-			return flags_; 
+		uint32_t flags()
+		{
+			return flags_;
 		}
-		uint32_t nargs() 
-		{ 
-			return nargs_; 
+		uint32_t nargs()
+		{
+			return nargs_;
 		}
 
-		bool hasFlag(uint32_t flag) 
+		bool hasFlag(uint32_t flag)
 		{
 			return flag & flags_;
 		}
@@ -88,7 +86,8 @@ namespace mathpresso {
 			flags_ |= flags;
 		}
 
-		void removeFlags(uint32_t flags) {
+		void removeFlags(uint32_t flags)
+		{
 			flags_ &= ~flags;
 		}
 
@@ -107,7 +106,7 @@ namespace mathpresso {
 			fnD_(fnD),
 			fnC_(fnC)
 		{
-			if (!fnD) 
+			if (!fnD)
 			{
 				addFlags(OpHasNoReal);
 			}
@@ -118,8 +117,7 @@ namespace mathpresso {
 		}
 
 		virtual ~MpOperationFunc()
-		{
-		}
+		{}
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
@@ -147,13 +145,11 @@ namespace mathpresso {
 			MpOperationFunc(nargs, flags | MpOperationFlags::OpFlagHasAsm, fnD, fnC),
 			asmC_(asmC),
 			asmD_(asmD)
-		{
-		}
+		{}
 
 		virtual ~MpOperationFuncAsm()
-		{
-		}
-		
+		{}
+
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 
 		virtual void setFnAsm(mpAsmFunc fn, bool isComplex = false);
@@ -162,7 +158,7 @@ namespace mathpresso {
 		mpAsmFunc asmC_;
 		mpAsmFunc asmD_;
 	};
-	
+
 	// isfinite
 	class MpOperationIsFinite :public MpOperationFuncAsm
 	{
@@ -176,9 +172,9 @@ namespace mathpresso {
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 
 	private:
-		virtual double evaluateDRetD(double *args) override ;
+		virtual double evaluateDRetD(double *args) override;
 		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
-		
+
 	};
 
 	// isinf
@@ -222,11 +218,12 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationGetReal() :
-			MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, nullptr, nullptr, nullptr, nullptr) {
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoComplex);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-	private:		
+	private:
 		virtual double evaluateCRetD(std::complex<double> *args) override;
 	};
 
@@ -235,14 +232,15 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationGetImag() :
-			MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, nullptr, nullptr, nullptr, nullptr) {
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoComplex);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 	private:
 		virtual double evaluateCRetD(std::complex<double> *args) override;
 	};
-	
+
 	// Square root
 	class MpOperationSqrt : public MpOperationFuncAsm
 	{
@@ -287,7 +285,8 @@ namespace mathpresso {
 	class MpOperationNot : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationNot() : MpOperationFuncAsm(1, OpFlagHasAsm, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationNot() : MpOperationFuncAsm(1, OpFlagHasAsm, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoReal | OpHasNoComplex);
 			priority_ = 3;
 		}
@@ -303,7 +302,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationConjug() :
-			MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoComplex);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -317,7 +317,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationRecip() :
-			MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+			MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoComplex | OpHasNoReal);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -334,7 +335,7 @@ namespace mathpresso {
 			sin, cos, tan, asin, acos, atan, sinh, cosh, tanh
 		};
 
-		MpOperationTrigonometrie(uint32_t type) : 
+		MpOperationTrigonometrie(uint32_t type) :
 			MpOperationFunc(1, OpFlagHasAsm, nullptr, nullptr),
 			type_(type)
 		{
@@ -348,12 +349,13 @@ namespace mathpresso {
 	private:
 		uint32_t type_;
 	};
-	
+
 	// Sign bit
 	class MpOperationSignBit : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationSignBit() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationSignBit() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoReal);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -366,7 +368,8 @@ namespace mathpresso {
 	class MpOperationCopySign : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationCopySign() : MpOperationFuncAsm(2, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationCopySign() : MpOperationFuncAsm(2, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoReal);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -379,7 +382,7 @@ namespace mathpresso {
 	class MpOperationAvg : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationAvg() : MpOperationFuncAsm(2, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr) 
+		MpOperationAvg() : MpOperationFuncAsm(2, MpOperationFlags::OpFlagNone, nullptr, nullptr, nullptr, nullptr)
 		{
 			removeFlags(OpHasNoComplex | OpHasNoReal);
 		}
@@ -394,7 +397,8 @@ namespace mathpresso {
 	class MpOperationAbs : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationAbs() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationAbs() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoComplex | OpHasNoReal);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -407,8 +411,8 @@ namespace mathpresso {
 	// round
 	class MpOperationRound : public MpOperationFuncAsm
 	{
-	public: 
-		MpOperationRound() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) 	
+	public:
+		MpOperationRound() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr)
 		{
 			removeFlags(OpHasNoReal);
 		}
@@ -423,7 +427,8 @@ namespace mathpresso {
 	class MpOperationRoundEven : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationRoundEven() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationRoundEven() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoReal);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -437,7 +442,8 @@ namespace mathpresso {
 	class MpOperationTrunc : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationTrunc() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationTrunc() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoReal);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -450,7 +456,8 @@ namespace mathpresso {
 	class MpOperationFrac : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationFrac() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationFrac() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoReal);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -463,7 +470,8 @@ namespace mathpresso {
 	class MpOperationFloor : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationFloor() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationFloor() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoReal);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -476,7 +484,8 @@ namespace mathpresso {
 	class MpOperationcCeil : public MpOperationFuncAsm
 	{
 	public:
-		MpOperationcCeil() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr) {
+		MpOperationcCeil() : MpOperationFuncAsm(1, OpFlagNone, nullptr, nullptr, nullptr, nullptr)
+		{
 			removeFlags(OpHasNoReal);
 		}
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -548,8 +557,7 @@ namespace mathpresso {
 		}
 
 		virtual ~MpOperationBinary()
-		{
-		}
+		{}
 
 		// calls generatAsmReal() and comppComplex() after setting up.
 		virtual JitVar compile(JitCompiler* jc, AstNode * node) override;
@@ -567,15 +575,14 @@ namespace mathpresso {
 		virtual double calculateReal(double vl, double vr) { return NAN; };
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(NAN, NAN); };
 	};
-		
+
 	// Addition
 	class MpOperationAdd : public MpOperationBinary
 	{
 	public:
 		MpOperationAdd() :
 			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 6)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -590,8 +597,7 @@ namespace mathpresso {
 	public:
 		MpOperationSub() :
 			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagHasAsm, 6)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -606,8 +612,7 @@ namespace mathpresso {
 	public:
 		MpOperationMul() :
 			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 5)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -622,8 +627,7 @@ namespace mathpresso {
 	public:
 		MpOperationDiv() :
 			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagHasAsm, 5)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -637,8 +641,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationMin() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0) {
-		}
+			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0)
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -650,8 +654,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationMax() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0) {
-		}
+			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0)
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -664,8 +668,7 @@ namespace mathpresso {
 	public:
 		MpOperationEq() :
 			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 9)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -680,8 +683,7 @@ namespace mathpresso {
 	public:
 		MpOperationNe() :
 			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 9)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -696,8 +698,7 @@ namespace mathpresso {
 	public:
 		MpOperationLt() :
 			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -710,8 +711,7 @@ namespace mathpresso {
 	public:
 		MpOperationLe() :
 			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -724,8 +724,7 @@ namespace mathpresso {
 	public:
 		MpOperationGt() :
 			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -738,8 +737,7 @@ namespace mathpresso {
 	public:
 		MpOperationGe() :
 			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
-		{
-		}
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -751,8 +749,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationModulo() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 5) {
-		}
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 5)
+		{}
 
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
@@ -777,9 +775,9 @@ namespace mathpresso {
 	class MpOperationAssignment : public MpOperation
 	{
 	public:
-		MpOperationAssignment() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft) 
+		MpOperationAssignment() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft)
 		{
-			priority_ = 15; 
+			priority_ = 15;
 		}
 
 
