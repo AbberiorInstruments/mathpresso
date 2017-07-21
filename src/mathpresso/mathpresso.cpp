@@ -291,10 +291,7 @@ struct GlobalConstant {
   double value;
 };
 
-#define TRY_EMPLACE(key, val) if (_symbols.find(key) == _symbols.end()) \
-_symbols.emplace(key, val);
-#define EMPLACE(key, val) _symbols.erase(key); \
-_symbols.emplace(key, val);
+#define TRY_EMPLACE(key, val) _symbols.emplace(key, val);
 
 Error Context::addBuiltIns(void) {
   ContextInternalImpl* d;
