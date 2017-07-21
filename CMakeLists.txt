@@ -35,6 +35,8 @@ include("${MATHPRESSO_DIR}/CxxProject.cmake")
 cxx_project(mathpresso)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  # avoid cl: Command line warning in builds in case GR was set before
+  string( REPLACE "/GR " "/GR- " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} )
   list(APPEND MATHPRESSO_PRIVATE_CFLAGS /GF)
   list(APPEND MATHPRESSO_PRIVATE_CFLAGS_DBG /GS /GR-)
   list(APPEND MATHPRESSO_PRIVATE_CFLAGS_REL /Oi /Oy /GS- /GR-)
@@ -125,7 +127,6 @@ if(NOT MATHPRESSO_EMBED)
     "${MATHPRESSO_PRIVATE_CFLAGS}"
     "${MATHPRESSO_PRIVATE_CFLAGS_REL}"
     "${MATHPRESSO_PRIVATE_CFLAGS_DBG}")
-  message("II=${ASMJIT_INCLUDE_DIR}")
   target_include_directories(mathpresso PRIVATE BEFORE ${ASMJIT_INCLUDE_DIR})
   target_include_directories(mathpresso PUBLIC
 	$<BUILD_INTERFACE:${MATHPRESSO_SOURCE_DIR}>
