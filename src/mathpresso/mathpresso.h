@@ -317,6 +317,7 @@ struct Context {
   //! Add function to this context. For functions this may be called once with and once without
   //! the flag kFunctionTakesComplex
   MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags, void *fnAsm = nullptr);
+  MATHPRESSO_API Error addObject(std::string name, std::shared_ptr<MpOperation> obj);
 
   //! Internal implementation
   MATHPRESSO_API Error addSymbol(AstSymbol* &sym, const char * name, int type);

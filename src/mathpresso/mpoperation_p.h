@@ -761,7 +761,7 @@ namespace mathpresso {
 	class MpOperationTernary : public MpOperation
 	{
 	public:
-		MpOperationTernary() : MpOperation(3, MpOperationFlags::OpIsRighttoLeft)
+		MpOperationTernary() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft)
 		{
 			priority_ = 15;
 		}

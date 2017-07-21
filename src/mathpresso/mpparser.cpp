@@ -694,11 +694,16 @@ Error Parser::parseCall(AstNode** pNodeOut) {
     MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires %u argument(s) (%u provided).", sym->getName(), reqArgs, n);
   }
 
-  std::string opNameDecorated(std::string(_tokenizer._start).substr(token.position, token.length) + "$" + std::to_string(n));
+  std::string opNameDecorated(str.getData(), str.getLength());
+  opNameDecorated += "$" + std::to_string(n);
 
   if (_ops->find(opNameDecorated) != _ops->end())
   {
 	  callNode->_symbol->setOp(_ops->at(opNameDecorated));
+  }
+  else
+  {
+	  MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires a MpOperation-Object, which is not to be found.", sym->getName());
   }
 
   // Transform an intrinsic function into unary or binary operator.
