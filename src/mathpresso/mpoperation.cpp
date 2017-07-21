@@ -4,7 +4,7 @@
 // [License]
 // Zlib - See LICENSE.md file in the package.
 
-#include "mpoperation_p.h"
+#include "mpoperation_internal_p.h"
 #include "mpast_p.h"
 #include "mpcompiler_p.h"
 #include "mpoptimizer_p.h"
@@ -14,6 +14,66 @@
 #include <complex>
 
 namespace mathpresso {
+
+	uint32_t addBuiltinMpObjects(Context * ctx)
+	{
+		ctx->addObject("+", std::make_shared<MpOperationAdd>());
+		ctx->addObject("-", std::make_shared<MpOperationSub>());
+		ctx->addObject("*", std::make_shared<MpOperationMul>());
+		ctx->addObject("/", std::make_shared<MpOperationDiv>());
+		ctx->addObject("==", std::make_shared<MpOperationEq>());
+		ctx->addObject("!=", std::make_shared<MpOperationNe>());
+		ctx->addObject(">=", std::make_shared<MpOperationGe>());
+		ctx->addObject(">", std::make_shared<MpOperationGt>());
+		ctx->addObject("<=", std::make_shared<MpOperationLe>());
+		ctx->addObject("<", std::make_shared<MpOperationLt>());
+		ctx->addObject("?", std::make_shared<MpOperationTernary>());
+		ctx->addObject("=", std::make_shared<MpOperationAssignment>());
+		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite>());
+		ctx->addObject("isinf", std::make_shared<MpOperationIsInfinite>());
+		ctx->addObject("isnan", std::make_shared<MpOperationIsNan>());
+		ctx->addObject("real", std::make_shared<MpOperationGetReal>());
+		ctx->addObject("imag", std::make_shared<MpOperationGetImag>());
+		ctx->addObject("min", std::make_shared<MpOperationMin>());
+		ctx->addObject("max", std::make_shared<MpOperationMax>());
+		ctx->addObject("=", std::make_shared<MpOperationAssignment>());
+		ctx->addObject("sin", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::sin));
+		ctx->addObject("cos", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::cos));
+		ctx->addObject("tan", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::tan));
+		ctx->addObject("sinh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::sinh));
+		ctx->addObject("cosh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::cosh));
+		ctx->addObject("tanh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::tanh));
+		ctx->addObject("asin", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::asin));
+		ctx->addObject("acos", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::acos));
+		ctx->addObject("atan", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::atan));
+		ctx->addObject("%", std::make_shared<MpOperationModulo>());
+		ctx->addObject("-", std::make_shared<MpOperationNeg>());
+		ctx->addObject("!", std::make_shared<MpOperationNot>());
+		ctx->addObject("sqrt", std::make_shared<MpOperationSqrt>());
+		ctx->addObject("sqrtc", std::make_shared<MpOperationSqrtC>());
+		ctx->addObject("conjug", std::make_shared<MpOperationConjug>());
+		ctx->addObject("avg", std::make_shared<MpOperationAvg>());
+		ctx->addObject("abs", std::make_shared<MpOperationAbs>());
+		ctx->addObject("recip", std::make_shared<MpOperationRecip>());
+		ctx->addObject("signbit", std::make_shared<MpOperationSignBit>());
+		ctx->addObject("copysign", std::make_shared<MpOperationCopySign>());
+		ctx->addObject("round", std::make_shared<MpOperationRound>());
+		ctx->addObject("roundeven", std::make_shared<MpOperationRoundEven>());
+		ctx->addObject("floor", std::make_shared<MpOperationFloor>());
+		ctx->addObject("ceil", std::make_shared<MpOperationcCeil>());
+		ctx->addObject("frac", std::make_shared<MpOperationFrac>());
+		ctx->addObject("trunc", std::make_shared<MpOperationTrunc>());
+		ctx->addObject("log", std::make_shared<MpOperationLog>());
+		ctx->addObject("log2", std::make_shared<MpOperationLog2>());
+		ctx->addObject("log10", std::make_shared<MpOperationLog10>());
+		ctx->addObject("exp", std::make_shared<MpOperationExp>());
+		ctx->addObject("pow", std::make_shared<MpOperationPow>());
+		ctx->addObject("atan2", std::make_shared<MpOperationAtan2>());
+		ctx->addObject("hypot", std::make_shared<MpOperationHypot>());
+		ctx->addObject("_none_", std::make_shared<MpOperationFunc>(0, MpOperationFlags::OpFlagNone, nullptr, nullptr));
+		return 0;
+	}
+
 
 	// MpOperationFunc
 	JitVar MpOperationFunc::compile(JitCompiler* jc, AstNode * node)

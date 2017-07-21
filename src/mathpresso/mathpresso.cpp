@@ -292,64 +292,10 @@ struct GlobalConstant {
 };
 
 
-Error Context::addBuiltIns(void) {
-  
-  // add the builtin operations.
-  addObject("+", std::make_shared<MpOperationAdd>());
-  addObject("-", std::make_shared<MpOperationSub>());
-  addObject("*", std::make_shared<MpOperationMul>());
-  addObject("/", std::make_shared<MpOperationDiv>());
-  addObject("==", std::make_shared<MpOperationEq>());
-  addObject("!=", std::make_shared<MpOperationNe>());
-  addObject(">=", std::make_shared<MpOperationGe>());
-  addObject(">", std::make_shared<MpOperationGt>());
-  addObject("<=", std::make_shared<MpOperationLe>());
-  addObject("<", std::make_shared<MpOperationLt>());
-  addObject("?", std::make_shared<MpOperationTernary>());
-  addObject("=", std::make_shared<MpOperationAssignment>());
-  addObject("isfinite", std::make_shared<MpOperationIsFinite>());
-  addObject("isinf", std::make_shared<MpOperationIsInfinite>());
-  addObject("isnan", std::make_shared<MpOperationIsNan>());
-  addObject("real", std::make_shared<MpOperationGetReal>());
-  addObject("imag", std::make_shared<MpOperationGetImag>());
-  addObject("min", std::make_shared<MpOperationMin>());
-  addObject("max", std::make_shared<MpOperationMax>());
-  addObject("=", std::make_shared<MpOperationAssignment>());
-  addObject("sin", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::sin));
-  addObject("cos", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::cos));
-  addObject("tan", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::tan));
-  addObject("sinh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::sinh));
-  addObject("cosh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::cosh));
-  addObject("tanh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::tanh));
-  addObject("asin", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::asin));
-  addObject("acos", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::acos));
-  addObject("atan", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::atan));
-  addObject("%", std::make_shared<MpOperationModulo>());
-  addObject("-", std::make_shared<MpOperationNeg>());
-  addObject("!", std::make_shared<MpOperationNot>());
-  addObject("sqrt", std::make_shared<MpOperationSqrt>());
-  addObject("sqrtc", std::make_shared<MpOperationSqrtC>());
-  addObject("conjug", std::make_shared<MpOperationConjug>());
-  addObject("avg", std::make_shared<MpOperationAvg>());
-  addObject("abs", std::make_shared<MpOperationAbs>());
-  addObject("recip", std::make_shared<MpOperationRecip>());
-  addObject("signbit", std::make_shared<MpOperationSignBit>());
-  addObject("copysign", std::make_shared<MpOperationCopySign>());
-  addObject("round", std::make_shared<MpOperationRound>());
-  addObject("roundeven", std::make_shared<MpOperationRoundEven>());
-  addObject("floor", std::make_shared<MpOperationFloor>());
-  addObject("ceil", std::make_shared<MpOperationcCeil>());
-  addObject("frac", std::make_shared<MpOperationFrac>());
-  addObject("trunc", std::make_shared<MpOperationTrunc>());
-  addObject("log", std::make_shared<MpOperationLog>());
-  addObject("log2", std::make_shared<MpOperationLog2>());
-  addObject("log10", std::make_shared<MpOperationLog10>());
-  addObject("exp", std::make_shared<MpOperationExp>());
-  addObject("pow", std::make_shared<MpOperationPow>());
-  addObject("atan2", std::make_shared<MpOperationAtan2>());
-  addObject("hypot", std::make_shared<MpOperationHypot>());
-  addObject("_none_", std::make_shared<MpOperationFunc>(0, 0, nullptr, nullptr));
-
+Error Context::addBuiltIns(void)
+{
+  // add the builtin operations.	
+  addBuiltinMpObjects(this);
 
   ContextInternalImpl* d;
   MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
