@@ -9,7 +9,7 @@
 #define _MATHPRESSO_MATHPRESSO_P_H
 
 // [Dependencies]
-#include "./mathpresso.h"
+#include <mathpresso/mathpresso.h>
 #include <asmjit/asmjit.h>
 
 #include <stdarg.h>

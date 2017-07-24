@@ -9,7 +9,7 @@
 #define _MATHPRESSO_MPATOMIC_P_H
 
 // [Dependencies]
-#include "./mathpresso_p.h"
+#include <mathpresso/mathpresso_p.h>
 
 namespace mathpresso {
 

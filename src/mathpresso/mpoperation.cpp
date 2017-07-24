@@ -4,12 +4,12 @@
 // [License]
 // Zlib - See LICENSE.md file in the package.
 
-#include "mpoperation_internal_p.h"
-#include "mpast_p.h"
-#include "mpcompiler_p.h"
-#include "mpoptimizer_p.h"
-#include "asmjit/x86/x86operand.h"
-#include "asmjit/x86/x86inst.h"
+#include <mathpresso/mpoperation_internal_p.h>
+#include <mathpresso/mpast_p.h>
+#include <mathpresso/mpcompiler_p.h>
+#include <mathpresso/mpoptimizer_p.h>
+#include <asmjit/x86/x86operand.h>
+#include <asmjit/x86/x86inst.h>
 
 #include <complex>
 

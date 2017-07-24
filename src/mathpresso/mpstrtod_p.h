@@ -9,7 +9,7 @@
 #define _MATHPRESSO_MPSTRTOD_P_H
 
 // [Dependencies]
-#include "./mathpresso_p.h"
+#include <mathpresso/mathpresso_p.h>
 
 // `mathpresso_p.h` includes asmjit, so we can use `ASMJIT_OS_...`.
 #if ASMJIT_OS_WINDOWS

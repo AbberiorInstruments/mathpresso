@@ -8,7 +8,7 @@
 #define MATHPRESSO_EXPORTS
 
 // [Dependencies]
-#include "./mpast_p.h"
+#include <mathpresso/mpast_p.h>
 
 namespace mathpresso {
 

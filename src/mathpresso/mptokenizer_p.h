@@ -9,8 +9,8 @@
 #define _MATHPRESSO_MPTOKENIZER_P_H
 
 // [Dependencies]
-#include "./mathpresso_p.h"
-#include "./mpstrtod_p.h"
+#include <mathpresso/mathpresso_p.h>
+#include <mathpresso/mpstrtod_p.h>
 #include <complex>
 
 namespace mathpresso {

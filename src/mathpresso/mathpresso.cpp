@@ -8,15 +8,15 @@
 #define MATHPRESSO_EXPORTS
 
 // [Dependencies]
-#include "./mathpresso_p.h"
-#include "./mpast_p.h"
-#include "./mpatomic_p.h"
-#include "./mpcompiler_p.h"
-#include "./mpeval_p.h"
-#include "./mpoptimizer_p.h"
-#include "./mpparser_p.h"
-#include "./mptokenizer_p.h"
-#include "./mpoperation_p.h"
+#include <mathpresso/mathpresso_p.h>
+#include <mathpresso/mpast_p.h>
+#include <mathpresso/mpatomic_p.h>
+#include <mathpresso/mpcompiler_p.h>
+#include <mathpresso/mpeval_p.h>
+#include <mathpresso/mpoptimizer_p.h>
+#include <mathpresso/mpparser_p.h>
+#include <mathpresso/mptokenizer_p.h>
+#include <mathpresso/mpoperation.h>
 
 #include <math.h>
 #include <string.h>
@@ -450,7 +450,6 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 		if (flags & kFunctionTakesComplex)
 		{
 	
-			symOp->setFn(fn, true);
 			if (fnAsm && symOp->hasFlag(MpOperationFlags::OpFlagHasAsm))
 			{
 				std::static_pointer_cast<MpOperationFuncAsm>(symOp)->setFnAsm((mpAsmFunc)fnAsm, true);
@@ -464,7 +463,6 @@ Error Context::addFunction(const char* name, void* fn, unsigned int flags, void 
 		}
 		else
 		{
-			symOp->setFn(fn);
 			if (fnAsm && symOp->hasFlag(MpOperationFlags::OpFlagHasAsm))
 			{
 				std::static_pointer_cast<MpOperationFuncAsm>(symOp)->setFnAsm((mpAsmFunc)fnAsm);

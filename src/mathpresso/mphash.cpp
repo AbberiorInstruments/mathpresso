@@ -8,7 +8,7 @@
 #define MATHPRESSO_EXPORTS
 
 // [Dependencies]
-#include "./mphash_p.h"
+#include  <mathpresso/mphash_p.h>
 
 namespace mathpresso {
 

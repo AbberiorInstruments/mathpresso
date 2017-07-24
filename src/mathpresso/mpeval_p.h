@@ -9,8 +9,8 @@
 #define _MATHPRESSO_MPEVAL_P_H
 
 // [Dependencies]
-#include "./mathpresso_p.h"
-#include "./mathpresso/mpcompiler_p.h"
+#include <mathpresso/mathpresso_p.h>
+#include <mathpresso/mpcompiler_p.h>
 #include <complex>
 #include <iostream>
 

@@ -9,8 +9,8 @@
 #define _MATHPRESSO_MPPARSER_P_H
 
 // [Dependencies]
-#include "./mpast_p.h"
-#include "./mptokenizer_p.h"
+#include <mathpresso/mpast_p.h>
+#include <mathpresso/mptokenizer_p.h>
 
 namespace mathpresso {
 

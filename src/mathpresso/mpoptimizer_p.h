@@ -9,7 +9,7 @@
 #define _MATHPRESSO_MPOPTIMIZER_P_H
 
 // [Dependencies]
-#include "./mpast_p.h"
+#include <mathpresso/mpast_p.h>
 
 namespace mathpresso {
 
