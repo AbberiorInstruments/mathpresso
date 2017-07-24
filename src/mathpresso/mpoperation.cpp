@@ -4,7 +4,7 @@
 // [License]
 // Zlib - See LICENSE.md file in the package.
 
-#include <mathpresso/mpoperation_internal_p.h>
+#include <mathpresso/mpoperation_p.h>
 #include <mathpresso/mpast_p.h>
 #include <mathpresso/mpcompiler_p.h>
 #include <mathpresso/mpoptimizer_p.h>
