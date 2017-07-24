@@ -21,15 +21,15 @@ namespace mathpresso {
 #define VPTR(function) reinterpret_cast<void*>(function)
 
 	// helpers:
-	double _sin(double arg) { return std::sin(arg); }
-	double _cos(double arg) { return std::cos(arg); }
-	double _tan(double arg) { return std::tan(arg); }
-	double _asin(double arg) { return std::asin(arg); }
-	double _acos(double arg) { return std::acos(arg); }
-	double _atan(double arg) { return std::atan(arg); }
-	double _sinh(double arg) { return std::sinh(arg); }
-	double _cosh(double arg) { return std::cosh(arg); }
-	double _tanh(double arg) { return std::tanh(arg); }
+	double _sin(double * arg) { return std::sin(arg[0]); }
+	double _cos(double * arg) { return std::cos(arg[0]); }
+	double _tan(double * arg) { return std::tan(arg[0]); }
+	double _asin(double * arg) { return std::asin(arg[0]); }
+	double _acos(double * arg) { return std::acos(arg[0]); }
+	double _atan(double * arg) { return std::atan(arg[0]); }
+	double _sinh(double * arg) { return std::sinh(arg[0]); }
+	double _cosh(double * arg) { return std::cosh(arg[0]); }
+	double _tanh(double * arg) { return std::tanh(arg[0]); }
 	std::complex<double> _sinC(std::complex<double>* arg) { return std::sin(arg[0]); }
 	std::complex<double> _cosC(std::complex<double>* arg) { return std::cos(arg[0]); }
 	std::complex<double> _tanC(std::complex<double>* arg) { return std::tan(arg[0]); }
@@ -298,8 +298,9 @@ namespace mathpresso {
 		{
 			throw std::runtime_error("Function does not exist.");
 		}
+		return ((mpFuncDtoD)fnD_)(args);
 
-		switch (nargs_)
+		/*switch (nargs_)
 		{
 		case 0: return ((Arg0Func)fnD_)();
 		case 1: return ((Arg1Func)fnD_)(args[0]);
@@ -312,7 +313,7 @@ namespace mathpresso {
 		case 8: return ((Arg8Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
 		default:
 			throw std::runtime_error("Too many arguments.");
-		}
+		}*/
 	}
 
 	std::complex<double> MpOperationFunc::evaluateDRetC(double * args)
@@ -766,15 +767,15 @@ namespace mathpresso {
 	{
 		switch (type_)
 		{
-		case trigonometrieFunc::sin: return _sin(args[0]);
-		case trigonometrieFunc::cos: return _cos(args[0]);
-		case trigonometrieFunc::tan: return _tan(args[0]);
-		case trigonometrieFunc::asin: return _asin(args[0]);
-		case trigonometrieFunc::acos: return _acos(args[0]);
-		case trigonometrieFunc::atan: return _atan(args[0]);
-		case trigonometrieFunc::sinh: return _sinh(args[0]);
-		case trigonometrieFunc::cosh: return _cosh(args[0]);
-		case trigonometrieFunc::tanh: return _tanh(args[0]);
+		case trigonometrieFunc::sin: return _sin(args);
+		case trigonometrieFunc::cos: return _cos(args);
+		case trigonometrieFunc::tan: return _tan(args);
+		case trigonometrieFunc::asin: return _asin(args);
+		case trigonometrieFunc::acos: return _acos(args);
+		case trigonometrieFunc::atan: return _atan(args);
+		case trigonometrieFunc::sinh: return _sinh(args);
+		case trigonometrieFunc::cosh: return _cosh(args);
+		case trigonometrieFunc::tanh: return _tanh(args);
 		default:
 			throw std::runtime_error("no function of this type available.");
 		}
