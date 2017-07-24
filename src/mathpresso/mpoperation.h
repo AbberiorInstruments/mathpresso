@@ -9,8 +9,9 @@
 #ifndef _MP_OPERATION_P_H
 #define _MP_OPERATION_P_H
 
-#include <complex>
 #include <mathpresso/mathpresso.h>
+#include <complex>
+#include <limits>
 
 namespace mathpresso {
 
