@@ -251,8 +251,9 @@ namespace mathpresso {
 		{
 			throw std::runtime_error("Function does not exist.");
 		}
+		return ((mpFuncDtoD)fnD_)(args);
 
-		switch (nargs_)
+		/*switch (nargs_)
 		{
 		case 0: return ((Arg0Func)fnD_)();
 		case 1: return ((Arg1Func)fnD_)(args[0]);
@@ -265,7 +266,7 @@ namespace mathpresso {
 		case 8: return ((Arg8Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
 		default:
 			throw std::runtime_error("Too many arguments.");
-		}
+		}*/
 	}
 
 	std::complex<double> MpOperationFunc::evaluateDRetC(double * args)
@@ -627,15 +628,15 @@ namespace mathpresso {
 
 	// MpOperationTrigonometrie
 	// helpers:
-	double _sin(double arg) { return std::sin(arg); }
-	double _cos(double arg) { return std::cos(arg); }
-	double _tan(double arg) { return std::tan(arg); }
-	double _asin(double arg) { return std::asin(arg); }
-	double _acos(double arg) { return std::acos(arg); }
-	double _atan(double arg) { return std::atan(arg); }
-	double _sinh(double arg) { return std::sinh(arg); }
-	double _cosh(double arg) { return std::cosh(arg); }
-	double _tanh(double arg) { return std::tanh(arg); }
+	double _sin(double * arg) { return std::sin(arg[0]); }
+	double _cos(double * arg) { return std::cos(arg[0]); }
+	double _tan(double * arg) { return std::tan(arg[0]); }
+	double _asin(double * arg) { return std::asin(arg[0]); }
+	double _acos(double * arg) { return std::acos(arg[0]); }
+	double _atan(double * arg) { return std::atan(arg[0]); }
+	double _sinh(double * arg) { return std::sinh(arg[0]); }
+	double _cosh(double * arg) { return std::cosh(arg[0]); }
+	double _tanh(double * arg) { return std::tanh(arg[0]); }
 	std::complex<double> _sinC(std::complex<double>* arg) { return std::sin(arg[0]); }
 	std::complex<double> _cosC(std::complex<double>* arg) { return std::cos(arg[0]); }
 	std::complex<double> _tanC(std::complex<double>* arg) { return std::tan(arg[0]); }
@@ -701,15 +702,15 @@ namespace mathpresso {
 	{
 		switch (type_)
 		{
-		case trigonometrieFunc::sin: return _sin(args[0]);
-		case trigonometrieFunc::cos: return _cos(args[0]);
-		case trigonometrieFunc::tan: return _tan(args[0]);
-		case trigonometrieFunc::asin: return _asin(args[0]);
-		case trigonometrieFunc::acos: return _acos(args[0]);
-		case trigonometrieFunc::atan: return _atan(args[0]);
-		case trigonometrieFunc::sinh: return _sinh(args[0]);
-		case trigonometrieFunc::cosh: return _cosh(args[0]);
-		case trigonometrieFunc::tanh: return _tanh(args[0]);
+		case trigonometrieFunc::sin: return _sin(args);
+		case trigonometrieFunc::cos: return _cos(args);
+		case trigonometrieFunc::tan: return _tan(args);
+		case trigonometrieFunc::asin: return _asin(args);
+		case trigonometrieFunc::acos: return _acos(args);
+		case trigonometrieFunc::atan: return _atan(args);
+		case trigonometrieFunc::sinh: return _sinh(args);
+		case trigonometrieFunc::cosh: return _cosh(args);
+		case trigonometrieFunc::tanh: return _tanh(args);
 		default:
 			throw std::runtime_error("no function of this type available.");
 		}
@@ -1078,48 +1079,48 @@ namespace mathpresso {
 	double MpOperationcCeil::evaluateDRetD(double * args) { return std::ceil(args[0]); }
 
 	// Log
-	double logRR(double x) { return std::log(x); }
+	double logRR(double  * x) { return std::log(x[0]); }
 	std::complex<double> logCC(std::complex<double> *  x) { return std::log(x[0]); }
 
 	MpOperationLog::MpOperationLog() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(logRR), reinterpret_cast<void*>(logCC))
 	{}
 
 	// Log2
-	double log2RR(double x) { return std::log2(x); }
+	double log2RR(double  * x) { return std::log2(x[0]); }
 	std::complex<double> log2CC(std::complex<double> *  x) { return std::log(x[0]) / log(2); }
 
 	MpOperationLog2::MpOperationLog2() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(log2RR), reinterpret_cast<void*>(log2CC))
 	{}
 
 	// Log10
-	double log10RR(double x) { return std::log10(x); }
+	double log10RR(double  * x) { return std::log10(x[0]); }
 	std::complex<double> log10CC(std::complex<double> *  x) { return std::log10(x[0]); }
 
 	MpOperationLog10::MpOperationLog10() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(log10RR), reinterpret_cast<void*>(log10CC))
 	{}
 
 	// exp
-	double expRR(double x) { return std::exp(x); }
+	double expRR(double  * x) { return std::exp(x[0]); }
 	std::complex<double> expCC(std::complex<double> *  x) { return std::exp(x[0]); }
 
 	MpOperationExp::MpOperationExp() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(expRR), reinterpret_cast<void*>(expCC))
 	{}
 
 	// pow
-	double powRR(double x, double y) { return std::pow(x, y); }
+	double powRR(double * x) { return std::pow(x[0], x[1]); }
 	std::complex<double> powCC(std::complex<double> *  x) { return std::pow(x[0], x[1]); }
 
 	MpOperationPow::MpOperationPow() : MpOperationFunc(2, MpOperationFlags::OpFlagNopIfROne, reinterpret_cast<void*>(powRR), reinterpret_cast<void*>(powCC))
 	{}
 
 	// Atan2
-	double atan2RR(double x, double y) { return std::atan2(x, y); }
+	double atan2RR(double * x) { return std::atan2(x[0], x[1]); }
 
 	MpOperationAtan2::MpOperationAtan2() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(atan2RR), nullptr)
 	{}
 
 	// hypot
-	double hypotRR(double x, double y) { return std::hypot(x, y); }
+	double hypotRR(double * x) { return std::hypot(x[0], x[1]); }
 
 	MpOperationHypot::MpOperationHypot() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, reinterpret_cast<void*>(hypotRR), nullptr)
 	{}
