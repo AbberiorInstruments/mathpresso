@@ -71,7 +71,7 @@ namespace mathpresso {
 		return kErrorOk;
 	}
 
-	Error AstOptimizer::onVarDecl(AstVarDecl* node) {
+	Error AstOptimizer::callMpOperation(AstVarDecl* node) {
 		if (node->mpOp_)
 			return node->mpOp_->optimize(this, node);
 		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),

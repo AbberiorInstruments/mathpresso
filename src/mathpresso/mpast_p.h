@@ -284,10 +284,6 @@ struct AstSymbol : public HashNode {
 		_valueComp(),
 		_usedCount(0),
 		_writeCount(0),
-		_funcPtr(nullptr),
-		_funcPtrCplx(nullptr),
-		_funcAsm(nullptr),
-		_funcAsmCplx(nullptr),
 		_op(nullptr)
 	{}
 
@@ -351,35 +347,6 @@ struct AstSymbol : public HashNode {
 
   MATHPRESSO_INLINE int32_t getVarOffset() const { return _varOffset; }
   MATHPRESSO_INLINE void setVarOffset(int32_t offset) { _varOffset = offset; }
-
-  MATHPRESSO_INLINE void* getFuncPtr(bool args_complex = false) const 
-  { 
-	  if (args_complex)
-		  return _funcPtrCplx;
-	  else
-		  return _funcPtr;
-  }
-
-  MATHPRESSO_INLINE void setFuncPtr(void* ptr, bool b_cplx = false) 
-  { 
-	   if (b_cplx)
-			_funcPtrCplx = ptr;
-		else
-			_funcPtr = ptr;
-  }
-  MATHPRESSO_INLINE void* getAsmPtr(bool args_complex = false) const {
-	  if (args_complex)
-		  return _funcAsmCplx;
-	  else
-		  return _funcAsm;
-  }
-
-  MATHPRESSO_INLINE void setAsmPtr(void* ptr, bool b_cplx = false) {
-	  if (b_cplx)
-		  _funcAsmCplx = ptr;
-	  else
-		  _funcAsm = ptr;
-  }
 
   //! Get the number of function/intrinsic arguments
   MATHPRESSO_INLINE uint32_t getFuncArgs() const { return _funcArgs; }
@@ -460,11 +427,6 @@ private:
 	//! if the symbol is real, _valueComp.imag() is set to 0.
 	std::complex<double> _valueComp;
 
-	//! Function pointer (in case the symbol is a function).
-	void* _funcPtr;
-	void* _funcPtrCplx;
-	void* _funcAsm;
-	void* _funcAsmCplx;
 	//! Number of function arguments (in case the symbol is a function).
 	uint32_t _funcArgs;
 	std::shared_ptr<MpOperation> _op;
@@ -593,7 +555,7 @@ struct AstNode {
 
   MATHPRESSO_INLINE AstNode(AstBuilder* ast, uint32_t nodeType, AstNode** children = nullptr, uint32_t length = 0)
     : _ast(ast),
-      _parent(NULL),
+      _parent(nullptr),
       _children(children),
       _nodeType(static_cast<uint8_t>(nodeType)),
       _nodeFlags(0),
@@ -1149,7 +1111,7 @@ struct AstVisitor {
 
   virtual Error onProgram(AstProgram* node);
   virtual Error onBlock(AstBlock* node) = 0;
-  virtual Error onVarDecl(AstVarDecl* node) = 0;
+  virtual Error callMpOperation(AstVarDecl* node) = 0;
   virtual Error onVar(AstVar* node) = 0;
   virtual Error onImm(AstImm* node) = 0;
   virtual Error onUnaryOp(AstUnaryOp* node) = 0;
@@ -1183,7 +1145,7 @@ struct AstDump : public AstVisitor {
   // --------------------------------------------------------------------------
 
   virtual Error onBlock(AstBlock* node);
-  virtual Error onVarDecl(AstVarDecl* node);
+  virtual Error callMpOperation(AstVarDecl* node);
   virtual Error onVar(AstVar* node);
   virtual Error onImm(AstImm* node);
   virtual Error onUnaryOp(AstUnaryOp* node);
