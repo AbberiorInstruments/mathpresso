@@ -77,8 +77,6 @@ namespace mathpresso {
 		uint32_t priority_;
 	};
 
-	MATHPRESSO_API uint32_t addBuiltinMpObjects(Context * ctx);
-
 	class MATHPRESSO_API MpOperationFunc : public MpOperation
 	{
 	public:

@@ -4,6 +4,9 @@
 // [License]
 // Zlib - See LICENSE.md file in the package.
 
+// [Export]
+#define MATHPRESSO_EXPORTS
+
 #include <mathpresso/mpoperation_p.h>
 #include <mathpresso/mpast_p.h>
 #include <mathpresso/mpcompiler_p.h>
