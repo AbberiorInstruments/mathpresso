@@ -85,14 +85,6 @@ namespace mathpresso {
 			fnD_(fnD),
 			fnC_(fnC)
 		{
-			if (!fnD)
-			{
-				addFlags(OpHasNoReal);
-			}
-			if (!fnC)
-			{
-				addFlags(OpHasNoComplex);
-			}
 		}
 
 		virtual ~MpOperationFunc()
