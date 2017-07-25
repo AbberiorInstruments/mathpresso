@@ -298,7 +298,9 @@ namespace mathpresso {
 			throw std::runtime_error("Function does not exist.");
 		}
 
-		switch (nargs_)
+		return ((mpFuncDtoD)fnD_)(args);
+
+		/*switch (nargs_)
 		{
 		case 0: return ((Arg0Func)fnD_)();
 		case 1: return ((Arg1Func)fnD_)(args[0]);
@@ -311,7 +313,7 @@ namespace mathpresso {
 		case 8: return ((Arg8Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
 		default:
 			throw std::runtime_error("Too many arguments.");
-		}
+		}*/
 	}
 
 	std::complex<double> MpOperationFunc::evaluateDRetC(double * args)
