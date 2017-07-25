@@ -300,6 +300,11 @@ namespace mathpresso {
 		}
 		return ((mpFuncDtoD)fnD_)(args);
 
+<<<<<<< 0938a60e9c5287c53744f3f5405e6e20dfba0c29
+=======
+		return ((mpFuncDtoD)fnD_)(args);
+
+>>>>>>>  corrected a functioncall
 		/*switch (nargs_)
 		{
 		case 0: return ((Arg0Func)fnD_)();
