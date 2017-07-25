@@ -186,7 +186,7 @@ namespace mathpresso {
 		}
 
 		// optimize all-immediate calls:
-		if (b_all_imm)
+		if (b_all_imm && !hasFlag(MpOperationFlags::OpFlagHasState))
 		{
 			AstImm* ret = opt->getAst()->newNode<AstImm>(0);
 			if (node->takesComplex())
@@ -1191,7 +1191,7 @@ namespace mathpresso {
 			node->addNodeFlags(AstNodeFlags::kAstReturnsComplex | AstNodeFlags::kAstTakesComplex);
 		}
 
-		if (lIsImm && rIsImm)
+		if (lIsImm && rIsImm && !hasFlag(MpOperationFlags::OpFlagHasState))
 		{
 			// optimize a calculation with two immediates.
 			AstImm* lNode = static_cast<AstImm*>(left);
@@ -1219,7 +1219,7 @@ namespace mathpresso {
 			node->getParent()->replaceNode(node, lNode);
 			opt->getAst()->deleteNode(node);
 		}
-		else if (lIsImm)
+		else if (lIsImm && !hasFlag(MpOperationFlags::OpFlagHasState))
 		{
 			AstImm* lNode = static_cast<AstImm*>(left);
 			// if the node is real, the imaginary part is set to zero by default.
@@ -1232,7 +1232,7 @@ namespace mathpresso {
 				opt->getAst()->deleteNode(node);
 			}
 		}
-		else if (rIsImm)
+		else if (rIsImm && !hasFlag(MpOperationFlags::OpFlagHasState))
 		{
 			AstImm* rNode = static_cast<AstImm*>(right);
 
