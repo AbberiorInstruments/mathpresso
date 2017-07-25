@@ -8,9 +8,9 @@
 #define MATHPRESSO_EXPORTS
 
 // [Dependencies]
-#include "./mpeval_p.h"
-#include "./mphash_p.h"
-#include "./mptokenizer_p.h"
+#include <mathpresso/mpeval_p.h>
+#include <mathpresso/mphash_p.h>
+#include <mathpresso/mptokenizer_p.h>
 #include <iostream>
 
 namespace mathpresso {

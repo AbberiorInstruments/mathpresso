@@ -9,7 +9,7 @@
 #define _MATHPRESSO_MPHASH_P_H
 
 // [Dependencies]
-#include "./mathpresso_p.h"
+#include  <mathpresso/mathpresso_p.h>
 
 namespace mathpresso {
 

@@ -1,205 +1,398 @@
 #pragma once
-// [MathPresso]
-// Mathematical Expression Parser and JIT Compiler.
-//
-// [License]
-// Zlib - See LICENSE.md file in the package.
+#include <mathpresso/mpoperation.h>
 
-// [Guard]
-#ifndef _MP_OPERATION_P_H
-#define _MP_OPERATION_P_H
-
-#include <complex>
-
-
-namespace mathpresso {
-
-	// Forward Declarations:
-	struct JitCompiler;
-	struct AstNode;
-	struct AstOptimizer;
-	struct JitVar;
-	struct Context;
-
-
-	typedef JitVar(*mpAsmFunc)(JitCompiler*, JitVar*);
-
-	enum MpOperationFlags
-	{
-		OpFlagNone = 0,
-		OpFlagIsOperator = 0x00000001,
-		OpFlagHasState = 0x00000002,
-		OpFlagHasAsm = 0x00000004,
-		OpIsRighttoLeft = 0x00000008,
-
-		OpIsCommutativ = 0x00000010,
-
-		// Set, if no (complex|real) function is available.
-		OpHasNoComplex = 0x00000020,
-		OpHasNoReal = 0x00000040,
-
-		// Types of Operation that are allowed.
-		OpFlagCReturnsD = 0x0000100,
-		OpFlagDReturnsC = 0x0000200,
-
-		// Set for optimization of binary operations
-		OpFlagNopIfLZero = 0x10000000,
-		OpFlagNopIfRZero = 0x20000000,
-		OpFlagNopIfLOne = 0x40000000,
-		OpFlagNopIfROne = 0x80000000,
-		OpFlagNopIfZero = OpFlagNopIfLZero | OpFlagNopIfRZero,
-		OpFlagNopIfOne = OpFlagNopIfLOne | OpFlagNopIfROne
-	};
-
-	class MpOperation
+namespace mathpresso
+{
+	// isfinite
+	class MpOperationIsFinite :public MpOperationFuncAsm
 	{
 	public:
-		// Con-/Destructor
-		MpOperation(uint32_t nargs, uint32_t flags) :
-			nargs_(nargs),
-			flags_(flags),
-			priority_(0)
+		MpOperationIsFinite();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// isinf
+	class MpOperationIsInfinite :public MpOperationFuncAsm
+	{
+	public:
+		MpOperationIsInfinite();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// isnan
+	class MpOperationIsNan :public MpOperationFuncAsm
+	{
+	public:
+		MpOperationIsNan();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// real
+	class MpOperationGetReal :public MpOperationFuncAsm
+	{
+	public:
+		MpOperationGetReal();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// imag
+	class MpOperationGetImag :public MpOperationFuncAsm
+	{
+	public:
+		MpOperationGetImag();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// Square root
+	class MpOperationSqrt : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationSqrt();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// Negation
+	class MpOperationNeg : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationNeg();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	protected:
+		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node) override;
+	};
+
+	// Not
+	class MpOperationNot : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationNot();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// conjugate
+	class MpOperationConjug :public MpOperationFuncAsm
+	{
+	public:
+		MpOperationConjug();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	private:
+		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node) override;
+	};
+
+	// Reciprocate
+	class MpOperationRecip :public MpOperationFuncAsm
+	{
+	public:
+		MpOperationRecip();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// trigonometric functions (sin, cos, tan, etc)
+	class MpOperationTrigonometrie : public MpOperationFuncAsm
+	{
+	public:
+		enum trigonometrieFunc {
+			sin, cos, tan, asin, acos, atan, sinh, cosh, tanh
+		};
+		MpOperationTrigonometrie(uint32_t type);
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	protected:
+		virtual double evaluateDRetD(double *args) override;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
+	private:
+		uint32_t type_;
+	};
+
+	// Sign bit
+	class MpOperationSignBit : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationSignBit();		
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// copy sign
+	class MpOperationCopySign : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationCopySign();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// Average
+	class MpOperationAvg : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationAvg();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// Absolute
+	class MpOperationAbs : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationAbs();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// round
+	class MpOperationRound : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationRound();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	protected:
+		std::string description_ = "Rounds *.5 towards infinity.";
+	};
+
+	// roundeven
+	class MpOperationRoundEven : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationRoundEven();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	protected:
+		std::string description_ = "Rounds *.5 towards nearest even integer.";
+	};
+
+	// trunc
+	class MpOperationTrunc : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationTrunc();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// frac
+	class MpOperationFrac : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationFrac();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// floor
+	class MpOperationFloor : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationFloor();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+
+	// ceil
+	class MpOperationcCeil : public MpOperationFuncAsm
+	{
+	public:
+		MpOperationcCeil();
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+	};
+	
+	// Addition
+	class MpOperationAdd : public MpOperationBinary
+	{
+	public:
+		MpOperationAdd() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 6)
 		{}
-
-		virtual ~MpOperation()
-		{}
-
-		// Add ASM code to compiler stack 
-		virtual JitVar compile(JitCompiler *jc, AstNode * node) = 0;
-		// Optimize AST 
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) = 0;
-
-		uint32_t nargs() { return nargs_; }
 
 	protected:
-		uint32_t nargs_;
-		uint32_t flags_;
-		uint32_t priority_;
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
 	};
 
-	uint32_t addBuiltinMpObjects(Context * ctx);
-
-	class MpOperationFunc : public MpOperation
+	// Subtraction
+	class MpOperationSub : public MpOperationBinary
 	{
 	public:
-		// Con-/Destructor
-		MpOperationFunc(uint32_t nargs, uint32_t flags, void * fnD, void * fnC) : MpOperation(nargs, flags),
-			fnD_(fnD),
-			fnC_(fnC)
-		{
-			if (!fnD)
-			{
-				addFlags(OpHasNoReal);
-			}
-			if (!fnC)
-			{
-				addFlags(OpHasNoComplex);
-			}
-		}
-
-		virtual ~MpOperationFunc()
+		MpOperationSub() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagHasAsm, 6)
 		{}
 
-		bool hasFlag(uint32_t flag)
-		{
-			return flag & flags_;
-		}
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
 
-		void addFlags(uint32_t flags)
-		{
-			flags_ |= flags;
-		}
+	// Multiplication
+	class MpOperationMul : public MpOperationBinary
+	{
+	public:
+		MpOperationMul() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 5)
+		{}
 
-		void removeFlags(uint32_t flags)
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Division
+	class MpOperationDiv : public MpOperationBinary
+	{
+	public:
+		MpOperationDiv() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagHasAsm, 5)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Minimum
+	class MpOperationMin : public MpOperationBinary
+	{
+	public:
+		MpOperationMin() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+	};
+
+	// Maximum
+	class MpOperationMax : public MpOperationBinary
+	{
+	public:
+		MpOperationMax() :
+			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+	};
+
+	// Equality
+	class MpOperationEq : public MpOperationBinary
+	{
+	public:
+		MpOperationEq() :
+			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 9)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Inequality
+	class MpOperationNe : public MpOperationBinary
+	{
+	public:
+		MpOperationNe() :
+			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 9)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+	};
+
+	// Lesser than
+	class MpOperationLt : public MpOperationBinary
+	{
+	public:
+		MpOperationLt() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+	};
+
+	// Lesser Equal
+	class MpOperationLe : public MpOperationBinary
+	{
+	public:
+		MpOperationLe() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+	};
+
+	// Greater than
+	class MpOperationGt : public MpOperationBinary
+	{
+	public:
+		MpOperationGt() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+	};
+
+	// Greater equal
+	class MpOperationGe : public MpOperationBinary
+	{
+	public:
+		MpOperationGe() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+	};
+
+	// Modulo
+	class MpOperationModulo : public MpOperationBinary
+	{
+	public:
+		MpOperationModulo() :
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 5)
+		{}
+
+	protected:
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculateReal(double vl, double vr) override;
+	};
+
+	// Ternary Operation
+	class MpOperationTernary : public MpOperation
+	{
+	public:
+		MpOperationTernary() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft)
 		{
-			flags_ &= ~flags;
+			priority_ = 15;
 		}
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
-		virtual void setFn(void * fn, bool isComplex = false);
-	protected:
-		virtual double evaluateDRetD(double *args);
-		virtual std::complex<double> evaluateDRetC(double *args);
-		virtual double evaluateCRetD(std::complex<double> *args);
-		virtual std::complex<double> evaluateCRetC(std::complex<double> *args);
-
-		// Should be overridden, if there is a special opportunity for optimization.
-		// Will be called by optimize as the last operation.
-		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node);
-
-		// Function-pointer:
-		void * fnC_;
-		void * fnD_;
 	};
 
-	class MpOperationFuncAsm : public MpOperationFunc
+	// Assignment
+	class MpOperationAssignment : public MpOperation
 	{
 	public:
-		MpOperationFuncAsm(uint32_t nargs, uint32_t flags, void * fnD, void * fnC, mpAsmFunc asmC, mpAsmFunc asmD) :
-			MpOperationFunc(nargs, flags | MpOperationFlags::OpFlagHasAsm, fnD, fnC),
-			asmC_(asmC),
-			asmD_(asmD)
-		{}
+		MpOperationAssignment() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft)
+		{
+			priority_ = 15;
+		}
 
-		virtual ~MpOperationFuncAsm()
-		{}
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-
-		virtual void setFnAsm(mpAsmFunc fn, bool isComplex = false);
-
-	protected:
-		mpAsmFunc asmC_;
-		mpAsmFunc asmD_;
-	};
-
-	class MpOperationBinary : public MpOperation
-	{
-	public:
-		MpOperationBinary(uint32_t nargs, uint32_t  flags, uint32_t priority) :
-			MpOperation(nargs, flags)
-		{
-			priority_ = priority;
-		}
-
-		virtual ~MpOperationBinary()
-		{}
-
-		// calls generatAsmReal() and comppComplex() after setting up.
-		virtual JitVar compile(JitCompiler* jc, AstNode * node) override;
-
-		// uses calculateReal() and calculateComplex() to calculate immediate values.
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
-
-		bool hasFlag(uint32_t flag)
-		{
-			return flag & flags_;
-		}
-
-		void addFlags(uint32_t flags)
-		{
-			flags_ |= flags;
-		}
-
-		void removeFlags(uint32_t flags)
-		{
-			flags_ &= ~flags;
-		}
-
-	protected:
-		// These are called by compile() and should only contain the asm-statements.
-		// vl will always be in a register, vr can be in Register or in Memory.
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr);
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr);
-
-		// Used to calculate optimization of immediates.
-		virtual double calculateReal(double vl, double vr) { return NAN; };
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(NAN, NAN); };
 	};
-
 }
-
-
-#endif //_MP_OPERATION_P_H

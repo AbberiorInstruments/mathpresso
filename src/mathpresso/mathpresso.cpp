@@ -8,15 +8,15 @@
 #define MATHPRESSO_EXPORTS
 
 // [Dependencies]
-#include "./mathpresso_p.h"
-#include "./mpast_p.h"
-#include "./mpatomic_p.h"
-#include "./mpcompiler_p.h"
-#include "./mpeval_p.h"
-#include "./mpoptimizer_p.h"
-#include "./mpparser_p.h"
-#include "./mptokenizer_p.h"
-#include "./mpoperation_p.h"
+#include <mathpresso/mathpresso_p.h>
+#include <mathpresso/mpast_p.h>
+#include <mathpresso/mpatomic_p.h>
+#include <mathpresso/mpcompiler_p.h>
+#include <mathpresso/mpeval_p.h>
+#include <mathpresso/mpoptimizer_p.h>
+#include <mathpresso/mpparser_p.h>
+#include <mathpresso/mptokenizer_p.h>
+#include <mathpresso/mpoperation.h>
 
 #include <math.h>
 #include <string.h>
@@ -49,50 +49,50 @@ namespace mathpresso {
 		{ "<=$2", OpInfo("<=", kOpLe, 8, LTR | RtoR | kOpFlagCondition | kOpFlagBinary | _kOpFlagHasobject) }, // done
 		{ ">$2", OpInfo(">", kOpGt, 8, LTR | RtoR | kOpFlagCondition | kOpFlagBinary | _kOpFlagHasobject) }, // done
 		{ "<=$2", OpInfo("<=", kOpGe, 8, LTR | RtoR | kOpFlagCondition | kOpFlagBinary | _kOpFlagHasobject) }, // done
-		{ "+$2", OpInfo("+", kOpAdd, 6, LTR | CandR | kOpFlagArithmetic | kOpFlagNopIfZero | kOpFlagBinary | _kOpFlagHasobject, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr) }, // done
-		{ "-$2", OpInfo("-", kOpSub, 6, LTR | CandR | kOpFlagArithmetic | kOpFlagNopIfRZero | kOpFlagBinary | _kOpFlagHasobject, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr) }, // done
-		{ "*$2", OpInfo("*", kOpMul, 5, LTR | CandR | kOpFlagArithmetic | kOpFlagNopIfOne | kOpFlagBinary | _kOpFlagHasobject, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr) }, //done
-		{ "/$2", OpInfo("/", kOpDiv, 5, LTR | CandR | kOpFlagArithmetic | kOpFlagNopIfROne | kOpFlagBinary | _kOpFlagHasobject, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr) }, // done
+		{ "+$2", OpInfo("+", kOpAdd, 6, LTR | CandR | kOpFlagArithmetic | kOpFlagNopIfZero | kOpFlagBinary | _kOpFlagHasobject) }, // done
+		{ "-$2", OpInfo("-", kOpSub, 6, LTR | CandR | kOpFlagArithmetic | kOpFlagNopIfRZero | kOpFlagBinary | _kOpFlagHasobject) }, // done
+		{ "*$2", OpInfo("*", kOpMul, 5, LTR | CandR | kOpFlagArithmetic | kOpFlagNopIfOne | kOpFlagBinary | _kOpFlagHasobject) }, //done
+		{ "/$2", OpInfo("/", kOpDiv, 5, LTR | CandR | kOpFlagArithmetic | kOpFlagNopIfROne | kOpFlagBinary | _kOpFlagHasobject) }, // done
 		{ "?$2", OpInfo("?", kOpQMark, 15, RTL | kOpFlagTernary | _kOpFlagHasobject) }, // done
 		{ ":$2", OpInfo(":", kOpColon, 15, RTL | kOpFlagTernary | _kOpFlagHasobject) }, // done
-		{ "%$2", OpInfo("%", kOpMod, 5, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpMod), nullptr) }, // done		
-		{ "isnan$1", OpInfo("isnan", kOpIsNan, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpIsNan), nullptr) }, // done
-		{ "isinf$1", OpInfo("isinf", kOpIsInf, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpIsInf), nullptr) }, // done
-		{ "isfinite$1", OpInfo("isfinite", kOpIsFinite, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpIsFinite), nullptr) }, // done
-		{ "sin$1", OpInfo("sin", kOpSin, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpSin), reinterpret_cast<void*>(mpFuncCtoC1<std::sin>)) }, // done
-		{ "cos$1", OpInfo("cos", kOpCos, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpCos), reinterpret_cast<void*>(mpFuncCtoC1<std::cos>)) }, // done
-		{ "tan$1", OpInfo("tan", kOpTan, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpTan), reinterpret_cast<void*>(mpFuncCtoC1<std::tan>)) }, // done
-		{ "sinh$1", OpInfo("sinh", kOpSinh, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpSinh), reinterpret_cast<void*>(mpFuncCtoC1<std::sinh>)) }, // done
-		{ "cosh$1", OpInfo("cosh", kOpCosh, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpCosh), reinterpret_cast<void*>(mpFuncCtoC1<std::cosh>)) }, // done
-		{ "tanh$1", OpInfo("tanh", kOpTanh, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpTanh), reinterpret_cast<void*>(mpFuncCtoC1<std::tanh>)) }, // done
-		{ "asin$1", OpInfo("asin", kOpAsin, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpAsin), reinterpret_cast<void*>(mpFuncCtoC1<std::asin>)) }, // done
-		{ "acos$1", OpInfo("acos", kOpAcos, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpAcos), reinterpret_cast<void*>(mpFuncCtoC1<std::acos>)) }, // done
-		{ "atan$1", OpInfo("atan", kOpAtan, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpAtan), reinterpret_cast<void*>(mpFuncCtoC1<std::atan>)) }, // done
-		{ "min$2", OpInfo("min", kOpMin, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpMin<double>), nullptr) }, // done
-		{ "max$2", OpInfo("max", kOpMax, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpMax<double>), nullptr) }, // done
-		{ "real$1", OpInfo("real", kOpReal, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, nullptr, reinterpret_cast<void*>(mpGetReal), nullptr) }, // done
-		{ "imag$1", OpInfo("imag", kOpImag, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, nullptr, reinterpret_cast<void*>(mpGetImag), nullptr) }, // done
-		{ "conjug$1", OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::conj>)) }, // done
-		{ "avg$2", OpInfo("avg", kOpAvg, 0, LTR | CandR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpAvg), reinterpret_cast<void*>(mpAvgC)) }, // done
-		{ "abs$1", OpInfo("abs", kOpAbs, 0, LTR | RtoR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpAbs), nullptr, reinterpret_cast<void*>(mpAbsC), nullptr) }, // done
-		{ "recip$1", OpInfo("recip", kOpRecip, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpRecip), reinterpret_cast<void*>(mpRecipC)) }, // done
-		{ "signbit$1", OpInfo("signbit", kOpSignBit, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpSignBit), nullptr) }, // done
-		{ "copysign$2", OpInfo("copysign", kOpCopySign, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpCopySign), nullptr) }, // done
-		{ "round$1", OpInfo("round", kOpRound, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpRound), nullptr) }, // done
-		{ "roundeven$1", OpInfo("roundeven", kOpRoundEven, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpRoundEven), nullptr) }, // done
-		{ "trunc$1", OpInfo("trunc", kOpTrunc, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpTrunc), nullptr) }, // done
-		{ "floor$1", OpInfo("floor", kOpFloor, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpFloor), nullptr) }, // done
-		{ "ceil$1", OpInfo("ceil", kOpCeil, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpCeil), nullptr) }, // done
-		{ "frac$1", OpInfo("frac", kOpFrac, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpFrac), nullptr) }, // done
-		{ "sqrtc$1", OpInfo("sqrtc", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, nullptr, reinterpret_cast<void*>(mpFuncCtoC1<std::sqrt>)) }, // done
-		{ "sqrt$1", OpInfo("sqrt", kOpSqrt, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpSqrt), nullptr) }, // done
-		{ "log$1", OpInfo("log", kOpLog, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpLog), reinterpret_cast<void*>(mpFuncCtoC1<std::log>)) }, // done
-		{ "log2$1", OpInfo("log2", kOpLog2, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpLog2), reinterpret_cast<void*>(mpLog2C)) }, // done
-		{ "log10$1", OpInfo("log10", kOpLog10, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpLog10), reinterpret_cast<void*>(mpFuncCtoC1<std::log10>)) }, // done
-		{ "exp$1", OpInfo("exp", kOpExp, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpExp), reinterpret_cast<void*>(mpFuncCtoC1<std::exp>)) }, // done
-		{ "pow$2", OpInfo("pow", kOpPow, 0, LTR | CandR | kOpFlagBinary | kOpFlagNopIfROne | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpPow), reinterpret_cast<void*>(mpFuncCtoC2<std::pow>)) }, // done
-		{ "atan2$2", OpInfo("atan2", kOpAtan2, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpAtan2), nullptr) }, // done
-		{ "hypot$2", OpInfo("hypot", kOpHypot, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject, reinterpret_cast<void*>(mpHypot), nullptr) }, // done
+		{ "%$2", OpInfo("%", kOpMod, 5, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done		
+		{ "isnan$1", OpInfo("isnan", kOpIsNan, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "isinf$1", OpInfo("isinf", kOpIsInf, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "isfinite$1", OpInfo("isfinite", kOpIsFinite, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "sin$1", OpInfo("sin", kOpSin, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "cos$1", OpInfo("cos", kOpCos, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "tan$1", OpInfo("tan", kOpTan, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "sinh$1", OpInfo("sinh", kOpSinh, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "cosh$1", OpInfo("cosh", kOpCosh, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "tanh$1", OpInfo("tanh", kOpTanh, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "asin$1", OpInfo("asin", kOpAsin, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "acos$1", OpInfo("acos", kOpAcos, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "atan$1", OpInfo("atan", kOpAtan, 0, LTR | CandR | kOpFlagTrigonometric | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "min$2", OpInfo("min", kOpMin, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "max$2", OpInfo("max", kOpMax, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "real$1", OpInfo("real", kOpReal, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "imag$1", OpInfo("imag", kOpImag, 0, LTR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "conjug$1", OpInfo("conjug", kOpConjug, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "avg$2", OpInfo("avg", kOpAvg, 0, LTR | CandR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "abs$1", OpInfo("abs", kOpAbs, 0, LTR | RtoR | CtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "recip$1", OpInfo("recip", kOpRecip, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "signbit$1", OpInfo("signbit", kOpSignBit, 0, LTR | RtoR | kOpFlagCondition | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "copysign$2", OpInfo("copysign", kOpCopySign, 0, LTR | RtoR | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "round$1", OpInfo("round", kOpRound, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "roundeven$1", OpInfo("roundeven", kOpRoundEven, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "trunc$1", OpInfo("trunc", kOpTrunc, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "floor$1", OpInfo("floor", kOpFloor, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "ceil$1", OpInfo("ceil", kOpCeil, 0, LTR | RtoR | kOpFlagRounding | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "frac$1", OpInfo("frac", kOpFrac, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "sqrtc$1", OpInfo("sqrtc", kOpSqrtC, 0, LTR | CtoC | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "sqrt$1", OpInfo("sqrt", kOpSqrt, 0, LTR | RtoR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "log$1", OpInfo("log", kOpLog, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "log2$1", OpInfo("log2", kOpLog2, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "log10$1", OpInfo("log10", kOpLog10, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "exp$1", OpInfo("exp", kOpExp, 0, LTR | CandR | kOpFlagUnary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "pow$2", OpInfo("pow", kOpPow, 0, LTR | CandR | kOpFlagBinary | kOpFlagNopIfROne | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "atan2$2", OpInfo("atan2", kOpAtan2, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
+		{ "hypot$2", OpInfo("hypot", kOpHypot, 0, LTR | RtoR | kOpFlagTrigonometric | kOpFlagBinary | kOpFlagIntrinsic | _kOpFlagHasobject) }, // done
 
 		{ "_none_$0", OpInfo("_none_", kOpNone, 0, LTR | _kOpFlagHasobject) }
 	};
@@ -210,7 +210,6 @@ static ContextImpl* mpContextClone(ContextImpl* otherD_) {
         case kAstSymbolFunction:
           clonedSym->setOpType(sym->getOpType());
           clonedSym->setFuncArgs(sym->getFuncArgs());
-          clonedSym->setFuncPtr(sym->getFuncPtr());
           break;
 
         default:
@@ -409,94 +408,6 @@ Error Context::listSymbols(std::vector<std::string> &syms)
 	} 
 	while (it.next());
 
-	return kErrorOk;
-}
-
-
-Error Context::addFunction(const char* name, void* fn, unsigned int flags, void *fnAsm) 
-{
-	AstSymbol * sym;
-	Error e = addSymbol(sym, name, kAstSymbolFunction);
-	if (e != kErrorOk)
-	{
-		if (e != kErrorSymbolAlreadyExists || sym ->getSymbolType() != kAstSymbolFunction)
-			return e;
-	}
-	else
-	{
-		sym->setSymbolFlag(kAstSymbolIsDeclared);
-	}
-
-	std::string name_decorated(name);
-	name_decorated += "$" + std::to_string(flags & _kFunctionArgMask);
-	bool existst = false;
-	if (fnAsm)
-	{
-		if (_symbols.find(name_decorated) == _symbols.end())
-			_symbols.emplace(name_decorated, std::make_shared<MpOperationFuncAsm>(flags & _kFunctionArgMask, 0, nullptr, nullptr, nullptr, nullptr));
-	}
-	else
-	{
-		if (_symbols.find(name_decorated) == _symbols.end())
-			_symbols.emplace(name_decorated, std::make_shared<MpOperationFunc>(flags & _kFunctionArgMask, 0, nullptr, nullptr));
-	}
-	
-	if (!sym->getOp())
-		sym->setOp(_symbols[name_decorated]);
-	
-	auto symOp = std::static_pointer_cast<MpOperationFunc>(sym->getOp());
-	if (!(flags & _kFunctionHasObject)) 
-	{
-		// Declaring complex part?
-		if (flags & kFunctionTakesComplex)
-		{
-			if (sym->getFuncPtr(true))
-				return kErrorSymbolAlreadyExists;
-
-			sym->setFuncPtr(fn, true);
-			sym->setAsmPtr(fnAsm, true);
-
-			symOp->setFn(fn, true);
-			if (fnAsm && symOp->hasFlag(MpOperationFlags::OpFlagHasAsm))
-			{
-				std::static_pointer_cast<MpOperationFuncAsm>(symOp)->setFnAsm((mpAsmFunc)fnAsm, true);
-			}
-
-			if (0 == (flags & kFunctionReturnsComplex))
-			{
-				sym->setSymbolFlag(kAstSymbolComplexFunctionReturnsReal);
-				symOp->addFlags(MpOperationFlags::OpFlagCReturnsD);
-			}
-		}
-		else
-		{
-			if (sym->getFuncPtr())
-				return kErrorSymbolAlreadyExists;
-
-			sym->setFuncPtr(fn);
-			sym->setAsmPtr(fnAsm);
-
-			symOp->setFn(fn);
-			if (fnAsm && symOp->hasFlag(MpOperationFlags::OpFlagHasAsm))
-			{
-				std::static_pointer_cast<MpOperationFuncAsm>(symOp)->setFnAsm((mpAsmFunc)fnAsm);
-			}
-
-			if (flags & kFunctionReturnsComplex)
-			{
-				sym->setSymbolFlag(kAstSymbolRealFunctionReturnsComplex);
-				symOp->addFlags(MpOperationFlags::OpFlagDReturnsC);
-			}
-		}
-	}
-
-	if (flags & kFunctionHasState)
-	{
-		sym->setSymbolFlag(kAstSymbolHasState);
-		symOp->addFlags(MpOperationFlags::OpFlagHasState);
-	}
-
-	sym->setFuncArgs(flags & _kFunctionArgMask);
 	return kErrorOk;
 }
 

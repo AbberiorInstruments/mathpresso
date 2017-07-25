@@ -8,7 +8,7 @@
 #define MATHPRESSO_EXPORTS
 
 // [Dependencies]
-#include "./mpast_p.h"
+#include <mathpresso/mpast_p.h>
 
 namespace mathpresso {
 
@@ -109,8 +109,6 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
     }
 
     case kAstSymbolFunction: {
-      sym->setFuncPtr(other->getFuncPtr());
-	  sym->setFuncPtr(other->getFuncPtr(true), true);
       sym->setFuncArgs(other->getFuncArgs());
 	  sym->setOp(other->getOp());
       break;
@@ -413,7 +411,7 @@ Error AstVisitor::onNode(AstNode* node) {
   switch (node->getNodeType()) {
     case kAstNodeProgram  : return onProgram  (static_cast<AstProgram*  >(node));
     case kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
-    case kAstNodeVarDecl  : return onVarDecl  (static_cast<AstVarDecl*  >(node));
+    case kAstNodeVarDecl  : return callMpOperation  (static_cast<AstVarDecl*  >(node));
     case kAstNodeVar      : return onVar      (static_cast<AstVar*      >(node));
 	case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
 	case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
@@ -454,7 +452,7 @@ Error AstDump::onBlock(AstBlock* node) {
   return kErrorOk;
 }
 
-Error AstDump::onVarDecl(AstVarDecl* node) {
+Error AstDump::callMpOperation(AstVarDecl* node) {
   AstSymbol* sym = node->getSymbol();
 
   nest("%s [VarDecl%s]", sym ? sym->getName() : static_cast<const char*>(NULL), (node->takesComplex()? ", complex":""));

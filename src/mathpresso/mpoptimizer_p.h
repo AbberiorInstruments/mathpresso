@@ -9,7 +9,7 @@
 #define _MATHPRESSO_MPOPTIMIZER_P_H
 
 // [Dependencies]
-#include "./mpast_p.h"
+#include <mathpresso/mpast_p.h>
 
 namespace mathpresso {
 
@@ -32,7 +32,7 @@ struct AstOptimizer : public AstVisitor {
   // --------------------------------------------------------------------------
 
   virtual Error onBlock(AstBlock* node);
-  virtual Error onVarDecl(AstVarDecl* node);
+  virtual Error callMpOperation(AstVarDecl* node);
   virtual Error onVar(AstVar* node);
   virtual Error onImm(AstImm* node);
   virtual Error onUnaryOp(AstUnaryOp* node);

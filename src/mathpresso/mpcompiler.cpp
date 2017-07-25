@@ -8,10 +8,10 @@
 #define MATHPRESSO_EXPORTS
 
 // [Dependencies]
-#include "./mpast_p.h"
-#include "./mpcompiler_p.h"
-#include "./mpeval_p.h"
-#include "./mpoperation_p.h"
+#include <mathpresso/mpast_p.h>
+#include <mathpresso/mpcompiler_p.h>
+#include <mathpresso/mpeval_p.h>
+#include <mathpresso/mpoperation.h>
 
 
 namespace mathpresso {
@@ -25,40 +25,6 @@ namespace mathpresso {
 		JitRuntime runtime;
 	};
 	static JitGlobal jitGlobal;
-
-	// ============================================================================
-	// [mathpresso::JitUtils]
-	// ============================================================================
-
-
-	struct JitUtils {
-		static void* getFuncByOp(uint32_t op, bool takesComplex, bool returnsComplex) {
-			if (takesComplex) 
-			{
-				if (returnsComplex)
-				{
-					return OpInfo::get(op).funcCtoC;
-				}
-				else 
-				{
-					return OpInfo::get(op).funcCtoD;
-				}
-			}
-			else 
-			{
-				if (returnsComplex)
-				{
-					return OpInfo::get(op).funcDtoC;
-				}
-				else 
-				{
-					return OpInfo::get(op).funcDtoD;
-				}
-			}
-
-		}
-	};
-
 
 
 	void JitCompiler::beginFunction() {
@@ -208,13 +174,13 @@ namespace mathpresso {
 	JitVar JitCompiler::onNode(AstNode* node) {
 		switch (node->getNodeType()) {
 		case kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
-		case kAstNodeVarDecl: return onVarDecl(static_cast<AstVarDecl*>(node));
 		case kAstNodeVar: return onVar(static_cast<AstVar*>(node));
 		case kAstNodeImm: return onImm(static_cast<AstImm*>(node));
-		case kAstNodeUnaryOp: return onUnaryOp(static_cast<AstUnaryOp*>(node));
-		case kAstNodeBinaryOp: return onBinaryOp(static_cast<AstBinaryOp*>(node));
-		case kAstNodeTernaryOp: return onTernaryOp(static_cast<AstTernaryOp*>(node));
-		case kAstNodeCall: return onCall(static_cast<AstCall*>(node));
+		case kAstNodeVarDecl: return static_cast<AstVarDecl*>(node)->mpOp_->compile(this, node);
+		case kAstNodeUnaryOp: return static_cast<AstUnaryOp*>(node)->mpOp_->compile(this, node);
+		case kAstNodeBinaryOp: return static_cast<AstBinaryOp*>(node)->mpOp_->compile(this, node);
+		case kAstNodeTernaryOp: return static_cast<AstTernaryOp*>(node)->mpOp_->compile(this, node);
+		case kAstNodeCall: return static_cast<AstCall*>(node)->getSymbol()->getOp()->compile(this, node);
 
 		default:
 			MATHPRESSO_ASSERT_NOT_REACHED();
@@ -231,18 +197,6 @@ namespace mathpresso {
 
 		// Return the last result (or no result if the block is empty).
 		return result;
-	}
-
-	JitVar JitCompiler::onVarDecl(AstVarDecl* node)
-	{
-		if (node->mpOp_)
-		{
-			return node->mpOp_->compile(this, node);
-		}
-		else
-		{
-			throw std::runtime_error("No MpOperation.");
-		}
 	}
 
 	JitVar JitCompiler::onVar(AstVar* node)
@@ -282,55 +236,6 @@ namespace mathpresso {
 			return getConstantD64(node->getValueCplx());
 		else
 			return getConstantD64(node->getValue());
-	}
-
-	JitVar JitCompiler::onUnaryOp(AstUnaryOp* node)
-	{
-		if (node->mpOp_)
-		{
-			return node->mpOp_->compile(this, node);
-		}
-		else
-		{
-			throw std::runtime_error("No MpOperation.");
-		}
-	}
-
-	JitVar JitCompiler::onBinaryOp(AstBinaryOp* node) {
-		if (node->mpOp_)
-		{
-			return node->mpOp_->compile(this, node);
-		}
-		else
-		{
-			throw std::runtime_error("No MpOperation.");
-		}
-	}
-
-
-
-	JitVar JitCompiler::onTernaryOp(AstTernaryOp* node)
-	{
-		if (node->mpOp_)
-		{
-			return node->mpOp_->compile(this, node);
-		}
-		else
-		{
-			throw std::runtime_error("No MpOperation.");
-		}
-	}
-
-	JitVar JitCompiler::onCall(AstCall* node)
-	{
-		if (node->getSymbol()->getOp())
-		{
-			return node->getSymbol()->getOp()->compile(this, node);
-		}
-		else
-		{
-			throw std::runtime_error("No MpOperation.");
-		}
 	}
 
 	void JitCompiler::inlineCallDRetD(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn) {

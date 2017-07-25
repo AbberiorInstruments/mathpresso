@@ -315,9 +315,8 @@ struct Context {
   MATHPRESSO_API Error addConstant(const char * name, std::complex<double> value);
   //! Add variable to this context.
   MATHPRESSO_API Error addVariable(const char* name, int offset, unsigned int flags = kVariableRW);
-  //! Add function to this context. For functions this may be called once with and once without
-  //! the flag kFunctionTakesComplex
-  MATHPRESSO_API Error addFunction(const char* name, void* fn, unsigned int flags, void *fnAsm = nullptr);
+
+  //! Adding Operations to the Context, which can contain function calls. See mpoeration.h for more information.
   MATHPRESSO_API Error addObject(std::string name, std::shared_ptr<MpOperation> obj);
 
   //! Internal implementation
@@ -418,6 +417,7 @@ struct Expression {
   //! True, if the result of the function could be a complex number
   bool _isComplex = false;
 };
+
 
 // ============================================================================
 // [mpsl::OutputLog]

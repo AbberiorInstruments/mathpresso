@@ -8,10 +8,10 @@
 #define MATHPRESSO_EXPORTS
 
 // [Dependencies]
-#include "./mpast_p.h"
-#include "./mpeval_p.h"
-#include "./mpoptimizer_p.h"
-#include "./mpoperation_p.h"
+#include <mathpresso/mpast_p.h>
+#include <mathpresso/mpeval_p.h>
+#include <mathpresso/mpoptimizer_p.h>
+#include <mathpresso/mpoperation.h>
 
 namespace mathpresso {
 
@@ -71,7 +71,7 @@ namespace mathpresso {
 		return kErrorOk;
 	}
 
-	Error AstOptimizer::onVarDecl(AstVarDecl* node) {
+	Error AstOptimizer::callMpOperation(AstVarDecl* node) {
 		if (node->mpOp_)
 			return node->mpOp_->optimize(this, node);
 		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),

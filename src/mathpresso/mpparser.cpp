@@ -8,7 +8,7 @@
 #define MATHPRESSO_EXPORTS
 
 // [Dependencies]
-#include "./mpparser_p.h"
+#include <mathpresso/mpparser_p.h>
 
 namespace mathpresso {
 

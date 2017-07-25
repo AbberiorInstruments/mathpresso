@@ -9,7 +9,7 @@
 #define _MATHPRESSO_MPCOMPILER_P_H
 
 // [Dependencies]
-#include "./mpast_p.h"
+#include <mathpresso/mpast_p.h>
 #include <memory>
 
 namespace mathpresso
@@ -124,18 +124,10 @@ namespace mathpresso
 
 		JitVar onNode(AstNode* node);
 		JitVar onBlock(AstBlock* node);
-		JitVar onVarDecl(AstVarDecl* node);
 		JitVar onVar(AstVar* node);
 		JitVar onImm(AstImm* node);
-		JitVar onUnaryOp(AstUnaryOp* node);
-		JitVar onBinaryOp(AstBinaryOp* node);
-		JitVar onTernaryOp(AstTernaryOp * node);
-		JitVar onCall(AstCall* node);
 
 		// Helpers.
-		void inlineRound(const asmjit::X86Xmm& dst, const asmjit::X86Xmm& src, uint32_t op, bool takesComplex, bool returnsComplex);
-		void inlineCallAbstract(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, size_t count, uint32_t op, bool takesComplex, bool returnsComplex);
-		void inlineCallAbstract(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fp, bool takesComplex, bool returnsComplex);
 		void inlineCallDRetD(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, size_t count, void* fn);
 		void inlineCallDRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
 		void inlineCallCRetD(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);

@@ -9,7 +9,7 @@
 #define _MATHPRESSO_MATHPRESSO_P_H
 
 // [Dependencies]
-#include "./mathpresso.h"
+#include <mathpresso/mathpresso.h>
 #include <asmjit/asmjit.h>
 
 #include <stdarg.h>
@@ -369,50 +369,9 @@ struct OpInfo {
 		name(name_),
 		type(type_),
 		precedence(precedence_),
-		flags(flags_),
-		funcCtoC(nullptr),
-		funcDtoD(nullptr),
-		funcCtoD(nullptr),
-		funcDtoC(nullptr),
-		funcCtoCAsm(nullptr),
-		funcDtoDAsm(nullptr),
-		funcCtoDAsm(nullptr),
-		funcDtoCAsm(nullptr)
+		flags(flags_)
 	{
 	};
-
-	OpInfo(std::string name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcRealtoReal, void* funcCplxtoCplx, void* funcCplxtoReal = nullptr, void* funcRealtoCplx = nullptr) :
-		name(name_),
-		type(type_),
-		precedence(precedence_),
-		flags(flags_),
-		funcCtoC(funcCplxtoCplx),
-		funcDtoD(funcRealtoReal), 
-		funcCtoD(funcCplxtoReal),
-		funcDtoC(funcRealtoCplx),
-		funcCtoCAsm(nullptr),
-		funcDtoDAsm(nullptr),
-		funcCtoDAsm(nullptr),
-		funcDtoCAsm(nullptr)
-	{
-	};
-	
-	OpInfo(std::string name_, uint8_t type_, uint8_t precedence_, uint32_t flags_, void* funcRealtoReal, void* funcCplxtoCplx, void* funcCplxtoReal, void* funcRealtoCplx, void* fnRtoRasm, void* fnCtoCAsm) :
-		name(name_),
-		type(type_),
-		precedence(precedence_),
-		flags(flags_),
-		funcCtoC(funcCplxtoCplx),
-		funcDtoD(funcRealtoReal),
-		funcCtoD(funcCplxtoReal),
-		funcDtoC(funcRealtoCplx),
-		funcCtoCAsm(fnCtoCAsm),
-		funcDtoDAsm(fnRtoRasm),
-		funcCtoDAsm(nullptr),
-		funcDtoCAsm(nullptr)
-	{
-	};
-
 
   // --------------------------------------------------------------------------
   // [Statics]
@@ -461,14 +420,7 @@ struct OpInfo {
   uint8_t precedence;
   uint8_t reserved;
   uint32_t flags;
-  void* funcCtoC;
-  void* funcDtoD;
-  void* funcCtoD;
-  void* funcDtoC;
-  void* funcCtoCAsm;
-  void* funcDtoDAsm;
-  void* funcCtoDAsm;
-  void* funcDtoCAsm;
+ 
   std::string name;
 };
 
@@ -485,6 +437,13 @@ MATHPRESSO_INLINE const OpInfo& OpInfo::get(uint32_t op) {
 	}
 	return _symbols[0].second;
 }
+
+
+// ============================================================================
+// [mathpresso::addBuiltinObjects]
+// ============================================================================
+struct Context;
+uint32_t addBuiltinMpObjects(Context * ctx);
 
 // ============================================================================
 // [mathpresso::StringRef]
