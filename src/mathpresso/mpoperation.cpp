@@ -1806,7 +1806,7 @@ namespace mathpresso {
 		ternaryNode->setCondition(branchCondition);
 		ternaryNode->setLeft(branchLeft);
 		ternaryNode->setRight(branchRight);
-		ternaryNode->mpOp_ = opt->_symbols->at("?$2").get();
+		ternaryNode->mpOp_ = opt->_symbols->at(std::make_pair("?", 2)).get();
 
 		AstBinaryOp* oldNode = static_cast<AstBinaryOp*>(node);
 

@@ -425,10 +425,7 @@ Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
 		sym->setSymbolFlag(kAstSymbolIsDeclared);
 	}
 
-	std::string name_decorated(name);
-	name_decorated += "$" + std::to_string(obj->nargs());
-
-	_symbols[name_decorated] = obj;
+	_symbols[std::make_pair(name, obj->nargs())] = obj;
 
 	sym->setOp(obj);
 	sym->setFuncArgs(obj->nargs());

@@ -272,7 +272,7 @@ struct ContextImpl {
 
 struct AstSymbol;
 
-typedef std::map<std::string, std::shared_ptr<MpOperation>> symbolMap;
+typedef std::map<std::pair<std::string, size_t>, std::shared_ptr<MpOperation>> symbolMap;
 
 //! MathPresso context.
 //!

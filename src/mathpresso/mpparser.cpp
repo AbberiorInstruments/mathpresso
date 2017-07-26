@@ -220,7 +220,7 @@ Error Parser::parseVariableDecl(AstBlock* block) {
 
     AstVarDecl* decl = _ast->newNode<AstVarDecl>();
     MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
-	decl->mpOp_ = _ops->at("=$2").get();
+	decl->mpOp_ = _ops->at(std::make_pair("=", 2)).get();
 
     decl->setPosition(position);
     decl->setSymbol(vSym);
@@ -443,7 +443,7 @@ _Unary: {
         MATHPRESSO_NULLCHECK(opNode);
         opNode->setPosition(token.getPosAsUInt());
 
-		std::string opNameDecorated(std::string(_tokenizer._start).substr(token.position, token.length) + "$1");
+		std::pair<std::string, int> opNameDecorated(std::make_pair(std::string(_tokenizer._start).substr(token.position, token.length), 1));
 
 		if (_ops->find(opNameDecorated) != _ops->end())
 		{
@@ -528,7 +528,7 @@ _Binary: {
         AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>(op);
         MATHPRESSO_NULLCHECK(newNode);
 
-		std::string opNameDecorated(std::string(_tokenizer._start).substr(token.position, token.length) + "$2");
+		std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start).substr(token.position, token.length), 2);
 		
 		if (_ops->find(opNameDecorated) != _ops->end())
 		{
@@ -694,8 +694,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
     MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires %u argument(s) (%u provided).", sym->getName(), reqArgs, n);
   }
 
-  std::string opNameDecorated(str.getData(), str.getLength());
-  opNameDecorated += "$" + std::to_string(n);
+  std::pair<std::string, int> opNameDecorated(std::string(str.getData(), str.getLength()), n);
 
   if (_ops->find(opNameDecorated) != _ops->end())
   {
