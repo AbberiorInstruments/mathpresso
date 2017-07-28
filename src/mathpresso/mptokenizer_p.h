@@ -37,9 +37,6 @@ enum TokenType {
   kTokenComma,        // ,
   kTokenSemicolon,    // ;
 
-  kTokenQMark,        // ?
-  kTokenColon,        // :
-
   kTokenLCurl,        // {
   kTokenRCurl,        // }
 
@@ -48,6 +45,9 @@ enum TokenType {
 
   kTokenLParen,       // (
   kTokenRParen,       // )
+
+  kTokenQMark,        // ?
+  kTokenColon,        // :
 
   kTokenAdd,          // +
   kTokenSub,          // -
@@ -118,8 +118,6 @@ enum TokenChar {
 	kTokenCharDot = kTokenDot,          // .
 	kTokenCharCom = kTokenComma,        // ,
 	kTokenCharSem = kTokenSemicolon,    // ;
-	kTokenCharQue = kTokenQMark,        // ?
-	kTokenCharCol = kTokenColon,        // :
 	kTokenCharLCu = kTokenLCurl,        // {
 	kTokenCharRCu = kTokenRCurl,        // }
 	kTokenCharLBr = kTokenLBracket,     // [
@@ -127,6 +125,8 @@ enum TokenChar {
 	kTokenCharLPa = kTokenLParen,       // (
 	kTokenCharRPa = kTokenRParen,       // )
 
+	kTokenCharQue = kTokenQMark,        // ?
+	kTokenCharCol = kTokenColon,        // :
 	kTokenCharAdd = kTokenAdd,          // +
 	kTokenCharSub = kTokenSub,          // -
 	kTokenCharMul = kTokenMul,          // *
@@ -301,6 +301,11 @@ struct Tokenizer {
   MATHPRESSO_INLINE uint32_t consumeAndNext(Token* token) {
     consume();
     return next(token);
+  }
+
+  MATHPRESSO_INLINE std::string getTokenName(Token * token) const
+  {
+	  return std::string(_p[token->position], token->length);
   }
 
   // --------------------------------------------------------------------------

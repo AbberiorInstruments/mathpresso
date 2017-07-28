@@ -21,7 +21,7 @@ namespace mathpresso {
 
 	bool isOperator(char c)
 	{
-		for (auto p : "+-*/^<>=~%!&|")
+		for (auto p : "+-*/^<>=~%!&|?:")
 		{
 			if (p == c)
 			{
@@ -77,6 +77,14 @@ namespace mathpresso {
 			}
 		}
 		return false;
+	}
+
+	bool isSpace(char c)
+	{
+		if (c == ' ' || c == '\t')
+			return true;
+		else
+			return false;
 	}
 
 	//! \internal
@@ -157,7 +165,7 @@ namespace mathpresso {
 			hVal = p[0];
 			c = mpCharClass[hVal];
 
-			if (c != kTokenCharSpc)
+			if (!isSpace(p[0]))
 				break;
 			p++;
 		}
@@ -169,7 +177,7 @@ namespace mathpresso {
 		// [Number | Dot]
 		// --------------------------------------------------------------------------
 
-		if (c <= kTokenChar0x9 || c == kTokenCharDot)
+		if (isNum(p[0]))
 		{
 			// Parsing floating point is not that simple as it looks. To simplify the
 			// most common cases we parse floating points up to `kSafeDigits` and then
@@ -279,8 +287,8 @@ namespace mathpresso {
 					safe = false;
 			}
 
-			// Error if there is an alpha-numeric character right next to the number and not 'i'.
-			if (p != pEnd && mpCharClass[p[0]] <= kTokenCharSym && mpCharClass[p[0]] != kTokenCharImg)
+			// Error if there is an alpha-numeric character right next to the number that is not 'i'.
+			if (p != pEnd && isSymbolFirst(p[0]) && p[0] != 'i')
 				goto _Invalid;
 
 
@@ -290,7 +298,7 @@ namespace mathpresso {
 
 			// check whether there is a complex number or not and set the output accordingly.
 			uint32_t tokenType;
-			if (mpCharClass[p[0]] == kTokenCharImg)
+			if (p[0] == 'i')
 			{
 				p++;
 				len++;
@@ -336,14 +344,14 @@ namespace mathpresso {
 		// [Symbol | Keyword]
 		// --------------------------------------------------------------------------
 
-		else if (c <= kTokenCharSym)
+		else if (isSymbolFirst(p[0]))
 		{
 			// We always generate the hVal during tokenization to improve performance.
 			while (++p != pEnd)
 			{
 				uint32_t ord = p[0];
 				c = mpCharClass[ord];
-				if (c > kTokenCharSym)
+				if (c > kTokenCharSym) // if (!isSymbolFirst(p[0]) || !isNum(p[0])) --> no dot?
 					break;
 				hVal = HashUtils::hashChar(hVal, ord);
 			}
@@ -357,7 +365,7 @@ namespace mathpresso {
 		// [Single-Char]
 		// --------------------------------------------------------------------------
 
-		else if (c <= kTokenCharSingleCharTokenEnd)
+		else if (isSeparator(p[0]))
 		{
 			_p = reinterpret_cast<const char*>(++p);
 			return token->setData((size_t)(pToken - pStart), (size_t)(p - pToken), 0, c);
@@ -367,7 +375,7 @@ namespace mathpresso {
 		// [Single-Char | Multi-Char]
 		// --------------------------------------------------------------------------
 
-		else if (c < kTokenCharSpc)
+		else if (isOperator(p[0]))
 		{
 			uint32_t c1 = (++p != pEnd) ? static_cast<uint32_t>(p[0]) : static_cast<uint32_t>(0);
 

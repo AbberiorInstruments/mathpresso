@@ -634,7 +634,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   MATHPRESSO_ASSERT(uToken == kTokenSymbol);
   uint32_t position = token.getPosAsUInt();
 
-  StringRef str(_tokenizer._start + token.position, token.length);
+  StringRef str(_tokenizer._start + token.position, token.length); // StringRef str(_tokenizer.getTokenName(&token).c_str());
   AstSymbol* sym = _currentScope->resolveSymbol(str, token.hVal); // resolve the Symbol.
 
   if (sym == nullptr)
