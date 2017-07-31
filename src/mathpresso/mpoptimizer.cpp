@@ -136,9 +136,9 @@ namespace mathpresso {
 
 	Error AstOptimizer::onCall(AstCall* node) 
 	{
-		if (node->getSymbol()->getOp() != nullptr)
+		if (node->mpOp_)
 		{
-			return node->getSymbol()->getOp()->optimize(this, node);
+			return node->mpOp_->optimize(this, node);
 		}
 		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 			"No MpOperation.");

@@ -634,21 +634,21 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   MATHPRESSO_ASSERT(uToken == kTokenSymbol);
   uint32_t position = token.getPosAsUInt();
 
-  StringRef str(_tokenizer._start + token.position, token.length); // StringRef str(_tokenizer.getTokenName(&token).c_str());
+  StringRef str(_tokenizer._start + token.position, token.length); 
   AstSymbol* sym = _currentScope->resolveSymbol(str, token.hVal); // resolve the Symbol.
 
   if (sym == nullptr)
     MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %.*s.", static_cast<int>(str.getLength()), str.getData());
 
   if (sym->getSymbolType() != kAstSymbolIntrinsic &&
-      sym->getSymbolType() != kAstSymbolFunction)
-    MATHPRESSO_PARSER_ERROR(token, "Expected a function name.");
+      sym->getSymbolType() != kAstSymbolFunction) // check that there is a function with this name.
+    MATHPRESSO_PARSER_ERROR(token, "Expected a function name."); 
 
   uToken = _tokenizer.next(&token);
   if (uToken != kTokenLParen)
-    MATHPRESSO_PARSER_ERROR(token, "Expected a '(' token after a function name.");
+    MATHPRESSO_PARSER_ERROR(token, "Expected a '(' token after a function name."); // check for semantic (sym not necessary)
 
-  AstCall* callNode = _ast->newNode<AstCall>();
+  AstCall* callNode = _ast->newNode<AstCall>(); // create callnode (sym not necessary)
   MATHPRESSO_NULLCHECK(callNode);
 
   callNode->setSymbol(sym); // set symbol as part of the node.
@@ -686,7 +686,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
 
   // Validate the number of function arguments.
   size_t n = callNode->getLength(); 
-  // lookup symbol here? _crrentScope wrong value? 
+  // lookup symbol here? _crrentScope wrong value? ->true, parsing went on
   uint32_t reqArgs = sym->getFuncArgs();
 
   if (n != reqArgs) {
@@ -698,7 +698,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
 
   if (_ops->find(opNameDecorated) != _ops->end())
   {
-	  callNode->_symbol->setOp(_ops->at(opNameDecorated));
+	  callNode->mpOp_ = _ops->at(opNameDecorated).get();
   }
   else
   {

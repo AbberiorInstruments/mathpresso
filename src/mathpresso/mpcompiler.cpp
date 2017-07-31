@@ -180,7 +180,7 @@ namespace mathpresso {
 		case kAstNodeUnaryOp: return static_cast<AstUnaryOp*>(node)->mpOp_->compile(this, node);
 		case kAstNodeBinaryOp: return static_cast<AstBinaryOp*>(node)->mpOp_->compile(this, node);
 		case kAstNodeTernaryOp: return static_cast<AstTernaryOp*>(node)->mpOp_->compile(this, node);
-		case kAstNodeCall: return static_cast<AstCall*>(node)->getSymbol()->getOp()->compile(this, node);
+		case kAstNodeCall: return static_cast<AstCall*>(node)->mpOp_->compile(this, node);
 
 		default:
 			MATHPRESSO_ASSERT_NOT_REACHED();

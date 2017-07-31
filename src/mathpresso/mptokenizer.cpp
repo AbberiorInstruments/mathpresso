@@ -135,6 +135,8 @@ namespace mathpresso {
 	uint32_t Tokenizer::next(Token* token)
 	{
 		// Skip parsing if the next token is already done, caused by `peek()`.
+
+		// the type of the currently parsed token
 		uint32_t c = _token.token;
 		uint32_t hVal;
 
@@ -237,10 +239,10 @@ namespace mathpresso {
 				}
 
 				// Token is '.'.
-				if ((size_t)(p - pToken) == 1)
+				if (size_t(p - pToken) == 1)
 				{
 					_p = reinterpret_cast<const char*>(p);
-					return token->setData((size_t)(pToken - pStart), (size_t)(p - pToken), 0, kTokenDot);
+					return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, kTokenDot);
 				}
 			}
 
@@ -253,9 +255,8 @@ namespace mathpresso {
 				if (++p == pEnd)
 					goto _Invalid;
 
-				c = p[0];
-				bool negative = c == '-';
-				if (negative || c == '+')
+				bool negative = p[0] == '-';
+				if (negative || p[0] == '+')
 					if (++p == pEnd)
 						goto _Invalid;
 
@@ -321,13 +322,13 @@ namespace mathpresso {
 				char tmp[512];
 				char* buf = tmp;
 
-				if (len >= MATHPRESSO_ARRAY_SIZE(tmp) && (buf = static_cast<char*>(::malloc(len + 1))) == NULL)
+				if (len >= MATHPRESSO_ARRAY_SIZE(tmp) && (buf = static_cast<char*>(::malloc(len + 1))) == nullptr)
 					return kTokenInvalid;
 
 				memcpy(buf, pToken, len);
 				buf[len] = '\0';
 
-				val = _strtod.conv(buf, NULL);
+				val = _strtod.conv(buf, nullptr);
 
 				if (buf != tmp)
 					::free(buf);
@@ -351,7 +352,7 @@ namespace mathpresso {
 			{
 				uint32_t ord = p[0];
 				c = mpCharClass[ord];
-				if (c > kTokenCharSym) // if (!isSymbolFirst(p[0]) || !isNum(p[0])) --> no dot?
+				if (!isSymbolFirst(p[0]) && !isNum(p[0]))
 					break;
 				hVal = HashUtils::hashChar(hVal, ord);
 			}

@@ -303,9 +303,9 @@ struct Tokenizer {
     return next(token);
   }
 
-  MATHPRESSO_INLINE std::string getTokenName(Token * token) const
+  MATHPRESSO_INLINE std::string getTokenName() const
   {
-	  return std::string(_p[token->position], token->length);
+	  return std::string(_start + _token.position, _token.length);
   }
 
   // --------------------------------------------------------------------------
