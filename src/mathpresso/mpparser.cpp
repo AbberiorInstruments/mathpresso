@@ -689,17 +689,16 @@ namespace mathpresso {
 
 		uToken = _tokenizer.next(&token);
 		if (uToken != kTokenLParen)
-			MATHPRESSO_PARSER_ERROR(token, "Expected a '(' token after a function name."); // check for semantic (sym not necessary)
+			MATHPRESSO_PARSER_ERROR(token, "Expected a '(' token after a function name."); 
 
-		AstCall* callNode = _ast->newNode<AstCall>(); // create callnode (sym not necessary)
+		AstCall* callNode = _ast->newNode<AstCall>(); 
 		MATHPRESSO_NULLCHECK(callNode);
 
-		// callNode->setSymbol(sym); // set symbol as part of the node.
 		callNode->setPosition(position);
 
 		uToken = _tokenizer.peek(&token);
 		if (uToken != kTokenRParen)
-		{ // append parameters as children (sym not necessary)
+		{ 
 			for (;;)
 			{
 				// Parse the argument expression.

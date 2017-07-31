@@ -99,20 +99,11 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
   sym->_opType = other->_opType;
   sym->_symbolFlags = other->_symbolFlags;
 
-  switch (sym->getSymbolType()) {
-    case kAstSymbolVariable: 
-	{
-      sym->setVarSlotId(other->getVarSlotId());
-      sym->setVarOffset(other->getVarOffset());
-	  sym->setValue(other->getValueComp());
-      break;
-    }
-
-    case kAstSymbolFunction: {
-      sym->setFuncArgs(other->getFuncArgs());
-	  sym->setOp(other->getOp());
-      break;
-    }
+  if (sym->getSymbolType() == kAstSymbolVariable) 
+  {
+	sym->setVarSlotId(other->getVarSlotId());
+	sym->setVarOffset(other->getVarOffset());
+	sym->setValue(other->getValueComp()); 
   }
 
   return sym;

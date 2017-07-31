@@ -19,73 +19,49 @@ namespace mathpresso {
 	// [mathpresso::Tokenizer]
 	// ============================================================================
 
-	bool isOperator(char c)
+	bool isIn(char c, std::string arr)
 	{
-		for (auto p : "+-*/^<>=~%!&|?:")
+		for (auto p : arr)
 		{
-			if (p == c)
+			if (p == tolower(c))
 			{
 				return true;
 			}
 		}
 		return false;
+	}
+
+	bool isOperator(char c)
+	{
+		return isIn(c, "+-*/^<>=~%!&|?:");
 	}
 
 	bool isNum(char c)
 	{
-		for (auto p : "0123456789.")
-		{
-			if (p == c)
-			{
-				return true;
-			}
-		}
-		return false;
+		return isIn(c, "1234567890.");
 	}
 
 	bool isSymbolFirst(char c)
 	{
-		for (auto p : "abcdefghijklmnopqrstuvwxyz_")
-		{
-			if (p == tolower(c))
-			{
-				return true;
-			}
-		}
-		return false;
+		return isIn(c, "abcdefghijklmnopqrstuvwxyz_");
 	}
 
 	bool isSymbol(char c)
 	{
-		for (auto p : ".")
-		{
-			if (p == tolower(c))
-			{
-				return true;
-			}
-		}
-		return isSymbolFirst(c);
+		return isSymbolFirst(c) || c == '.';
 	}
 
 	bool isSeparator(char c)
 	{
-		for (auto p : " ,()[]{};")
-		{
-			if (p == tolower(c))
-			{
-				return true;
-			}
-		}
-		return false;
+		return isIn(c, " ,()[]{};");
 	}
 
 	bool isSpace(char c)
 	{
-		if (c == ' ' || c == '\t')
-			return true;
-		else
-			return false;
+		return  (c == ' ' || c == '\t');
 	}
+
+	
 
 	//! \internal
 	//!

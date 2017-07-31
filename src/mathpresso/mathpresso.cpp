@@ -209,7 +209,6 @@ static ContextImpl* mpContextClone(ContextImpl* otherD_) {
         case kAstSymbolIntrinsic:
         case kAstSymbolFunction:
           clonedSym->setOpType(sym->getOpType());
-          clonedSym->setFuncArgs(sym->getFuncArgs());
           break;
 
         default:
@@ -426,9 +425,6 @@ Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
 	}
 
 	_symbols[std::make_pair(name, obj->nargs())] = obj;
-
-	sym->setOp(obj);
-	sym->setFuncArgs(obj->nargs());
 
 	return kErrorOk;
 }

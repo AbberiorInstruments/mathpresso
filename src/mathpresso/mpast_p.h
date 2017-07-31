@@ -283,8 +283,7 @@ struct AstSymbol : public HashNode {
 		_symbolFlags(scopeType == kAstScopeGlobal ? (int)kAstSymbolIsGlobal : 0),
 		_valueComp(),
 		_usedCount(0),
-		_writeCount(0),
-		_op(nullptr)
+		_writeCount(0)
 	{}
 
   // --------------------------------------------------------------------------
@@ -348,14 +347,6 @@ struct AstSymbol : public HashNode {
   MATHPRESSO_INLINE int32_t getVarOffset() const { return _varOffset; }
   MATHPRESSO_INLINE void setVarOffset(int32_t offset) { _varOffset = offset; }
 
-  //! Get the number of function/intrinsic arguments
-  MATHPRESSO_INLINE uint32_t getFuncArgs() const { return _funcArgs; }
-  //! Set the number of function/intrinsic arguments
-  MATHPRESSO_INLINE void setFuncArgs(uint32_t n) {
-    MATHPRESSO_ASSERT(_symbolType == kAstSymbolIntrinsic || _symbolType == kAstSymbolFunction);
-    _funcArgs = n;
-  }
-
   //! Get whether the variable has assigned a constant value at the moment.
   //!
   //! If true, the `_value` is a valid constant that can be used to replace
@@ -388,9 +379,6 @@ struct AstSymbol : public HashNode {
 
   MATHPRESSO_INLINE void decUsedCount(uint32_t n = 1) { _usedCount -= n; }
   MATHPRESSO_INLINE void decWriteCount(uint32_t n = 1) { _writeCount -= n; }
-
-  MATHPRESSO_INLINE std::shared_ptr<MpOperation> getOp() const { return _op; }
-  MATHPRESSO_INLINE void setOp(std::shared_ptr<MpOperation> op) { _op = op; }
 
   // --------------------------------------------------------------------------
   // [Members]
@@ -425,12 +413,7 @@ private:
 	int32_t _varOffset;
 	//! The current value of the symbol (in case the symbol is an immediate).
 	//! if the symbol is real, _valueComp.imag() is set to 0.
-	std::complex<double> _valueComp;
-
-	//! Number of function arguments (in case the symbol is a function).
-	uint32_t _funcArgs;
-	std::shared_ptr<MpOperation> _op;
-	  
+	std::complex<double> _valueComp;	  
 };
 
 typedef Hash<StringRef, AstSymbol> AstSymbolHash;
