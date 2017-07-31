@@ -27,7 +27,8 @@ namespace mathpresso {
 	static JitGlobal jitGlobal;
 
 
-	void JitCompiler::beginFunction() {
+	void JitCompiler::beginFunction()
+	{
 		cc->addFunc(FuncSignature2<void, double*, double*>(CallConv::kIdHostCDecl));
 
 		resultAddress = cc->newIntPtr("pResult");
@@ -40,21 +41,24 @@ namespace mathpresso {
 		functionBody = cc->getCursor();
 	}
 
-	void JitCompiler::endFunction() {
+	void JitCompiler::endFunction()
+	{
 		cc->endFunc();
 
 		if (constLabel.isValid())
 			cc->embedConstPool(constLabel, constPool);
 	}
 
-	JitVar JitCompiler::copyVar(const JitVar& other, uint32_t flags) {
+	JitVar JitCompiler::copyVar(const JitVar& other, uint32_t flags)
+	{
 		JitVar v(cc->newXmmSd(), flags);
 		cc->emit(other.isXmm() ? X86Inst::kIdMovapd : X86Inst::kIdMovsd,
 			v.getXmm(), other.getOperand());
 		return v;
 	}
 
-	JitVar JitCompiler::writableVar(const JitVar& other) {
+	JitVar JitCompiler::writableVar(const JitVar& other)
+	{
 		if (other.isMem() || other.isRO())
 			return copyVar(other, other.flags & ~JitVar::FLAG_RO);
 		else
@@ -62,21 +66,24 @@ namespace mathpresso {
 	}
 
 	// copies a non-complex var to a register, if necessary
-	JitVar JitCompiler::registerVar(const JitVar& other) {
+	JitVar JitCompiler::registerVar(const JitVar& other)
+	{
 		if (other.isMem())
 			return copyVar(other, other.flags);
 		else
 			return other;
 	}
 
-	JitVar JitCompiler::copyVarComplex(const JitVar& other, uint32_t flags) {
+	JitVar JitCompiler::copyVarComplex(const JitVar& other, uint32_t flags)
+	{
 		JitVar v(cc->newXmmPd(), flags);
 
 		cc->emit(X86Inst::kIdMovupd, v.getXmm(), other.getOperand());
 		return v;
 	}
 
-	JitVar JitCompiler::writableVarComplex(const JitVar& other) {
+	JitVar JitCompiler::writableVarComplex(const JitVar& other)
+	{
 		if (other.isMem() || other.isRO())
 			return copyVarComplex(other, other.flags & ~JitVar::FLAG_RO);
 		else
@@ -84,8 +91,9 @@ namespace mathpresso {
 	}
 
 	// copies a var to a register, and makes sure its a complex value.
-	JitVar JitCompiler::registerVarComplex(const JitVar& other, bool otherIsNonComplex) {
-		if (otherIsNonComplex) 
+	JitVar JitCompiler::registerVarComplex(const JitVar& other, bool otherIsNonComplex)
+	{
+		if (otherIsNonComplex)
 			return registerVarAsComplex(other);
 		else if (other.isMem())
 			return copyVarComplex(other, JitVar::FLAGS::FLAG_NONE);
@@ -98,7 +106,7 @@ namespace mathpresso {
 	{
 		JitVar v(cc->newXmmPd(), other.flags);
 		cc->pxor(v.getXmm(), v.getXmm());
-		if (other.isMem()) 
+		if (other.isMem())
 		{
 			cc->movlpd(v.getXmm(), other.getMem());
 		}
@@ -111,9 +119,11 @@ namespace mathpresso {
 
 	//! Compiles an AstBlock into assembler.
 	//! NOTE: use beginFunction() before and endFunction() after calling this.
-	void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots, bool b_complex) {
+	void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots, bool b_complex)
+	{
 		// Create Definitions for the Variables and add them as JitVar
-		if (numSlots != 0) {
+		if (numSlots != 0)
+		{
 			varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
 			if (varSlots == nullptr) return;
 
@@ -127,9 +137,11 @@ namespace mathpresso {
 		// Write altered global variables.
 		{
 			AstSymbolHashIterator it(rootScope->getSymbols());
-			while (it.has()) {
+			while (it.has())
+			{
 				AstSymbol* sym = it.get();
-				if (sym->isGlobal() && sym->isAltered()) {
+				if (sym->isGlobal() && sym->isAltered())
+				{
 					JitVar v = varSlots[sym->getVarSlotId()];
 					if (!b_complex)
 					{
@@ -171,8 +183,10 @@ namespace mathpresso {
 			heap->release(varSlots, sizeof(JitVar) * numSlots);
 	}
 
-	JitVar JitCompiler::onNode(AstNode* node) {
-		switch (node->getNodeType()) {
+	JitVar JitCompiler::onNode(AstNode* node)
+	{
+		switch (node->getNodeType())
+		{
 		case kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
 		case kAstNodeVar: return onVar(static_cast<AstVar*>(node));
 		case kAstNodeImm: return onImm(static_cast<AstImm*>(node));
@@ -188,7 +202,8 @@ namespace mathpresso {
 		}
 	}
 
-	JitVar JitCompiler::onBlock(AstBlock* node) {
+	JitVar JitCompiler::onBlock(AstBlock* node)
+	{
 		JitVar result;
 		size_t i, len = node->getLength();
 
@@ -203,12 +218,12 @@ namespace mathpresso {
 	{
 		AstSymbol* sym = node->getSymbol();
 		uint32_t slotId = sym->getVarSlotId();
-		bool b_complex = node ->returnsComplex();
+		bool b_complex = node->returnsComplex();
 
 		JitVar result = varSlots[slotId];
 		if (result.isNone())
 		{
-			if (sym->isGlobal()) 
+			if (sym->isGlobal())
 			{
 				result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAG_RO);
 				varSlots[slotId] = result;
@@ -220,7 +235,7 @@ namespace mathpresso {
 						result = copyVarComplex(result, JitVar::FLAG_NONE);
 				}
 			}
-			else 
+			else
 			{
 				result = getConstantD64(mpGetNan());
 				varSlots[slotId] = result;
@@ -229,7 +244,7 @@ namespace mathpresso {
 
 		return result;
 	}
-	
+
 	JitVar JitCompiler::onImm(AstImm* node)
 	{
 		if (node->returnsComplex())
@@ -238,7 +253,8 @@ namespace mathpresso {
 			return getConstantD64(node->getValue());
 	}
 
-	void JitCompiler::inlineCallDRetD(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn) {
+	void JitCompiler::inlineCallDRetD(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
+	{
 		// Use function builder to build a function prototype.
 		FuncSignatureX signature;
 		signature.setRetT<double>();
@@ -254,7 +270,8 @@ namespace mathpresso {
 			ctx->setArg(static_cast<uint32_t>(i), args[i]);
 	}
 
-	void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn) {
+	void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
+	{
 		// copy the parameters to Memory.
 		X86Mem stack(cc->newStack(count * sizeof(double), sizeof(double)));
 		X86Gp dataPointerReg(cc->newUIntPtr());
@@ -270,7 +287,7 @@ namespace mathpresso {
 			cc->movsd(stack, args[i]);
 			stack.addOffset(sizeof(double));
 		}
-		
+
 		// Use function builder to build a function prototype.
 		FuncSignatureX signature;
 		signature.setRetT<void>();
@@ -289,7 +306,8 @@ namespace mathpresso {
 	}
 
 	//! Calls a function with complex arguments and non-complex returns.
-	void JitCompiler::inlineCallCRetD(const X86Xmm& dst, const X86Xmm* args, const size_t count, void* fn) {
+	void JitCompiler::inlineCallCRetD(const X86Xmm& dst, const X86Xmm* args, const size_t count, void* fn)
+	{
 		// copy the data to Memory.
 		X86Mem stack(cc->newStack(count * 16, 16));
 		X86Gp dataPointerReg(cc->newUIntPtr());
@@ -314,7 +332,8 @@ namespace mathpresso {
 
 	}
 
-	void JitCompiler::inlineCallCRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn) {
+	void JitCompiler::inlineCallCRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
+	{
 		// copy the data to Memory.
 		X86Mem stack(cc->newStack((count + 1) * 16, 16));
 		X86Gp dataPointerReg(cc->newUIntPtr());
@@ -342,8 +361,10 @@ namespace mathpresso {
 		cc->movapd(dst, stack);
 	}
 
-	void JitCompiler::prepareConstPool() {
-		if (!constLabel.isValid()) {
+	void JitCompiler::prepareConstPool()
+	{
+		if (!constLabel.isValid())
+		{
 			constLabel = cc->newLabel();
 
 			CBNode* prev = cc->setCursor(functionBody);
@@ -352,7 +373,8 @@ namespace mathpresso {
 		}
 	}
 
-	JitVar JitCompiler::getConstantU64(uint64_t value) {
+	JitVar JitCompiler::getConstantU64(uint64_t value)
+	{
 		prepareConstPool();
 
 		size_t offset;
@@ -362,7 +384,8 @@ namespace mathpresso {
 		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
 	}
 
-	JitVar JitCompiler::getConstantU64(uint64_t real, uint64_t imag) {
+	JitVar JitCompiler::getConstantU64(uint64_t real, uint64_t imag)
+	{
 		prepareConstPool();
 
 		uint64_t value[2] = { real, imag };
@@ -373,7 +396,8 @@ namespace mathpresso {
 		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
 	}
 
-	JitVar JitCompiler::getConstantU64AsPD(uint64_t value) {
+	JitVar JitCompiler::getConstantU64AsPD(uint64_t value)
+	{
 		prepareConstPool();
 
 		size_t offset;
@@ -384,26 +408,30 @@ namespace mathpresso {
 		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
 	}
 
-	JitVar JitCompiler::getConstantD64(double value) {
+	JitVar JitCompiler::getConstantD64(double value)
+	{
 		DoubleBits bits;
 		bits.d = value;
 		return getConstantU64(bits.u);
 	}
 
-	JitVar JitCompiler::getConstantD64(std::complex<double> value) {
+	JitVar JitCompiler::getConstantD64(std::complex<double> value)
+	{
 		DoubleBitsComp bits;
 		bits.d[0] = value.real();
 		bits.d[1] = value.imag();
 		return getConstantU64(bits.u[0], bits.u[1]);
 	}
 
-	JitVar JitCompiler::getConstantD64AsPD(double value) {
+	JitVar JitCompiler::getConstantD64AsPD(double value)
+	{
 		DoubleBits bits;
 		bits.d = value;
 		return getConstantU64AsPD(bits.u);
 	}
 
-	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const symbolMap * syms, bool b_complex) {
+	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const symbolMap * syms, bool b_complex)
+	{
 		StringLogger logger;
 
 		CodeHolder code;
@@ -412,7 +440,8 @@ namespace mathpresso {
 		X86Compiler c(&code);
 		bool debugAsm = log != nullptr && (options & kOptionDebugAsm) != 0;
 
-		if (debugAsm) {
+		if (debugAsm)
+		{
 			logger.addOptions(Logger::kOptionBinaryForm | (b_complex ? Logger::kOptionImmExtended : 0));
 			code.setLogger(&logger);
 		}
@@ -436,7 +465,8 @@ namespace mathpresso {
 		return fn;
 	}
 
-	void mpFreeFunction(void* fn) {
+	void mpFreeFunction(void* fn)
+	{
 		jitGlobal.runtime.release(fn);
 	}
 

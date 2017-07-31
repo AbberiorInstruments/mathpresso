@@ -14,71 +14,72 @@
 
 namespace mathpresso {
 
-// ============================================================================
-// [Forward Declaration]
-// ============================================================================
+	// ============================================================================
+	// [Forward Declaration]
+	// ============================================================================
 
-struct AstBuilder;
-struct AstBlock;
-struct AstNode;
-struct AstProgram;
-struct AstVar;
+	struct AstBuilder;
+	struct AstBlock;
+	struct AstNode;
+	struct AstProgram;
+	struct AstVar;
 
-// ============================================================================
-// [mathpresso::Parser]
-// ============================================================================
+	// ============================================================================
+	// [mathpresso::Parser]
+	// ============================================================================
 
-struct Parser {
-  MATHPRESSO_NO_COPY(Parser)
+	struct Parser {
+		MATHPRESSO_NO_COPY(Parser)
 
-  enum Flags {
-    kNoFlags = 0x00,
-    kEnableVarDecls = 0x01,
-    kEnableNestedBlock = 0x02
-  };
+			enum Flags {
+			kNoFlags = 0x00,
+			kEnableVarDecls = 0x01,
+			kEnableNestedBlock = 0x02
+		};
 
-  // --------------------------------------------------------------------------
-  // [Construction / Destruction]
-  // --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const symbolMap * ops)
-    : _ast(ast),
-      _errorReporter(errorReporter),
-      _currentScope(ast->getRootScope()),
-      _tokenizer(body, len),
-	  _ops(ops) {}
-  MATHPRESSO_INLINE ~Parser() {}
+		MATHPRESSO_INLINE Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const symbolMap * ops)
+			: _ast(ast),
+			_errorReporter(errorReporter),
+			_currentScope(ast->getRootScope()),
+			_tokenizer(body, len),
+			_ops(ops)
+		{}
+		MATHPRESSO_INLINE ~Parser() {}
 
-  // --------------------------------------------------------------------------
-  // [Accessors]
-  // --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Accessors]
+		// --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE AstScope* getCurrentScope() const { return _currentScope; }
+		MATHPRESSO_INLINE AstScope* getCurrentScope() const { return _currentScope; }
 
-  // --------------------------------------------------------------------------
-  // [Parse]
-  // --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Parse]
+		// --------------------------------------------------------------------------
 
-  MATHPRESSO_NOAPI Error parseProgram(AstProgram* block);
+		MATHPRESSO_NOAPI Error parseProgram(AstProgram* block);
 
-  MATHPRESSO_NOAPI Error parseStatement(AstBlock* block, uint32_t flags);
-  MATHPRESSO_NOAPI Error parseBlockOrStatement(AstBlock* block);
+		MATHPRESSO_NOAPI Error parseStatement(AstBlock* block, uint32_t flags);
+		MATHPRESSO_NOAPI Error parseBlockOrStatement(AstBlock* block);
 
-  MATHPRESSO_NOAPI Error parseVariableDecl(AstBlock* block);
-  MATHPRESSO_NOAPI Error parseExpression(AstNode** pNodeOut, bool isNested);
-  MATHPRESSO_NOAPI Error parseCall(AstNode** pNodeOut);
+		MATHPRESSO_NOAPI Error parseVariableDecl(AstBlock* block);
+		MATHPRESSO_NOAPI Error parseExpression(AstNode** pNodeOut, bool isNested);
+		MATHPRESSO_NOAPI Error parseCall(AstNode** pNodeOut);
 
-  // --------------------------------------------------------------------------
-  // [Members]
-  // --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Members]
+		// --------------------------------------------------------------------------
 
-  AstBuilder* _ast;
-  ErrorReporter* _errorReporter;
+		AstBuilder* _ast;
+		ErrorReporter* _errorReporter;
 
-  AstScope* _currentScope;
-  Tokenizer _tokenizer;
-  const symbolMap * _ops;
-};
+		AstScope* _currentScope;
+		Tokenizer _tokenizer;
+		const symbolMap * _ops;
+	};
 
 } // mathpresso namespace
 

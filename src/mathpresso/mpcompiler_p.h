@@ -22,9 +22,9 @@ namespace mathpresso
 	// [mathpresso::JitVar]
 	// ============================================================================
 
-	struct JitVar 
+	struct JitVar
 	{
-		enum FLAGS 
+		enum FLAGS
 		{
 			FLAG_NONE = 0,
 			FLAG_RO = 1
@@ -36,7 +36,7 @@ namespace mathpresso
 		MATHPRESSO_INLINE ~JitVar() {}
 
 		// Reset
-		MATHPRESSO_INLINE void reset() 
+		MATHPRESSO_INLINE void reset()
 		{
 			op.reset();
 			flags = FLAG_NONE;
@@ -49,13 +49,15 @@ namespace mathpresso
 			flags = other.flags;
 			return *this;
 		}
-		
+
 		// Operator Overload.
-		MATHPRESSO_INLINE const bool operator==(const JitVar& other) {
+		MATHPRESSO_INLINE const bool operator==(const JitVar& other)
+		{
 			return this->flags == other.flags && this->op.isEqual(other.op);
 		}
 
-		MATHPRESSO_INLINE const bool operator!=(const JitVar& other) {
+		MATHPRESSO_INLINE const bool operator!=(const JitVar& other)
+		{
 			return !(this->operator==(other));
 		}
 
@@ -90,7 +92,7 @@ namespace mathpresso
 	// [mathpresso::JitCompiler]
 	// ============================================================================
 
-	struct MATHPRESSO_NOAPI JitCompiler 
+	struct MATHPRESSO_NOAPI JitCompiler
 	{
 		JitCompiler(asmjit::ZoneHeap* heap, asmjit::X86Compiler* cc, const symbolMap * syms)
 			: heap(heap),
