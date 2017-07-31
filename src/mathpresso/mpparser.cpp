@@ -634,15 +634,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   MATHPRESSO_ASSERT(uToken == kTokenSymbol);
   uint32_t position = token.getPosAsUInt();
 
-  StringRef str(_tokenizer._start + token.position, token.length); 
-  AstSymbol* sym = _currentScope->resolveSymbol(str, token.hVal); // resolve the Symbol.
-
-  if (sym == nullptr)
-    MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %.*s.", static_cast<int>(str.getLength()), str.getData());
-
-  if (sym->getSymbolType() != kAstSymbolIntrinsic &&
-      sym->getSymbolType() != kAstSymbolFunction) // check that there is a function with this name.
-    MATHPRESSO_PARSER_ERROR(token, "Expected a function name."); 
+  std::string fnName(_tokenizer.getTokenName()); 
 
   uToken = _tokenizer.next(&token);
   if (uToken != kTokenLParen)
@@ -651,7 +643,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   AstCall* callNode = _ast->newNode<AstCall>(); // create callnode (sym not necessary)
   MATHPRESSO_NULLCHECK(callNode);
 
-  callNode->setSymbol(sym); // set symbol as part of the node.
+ // callNode->setSymbol(sym); // set symbol as part of the node.
   callNode->setPosition(position);
 
   uToken = _tokenizer.peek(&token);
@@ -684,17 +676,7 @@ Error Parser::parseCall(AstNode** pNodeOut) {
 
   _tokenizer.consume();
 
-  // Validate the number of function arguments.
-  size_t n = callNode->getLength(); 
-  // lookup symbol here? _crrentScope wrong value? ->true, parsing went on
-  uint32_t reqArgs = sym->getFuncArgs();
-
-  if (n != reqArgs) {
-    _ast->deleteNode(callNode);
-    MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires %u argument(s) (%u provided).", sym->getName(), reqArgs, n);
-  }
-
-  std::pair<std::string, int> opNameDecorated(std::string(str.getData(), str.getLength()), n);
+ std::pair<std::string, int> opNameDecorated(fnName, callNode->getLength());
 
   if (_ops->find(opNameDecorated) != _ops->end())
   {
@@ -702,45 +684,11 @@ Error Parser::parseCall(AstNode** pNodeOut) {
   }
   else
   {
-	  MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires a MpOperation-Object, which is not to be found.", sym->getName());
+	  MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires a MpOperation-Object with %d arguments.", opNameDecorated.first, opNameDecorated.second);
   }
 
-  // Transform an intrinsic function into unary or binary operator.
-  if (sym->getSymbolType() == kAstSymbolIntrinsic) {
-    const OpInfo& op = OpInfo::get(sym->getOpType());
-    MATHPRESSO_ASSERT(n == op.getOpCount());
-
-    AstNode* opNode;
-    if (reqArgs == 1) {
-      AstUnaryOp* unary = _ast->newNode<AstUnaryOp>(op.type);
-      MATHPRESSO_NULLCHECK(unary);
-
-	  unary->mpOp_ = callNode->getSymbol()->getOp().get();
-	  
-      unary->setChild(callNode->removeAt(0));
-      opNode = unary;
-    }
-    else {
-      AstBinaryOp* binary = _ast->newNode<AstBinaryOp>(op.type);
-      MATHPRESSO_NULLCHECK(binary);
-
-	  binary->mpOp_ = callNode->getSymbol()->getOp().get();
-
-      binary->setRight(callNode->removeAt(1));
-      binary->setLeft(callNode->removeAt(0));
-      opNode = binary;
-    }
-
-    opNode->setPosition(callNode->getPosition());
-    _ast->deleteNode(callNode);
-
-    *pNodeOut = opNode;
-    return kErrorOk;
-  }
-  else {
-    *pNodeOut = callNode;
-    return kErrorOk;
-  }
+  *pNodeOut = callNode;
+  return kErrorOk;
 }
 
 } // mathpresso namespace
