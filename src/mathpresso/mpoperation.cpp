@@ -76,6 +76,7 @@ namespace mathpresso {
 		ctx->addObject("<=", std::make_shared<MpOperationLe>());
 		ctx->addObject("<", std::make_shared<MpOperationLt>());
 		ctx->addObject("?", std::make_shared<MpOperationTernary>());
+		ctx->addObject(":", std::make_shared<MpOperationTernaryHelper>());
 		ctx->addObject("=", std::make_shared<MpOperationAssignment>());
 		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite>());
 		ctx->addObject("isinf", std::make_shared<MpOperationIsInfinite>());
@@ -1860,6 +1861,16 @@ namespace mathpresso {
 		}
 		return kErrorOk;
 
+	}
+
+	JitVar MpOperationTernaryHelper::compile(JitCompiler * jc, AstNode * node)
+	{
+		throw std::runtime_error("MpOperationHelper: should never be reached");
+	}
+
+	uint32_t MpOperationTernaryHelper::optimize(AstOptimizer *opt, AstNode *node)
+	{
+		return kErrorInvalidState;
 	}
 
 	// Assignment

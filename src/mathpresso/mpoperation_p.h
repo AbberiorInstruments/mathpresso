@@ -381,6 +381,19 @@ namespace mathpresso
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
 	};
+	
+	class MpOperationTernaryHelper : public MpOperation
+	{
+	public:
+		MpOperationTernaryHelper() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft)
+		{
+			priority_ = 15;
+		}
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
+
+	};
 
 	// Assignment
 	class MpOperationAssignment : public MpOperation
