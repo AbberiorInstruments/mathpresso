@@ -127,7 +127,6 @@ static ContextImpl* mpContextClone(ContextImpl* otherD_) {
 
         case kAstSymbolIntrinsic:
         case kAstSymbolFunction:
-          clonedSym->setOpType(sym->getOpType());
           break;
 
         default:

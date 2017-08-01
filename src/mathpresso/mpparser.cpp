@@ -469,25 +469,17 @@ namespace mathpresso {
 			}
 
 			// Parse a right-to-left associative unary operator ('+', '-', "!").
-			case kTokenAdd: op = kOpNone; goto _Unary;
-			case kTokenSub: op = kOpNeg; goto _Unary;
-			case kTokenNot: op = kOpNot; goto _Unary;
 			case kTokenOperator:
 			{
 				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 1);
 				if (_ops->find(opNameDecorated) == _ops->end())
 					MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
 				op = 0;
-			}
-			_Unary:
-			{
 
 				// Parse the unary operator.
 				AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>(op);
 				MATHPRESSO_NULLCHECK(opNode);
 				opNode->setPosition(token.getPosAsUInt());
-
-				std::pair<std::string, int> opNameDecorated(std::make_pair(std::string(_tokenizer._start + token.position, token.length), 1));
 
 				if (_ops->find(opNameDecorated) != _ops->end())
 				{
@@ -543,8 +535,6 @@ namespace mathpresso {
 			// Parse a binary operator.
 			case kTokenAssign:
 			{
-				op = kOpAssign;
-
 				// Check whether the assignment is valid.
 				if (currentNode->getNodeType() != kAstNodeVar)
 					MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
@@ -560,31 +550,17 @@ namespace mathpresso {
 				goto _Binary;
 			}
 
-
-			case kTokenEq: op = kOpEq; goto _Binary;
-			case kTokenNe: op = kOpNe; goto _Binary;
-			case kTokenGt: op = kOpGt; goto _Binary;
-			case kTokenGe: op = kOpGe; goto _Binary;
-			case kTokenLt: op = kOpLt; goto _Binary;
-			case kTokenLe: op = kOpLe; goto _Binary;
-			case kTokenAdd: op = kOpAdd; goto _Binary;
-			case kTokenSub: op = kOpSub; goto _Binary;
-			case kTokenMul: op = kOpMul; goto _Binary;
-			case kTokenDiv: op = kOpDiv; goto _Binary;
-			case kTokenMod: op = kOpMod; goto _Binary;
-			case kTokenQMark: op = kOpQMark; goto _Binary;
-			case kTokenColon: op = kOpColon; goto _Binary;
+			// Parse Binary Operators
 			case kTokenOperator:
 			{
 				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 2);
 				if (_ops->find(opNameDecorated) == _ops->end())
 					MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
-				op = 0;
 			}
 			_Binary:
 			{
 
-				AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>(op);
+				AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>();
 				MATHPRESSO_NULLCHECK(newNode);
 
 				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 2);

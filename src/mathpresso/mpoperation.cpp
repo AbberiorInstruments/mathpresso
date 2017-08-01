@@ -1816,7 +1816,7 @@ namespace mathpresso {
 		}
 
 		// create the new Ternary Node.
-		AstTernaryOp* ternaryNode = node->getAst()->newNode<AstTernaryOp>(kOpQMark);
+		AstTernaryOp* ternaryNode = node->getAst()->newNode<AstTernaryOp>();
 		ternaryNode->setCondition(branchCondition);
 		ternaryNode->setLeft(branchLeft);
 		ternaryNode->setRight(branchRight);

@@ -97,7 +97,6 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
   if (sym == nullptr)
     return nullptr;
 
-  sym->_opType = other->_opType;
   sym->_symbolFlags = other->_symbolFlags;
 
   if (sym->getSymbolType() == kAstSymbolVariable) 

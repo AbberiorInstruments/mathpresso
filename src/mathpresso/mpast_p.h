@@ -279,7 +279,6 @@ struct AstSymbol : public HashNode {
 		_name(name),
 		_node(nullptr),
 		_symbolType(static_cast<uint8_t>(symbolType)),
-		_opType(kOpNone),
 		_symbolFlags(scopeType == kAstScopeGlobal ? (int)kAstSymbolIsGlobal : 0),
 		_valueComp(),
 		_usedCount(0),
@@ -330,16 +329,6 @@ struct AstSymbol : public HashNode {
   MATHPRESSO_INLINE bool isDeclared() const { return hasSymbolFlag(kAstSymbolIsDeclared); }
   //! Set the symbol to be declared (\ref kAstSymbolIsDeclared flag).
   MATHPRESSO_INLINE void setDeclared() { setSymbolFlag(kAstSymbolIsDeclared); }
-
-  //! Get operator type, see \ref OpType.
-  //!
-  //! Only valid if symbol type is \ref kAstSymbolIntrinsic.
-  MATHPRESSO_INLINE uint32_t getOpType() const { return _opType; }
-  //! Set operator type to `opType`.
-  MATHPRESSO_INLINE void setOpType(uint32_t opType) {
-    MATHPRESSO_ASSERT(_symbolType == kAstSymbolIntrinsic);
-    _opType = static_cast<uint8_t>(opType);
-  }
 
   MATHPRESSO_INLINE uint32_t getVarSlotId() const { return _varSlotId; }
   MATHPRESSO_INLINE void setVarSlotId(uint32_t slotId) { _varSlotId = slotId; }
@@ -394,9 +383,7 @@ struct AstSymbol : public HashNode {
 
   //! Type of the symbol, see \ref AstSymbolType.
   uint8_t _symbolType;
-  //! Operator type (if the symbol is \ref kAstSymbolIntrinsic).
-  uint8_t _opType;
-  //! Flags, see \ref AstSymbolFlags.
+   //! Flags, see \ref AstSymbolFlags.
   uint16_t _symbolFlags;
 
   //! Number of times the variable is used (both read and write count).
@@ -544,7 +531,6 @@ struct AstNode {
       _nodeType(static_cast<uint8_t>(nodeType)),
       _nodeFlags(0),
       _nodeSize(0),
-      _op(kOpNone),
       _position(~static_cast<uint32_t>(0)),
       _length(length) {}
 
@@ -997,10 +983,9 @@ struct AstBinaryOp : public AstBinary {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE AstBinaryOp(AstBuilder* ast, uint32_t op)
+  MATHPRESSO_INLINE AstBinaryOp(AstBuilder* ast)
     : AstBinary(ast, kAstNodeBinaryOp)
   {
-	setOp(op); 
   }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
@@ -1027,11 +1012,9 @@ struct AstTernaryOp : public AstTernary {
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-	MATHPRESSO_INLINE AstTernaryOp(AstBuilder* ast, uint32_t op) :
+	MATHPRESSO_INLINE AstTernaryOp(AstBuilder* ast) :
 		AstTernary(ast, kAstNodeTernaryOp)
-	{
-		setOp(op);
-	}
+	{}
 
 };
 
