@@ -327,7 +327,6 @@ namespace mathpresso {
 			while (++p != pEnd)
 			{
 				uint32_t ord = p[0];
-				c = mpCharClass[ord];
 				if (!isSymbol(p[0]))
 					break;
 				hVal = HashUtils::hashChar(hVal, ord);

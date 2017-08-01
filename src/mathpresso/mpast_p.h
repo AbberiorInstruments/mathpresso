@@ -989,7 +989,7 @@ struct AstBinaryOp : public AstBinary {
   }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
-	if (mpOp_->flags() & MpOperationFlags::OpIsAssgignment && hasLeft()) {
+	if ((mpOp_->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft()) {
       AstVar* var = static_cast<AstVar*>(getLeft());
       AstSymbol* sym = var->getSymbol();
 

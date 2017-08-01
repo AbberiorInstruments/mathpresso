@@ -46,52 +46,7 @@ enum TokenType {
   kTokenLParen,       // (
   kTokenRParen,       // )
 
-  kTokenQMark,        // ?
-  kTokenColon,        // :
-
-  kTokenAdd,          // +
-  kTokenSub,          // -
-  kTokenMul,          // *
-  kTokenDiv,          // /
-  kTokenMod,          // %
-  kTokenNot,          // !
-
-  kTokenBitAnd,       // &
-  kTokenBitOr,        // |
-  kTokenBitXor,       // ^
-  kTokenBitNeg,       // ~
-
-  kTokenAssign,       // =
-  kTokenLt,           // <
-  kTokenGt,           // >
-
-  kTokenPlusPlus,     // ++
-  kTokenMinusMinus,   // --
-
-  kTokenEq,           // ==
-  kTokenNe,           // !=
-  kTokenLe,           // <=
-  kTokenGe,           // >=
-
-  kTokenLogAnd,       // &&
-  kTokenLogOr,        // ||
-
-  kTokenBitSar,       // >>
-  kTokenBitShr,       // >>>
-  kTokenBitShl,       // <<
-
-  kTokenAssignAdd,    // +=
-  kTokenAssignSub,    // -=
-  kTokenAssignMul,    // *=
-  kTokenAssignDiv,    // /=
-  kTokenAssignMod,    // %=
-
-  kTokenAssignBitAnd, // &=
-  kTokenAssignBitOr,  // |=
-  kTokenAssignBitXor, // ^=
-  kTokenAssignBitSar, // >>=
-  kTokenAssignBitShr, // >>>=
-  kTokenAssignBitShl, // <<=
+  kTokenOperator,
 
   kTokenEnd           // <end>
 };
@@ -125,22 +80,9 @@ enum TokenChar {
 	kTokenCharLPa = kTokenLParen,       // (
 	kTokenCharRPa = kTokenRParen,       // )
 
-	kTokenCharQue = kTokenQMark,        // ?
-	kTokenCharCol = kTokenColon,        // :
-	kTokenCharAdd = kTokenAdd,          // +
-	kTokenCharSub = kTokenSub,          // -
-	kTokenCharMul = kTokenMul,          // *
-	kTokenCharDiv = kTokenDiv,          // /
-	kTokenCharMod = kTokenMod,          // %
-	kTokenCharNot = kTokenNot,          // !
-	kTokenCharAnd = kTokenBitAnd,       // &
-	kTokenCharOr = kTokenBitOr,        // |
-	kTokenCharXor = kTokenBitXor,       // ^
-	kTokenCharNeg = kTokenBitNeg,       // ~
-	kTokenCharEq = kTokenAssign,       // =
-	kTokenCharLt = kTokenLt,           // <
-	kTokenCharGt = kTokenGt,           // >
-
+	// Marks a Operator
+	kTokenCharOp = kTokenOperator,
+	
 	// Space.
 	kTokenCharSpc = 63,
 
@@ -148,7 +90,6 @@ enum TokenChar {
 	kTokenCharExt,
 	// Invalid (non-recognized) character.
 	kTokenCharInv,
-	kTokenOperator,
 
 	kTokenCharSingleCharTokenEnd = kTokenCharRPa
 };
@@ -159,18 +100,18 @@ static const uint8_t mpCharClass[] = {
 	C(Inv), C(Spc), C(Spc), C(Spc), C(Spc), C(Spc), C(Inv), C(Inv), // 008-015 .     .. | Spaces: 0x9-0xD.
 	C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), // 016-023 ........ | All invalid.
 	C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), C(Inv), // 024-031 ........ | All invalid.
-	C(Spc), C(Not), C(Inv), C(Inv), C(Inv), C(Mod), C(And), C(Inv), // 032-039  !"#$%&' | Unassigned: "#$'.
-	C(LPa), C(RPa), C(Mul), C(Add), C(Com), C(Sub), C(Dot), C(Div), // 040-047 ()*+,-./ |
+	C(Spc), C(Op ), C(Inv), C(Inv), C(Inv), C(Op ), C(Op ), C(Inv), // 032-039  !"#$%&' | Unassigned: "#$'.
+	C(LPa), C(RPa), C(Op ), C(Op ), C(Com), C(Op ), C(Dot), C(Op ), // 040-047 ()*+,-./ |
 	C(0x0), C(0x1), C(0x2), C(0x3), C(0x4), C(0x5), C(0x6), C(0x7), // 048-055 01234567 |
-	C(0x8), C(0x9), C(Col), C(Sem), C(Lt),  C(Eq),  C(Gt),  C(Que), // 056-063 89:;<=>? |
+	C(0x8), C(0x9), C(Op), C(Sem), C(Op),  C(Op),  C(Op),  C(Op ), // 056-063 89:;<=>? |
 	C(Inv), C(0xA), C(0xB), C(0xC), C(0xD), C(0xE), C(0xF), C(Sym), // 064-071 @ABCDEFG | Unassigned: @.
 	C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 072-079 HIJKLMNO |
 	C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 080-087 PQRSTUVW |
-	C(Sym), C(Sym), C(Sym), C(LBr), C(Inv), C(RBr), C(Xor), C(Sym), // 088-095 XYZ[\]^_ | Unassigned: \.
+	C(Sym), C(Sym), C(Sym), C(LBr), C(Inv), C(RBr), C(Op ), C(Sym), // 088-095 XYZ[\]^_ | Unassigned: \.
 	C(Inv), C(0xA), C(0xB), C(0xC), C(0xD), C(0xE), C(0xF), C(Sym), // 096-103 `abcdefg | Unassigned: `.
 	C(Sym), C(Img), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 104-111 hijklmno |
 	C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), C(Sym), // 112-119 pqrstuvw |
-	C(Sym), C(Sym), C(Sym), C(LCu), C(Or),  C(RCu), C(Neg), C(Inv), // 120-127 xyz{|}~  |
+	C(Sym), C(Sym), C(Sym), C(LCu), C(Op),  C(RCu), C(Op ), C(Inv), // 120-127 xyz{|}~  |
 	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 128-135 ........ | Extended.
 	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 136-143 ........ |
 	C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), C(Ext), // 144-151 ........ |

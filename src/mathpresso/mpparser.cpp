@@ -98,11 +98,11 @@ namespace mathpresso {
 			return kErrorOk;
 		}
 
-		if (uToken == kTokenColon)
+		/*if (uToken == kTokenOperator )
 		{
 			_tokenizer.consume();
 			return kErrorOk;
-		}
+		}*/
 
 		// Parse a nested block.
 		if (uToken == kTokenLCurl)
@@ -255,7 +255,7 @@ namespace mathpresso {
 
 			// Parse possible assignment '='.
 			uToken = _tokenizer.next(&token);
-			bool isAssigned = (uToken == kTokenAssign || uToken == kTokenOperator); // TODO: hack, might let non-assignments pass as assignments
+			bool isAssigned = (uToken == kTokenOperator && std::string(_tokenizer._start + token.position, token.length) == "=");
 
 			if (isAssigned)
 			{
@@ -481,11 +481,8 @@ namespace mathpresso {
 				MATHPRESSO_NULLCHECK(opNode);
 				opNode->setPosition(token.getPosAsUInt());
 
-				if (_ops->find(opNameDecorated) != _ops->end())
-				{
-					opNode->mpOp_ = _ops->at(opNameDecorated).get();
-				}
-
+				opNode->mpOp_ = _ops->at(opNameDecorated).get();
+				
 				if (lastUnaryNode == nullptr)
 					currentNode = opNode;
 				else
@@ -532,42 +529,35 @@ namespace mathpresso {
 				return kErrorOk;
 			}
 
-			// Parse a binary operator.
-			case kTokenAssign:
-			{
-				// Check whether the assignment is valid.
-				if (currentNode->getNodeType() != kAstNodeVar)
-					MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
-
-				AstSymbol* sym = static_cast<AstVar*>(currentNode)->getSymbol();
-				if (sym->hasSymbolFlag(kAstSymbolIsReadOnly))
-					MATHPRESSO_PARSER_ERROR(token, "Can't assign to a read-only variable '%s'.", sym->getName());
-
-				if (isNested)
-					MATHPRESSO_PARSER_ERROR(token, "Invalid assignment inside an expression.");
-
-				sym->incWriteCount();
-				goto _Binary;
-			}
-
 			// Parse Binary Operators
 			case kTokenOperator:
 			{
 				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 2);
 				if (_ops->find(opNameDecorated) == _ops->end())
 					MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
-			}
-			_Binary:
-			{
+
+
+				if (opNameDecorated.first == "=")
+				{
+					// Check whether the assignment is valid.
+					if (currentNode->getNodeType() != kAstNodeVar)
+						MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
+
+					AstSymbol* sym = static_cast<AstVar*>(currentNode)->getSymbol();
+					if (sym->hasSymbolFlag(kAstSymbolIsReadOnly))
+						MATHPRESSO_PARSER_ERROR(token, "Can't assign to a read-only variable '%s'.", sym->getName());
+
+					if (isNested)
+						MATHPRESSO_PARSER_ERROR(token, "Invalid assignment inside an expression.");
+
+					sym->incWriteCount();
+				}
 
 				AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>();
 				MATHPRESSO_NULLCHECK(newNode);
 
-				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 2);
-				if (_ops->find(opNameDecorated) != _ops->end())
-				{
-					newNode->mpOp_ = _ops->at(opNameDecorated).get();
-				}
+				newNode->mpOp_ = _ops->at(opNameDecorated).get();
+				
 
 				newNode->setPosition(token.getPosAsUInt());
 
