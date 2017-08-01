@@ -9,6 +9,7 @@
 
 // [Dependencies]
 #include <mathpresso/mpparser_p.h>
+#include <mathpresso/mpoperation.h>
 
 namespace mathpresso {
 
@@ -594,8 +595,10 @@ namespace mathpresso {
 					break;
 				}
 
-				uint32_t currentBinaryPrec = OpInfo::get(currentBinaryNode->getOp()).precedence;
-				uint32_t newBinaryPrec = OpInfo::get(op).precedence;
+				//uint32_t currentBinaryPrec = OpInfo::get(currentBinaryNode->getOp()).precedence;
+				uint32_t currentBinaryPrec = currentBinaryNode->mpOp_->getPrecedence();
+				//uint32_t newBinaryPrec = OpInfo::get(op).precedence;
+				uint32_t newBinaryPrec = newNode->mpOp_->getPrecedence();
 
 				if (currentBinaryPrec > newBinaryPrec)
 				{
@@ -624,9 +627,10 @@ namespace mathpresso {
 						// Terminate conditions:
 						//   1. currentBinaryNode has higher precedence than newNode.
 						//   2. currentBinaryNode has equal precedence and right-to-left associativity.
-						if (OpInfo::get(currentBinaryNode->getOp()).rightAssociate(newBinaryPrec))
+						if (currentBinaryPrec > newBinaryPrec || (currentBinaryPrec == newBinaryPrec && currentBinaryNode->mpOp_->isRightToLeft()))
 							break;
 						currentBinaryNode = static_cast<AstBinaryOp*>(currentBinaryNode->getParent());
+						currentBinaryPrec = currentBinaryNode->mpOp_->getPrecedence();
 					}
 
 					// currentBinaryNode <+
@@ -638,7 +642,9 @@ namespace mathpresso {
 					// |    /       \            |
 					// | (...)    (currentNode)  | currentBinaryNode will become a top-level node.
 					// +-------------------------+
-					if (!currentBinaryNode->hasParent() && !OpInfo::get(currentBinaryNode->getOp()).rightAssociate(newBinaryPrec))
+
+					if (!currentBinaryNode->hasParent() && 
+						!(currentBinaryPrec > newBinaryPrec || (currentBinaryPrec == newBinaryPrec && currentBinaryNode->mpOp_->isRightToLeft())))
 					{
 						newNode->setLeft(currentBinaryNode);
 					}

@@ -75,8 +75,8 @@ namespace mathpresso {
 		ctx->addObject(">", std::make_shared<MpOperationGt>());
 		ctx->addObject("<=", std::make_shared<MpOperationLe>());
 		ctx->addObject("<", std::make_shared<MpOperationLt>());
-		ctx->addObject("?", std::make_shared<MpOperationTernary>());
-		ctx->addObject(":", std::make_shared<MpOperationTernaryHelper>());
+		ctx->addObject("?", std::make_shared<MpOperationTernary>(false));
+		ctx->addObject(":", std::make_shared<MpOperationTernary>(true));
 		ctx->addObject("=", std::make_shared<MpOperationAssignment>());
 		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite>());
 		ctx->addObject("isinf", std::make_shared<MpOperationIsInfinite>());
@@ -575,7 +575,7 @@ namespace mathpresso {
 	std::complex<double> negCC(std::complex<double>* args) { return -args[0]; }
 
 	MpOperationNeg::MpOperationNeg() :
-		MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(negRR), VPTR(negCC), nullptr, nullptr)
+		MpOperationFuncAsm(1, MpOperationFlags::OpIsRighttoLeft, VPTR(negRR), VPTR(negCC), nullptr, nullptr)
 	{
 		priority_ = 3;
 	}
@@ -1691,6 +1691,10 @@ namespace mathpresso {
 	// Ternary operation
 	JitVar MpOperationTernary::compile(JitCompiler* jc, AstNode * node)
 	{
+		if (isColon_)
+		{
+			throw std::runtime_error("MpOperationHelper: should never be reached");
+		}
 		asmjit::Label lblElse = jc->cc->newLabel();
 		asmjit::Label lblEnd = jc->cc->newLabel();
 		JitVar erg;
@@ -1750,12 +1754,19 @@ namespace mathpresso {
 
 	uint32_t MpOperationTernary::optimize(AstOptimizer *opt, AstNode *node)
 	{
+		if (isColon_)
+		{
+			return opt->_errorReporter->onError(kErrorInvalidState, node->getPosition(),
+				"this is an implementation error.");
+		}
+
 		AstBinaryOp* lastColon = static_cast<AstBinaryOp*>(node);
 		// go to the last Colon after question-marks.
 		while (lastColon->getOp() == kOpQMark)
 		{
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 		}
+
 		while (lastColon->getRight()->getOp() == kOpColon)
 		{
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
@@ -1862,17 +1873,7 @@ namespace mathpresso {
 		return kErrorOk;
 
 	}
-
-	JitVar MpOperationTernaryHelper::compile(JitCompiler * jc, AstNode * node)
-	{
-		throw std::runtime_error("MpOperationHelper: should never be reached");
-	}
-
-	uint32_t MpOperationTernaryHelper::optimize(AstOptimizer *opt, AstNode *node)
-	{
-		return kErrorInvalidState;
-	}
-
+	
 	// Assignment
 	JitVar mathpresso::MpOperationAssignment::compile(JitCompiler * jc, AstNode * node)
 	{

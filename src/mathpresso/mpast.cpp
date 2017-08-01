@@ -299,7 +299,7 @@ static Error mpBlockNodeGrow(AstBlock* self) {
   size_t oldCapacity = self->_capacity;
   size_t newCapacity = oldCapacity;
 
-  size_t length = self->_length;
+  size_t length = self->getLength();
   MATHPRESSO_ASSERT(oldCapacity == length);
 
   // Grow, we prefer growing quickly until we reach 128 and then 1024 nodes. We

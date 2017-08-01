@@ -540,6 +540,7 @@ struct AstNode {
     : _ast(ast),
       _parent(nullptr),
       _children(children),
+	  mpOp_(nullptr),
       _nodeType(static_cast<uint8_t>(nodeType)),
       _nodeFlags(0),
       _nodeSize(0),
@@ -640,6 +641,9 @@ struct AstNode {
   //! Child nodes.
   AstNode** _children;
 
+  MpOperation* mpOp_;
+
+  private:
   //! Node type, see `AstNodeType`.
   uint8_t _nodeType;
   //! Node flags, see `AstNodeFlags`.
@@ -648,10 +652,10 @@ struct AstNode {
   uint8_t _nodeSize;
   //! Operator, see `OpType`.
   uint8_t _op;
-
   //! Position (in characters) to the beginning of the program (default -1).
   uint32_t _position;
 
+  protected:
   //! Count of child-nodes.
   size_t _length;
 };
@@ -853,10 +857,10 @@ struct AstVarDecl : public AstUnary {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE AstVarDecl(AstBuilder* ast)
-    : AstUnary(ast, kAstNodeVarDecl),
-      _symbol(nullptr),
-	  mpOp_(nullptr) {}
+	  MATHPRESSO_INLINE AstVarDecl(AstBuilder* ast)
+	  : AstUnary(ast, kAstNodeVarDecl),
+	  _symbol(nullptr)
+  {}
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
     AstSymbol* sym = getSymbol();
@@ -876,7 +880,7 @@ struct AstVarDecl : public AstUnary {
   // --------------------------------------------------------------------------
 
   AstSymbol* _symbol;
-  MpOperation * mpOp_;
+ 
 };
 
 // ============================================================================
@@ -977,11 +981,9 @@ struct AstUnaryOp : public AstUnary {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstUnaryOp(AstBuilder* ast, uint32_t op)
-    : AstUnary(ast, kAstNodeUnaryOp),
-	mpOp_(nullptr)
+    : AstUnary(ast, kAstNodeUnaryOp)
 	{ setOp(op); }
 
-  MpOperation* mpOp_;
 };
 
 // ============================================================================
@@ -996,8 +998,7 @@ struct AstBinaryOp : public AstBinary {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstBinaryOp(AstBuilder* ast, uint32_t op)
-    : AstBinary(ast, kAstNodeBinaryOp),
-	mpOp_(nullptr)
+    : AstBinary(ast, kAstNodeBinaryOp)
   {
 	setOp(op); 
   }
@@ -1010,10 +1011,9 @@ struct AstBinaryOp : public AstBinary {
       if (sym != nullptr)
         sym->decWriteCount();
     }
-	mpOp_ = nullptr;
+
   }
 
- MpOperation* mpOp_;
 };
 
 // ============================================================================
@@ -1028,13 +1028,11 @@ struct AstTernaryOp : public AstTernary {
 		// --------------------------------------------------------------------------
 
 	MATHPRESSO_INLINE AstTernaryOp(AstBuilder* ast, uint32_t op) :
-		AstTernary(ast, kAstNodeTernaryOp),
-		mpOp_(nullptr) 
+		AstTernary(ast, kAstNodeTernaryOp)
 	{
 		setOp(op);
 	}
 
-	MpOperation* mpOp_;
 };
 
 // ============================================================================
@@ -1064,8 +1062,6 @@ struct AstCall : public AstBlock {
   // --------------------------------------------------------------------------
 
   AstSymbol* _symbol;
-
-  MpOperation * mpOp_;
 };
 
 // ============================================================================

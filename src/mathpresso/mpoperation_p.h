@@ -372,7 +372,7 @@ namespace mathpresso
 	class MpOperationTernary : public MpOperation
 	{
 	public:
-		MpOperationTernary() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft)
+		MpOperationTernary(bool iscolon) : MpOperation(2, MpOperationFlags::OpIsRighttoLeft), isColon_(iscolon)
 		{
 			priority_ = 15;
 		}
@@ -380,19 +380,8 @@ namespace mathpresso
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
-	};
-	
-	class MpOperationTernaryHelper : public MpOperation
-	{
-	public:
-		MpOperationTernaryHelper() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft)
-		{
-			priority_ = 15;
-		}
-
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
-
+	private :
+		bool isColon_;
 	};
 
 	// Assignment

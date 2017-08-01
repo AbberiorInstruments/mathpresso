@@ -48,12 +48,12 @@ namespace mathpresso {
 
 	bool isSymbol(char c)
 	{
-		return isSymbolFirst(c) || c == '.';
+		return isSymbolFirst(c) || isNum(c);
 	}
 
 	bool isSeparator(char c)
 	{
-		return isIn(c, " ,()[]{};");
+		return isIn(c, ",()[]{};");
 	}
 
 	bool isSpace(char c)
@@ -328,7 +328,7 @@ namespace mathpresso {
 			{
 				uint32_t ord = p[0];
 				c = mpCharClass[ord];
-				if (!isSymbolFirst(p[0]) && !isNum(p[0]))
+				if (!isSymbol(p[0]))
 					break;
 				hVal = HashUtils::hashChar(hVal, ord);
 			}

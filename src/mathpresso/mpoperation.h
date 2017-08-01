@@ -71,7 +71,7 @@ namespace mathpresso {
 
 		uint32_t nargs() { return nargs_; }
 
-		bool isRightAssciate() { return flags_ & OpIsRighttoLeft; }
+		bool isRightToLeft() { return (flags_ & OpIsRighttoLeft) != 0; }
 
 		uint32_t getPrecedence() { return priority_; }
 
