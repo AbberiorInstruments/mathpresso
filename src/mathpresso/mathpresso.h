@@ -14,6 +14,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <algorithm>
 
 #if !defined(_MSC_VER)
 #include <stdint.h>
@@ -331,6 +332,19 @@ struct Context {
 
   //! Private data not available to the MathPresso public API.
   ContextImpl* _d;
+
+  std::string findName(MpOperation* ptr) const
+  {
+	  auto test = std::find_if(_symbols.begin(), _symbols.end(), [&](const std::pair<std::pair<std::string, size_t>, std::shared_ptr<MpOperation>> &pair)
+	  {
+		  return pair.second.get() == ptr;
+	  });
+
+	  if (test != _symbols.end())
+		  return test->first.first;
+	  else
+		  return "Operation unknown.";
+  }
 
 
 //private:

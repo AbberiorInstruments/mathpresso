@@ -491,7 +491,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	{ MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len, &ctx._symbols).parseProgram(ast.getProgramNode())); }
 
 	if (options & kOptionDebugAst) {
-		ast.dump(sbTmp);
+		ast.dump(sbTmp, &ctx);
 		log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
 		sbTmp.clear();
 	}
@@ -500,7 +500,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	{ MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, &ctx._symbols).onProgram(ast.getProgramNode())); }
 
 	if (options & kOptionDebugAst) {
-		ast.dump(sbTmp);
+		ast.dump(sbTmp, &ctx);
 		log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
 		sbTmp.clear();
 	}

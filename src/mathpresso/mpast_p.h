@@ -10,6 +10,7 @@
 
 // [Dependencies]
 #include <mathpresso/mphash_p.h>
+#include <mathpresso/mpoperation.h>
 
 #include <iostream>
 #include <complex>
@@ -29,7 +30,6 @@ struct AstNode;
 struct AstProgram;
 struct AstUnary;
 
-class MpOperation;
 
 // ============================================================================
 // [mathpresso::AstScopeType]
@@ -242,7 +242,7 @@ struct AstBuilder {
   // [Dump]
   // --------------------------------------------------------------------------
 
-  Error dump(StringBuilder& sb);
+  Error dump(StringBuilder& sb, const Context * ctx = nullptr);
 
   // --------------------------------------------------------------------------
   // [Members]
@@ -1004,7 +1004,7 @@ struct AstBinaryOp : public AstBinary {
   }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
-	if (OpInfo::get(getOp()).isAssignment() && hasLeft()) {
+	if (mpOp_->flags() & MpOperationFlags::OpIsAssgignment && hasLeft()) {
       AstVar* var = static_cast<AstVar*>(getLeft());
       AstSymbol* sym = var->getSymbol();
 
@@ -1118,7 +1118,7 @@ struct AstDump : public AstVisitor {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  AstDump(AstBuilder* ast, StringBuilder& sb);
+  AstDump(AstBuilder* ast, StringBuilder& sb, const Context * ctx);
   virtual ~AstDump();
 
   // --------------------------------------------------------------------------
@@ -1148,6 +1148,7 @@ struct AstDump : public AstVisitor {
 
   StringBuilder& _sb;
   uint32_t _level;
+  const Context * ctx_;
 };
 
 } // mathpresso namespace

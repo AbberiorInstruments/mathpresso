@@ -42,6 +42,9 @@ namespace mathpresso {
 		OpFlagCReturnsD = 0x0000100,
 		OpFlagDReturnsC = 0x0000200,
 
+		// some information, that is necessary for parsing:
+		OpIsAssgignment = 0x0001000,
+
 		// Set for optimization of binary operations
 		OpFlagNopIfLZero = 0x10000000,
 		OpFlagNopIfRZero = 0x20000000,
@@ -69,11 +72,13 @@ namespace mathpresso {
 		// Optimize AST 
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) = 0;
 
-		uint32_t nargs() { return nargs_; }
+		uint32_t nargs() const { return nargs_; }
 
-		bool isRightToLeft() { return (flags_ & OpIsRighttoLeft) != 0; }
+		bool isRightToLeft() const { return (flags_ & OpIsRighttoLeft) != 0; }
 
-		uint32_t getPrecedence() { return priority_; }
+		uint32_t getPrecedence() const { return priority_; }
+
+		uint32_t flags() const { return flags_; }
 
 	protected:
 		uint32_t nargs_;

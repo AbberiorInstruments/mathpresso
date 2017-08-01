@@ -388,7 +388,7 @@ namespace mathpresso
 	class MpOperationAssignment : public MpOperation
 	{
 	public:
-		MpOperationAssignment() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft)
+		MpOperationAssignment() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment)
 		{
 			priority_ = 15;
 		}

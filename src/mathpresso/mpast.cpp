@@ -9,6 +9,7 @@
 
 // [Dependencies]
 #include <mathpresso/mpast_p.h>
+#include <mathpresso/mathpresso.h>
 
 namespace mathpresso {
 
@@ -164,8 +165,8 @@ Error AstBuilder::initProgramScope() {
 // [mathpresso::AstBuilder - Dump]
 // ============================================================================
 
-Error AstBuilder::dump(StringBuilder& sb) {
-  return AstDump(this, sb).onProgram(getProgramNode());
+Error AstBuilder::dump(StringBuilder& sb, const Context * ctx) {
+  return AstDump(this, sb, ctx).onProgram(getProgramNode());
 }
 
 // ============================================================================
@@ -423,10 +424,12 @@ Error AstVisitor::onProgram(AstProgram* node) {
 // [mathpresso::AstDump - Construction / Destruction]
 // ============================================================================
 
-AstDump::AstDump(AstBuilder* ast, StringBuilder& sb)
+AstDump::AstDump(AstBuilder* ast, StringBuilder& sb, const Context * ctx)
   : AstVisitor(ast),
     _sb(sb),
-    _level(0) {}
+    _level(0),
+	ctx_(ctx)
+{}
 AstDump::~AstDump() {}
 
 // ============================================================================
@@ -459,10 +462,9 @@ const char * sym_name(T * node)
 	return sym ? sym ->getName() : "(null)";
 }
 
-template<class T>
-const char * op_name(T * node)
+std::string op_name(AstNode * node, const Context * ctx)
 {
-	return OpInfo::get(node->getOp()).name.c_str();
+	return ctx->findName(node->mpOp_);
 }
 
 const char * node_type(AstNode * node)
@@ -491,14 +493,14 @@ Error AstDump::onImm(AstImm* node) {
 
 
 Error AstDump::onUnaryOp(AstUnaryOp* node) {
-	nest("%s [Unary, %s -> %s]", op_name(node), parm_type(node), node_type(node));
+	nest("%s [Unary, %s -> %s]", op_name(node, ctx_).c_str(), parm_type(node), node_type(node));
 	if (node->hasChild())
 		MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 	return denest();
 }
 
 Error AstDump::onBinaryOp(AstBinaryOp* node) {
-  nest("%s [Binary, %s -> %s]", op_name(node), parm_type(node), node_type(node));
+  nest("%s [Binary, %s -> %s]", op_name(node, ctx_).c_str(), parm_type(node), node_type(node));
   if (node->hasLeft())
     MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
   if (node->hasRight())
@@ -507,7 +509,7 @@ Error AstDump::onBinaryOp(AstBinaryOp* node) {
 }
 
 Error AstDump::onTernaryOp(AstTernaryOp* node) {
-	nest("%s [Ternary, %s -> %s]", op_name(node), parm_type(node), node_type(node));
+	nest("%s [Ternary, %s -> %s]", op_name(node, ctx_).c_str(), parm_type(node), node_type(node));
 	if (node->hasCondition())
 		MATHPRESSO_PROPAGATE(onNode(node->getCondition()));
 	if (node->hasLeft())
