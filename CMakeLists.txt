@@ -35,11 +35,9 @@ include("${MATHPRESSO_DIR}/CxxProject.cmake")
 cxx_project(mathpresso)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  # avoid cl: Command line warning in builds in case GR was set before
-  string( REPLACE "/GR " "/GR- " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} )
   list(APPEND MATHPRESSO_PRIVATE_CFLAGS /GF)
-  list(APPEND MATHPRESSO_PRIVATE_CFLAGS_DBG /GS /GR-)
-  list(APPEND MATHPRESSO_PRIVATE_CFLAGS_REL /Oi /Oy /GS- /GR-)
+  list(APPEND MATHPRESSO_PRIVATE_CFLAGS_DBG /GS )
+  list(APPEND MATHPRESSO_PRIVATE_CFLAGS_REL /Oi /Oy /GS- )
 
   if(NOT MSVC60 AND NOT MSVC70 AND NOT MSVC71)
     list(APPEND MATHPRESSO_PRIVATE_CFLAGS /MP)        # Enable multi-process compilation.
