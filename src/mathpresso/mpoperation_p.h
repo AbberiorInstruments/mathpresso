@@ -380,7 +380,7 @@ namespace mathpresso
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
-	private :
+	protected:
 		bool isColon_;
 	};
 

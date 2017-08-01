@@ -1762,17 +1762,20 @@ namespace mathpresso {
 
 		AstBinaryOp* lastColon = static_cast<AstBinaryOp*>(node);
 		// go to the last Colon after question-marks.
-		while (lastColon->getOp() == kOpQMark)
+		
+		while (typeid(*lastColon->mpOp_) == typeid(MpOperationTernary) && !dynamic_cast<MpOperationTernary*>(lastColon->mpOp_)->isColon_)
 		{
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 		}
 
-		while (lastColon->getRight()->getOp() == kOpColon)
+		while (lastColon->getRight()->mpOp_ && // nullcheck
+			typeid(*lastColon->getRight()->mpOp_) == typeid(MpOperationTernary) && // check for correct type
+			dynamic_cast<MpOperationTernary*>(lastColon->getRight()->mpOp_)->isColon_) // check whether colon or Qmark
 		{
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 		}
 
-		if (lastColon->getOp() != kOpColon)
+		if (typeid(*lastColon->mpOp_) == typeid(MpOperationTernary) && !dynamic_cast<MpOperationTernary*>(lastColon->mpOp_)->isColon_)
 		{
 			return opt->_errorReporter->onError(kErrorInvalidSyntax, node->getPosition(),
 				"Invalid ternary operation. Expected a ':', found '%s' instead.", OpInfo::get(lastColon->getOp()).name);

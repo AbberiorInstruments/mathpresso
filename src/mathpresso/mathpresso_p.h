@@ -368,7 +368,7 @@ struct OpInfo {
 	OpInfo(std::string name_, uint8_t type_, uint8_t precedence_, uint32_t flags_) :
 		name(name_),
 		type(type_),
-		precedence(precedence_),
+		//precedence(precedence_),
 		flags(flags_)
 	{
 	};
@@ -383,42 +383,42 @@ struct OpInfo {
   // [Accessors]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE bool isUnary() const { return (flags & kOpFlagUnary) != 0; }
-  MATHPRESSO_INLINE bool isBinary() const { return (flags & kOpFlagBinary) != 0; }
-  MATHPRESSO_INLINE uint32_t getOpCount() const { return 1 + ((flags & kOpFlagBinary) != 0); }
+  //MATHPRESSO_INLINE bool isUnary() const { return (flags & kOpFlagUnary) != 0; }
+  //MATHPRESSO_INLINE bool isBinary() const { return (flags & kOpFlagBinary) != 0; }
+  //MATHPRESSO_INLINE uint32_t getOpCount() const { return 1 + ((flags & kOpFlagBinary) != 0); }
 
-  MATHPRESSO_INLINE bool isIntrinsic() const { return (flags & kOpFlagIntrinsic) != 0; }
+  //MATHPRESSO_INLINE bool isIntrinsic() const { return (flags & kOpFlagIntrinsic) != 0; }
 
-  MATHPRESSO_INLINE bool isLeftToRight() const { return (flags & kOpFlagRightToLeft) == 0; }
-  MATHPRESSO_INLINE bool isRightToLeft() const { return (flags & kOpFlagRightToLeft) != 0; }
+  //MATHPRESSO_INLINE bool isLeftToRight() const { return (flags & kOpFlagRightToLeft) == 0; }
+  //MATHPRESSO_INLINE bool isRightToLeft() const { return (flags & kOpFlagRightToLeft) != 0; }
 
   MATHPRESSO_INLINE bool isAssignment() const { return (flags & kOpFlagAssign) != 0; }
-  MATHPRESSO_INLINE bool isArithmetic() const { return (flags & kOpFlagArithmetic) != 0; }
-  MATHPRESSO_INLINE bool isCondition() const { return (flags & kOpFlagCondition) != 0; }
+  //MATHPRESSO_INLINE bool isArithmetic() const { return (flags & kOpFlagArithmetic) != 0; }
+  //MATHPRESSO_INLINE bool isCondition() const { return (flags & kOpFlagCondition) != 0; }
 
-  MATHPRESSO_INLINE bool isRounding() const { return (flags & kOpFlagRounding) != 0; }
-  MATHPRESSO_INLINE bool isTrigonometric() const { return (flags & kOpFlagTrigonometric) != 0; }
+  //MATHPRESSO_INLINE bool isRounding() const { return (flags & kOpFlagRounding) != 0; }
+  //MATHPRESSO_INLINE bool isTrigonometric() const { return (flags & kOpFlagTrigonometric) != 0; }
 
-  MATHPRESSO_INLINE bool returnsComplex() const { return hasDtoC() || hasDtoD(); }
-  MATHPRESSO_INLINE bool isComplex() const { return hasCtoC() || hasCtoD(); }
+  //MATHPRESSO_INLINE bool returnsComplex() const { return hasDtoC() || hasDtoD(); }
+  //MATHPRESSO_INLINE bool isComplex() const { return hasCtoC() || hasCtoD(); }
 
-  MATHPRESSO_INLINE bool hasCtoC() const { return (flags & kOpFlagComplexToComplex) != 0; }
-  MATHPRESSO_INLINE bool hasCtoD() const { return (flags & kOpFlagComplexToReal) != 0; }
-  MATHPRESSO_INLINE bool hasDtoC() const { return (flags & kOpFlagRealToComplex) != 0; }
-  MATHPRESSO_INLINE bool hasDtoD() const { return (flags & kOpFlagRealToReal) != 0; }
+  //MATHPRESSO_INLINE bool hasCtoC() const { return (flags & kOpFlagComplexToComplex) != 0; }
+  //MATHPRESSO_INLINE bool hasCtoD() const { return (flags & kOpFlagComplexToReal) != 0; }
+  //MATHPRESSO_INLINE bool hasDtoC() const { return (flags & kOpFlagRealToComplex) != 0; }
+  //MATHPRESSO_INLINE bool hasDtoD() const { return (flags & kOpFlagRealToReal) != 0; }
 
-  MATHPRESSO_INLINE bool rightAssociate(uint32_t rPrec) const {
+ /* MATHPRESSO_INLINE bool rightAssociate(uint32_t rPrec) const {
     return precedence > rPrec || (precedence == rPrec && isRightToLeft());
-  }
+  }*/
 
   // --------------------------------------------------------------------------
   // [Members]
   // --------------------------------------------------------------------------
 
   uint8_t type;
-  uint8_t altType;
-  uint8_t precedence;
-  uint8_t reserved;
+  //uint8_t altType;
+  //uint8_t precedence;
+  //uint8_t reserved;
   uint32_t flags;
  
   std::string name;

@@ -142,11 +142,11 @@ namespace mathpresso {
 			return kErrorOk;
 		}
 
-		if (uToken == kTokenColon)
+		/*if (uToken == kTokenColon)
 		{
 			_tokenizer.consume();
 			return kErrorOk;
-		}
+		}*/
 
 		if (uToken == kTokenEnd)
 			return kErrorOk;
@@ -255,7 +255,7 @@ namespace mathpresso {
 
 			// Parse possible assignment '='.
 			uToken = _tokenizer.next(&token);
-			bool isAssigned = (uToken == kTokenAssign);
+			bool isAssigned = (uToken == kTokenAssign || uToken == kTokenOperator); // TODO: hack, might let non-assignments pass as assignments
 
 			if (isAssigned)
 			{
@@ -272,7 +272,7 @@ namespace mathpresso {
 			vSym->setDeclared();
 
 			// Parse the ',' or ';' tokens.
-			if (uToken == kTokenComma || uToken == kTokenSemicolon || uToken == kTokenEnd)
+			if (uToken == kTokenComma || uToken == kTokenSemicolon || uToken == kTokenEnd) 
 			{
 				block->appendNode(decl);
 
@@ -472,6 +472,13 @@ namespace mathpresso {
 			case kTokenAdd: op = kOpNone; goto _Unary;
 			case kTokenSub: op = kOpNeg; goto _Unary;
 			case kTokenNot: op = kOpNot; goto _Unary;
+			case kTokenOperator:
+			{
+				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 1);
+				if (_ops->find(opNameDecorated) == _ops->end())
+					MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
+				op = 0;
+			}
 			_Unary:
 			{
 
@@ -480,7 +487,7 @@ namespace mathpresso {
 				MATHPRESSO_NULLCHECK(opNode);
 				opNode->setPosition(token.getPosAsUInt());
 
-				std::pair<std::string, int> opNameDecorated(std::make_pair(std::string(_tokenizer._start).substr(token.position, token.length), 1));
+				std::pair<std::string, int> opNameDecorated(std::make_pair(std::string(_tokenizer._start + token.position, token.length), 1));
 
 				if (_ops->find(opNameDecorated) != _ops->end())
 				{
@@ -567,13 +574,20 @@ namespace mathpresso {
 			case kTokenMod: op = kOpMod; goto _Binary;
 			case kTokenQMark: op = kOpQMark; goto _Binary;
 			case kTokenColon: op = kOpColon; goto _Binary;
+			case kTokenOperator:
+			{
+				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 2);
+				if (_ops->find(opNameDecorated) == _ops->end())
+					MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
+				op = 0;
+			}
 			_Binary:
 			{
+
 				AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>(op);
 				MATHPRESSO_NULLCHECK(newNode);
 
-				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start).substr(token.position, token.length), 2);
-
+				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 2);
 				if (_ops->find(opNameDecorated) != _ops->end())
 				{
 					newNode->mpOp_ = _ops->at(opNameDecorated).get();
@@ -595,9 +609,7 @@ namespace mathpresso {
 					break;
 				}
 
-				//uint32_t currentBinaryPrec = OpInfo::get(currentBinaryNode->getOp()).precedence;
 				uint32_t currentBinaryPrec = currentBinaryNode->mpOp_->getPrecedence();
-				//uint32_t newBinaryPrec = OpInfo::get(op).precedence;
 				uint32_t newBinaryPrec = newNode->mpOp_->getPrecedence();
 
 				if (currentBinaryPrec > newBinaryPrec)

@@ -354,8 +354,20 @@ namespace mathpresso {
 
 		else if (isOperator(p[0]))
 		{
-			uint32_t c1 = (++p != pEnd) ? static_cast<uint32_t>(p[0]) : static_cast<uint32_t>(0);
+			size_t length(1);
 
+			if (++p != pEnd && isOperator(p[0]))
+			{
+				if (++p != pEnd && isOperator(p[0]))
+					length = 3;
+				else
+					length = 2;
+			}
+			
+			_p = reinterpret_cast<const char*>(p);
+			return token->setData((size_t)(pToken - pStart), length, 0, kTokenOperator);
+
+			uint32_t c1 = (++p != pEnd) ? static_cast<uint32_t>(p[0]) : static_cast<uint32_t>(0);
 			switch (c)
 			{
 			case kTokenCharAdd: // `+=`, `++`, `+`.

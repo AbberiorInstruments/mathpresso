@@ -148,6 +148,7 @@ enum TokenChar {
 	kTokenCharExt,
 	// Invalid (non-recognized) character.
 	kTokenCharInv,
+	kTokenOperator,
 
 	kTokenCharSingleCharTokenEnd = kTokenCharRPa
 };
