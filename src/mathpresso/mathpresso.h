@@ -268,32 +268,43 @@ struct ContextImpl {
 };
 
 // ============================================================================
-// [mathpresso::Context]
+// [mathpresso::Operations]
 // ============================================================================
-
-struct AstSymbol;
-
 
 typedef std::map<std::pair<std::string, size_t>, std::shared_ptr<MpOperation>> symbolMap;
 
+//! Holds MpOperation-objects and gives an easy way to finding them.
 class Operations
 {
 public:
+
+	//! Get The name of a function, where you have a pointer to MpOperation.
 	std::string findName(MpOperation* ptr) const;
 
+	//! get the mame of a function where have a shared_ptr to MpOperation
 	std::string findName(std::shared_ptr<MpOperation> ptr) const;	
 
+	//! Get a shared_ptr to a MpOperation, by its name and number of arguments.
 	std::shared_ptr<MpOperation> getOperation(std::string name, size_t numArgs) const;	
 
+	//! Get all MpOperations with a specific name, regardless of the number of arguments.
 	std::vector<std::shared_ptr<MpOperation>> findOperations(std::string name) const;	
 
+	//! Add a MpOperation-Object to the internal map.
 	void addOperation(std::string name, std::shared_ptr<MpOperation> obj);
 
+	//! Check whether a MpOperation-Object with a known name and number of arguments exists.
 	bool hasOperation(std::string name, size_t numArgs) const;
 
 private:
 	symbolMap _symbols;
 };
+
+// ============================================================================
+// [mathpresso::Context]
+// ============================================================================
+
+struct AstSymbol;
 
 //! MathPresso context.
 //!

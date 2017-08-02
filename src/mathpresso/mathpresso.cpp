@@ -349,7 +349,6 @@ Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
 		sym->setSymbolFlag(kAstSymbolIsDeclared);
 	}
 
-	//_symbols[std::make_pair(name, obj->nargs())] = obj;
 	_ops.addOperation(name, obj);
 
 	return kErrorOk;

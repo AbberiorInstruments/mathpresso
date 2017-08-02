@@ -161,7 +161,6 @@ namespace mathpresso
 
 		bool enableSSE4_1;
 
-		//const symbolMap * _symbols;
 		const Operations * _ops;
 
 	};
