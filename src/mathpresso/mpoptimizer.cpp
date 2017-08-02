@@ -30,6 +30,26 @@ namespace mathpresso {
 	// [mpsl::AstOptimizer - OnNode]
 	// ============================================================================
 
+	Error AstOptimizer::onNode(AstNode * node)
+	{
+		switch (node->getNodeType())
+		{
+		case kAstNodeProgram: return onProgram(static_cast<AstProgram*>(node));
+		case kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
+		case kAstNodeVar: return onVar(static_cast<AstVar*>(node));
+		case kAstNodeImm: return onImm(static_cast<AstImm*>(node));
+		case kAstNodeVarDecl:
+		case kAstNodeUnaryOp:
+		case kAstNodeBinaryOp:
+		case kAstNodeTernaryOp:
+		case kAstNodeCall:
+			return optimize(node);
+
+		default:
+			return MATHPRESSO_TRACE_ERROR(kErrorInvalidState);
+		}
+	}
+
 	Error AstOptimizer::onBlock(AstBlock* node) {
 		// Prevent removing nodes that are not stored in pure `AstBlock`. For example
 		// function call inherits from `AstBlock`, but it needs each expression passed.
@@ -104,7 +124,7 @@ namespace mathpresso {
 		return kErrorOk;
 	}
 
-	Error AstOptimizer::onUnaryOp(AstUnaryOp* node)
+	Error AstOptimizer::optimize(AstNode * node)
 	{
 		if (node->_mpOp)
 		{
@@ -112,39 +132,27 @@ namespace mathpresso {
 		}
 		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 			"No MpOperation.");
+	}
+
+	Error AstOptimizer::onUnaryOp(AstUnaryOp* node)
+	{
+		return optimize(node);
 	}
 
 	Error AstOptimizer::onBinaryOp(AstBinaryOp* node)
 	{
-		if (node->_mpOp != nullptr)
-		{
-			return node->_mpOp->optimize(this, node);
-		}
-		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-			"No MpOperation.");
+		return optimize(node);
 	}
 
-	Error AstOptimizer::onTernaryOp(AstTernaryOp* node) {
-
-		if (node->_mpOp != nullptr)
-		{
-			return node->_mpOp->optimize(this, node);
-		}
-		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-			"No MpOperation.");
-
-	}
-
-	Error AstOptimizer::onCall(AstCall* node) 
+	Error AstOptimizer::onTernaryOp(AstTernaryOp* node)
 	{
-		if (node->_mpOp)
-		{
-			return node->_mpOp->optimize(this, node);
-		}
-		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
-			"No MpOperation.");
+		return optimize(node);
 	}
 
+	Error AstOptimizer::onCall(AstCall* node)
+	{
+		return optimize(node);
+	}
 
 
 } // mathpresso namespace

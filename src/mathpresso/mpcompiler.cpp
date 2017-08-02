@@ -190,11 +190,12 @@ namespace mathpresso {
 		case kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
 		case kAstNodeVar: return onVar(static_cast<AstVar*>(node));
 		case kAstNodeImm: return onImm(static_cast<AstImm*>(node));
-		case kAstNodeVarDecl: return static_cast<AstVarDecl*>(node)->_mpOp->compile(this, node);
-		case kAstNodeUnaryOp: return static_cast<AstUnaryOp*>(node)->_mpOp->compile(this, node);
-		case kAstNodeBinaryOp: return static_cast<AstBinaryOp*>(node)->_mpOp->compile(this, node);
-		case kAstNodeTernaryOp: return static_cast<AstTernaryOp*>(node)->_mpOp->compile(this, node);
-		case kAstNodeCall: return static_cast<AstCall*>(node)->_mpOp->compile(this, node);
+		case kAstNodeVarDecl:
+		case kAstNodeUnaryOp: 
+		case kAstNodeBinaryOp:
+		case kAstNodeTernaryOp:
+		case kAstNodeCall: 
+			return node->_mpOp->compile(this, node);
 
 		default:
 			MATHPRESSO_ASSERT_NOT_REACHED();

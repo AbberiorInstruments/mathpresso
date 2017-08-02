@@ -31,10 +31,13 @@ struct AstOptimizer : public AstVisitor {
   // [OnNode]
   // --------------------------------------------------------------------------
 
+  virtual Error onNode(AstNode * node) override;
+
   virtual Error onBlock(AstBlock* node);
   virtual Error callMpOperation(AstVarDecl* node);
   virtual Error onVar(AstVar* node);
   virtual Error onImm(AstImm* node);
+  virtual Error optimize(AstNode * node);
   virtual Error onUnaryOp(AstUnaryOp* node);
   virtual Error onBinaryOp(AstBinaryOp* node);
   virtual Error onTernaryOp(AstTernaryOp * node);
