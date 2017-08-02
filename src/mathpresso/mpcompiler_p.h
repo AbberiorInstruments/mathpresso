@@ -15,7 +15,7 @@
 namespace mathpresso
 {
 
-	MATHPRESSO_NOAPI CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const symbolMap * syms, bool b_complex = false);
+	MATHPRESSO_NOAPI CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const Operations * ops, bool b_complex = false);
 	MATHPRESSO_NOAPI void mpFreeFunction(void* fn);
 
 	// ============================================================================
@@ -94,13 +94,14 @@ namespace mathpresso
 
 	struct MATHPRESSO_NOAPI JitCompiler
 	{
-		JitCompiler(asmjit::ZoneHeap* heap, asmjit::X86Compiler* cc, const symbolMap * syms)
+		JitCompiler(asmjit::ZoneHeap* heap, asmjit::X86Compiler* cc, const Operations * ops)
 			: heap(heap),
 			cc(cc),
 			varSlots(nullptr),
 			functionBody(nullptr),
 			constPool(&cc->_cbDataZone),
-			_symbols(syms)
+			//_symbols(syms),
+			_ops(ops)
 		{
 			enableSSE4_1 = asmjit::CpuInfo::getHost().hasFeature(asmjit::CpuInfo::kX86FeatureSSE4_1);
 		}
@@ -160,7 +161,8 @@ namespace mathpresso
 
 		bool enableSSE4_1;
 
-		const symbolMap * _symbols;
+		//const symbolMap * _symbols;
+		const Operations * _ops;
 
 	};
 

@@ -98,11 +98,6 @@ namespace mathpresso {
 			return kErrorOk;
 		}
 
-		/*if (uToken == kTokenOperator )
-		{
-			_tokenizer.consume();
-			return kErrorOk;
-		}*/
 
 		// Parse a nested block.
 		if (uToken == kTokenLCurl)
@@ -141,12 +136,6 @@ namespace mathpresso {
 			_tokenizer.consume();
 			return kErrorOk;
 		}
-
-		/*if (uToken == kTokenColon)
-		{
-			_tokenizer.consume();
-			return kErrorOk;
-		}*/
 
 		if (uToken == kTokenEnd)
 			return kErrorOk;
@@ -243,7 +232,8 @@ namespace mathpresso {
 
 			AstVarDecl* decl = _ast->newNode<AstVarDecl>();
 			MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
-			decl->mpOp_ = _ops->at(std::make_pair("=", 2)).get();
+			//decl->_mpOp = _ops->at(std::make_pair("=", 2)).get();
+			decl->_mpOp = _ops->getOperation("=", 2).get();
 
 			decl->setPosition(position);
 			decl->setSymbol(vSym);
@@ -334,8 +324,7 @@ namespace mathpresso {
 		// +-----------------+-----------------+-----------------+-----------------+
 
 		Token token;
-		uint32_t op;
-
+		
 		// Current binary operator node. Initial nullptr value means that the parsing
 		// just started and there is no binary operator yet. Once the first binary
 		// operator has been parsed `currentBinaryNode` will be set accordingly.
@@ -471,17 +460,17 @@ namespace mathpresso {
 			// Parse a right-to-left associative unary operator ('+', '-', "!").
 			case kTokenOperator:
 			{
-				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 1);
-				if (_ops->find(opNameDecorated) == _ops->end())
-					MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
-				op = 0;
+				std::string name(_tokenizer._start + token.position, token.length);
+				if (!_ops->hasOperation(name, 1))
+					MATHPRESSO_PARSER_ERROR(token, "Invalid unary operator.");
 
+				
 				// Parse the unary operator.
-				AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>(op);
+				AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>();
 				MATHPRESSO_NULLCHECK(opNode);
 				opNode->setPosition(token.getPosAsUInt());
 
-				opNode->mpOp_ = _ops->at(opNameDecorated).get();
+				opNode->_mpOp = _ops->getOperation(name, 1).get();
 				
 				if (lastUnaryNode == nullptr)
 					currentNode = opNode;
@@ -532,12 +521,12 @@ namespace mathpresso {
 			// Parse Binary Operators
 			case kTokenOperator:
 			{
-				std::pair<std::string, int> opNameDecorated(std::string(_tokenizer._start + token.position, token.length), 2);
-				if (_ops->find(opNameDecorated) == _ops->end())
+				std::string name(_tokenizer._start + token.position, token.length);
+				if (!_ops->hasOperation(name, 2))
 					MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
 
 
-				if (opNameDecorated.first == "=")
+				if (name == "=")
 				{
 					// Check whether the assignment is valid.
 					if (currentNode->getNodeType() != kAstNodeVar)
@@ -556,8 +545,7 @@ namespace mathpresso {
 				AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>();
 				MATHPRESSO_NULLCHECK(newNode);
 
-				newNode->mpOp_ = _ops->at(opNameDecorated).get();
-				
+				newNode->_mpOp = _ops->getOperation(name, 2).get();
 
 				newNode->setPosition(token.getPosAsUInt());
 
@@ -575,8 +563,8 @@ namespace mathpresso {
 					break;
 				}
 
-				uint32_t currentBinaryPrec = currentBinaryNode->mpOp_->getPrecedence();
-				uint32_t newBinaryPrec = newNode->mpOp_->getPrecedence();
+				uint32_t currentBinaryPrec = currentBinaryNode->_mpOp->getPrecedence();
+				uint32_t newBinaryPrec = newNode->_mpOp->getPrecedence();
 
 				if (currentBinaryPrec > newBinaryPrec)
 				{
@@ -605,10 +593,10 @@ namespace mathpresso {
 						// Terminate conditions:
 						//   1. currentBinaryNode has higher precedence than newNode.
 						//   2. currentBinaryNode has equal precedence and right-to-left associativity.
-						if (currentBinaryPrec > newBinaryPrec || (currentBinaryPrec == newBinaryPrec && currentBinaryNode->mpOp_->isRightToLeft()))
+						if (currentBinaryPrec > newBinaryPrec || (currentBinaryPrec == newBinaryPrec && currentBinaryNode->_mpOp->isRightToLeft()))
 							break;
 						currentBinaryNode = static_cast<AstBinaryOp*>(currentBinaryNode->getParent());
-						currentBinaryPrec = currentBinaryNode->mpOp_->getPrecedence();
+						currentBinaryPrec = currentBinaryNode->_mpOp->getPrecedence();
 					}
 
 					// currentBinaryNode <+
@@ -622,7 +610,7 @@ namespace mathpresso {
 					// +-------------------------+
 
 					if (!currentBinaryNode->hasParent() && 
-						!(currentBinaryPrec > newBinaryPrec || (currentBinaryPrec == newBinaryPrec && currentBinaryNode->mpOp_->isRightToLeft())))
+						!(currentBinaryPrec > newBinaryPrec || (currentBinaryPrec == newBinaryPrec && currentBinaryNode->_mpOp->isRightToLeft())))
 					{
 						newNode->setLeft(currentBinaryNode);
 					}
@@ -714,15 +702,14 @@ namespace mathpresso {
 
 		_tokenizer.consume();
 
-		std::pair<std::string, int> opNameDecorated(fnName, callNode->getLength());
 
-		if (_ops->find(opNameDecorated) != _ops->end())
+		if (_ops->hasOperation(fnName, callNode->getLength()))
 		{
-			callNode->mpOp_ = _ops->at(opNameDecorated).get();
+			callNode->_mpOp = _ops->getOperation(fnName, callNode->getLength()).get();
 		}
 		else
 		{
-			MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires a MpOperation-Object with %d arguments.", opNameDecorated.first, opNameDecorated.second);
+			MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires a MpOperation-Object with %d arguments.", fnName, callNode->getLength());
 		}
 
 		*pNodeOut = callNode;

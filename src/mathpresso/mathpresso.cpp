@@ -20,6 +20,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <map>
 
 namespace mathpresso {
 
@@ -107,7 +108,7 @@ static ContextImpl* mpContextClone(ContextImpl* otherD_) {
     while (it.has()) {
       AstSymbol* sym = it.get();
 
-      StringRef name(sym->_name, sym->_length);
+      StringRef name(sym->getName(), sym->getLength());
       uint32_t hVal = sym->getHVal();
       uint32_t type = sym->getSymbolType();
 
@@ -117,7 +118,7 @@ static ContextImpl* mpContextClone(ContextImpl* otherD_) {
         return nullptr;
       }
 
-      clonedSym->_symbolFlags = sym->_symbolFlags;
+      clonedSym->setSymbolFlag(sym->getSymbolFlags());
       switch (type) {
         case kAstSymbolVariable:
           clonedSym->setVarSlotId(sym->getVarSlotId());
@@ -188,10 +189,16 @@ Context& Context::operator=(const Context& other) {
 // ============================================================================
 
 Context::Context()
-  : _d(const_cast<ContextImpl*>(&mpContextNull)) {}
+  : _d(const_cast<ContextImpl*>(&mpContextNull)),
+	//_symbols(),
+	_ops()
+{}
 
 Context::Context(const Context& other)
-  : _d(mpContextAddRef(other._d)) {}
+  : _d(mpContextAddRef(other._d)),
+	//_symbols(other._symbols),
+	_ops(other._ops)
+{}
 
 Context::~Context() {
   mpContextRelease(_d);
@@ -321,7 +328,7 @@ Error Context::listSymbols(std::vector<std::string> &syms)
 	HashIterator<StringRef, AstSymbol> it(d ->_scope.getSymbols());
 	do 
 	{
-		syms.push_back(it.get()->_name);
+		syms.push_back(it.get()->getName());
 	} 
 	while (it.next());
 
@@ -342,7 +349,8 @@ Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
 		sym->setSymbolFlag(kAstSymbolIsDeclared);
 	}
 
-	_symbols[std::make_pair(name, obj->nargs())] = obj;
+	//_symbols[std::make_pair(name, obj->nargs())] = obj;
+	_ops.addOperation(name, obj);
 
 	return kErrorOk;
 }
@@ -406,19 +414,19 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	ErrorReporter errorReporter(body, len, options, log);
 
 	// Parse the expression into AST.
-	{ MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len, &ctx._symbols).parseProgram(ast.getProgramNode())); }
+	{ MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len, &ctx._ops).parseProgram(ast.getProgramNode())); }
 
 	if (options & kOptionDebugAst) {
-		ast.dump(sbTmp, &ctx);
+		ast.dump(sbTmp, &ctx._ops);
 		log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
 		sbTmp.clear();
 	}
 
 	// Perform basic optimizations at AST level.
-	{ MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, &ctx._symbols).onProgram(ast.getProgramNode())); }
+	{ MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, &ctx._ops).onProgram(ast.getProgramNode())); }
 
 	if (options & kOptionDebugAst) {
-		ast.dump(sbTmp, &ctx);
+		ast.dump(sbTmp, &ctx._ops);
 		log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
 		sbTmp.clear();
 	}
@@ -428,7 +436,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	// Compile the function to machine code.
 	reset();
 
-	CompiledFunc fn = mpCompileFunction(&ast, options, log, &ctx._symbols, _isComplex);
+	CompiledFunc fn = mpCompileFunction(&ast, options, log, &ctx._ops, _isComplex);
 
 	if (fn == nullptr)
 		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
@@ -541,6 +549,52 @@ Error ErrorReporter::onError(Error error, uint32_t position, const StringBuilder
   }
 
   return MATHPRESSO_TRACE_ERROR(error);
+}
+
+std::string Operations::findName(MpOperation * ptr) const
+{
+	auto test = std::find_if(_symbols.begin(), _symbols.end(), [&](const std::pair<std::pair<std::string, size_t>, std::shared_ptr<MpOperation>> &pair)
+	{
+		return pair.second.get() == ptr;
+	});
+
+	if (test != _symbols.end())
+		return test->first.first;
+	else
+		return "Operation unknown.";
+}
+
+std::string Operations::findName(std::shared_ptr<MpOperation> ptr) const
+{
+	return findName(ptr.get());
+}
+
+std::shared_ptr<MpOperation> Operations::getOperation(std::string name, size_t numArgs) const
+{
+	return _symbols.at(std::make_pair(name, numArgs));
+}
+
+std::vector<std::shared_ptr<MpOperation>> Operations::findOperations(std::string name) const
+{
+	std::vector<std::shared_ptr<MpOperation>> ret{};
+
+	for (auto p : _symbols)
+	{
+		if (p.first.first == name)
+			ret.push_back(p.second);
+	}
+
+	return ret;
+}
+
+void Operations::addOperation(std::string name, std::shared_ptr<MpOperation> obj)
+{
+	_symbols[std::make_pair(name, obj->nargs())] = obj;
+}
+
+bool Operations::hasOperation(std::string name, size_t numArgs) const
+{
+	return _symbols.find(std::make_pair(name, numArgs)) != _symbols.end();
 }
 
 } // mathpresso namespace

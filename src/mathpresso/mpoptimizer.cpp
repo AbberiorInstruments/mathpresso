@@ -19,10 +19,11 @@ namespace mathpresso {
 	// [mpsl::AstOptimizer - Construction / Destruction]
 	// ============================================================================
 
-	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const symbolMap* syms)
+	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const Operations* ops)
 		: AstVisitor(ast),
 		_errorReporter(errorReporter),
-		_symbols(syms) {}
+		_ops(ops)
+	{}
 	AstOptimizer::~AstOptimizer() {}
 
 	// ============================================================================
@@ -72,8 +73,8 @@ namespace mathpresso {
 	}
 
 	Error AstOptimizer::callMpOperation(AstVarDecl* node) {
-		if (node->mpOp_)
-			return node->mpOp_->optimize(this, node);
+		if (node->_mpOp)
+			return node->_mpOp->optimize(this, node);
 		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 			"No MpOperation.");
 	}
@@ -105,9 +106,9 @@ namespace mathpresso {
 
 	Error AstOptimizer::onUnaryOp(AstUnaryOp* node)
 	{
-		if (node->mpOp_)
+		if (node->_mpOp)
 		{
-			return node->mpOp_->optimize(this, node);
+			return node->_mpOp->optimize(this, node);
 		}
 		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 			"No MpOperation.");
@@ -115,9 +116,9 @@ namespace mathpresso {
 
 	Error AstOptimizer::onBinaryOp(AstBinaryOp* node)
 	{
-		if (node->mpOp_ != nullptr)
+		if (node->_mpOp != nullptr)
 		{
-			return node->mpOp_->optimize(this, node);
+			return node->_mpOp->optimize(this, node);
 		}
 		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 			"No MpOperation.");
@@ -125,9 +126,9 @@ namespace mathpresso {
 
 	Error AstOptimizer::onTernaryOp(AstTernaryOp* node) {
 
-		if (node->mpOp_ != nullptr)
+		if (node->_mpOp != nullptr)
 		{
-			return node->mpOp_->optimize(this, node);
+			return node->_mpOp->optimize(this, node);
 		}
 		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 			"No MpOperation.");
@@ -136,9 +137,9 @@ namespace mathpresso {
 
 	Error AstOptimizer::onCall(AstCall* node) 
 	{
-		if (node->mpOp_)
+		if (node->_mpOp)
 		{
-			return node->mpOp_->optimize(this, node);
+			return node->_mpOp->optimize(this, node);
 		}
 		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
 			"No MpOperation.");

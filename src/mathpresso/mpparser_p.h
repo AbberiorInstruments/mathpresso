@@ -41,7 +41,7 @@ namespace mathpresso {
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_INLINE Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const symbolMap * ops)
+		MATHPRESSO_INLINE Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const Operations * ops)
 			: _ast(ast),
 			_errorReporter(errorReporter),
 			_currentScope(ast->getRootScope()),
@@ -78,7 +78,7 @@ namespace mathpresso {
 
 		AstScope* _currentScope;
 		Tokenizer _tokenizer;
-		const symbolMap * _ops;
+		const Operations * _ops;
 	};
 
 } // mathpresso namespace

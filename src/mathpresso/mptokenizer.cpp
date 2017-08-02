@@ -61,7 +61,7 @@ namespace mathpresso {
 		return  (c == ' ' || c == '\t');
 	}
 
-	
+
 
 	//! \internal
 	//!
@@ -344,7 +344,7 @@ namespace mathpresso {
 		else if (isSeparator(p[0]))
 		{
 			_p = reinterpret_cast<const char*>(++p);
-			return token->setData((size_t)(pToken - pStart), (size_t)(p - pToken), 0, c);
+			return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, c);
 		}
 
 		// --------------------------------------------------------------------------
@@ -362,9 +362,21 @@ namespace mathpresso {
 				else
 					length = 2;
 			}
-			
+
+			if (std::string(reinterpret_cast<const char*>(pToken), length) == "//")
+			{
+				for (;;)
+				{
+					if (p == pEnd)
+						goto _EndOfInput;
+
+					if (p++[0] == '\n')
+						goto _Repeat;
+				}
+			}
+
 			_p = reinterpret_cast<const char*>(p);
-			return token->setData((size_t)(pToken - pStart), length, 0, kTokenOperator);
+			return token->setData(size_t(pToken - pStart), length, 0, kTokenOperator);
 
 		}
 
@@ -374,22 +386,7 @@ namespace mathpresso {
 
 	_Invalid:
 		_p = reinterpret_cast<const char*>(pToken);
-		return token->setData((size_t)(pToken - pStart), (size_t)(p - pToken), 0, kTokenInvalid);
-
-		// --------------------------------------------------------------------------
-		// [Comment]
-		// --------------------------------------------------------------------------
-
-	_Comment:
-		for (;;)
-		{
-			if (p == pEnd)
-				goto _EndOfInput;
-
-			c = static_cast<uint8_t>(*p++);
-			if (c == '\n')
-				goto _Repeat;
-		}
+		return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, kTokenInvalid);
 
 		// --------------------------------------------------------------------------
 		// [EOI]
@@ -397,7 +394,7 @@ namespace mathpresso {
 
 	_EndOfInput:
 		_p = _end;
-		return token->setData((size_t)(pToken - pStart), (size_t)(p - pToken), 0, kTokenEnd);
+		return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, kTokenEnd);
 	}
 
 } // mathpresso namespace

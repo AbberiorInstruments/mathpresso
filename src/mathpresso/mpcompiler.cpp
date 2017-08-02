@@ -190,11 +190,11 @@ namespace mathpresso {
 		case kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
 		case kAstNodeVar: return onVar(static_cast<AstVar*>(node));
 		case kAstNodeImm: return onImm(static_cast<AstImm*>(node));
-		case kAstNodeVarDecl: return static_cast<AstVarDecl*>(node)->mpOp_->compile(this, node);
-		case kAstNodeUnaryOp: return static_cast<AstUnaryOp*>(node)->mpOp_->compile(this, node);
-		case kAstNodeBinaryOp: return static_cast<AstBinaryOp*>(node)->mpOp_->compile(this, node);
-		case kAstNodeTernaryOp: return static_cast<AstTernaryOp*>(node)->mpOp_->compile(this, node);
-		case kAstNodeCall: return static_cast<AstCall*>(node)->mpOp_->compile(this, node);
+		case kAstNodeVarDecl: return static_cast<AstVarDecl*>(node)->_mpOp->compile(this, node);
+		case kAstNodeUnaryOp: return static_cast<AstUnaryOp*>(node)->_mpOp->compile(this, node);
+		case kAstNodeBinaryOp: return static_cast<AstBinaryOp*>(node)->_mpOp->compile(this, node);
+		case kAstNodeTernaryOp: return static_cast<AstTernaryOp*>(node)->_mpOp->compile(this, node);
+		case kAstNodeCall: return static_cast<AstCall*>(node)->_mpOp->compile(this, node);
 
 		default:
 			MATHPRESSO_ASSERT_NOT_REACHED();
@@ -430,7 +430,7 @@ namespace mathpresso {
 		return getConstantU64AsPD(bits.u);
 	}
 
-	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const symbolMap * syms, bool b_complex)
+	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const Operations * ops, bool b_complex)
 	{
 		StringLogger logger;
 
@@ -446,7 +446,7 @@ namespace mathpresso {
 			code.setLogger(&logger);
 		}
 
-		JitCompiler jitCompiler(ast->getHeap(), &c, syms);
+		JitCompiler jitCompiler(ast->getHeap(), &c, ops);
 		if ((options & kOptionDisableSSE4_1) != 0)
 			jitCompiler.enableSSE4_1 = false;
 

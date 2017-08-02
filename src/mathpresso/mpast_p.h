@@ -242,7 +242,7 @@ struct AstBuilder {
   // [Dump]
   // --------------------------------------------------------------------------
 
-  Error dump(StringBuilder& sb, const Context * ctx = nullptr);
+  Error dump(StringBuilder& sb, const Operations * ops = nullptr);
 
   // --------------------------------------------------------------------------
   // [Members]
@@ -373,34 +373,33 @@ struct AstSymbol : public HashNode {
   // [Members]
   // --------------------------------------------------------------------------
 
-  //! Symbol name length.
-  uint32_t _length;
-  //! Symbol name (key).
-  const char* _name;
-
-  //! Node where the symbol is defined.
-  AstNode* _node;
-
-  //! Type of the symbol, see \ref AstSymbolType.
-  uint8_t _symbolType;
-   //! Flags, see \ref AstSymbolFlags.
-  uint16_t _symbolFlags;
-
-  //! Number of times the variable is used (both read and write count).
-  uint32_t _usedCount;
-  //! Number of times the variable is written.
-  uint32_t _writeCount;
-
-
-  // the following parts could be packed into a std::variant (c++17)
 private:
+	//! Symbol name length.
+	uint32_t _length;
+	//! Symbol name (key).
+	const char* _name;
+
+	//! Node where the symbol is defined.
+	AstNode* _node;
+
+	//! Type of the symbol, see \ref AstSymbolType.
+	uint8_t _symbolType;
+	//! Flags, see \ref AstSymbolFlags.
+	uint16_t _symbolFlags;
+
+
+	//! Number of times the variable is used (both read and write count).
+	uint32_t _usedCount;
+	//! Number of times the variable is written.
+	uint32_t _writeCount;
+
 	//! Variable slot id.
 	uint32_t _varSlotId;
 	//! Variable offset in data structure (in case the symbol is a global variable).
 	int32_t _varOffset;
 	//! The current value of the symbol (in case the symbol is an immediate).
 	//! if the symbol is real, _valueComp.imag() is set to 0.
-	std::complex<double> _valueComp;	  
+	std::complex<double> _valueComp;
 };
 
 typedef Hash<StringRef, AstSymbol> AstSymbolHash;
@@ -513,8 +512,10 @@ struct AstScope {
     \
     return node; \
   } \
-  \
-  _Type_* _Memb_
+  private:\
+  _Type_* _Memb_;\
+  public:
+
 
 struct AstNode {
   MATHPRESSO_NO_COPY(AstNode)
@@ -527,10 +528,9 @@ struct AstNode {
     : _ast(ast),
       _parent(nullptr),
       _children(children),
-	  mpOp_(nullptr),
+	  _mpOp(nullptr),
       _nodeType(static_cast<uint8_t>(nodeType)),
       _nodeFlags(0),
-      _nodeSize(0),
       _position(~static_cast<uint32_t>(0)),
       _length(length) {}
 
@@ -580,14 +580,6 @@ struct AstNode {
   MATHPRESSO_INLINE bool takesComplex()   const { return hasNodeFlag(kAstTakesComplex); }
   MATHPRESSO_INLINE bool returnsComplex() const { return hasNodeFlag(kAstReturnsComplex); }
 
-  //! Get node size (in bytes).
-  MATHPRESSO_INLINE uint32_t getNodeSize() const { return _nodeSize; }
-
-  //! Get op.
-  MATHPRESSO_INLINE uint32_t getOp() const { return _op; }
-  //! Set op.
-  MATHPRESSO_INLINE void setOp(uint32_t op) { _op = static_cast<uint8_t>(op); }
-
   //! Get whether the node has associated position in source code.
   MATHPRESSO_INLINE bool hasPosition() const { return _position != ~static_cast<uint32_t>(0); }
   //! Get source code position of the node.
@@ -627,21 +619,17 @@ struct AstNode {
   //! Child nodes.
   AstNode** _children;
 
-  MpOperation* mpOp_;
+  MpOperation* _mpOp;
 
-  private:
+private:
   //! Node type, see `AstNodeType`.
   uint8_t _nodeType;
   //! Node flags, see `AstNodeFlags`.
   uint8_t _nodeFlags;
-  //! Node size in bytes for `ZoneHeap`.
-  uint8_t _nodeSize;
-  //! Operator, see `OpType`.
-  uint8_t _op;
   //! Position (in characters) to the beginning of the program (default -1).
   uint32_t _position;
 
-  protected:
+protected:
   //! Count of child-nodes.
   size_t _length;
 };
@@ -864,7 +852,7 @@ struct AstVarDecl : public AstUnary {
   // --------------------------------------------------------------------------
   // [Members]
   // --------------------------------------------------------------------------
-
+private:
   AstSymbol* _symbol;
  
 };
@@ -894,7 +882,7 @@ struct AstVar : public AstNode {
   // --------------------------------------------------------------------------
   // [Members]
   // --------------------------------------------------------------------------
-
+private:
   AstSymbol* _symbol;
 };
 
@@ -949,7 +937,7 @@ struct AstImm : public AstNode {
   // --------------------------------------------------------------------------
   // [Members]
   // --------------------------------------------------------------------------
-
+private:
   std::complex<double> _value;
 };
 
@@ -966,9 +954,9 @@ struct AstUnaryOp : public AstUnary {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE AstUnaryOp(AstBuilder* ast, uint32_t op)
+  MATHPRESSO_INLINE AstUnaryOp(AstBuilder* ast)
     : AstUnary(ast, kAstNodeUnaryOp)
-	{ setOp(op); }
+	{}
 
 };
 
@@ -989,7 +977,7 @@ struct AstBinaryOp : public AstBinary {
   }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
-	if ((mpOp_->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft()) {
+	if ((_mpOp->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft()) {
       AstVar* var = static_cast<AstVar*>(getLeft());
       AstSymbol* sym = var->getSymbol();
 
@@ -1101,7 +1089,7 @@ struct AstDump : public AstVisitor {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  AstDump(AstBuilder* ast, StringBuilder& sb, const Context * ctx);
+  AstDump(AstBuilder* ast, StringBuilder& sb, const Operations * ctx);
   virtual ~AstDump();
 
   // --------------------------------------------------------------------------
@@ -1131,7 +1119,7 @@ struct AstDump : public AstVisitor {
 
   StringBuilder& _sb;
   uint32_t _level;
-  const Context * ctx_;
+  const Operations * _ops;
 };
 
 } // mathpresso namespace

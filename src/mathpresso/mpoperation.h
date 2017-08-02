@@ -197,8 +197,8 @@ namespace mathpresso {
 		virtual double calculateReal(double vl, double vr) { return std::numeric_limits<double>::quiet_NaN(); };
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()); };
 	};
-
-
+	
+	
 
 
 

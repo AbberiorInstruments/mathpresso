@@ -273,7 +273,27 @@ struct ContextImpl {
 
 struct AstSymbol;
 
+
 typedef std::map<std::pair<std::string, size_t>, std::shared_ptr<MpOperation>> symbolMap;
+
+class Operations
+{
+public:
+	std::string findName(MpOperation* ptr) const;
+
+	std::string findName(std::shared_ptr<MpOperation> ptr) const;	
+
+	std::shared_ptr<MpOperation> getOperation(std::string name, size_t numArgs) const;	
+
+	std::vector<std::shared_ptr<MpOperation>> findOperations(std::string name) const;	
+
+	void addOperation(std::string name, std::shared_ptr<MpOperation> obj);
+
+	bool hasOperation(std::string name, size_t numArgs) const;
+
+private:
+	symbolMap _symbols;
+};
 
 //! MathPresso context.
 //!
@@ -333,26 +353,10 @@ struct Context {
   //! Private data not available to the MathPresso public API.
   ContextImpl* _d;
 
-  std::string findName(MpOperation* ptr) const
-  {
-	  auto test = std::find_if(_symbols.begin(), _symbols.end(), [&](const std::pair<std::pair<std::string, size_t>, std::shared_ptr<MpOperation>> &pair)
-	  {
-		  return pair.second.get() == ptr;
-	  });
-
-	  if (test != _symbols.end())
-		  return test->first.first;
-	  else
-		  return "Operation unknown.";
-  }
 
 
-//private:
-  //! The string contains the name of the function described decorated with the 
-  //! number of arguments.
-  symbolMap _symbols;
+  Operations _ops;
 };
-
 
 // ============================================================================
 // [mathpresso::Expression]

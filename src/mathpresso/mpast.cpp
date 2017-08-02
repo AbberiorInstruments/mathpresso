@@ -97,7 +97,7 @@ AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
   if (sym == nullptr)
     return nullptr;
 
-  sym->_symbolFlags = other->_symbolFlags;
+  sym->setSymbolFlag(other->getSymbolFlags());
 
   if (sym->getSymbolType() == kAstSymbolVariable) 
   {
@@ -164,8 +164,8 @@ Error AstBuilder::initProgramScope() {
 // [mathpresso::AstBuilder - Dump]
 // ============================================================================
 
-Error AstBuilder::dump(StringBuilder& sb, const Context * ctx) {
-  return AstDump(this, sb, ctx).onProgram(getProgramNode());
+Error AstBuilder::dump(StringBuilder& sb, const Operations * ops) {
+  return AstDump(this, sb, ops).onProgram(getProgramNode());
 }
 
 // ============================================================================
@@ -268,7 +268,7 @@ AstNode* AstNode::injectNode(AstNode* refNode, AstUnary* node) {
     refNode->_parent = node;
 
     node->_parent = this;
-    node->_child = refNode;
+    node->setChild(refNode);
 
     return refNode;
   }
@@ -286,7 +286,7 @@ AstNode* AstNode::injectAt(uint32_t index, AstUnary* node) {
   child->_parent = node;
 
   node->_parent = this;
-  node->_child = child;
+  node->setChild(child);
 
   return child;
 }
@@ -423,11 +423,11 @@ Error AstVisitor::onProgram(AstProgram* node) {
 // [mathpresso::AstDump - Construction / Destruction]
 // ============================================================================
 
-AstDump::AstDump(AstBuilder* ast, StringBuilder& sb, const Context * ctx)
+AstDump::AstDump(AstBuilder* ast, StringBuilder& sb, const Operations * ops)
   : AstVisitor(ast),
     _sb(sb),
     _level(0),
-	ctx_(ctx)
+	_ops(ops)
 {}
 AstDump::~AstDump() {}
 
@@ -461,9 +461,9 @@ const char * sym_name(T * node)
 	return sym ? sym ->getName() : "(null)";
 }
 
-std::string op_name(AstNode * node, const Context * ctx)
+std::string op_name(AstNode * node, const Operations * ops)
 {
-	return ctx->findName(node->mpOp_);
+	return ops->findName(node->_mpOp);
 }
 
 const char * node_type(AstNode * node)
@@ -492,14 +492,14 @@ Error AstDump::onImm(AstImm* node) {
 
 
 Error AstDump::onUnaryOp(AstUnaryOp* node) {
-	nest("%s [Unary, %s -> %s]", op_name(node, ctx_).c_str(), parm_type(node), node_type(node));
+	nest("%s [Unary, %s -> %s]", op_name(node, _ops).c_str(), parm_type(node), node_type(node));
 	if (node->hasChild())
 		MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 	return denest();
 }
 
 Error AstDump::onBinaryOp(AstBinaryOp* node) {
-  nest("%s [Binary, %s -> %s]", op_name(node, ctx_).c_str(), parm_type(node), node_type(node));
+  nest("%s [Binary, %s -> %s]", op_name(node, _ops).c_str(), parm_type(node), node_type(node));
   if (node->hasLeft())
     MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
   if (node->hasRight())
@@ -508,7 +508,7 @@ Error AstDump::onBinaryOp(AstBinaryOp* node) {
 }
 
 Error AstDump::onTernaryOp(AstTernaryOp* node) {
-	nest("%s [Ternary, %s -> %s]", op_name(node, ctx_).c_str(), parm_type(node), node_type(node));
+	nest("%s [Ternary, %s -> %s]", op_name(node, _ops).c_str(), parm_type(node), node_type(node));
 	if (node->hasCondition())
 		MATHPRESSO_PROPAGATE(onNode(node->getCondition()));
 	if (node->hasLeft())

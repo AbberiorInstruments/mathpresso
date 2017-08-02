@@ -601,7 +601,7 @@ namespace mathpresso {
 	{
 		// -(-(x)) = x
 		if (node->getAt(0)->getNodeType() == kAstNodeUnaryOp
-			&& static_cast<AstUnaryOp*>(node)->mpOp_ == static_cast<AstUnaryOp*>(node->getAt(0))->mpOp_)
+			&& static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
 		{
 			AstNode* childOfChild = static_cast<AstUnaryOp*>(node->getAt(0))->unlinkChild();
 			node->getParent()->replaceNode(node, childOfChild);
@@ -659,7 +659,7 @@ namespace mathpresso {
 	{
 		// conj(conj(x)) = x
 		if (node->getAt(0)->getNodeType() == kAstNodeUnaryOp
-			&& static_cast<AstUnaryOp*>(node)->mpOp_ == static_cast<AstUnaryOp*>(node->getAt(0))->mpOp_)
+			&& static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
 		{
 			AstNode* childOfChild = static_cast<AstUnaryOp*>(node->getAt(0))->unlinkChild();
 			node->getParent()->replaceNode(node, childOfChild);
@@ -1762,19 +1762,19 @@ namespace mathpresso {
 
 		AstBinaryOp* lastColon = static_cast<AstBinaryOp*>(node);
 		// go to the last Colon after question-marks.
-		while (lastColon->mpOp_ && typeid(*lastColon->mpOp_) == typeid(*this) && !dynamic_cast<MpOperationTernary*>(lastColon->mpOp_)->isColon_)
+		while (lastColon->_mpOp && typeid(*lastColon->_mpOp) == typeid(*this) && !dynamic_cast<MpOperationTernary*>(lastColon->_mpOp)->isColon_)
 		{
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 		}
 
-		while (lastColon->getRight()->mpOp_ && // nullcheck
-			typeid(*lastColon->getRight()->mpOp_) == typeid(*this) && // check for correct type
-			dynamic_cast<MpOperationTernary*>(lastColon->getRight()->mpOp_)->isColon_) // check whether colon or Qmark
+		while (lastColon->getRight()->_mpOp && // nullcheck
+			typeid(*lastColon->getRight()->_mpOp) == typeid(*this) && // check for correct type
+			dynamic_cast<MpOperationTernary*>(lastColon->getRight()->_mpOp)->isColon_) // check whether colon or Qmark
 		{
 			lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 		}
 
-		if (typeid(*lastColon->mpOp_) == typeid(*this) && !dynamic_cast<MpOperationTernary*>(lastColon->mpOp_)->isColon_)
+		if (typeid(*lastColon->_mpOp) == typeid(*this) && !dynamic_cast<MpOperationTernary*>(lastColon->_mpOp)->isColon_)
 		{
 			return opt->_errorReporter->onError(kErrorInvalidSyntax, node->getPosition(),
 				"Invalid ternary operation. Expected a ':'." );
@@ -1820,7 +1820,7 @@ namespace mathpresso {
 		ternaryNode->setCondition(branchCondition);
 		ternaryNode->setLeft(branchLeft);
 		ternaryNode->setRight(branchRight);
-		ternaryNode->mpOp_ = opt->_symbols->at(std::make_pair("?", 2)).get();
+		ternaryNode->_mpOp = opt->_ops->getOperation("?", 2).get();
 
 		AstBinaryOp* oldNode = static_cast<AstBinaryOp*>(node);
 
