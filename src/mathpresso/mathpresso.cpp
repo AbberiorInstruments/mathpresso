@@ -372,7 +372,7 @@ Error Context::delSymbol(const char* name) {
 
   if (_ops.hasOperation(name, sym->getLength()))
   {
-	  _ops.removeOperation(name, sym->getLength());
+	  _ops.removeObject(name, sym->getLength());
   }
 
   d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
@@ -609,7 +609,7 @@ bool Operations::hasOperation(std::string name, size_t numArgs) const
 	return _symbols.find(std::make_pair(name, numArgs)) != _symbols.end();
 }
 
-void Operations::removeOperation(std::string name, size_t numArgs)
+void Operations::removeObject(std::string name, size_t numArgs)
 {
 	_symbols.erase(std::make_pair(name, numArgs));
 }
