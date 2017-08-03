@@ -296,6 +296,14 @@ public:
 	//! Check whether a MpOperation-Object with a known name and number of arguments exists.
 	bool hasOperation(std::string name, size_t numArgs) const;
 
+	void getNames(std::vector<std::string> &names) const
+	{
+		for (auto p : _symbols)
+		{
+			names.push_back(p.first.first);
+		}
+	}
+
 private:
 	symbolMap _symbols;
 };
@@ -355,7 +363,7 @@ struct Context {
   //! Delete symbol from this context.
   MATHPRESSO_API Error delSymbol(const char* name);
 
-  //! Retrieve a list of all available symbols
+  //! Retrieve a list of all available symbols (Functions, operators and constants)
   MATHPRESSO_API Error listSymbols(std::vector<std::string> &syms);
   // --------------------------------------------------------------------------
   // [Members]

@@ -322,16 +322,20 @@ Error Context::listSymbols(std::vector<std::string> &syms)
 {
 	syms.clear();
 
+	_ops.getNames(syms);
+
 	ContextInternalImpl* d;
 	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
 
-	HashIterator<StringRef, AstSymbol> it(d ->_scope.getSymbols());
-	do 
+	HashIterator<StringRef, AstSymbol> it(d->_scope.getSymbols());
+	do
 	{
-		syms.push_back(it.get()->getName());
-	} 
-	while (it.next());
-
+		if (std::find(syms.begin(), syms.end(), it.get()->getName()) == syms.end())
+		{
+			syms.push_back(it.get()->getName());
+		}
+	} while (it.next());
+	
 	return kErrorOk;
 }
 
