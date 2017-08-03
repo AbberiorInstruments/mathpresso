@@ -273,15 +273,10 @@ namespace mathpresso {
 		signature.setRetT<double>();
 		signature.addArgT<TypeId::UIntPtr>(); // parameters
 
-											  //for (size_t i = 0; i < count; i++)
-											  //signature.addArgT<double>();
-
-											  // Create the function call.
+		// Create the function call.
 		CCFuncCall* ctx = cc->call(reinterpret_cast<uint64_t>(fn), signature);
 		ctx->setRet(0, dst);
 
-		//for (size_t i = 0; i < count; i++)
-		//ctx->setArg(static_cast<uint32_t>(i), args[i]);
 		ctx->setArg(0, dataPointerReg);
 
 #else

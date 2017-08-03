@@ -20,8 +20,6 @@ namespace mathpresso {
 
 #define VPTR(function) reinterpret_cast<void*>(function)
 
-//#define _REALREWORK
-
 #ifdef _REALREWORK
 	double _sin(double * arg) { return std::sin(arg[0]); }
 	double _cos(double * arg) { return std::cos(arg[0]); }
@@ -49,7 +47,6 @@ namespace mathpresso {
 	double negRR(double * args) { return -args[0]; }
 	double notRR(double * args) { return args[0] == 0 ? 1.0 : 0.0; }
 	double recipRR(double * args) { return 1.0 / args[0]; }
-
 	double signbitRR(double * args) { return std::signbit(args[0]) ? 1.0 : 0.0; }
 	double copysignRR(double * args) { return std::copysign(args[0], args[1]); }
 	double avgRR(double * args) { return (args[0] + args[1]) * 0.5; }
@@ -83,7 +80,6 @@ namespace mathpresso {
 	double powRR(double x, double y) { return std::pow(x, y); }
 	double atan2RR(double x, double y) { return std::atan2(x, y); }
 	double hypotRR(double x, double y) { return std::hypot(x, y); }
-
 	double isfiniteRR(double args) { return std::isfinite(args) ? 1.0 : 0.0; }
 	double isinfRR(double args) { return std::isinf(args) ? 1.0 : 0.0; }
 	double isnanRR(double args) { return std::isnan(args) ? 1.0 : 0.0; }
@@ -105,11 +101,9 @@ namespace mathpresso {
 	double fracRR(double args) { return args - std::floor(args); }
 	double floorRR(double args) { return std::floor(args); }
 	double ceilRR(double args) { return std::ceil(args); }
-
 #endif
 
-	// helpers:
-	
+	// helpers:	
 	std::complex<double> _sinC(std::complex<double>* arg) { return std::sin(arg[0]); }
 	std::complex<double> _cosC(std::complex<double>* arg) { return std::cos(arg[0]); }
 	std::complex<double> _tanC(std::complex<double>* arg) { return std::tan(arg[0]); }
@@ -123,12 +117,7 @@ namespace mathpresso {
 	// helpers for inline.
 	std::complex<double> dummyCC(std::complex<double> * args) { return std::complex<double>(0, 0); }
 	
-	
-
-
-
 	// helpers, no derived object
-	//
 	std::complex<double> logCC(std::complex<double> *  x) { return std::log(x[0]); }
 	std::complex<double> log2CC(std::complex<double> *  x) { return std::log(x[0]) / log(2); }
 	std::complex<double> log10CC(std::complex<double> *  x) { return std::log10(x[0]); }
