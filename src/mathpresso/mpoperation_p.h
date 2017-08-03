@@ -4,7 +4,7 @@
 namespace mathpresso
 {
 	// isfinite
-	class MpOperationIsFinite :public MpOperationFuncAsm
+	class MpOperationIsFinite : public MpOperationFuncAsm
 	{
 	public:
 		MpOperationIsFinite();
@@ -12,7 +12,7 @@ namespace mathpresso
 	};
 
 	// isinf
-	class MpOperationIsInfinite :public MpOperationFuncAsm
+	class MpOperationIsInfinite : public MpOperationFuncAsm
 	{
 	public:
 		MpOperationIsInfinite();
@@ -20,7 +20,7 @@ namespace mathpresso
 	};
 
 	// isnan
-	class MpOperationIsNan :public MpOperationFuncAsm
+	class MpOperationIsNan : public MpOperationFuncAsm
 	{
 	public:
 		MpOperationIsNan();
@@ -28,7 +28,7 @@ namespace mathpresso
 	};
 
 	// real
-	class MpOperationGetReal :public MpOperationFuncAsm
+	class MpOperationGetReal : public MpOperationFuncAsm
 	{
 	public:
 		MpOperationGetReal();
@@ -36,7 +36,7 @@ namespace mathpresso
 	};
 
 	// imag
-	class MpOperationGetImag :public MpOperationFuncAsm
+	class MpOperationGetImag : public MpOperationFuncAsm
 	{
 	public:
 		MpOperationGetImag();
@@ -91,16 +91,16 @@ namespace mathpresso
 	class MpOperationTrigonometrie : public MpOperationFuncAsm
 	{
 	public:
-		enum trigonometrieFunc {
+		enum class Type {
 			sin, cos, tan, asin, acos, atan, sinh, cosh, tanh
 		};
-		MpOperationTrigonometrie(uint32_t type);
+		MpOperationTrigonometrie(Type type);
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 	protected:
 		virtual double evaluateDRetD(double *args) override;
 		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
 	private:
-		uint32_t type_;
+		Type type_;
 	};
 
 	// Sign bit
@@ -379,7 +379,6 @@ namespace mathpresso
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
-
 	protected:
 		bool isColon_;
 	};

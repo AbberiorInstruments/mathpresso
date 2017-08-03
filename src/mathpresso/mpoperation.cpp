@@ -166,15 +166,15 @@ namespace mathpresso {
 		ctx->addObject("ceil", std::make_shared<MpOperationcCeil>());
 		ctx->addObject("frac", std::make_shared<MpOperationFrac>());
 		ctx->addObject("trunc", std::make_shared<MpOperationTrunc>());
-		ctx->addObject("sin", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::sin));
-		ctx->addObject("cos", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::cos));
-		ctx->addObject("tan", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::tan));
-		ctx->addObject("sinh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::sinh));
-		ctx->addObject("cosh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::cosh));
-		ctx->addObject("tanh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::tanh));
-		ctx->addObject("asin", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::asin));
-		ctx->addObject("acos", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::acos));
-		ctx->addObject("atan", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::atan));
+		ctx->addObject("sin", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::Type::sin));
+		ctx->addObject("cos", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::Type::cos));
+		ctx->addObject("tan", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::Type::tan));
+		ctx->addObject("sinh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::Type::sinh));
+		ctx->addObject("cosh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::Type::cosh));
+		ctx->addObject("tanh", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::Type::tanh));
+		ctx->addObject("asin", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::Type::asin));
+		ctx->addObject("acos", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::Type::acos));
+		ctx->addObject("atan", std::make_shared<MpOperationTrigonometrie>(MpOperationTrigonometrie::Type::atan));
 		ctx->addObject("sqrtc", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagDReturnsC, VPTR(sqrtRC), VPTR(sqrtCC)));
 		ctx->addObject("log", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(logRR), VPTR(logCC)));
 		ctx->addObject("log2", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(log2RR), VPTR(log2CC)));
@@ -765,7 +765,7 @@ namespace mathpresso {
 	}
 
 	// MpOperationTrigonometrie
-	MpOperationTrigonometrie::MpOperationTrigonometrie(uint32_t type) :
+	MpOperationTrigonometrie::MpOperationTrigonometrie(Type type) :
 		MpOperationFuncAsm(1, OpFlagHasAsm, VPTR(dummyRR), VPTR(dummyCC), nullptr, nullptr),
 		type_(type)
 	{}
@@ -776,39 +776,39 @@ namespace mathpresso {
 		void* tmpD = fnD_;
 		switch (type_)
 		{
-		case trigonometrieFunc::sin:
+		case Type::sin:
 			fnD_ = reinterpret_cast<void*>(_sin);
 			fnC_ = reinterpret_cast<void*>(_sinC);
 			break;
-		case trigonometrieFunc::cos:
+		case Type::cos:
 			fnD_ = reinterpret_cast<void*>(_cos);
 			fnC_ = reinterpret_cast<void*>(_cosC);
 			break;
-		case trigonometrieFunc::tan:
+		case Type::tan:
 			fnD_ = reinterpret_cast<void*>(_tan);
 			fnC_ = reinterpret_cast<void*>(_tanC);
 			break;
-		case trigonometrieFunc::asin:
+		case Type::asin:
 			fnD_ = reinterpret_cast<void*>(_asin);
 			fnC_ = reinterpret_cast<void*>(_asinC);
 			break;
-		case trigonometrieFunc::acos:
+		case Type::acos:
 			fnD_ = reinterpret_cast<void*>(_acos);
 			fnC_ = reinterpret_cast<void*>(_acosC);
 			break;
-		case trigonometrieFunc::atan:
+		case Type::atan:
 			fnD_ = reinterpret_cast<void*>(_atan);
 			fnC_ = reinterpret_cast<void*>(_atanC);
 			break;
-		case trigonometrieFunc::sinh:
+		case Type::sinh:
 			fnD_ = reinterpret_cast<void*>(_sinh);
 			fnC_ = reinterpret_cast<void*>(_sinhC);
 			break;
-		case trigonometrieFunc::cosh:
+		case Type::cosh:
 			fnD_ = reinterpret_cast<void*>(_cosh);
 			fnC_ = reinterpret_cast<void*>(_coshC);
 			break;
-		case trigonometrieFunc::tanh:
+		case Type::tanh:
 			fnD_ = reinterpret_cast<void*>(_tanh);
 			fnC_ = reinterpret_cast<void*>(_tanhC);
 			break;
@@ -826,25 +826,25 @@ namespace mathpresso {
 		switch (type_)
 		{
 #ifdef _REALREWORK
-		case trigonometrieFunc::sin: return _sin(args);
-		case trigonometrieFunc::cos: return _cos(args);
-		case trigonometrieFunc::tan: return _tan(args);
-		case trigonometrieFunc::asin: return _asin(args);
-		case trigonometrieFunc::acos: return _acos(args);
-		case trigonometrieFunc::atan: return _atan(args);
-		case trigonometrieFunc::sinh: return _sinh(args);
-		case trigonometrieFunc::cosh: return _cosh(args);
-		case trigonometrieFunc::tanh: return _tanh(args);
+		case Type::sin: return _sin(args);
+		case Type::cos: return _cos(args);
+		case Type::tan: return _tan(args);
+		case Type::asin: return _asin(args);
+		case Type::acos: return _acos(args);
+		case Type::atan: return _atan(args);
+		case Type::sinh: return _sinh(args);
+		case Type::cosh: return _cosh(args);
+		case Type::tanh: return _tanh(args);
 #else
-		case trigonometrieFunc::sin: return _sin(args[0]);
-		case trigonometrieFunc::cos: return _cos(args[0]);
-		case trigonometrieFunc::tan: return _tan(args[0]);
-		case trigonometrieFunc::asin: return _asin(args[0]);
-		case trigonometrieFunc::acos: return _acos(args[0]);
-		case trigonometrieFunc::atan: return _atan(args[0]);
-		case trigonometrieFunc::sinh: return _sinh(args[0]);
-		case trigonometrieFunc::cosh: return _cosh(args[0]);
-		case trigonometrieFunc::tanh: return _tanh(args[0]);
+		case Type::sin: return _sin(args[0]);
+		case Type::cos: return _cos(args[0]);
+		case Type::tan: return _tan(args[0]);
+		case Type::asin: return _asin(args[0]);
+		case Type::acos: return _acos(args[0]);
+		case Type::atan: return _atan(args[0]);
+		case Type::sinh: return _sinh(args[0]);
+		case Type::cosh: return _cosh(args[0]);
+		case Type::tanh: return _tanh(args[0]);
 #endif // _REALREWORK
 
 		
@@ -857,15 +857,15 @@ namespace mathpresso {
 	{
 		switch (type_)
 		{
-		case trigonometrieFunc::sin: return _sinC(args);
-		case trigonometrieFunc::cos: return _cosC(args);
-		case trigonometrieFunc::tan: return _tanC(args);
-		case trigonometrieFunc::asin: return _asinC(args);
-		case trigonometrieFunc::acos: return _acosC(args);
-		case trigonometrieFunc::atan: return _atanC(args);
-		case trigonometrieFunc::sinh: return _sinhC(args);
-		case trigonometrieFunc::cosh: return _coshC(args);
-		case trigonometrieFunc::tanh: return _tanhC(args);
+		case Type::sin: return _sinC(args);
+		case Type::cos: return _cosC(args);
+		case Type::tan: return _tanC(args);
+		case Type::asin: return _asinC(args);
+		case Type::acos: return _acosC(args);
+		case Type::atan: return _atanC(args);
+		case Type::sinh: return _sinhC(args);
+		case Type::cosh: return _coshC(args);
+		case Type::tanh: return _tanhC(args);
 		default:
 			throw std::runtime_error("no function of this type available.");
 		}
