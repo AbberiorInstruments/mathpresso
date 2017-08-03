@@ -153,7 +153,8 @@ namespace mathpresso {
 		}
 
 		virtual ~MpOperationBinary()
-		{}
+		{
+		}
 
 		// calls generatAsmReal() and comppComplex() after setting up.
 		virtual JitVar compile(JitCompiler* jc, AstNode * node) override;
@@ -177,14 +178,20 @@ namespace mathpresso {
 		}
 
 	protected:
-		// These are called by compile() and should only contain the asm-statements.
-		// vl will always be in a register, vr can be in Register or in Memory.
+		// These are called by compile() and should only contain the asm-statements. vl will always
+		// be in a register, vr can be in Register or in Memory.
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr);
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr);
 
 		// Used to calculate optimization of immediates.
-		virtual double calculateReal(double vl, double vr) { return std::numeric_limits<double>::quiet_NaN(); };
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) { return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()); };
+		virtual double calculateReal(double vl, double vr) 
+		{ 
+			return std::numeric_limits<double>::quiet_NaN(); 
+		};
+		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) 
+		{ 
+			return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()); 
+		};
 	};
 	
 	

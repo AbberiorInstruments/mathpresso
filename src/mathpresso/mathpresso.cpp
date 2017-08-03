@@ -332,16 +332,14 @@ Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
 		sym->setSymbolFlag(kAstSymbolIsDeclared);
 	}
 
-	_ops.addOperation(name, obj);
+	_ops.add(name, obj);
 
 	return kErrorOk;
 }
 
 Error Context::listSymbols(std::vector<std::string> &syms)
 {
-	syms.clear();
-
-	_ops.getNames(syms);
+	syms = _ops.names();
 
 	ContextInternalImpl* d;
 	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
@@ -370,14 +368,8 @@ Error Context::delSymbol(const char* name) {
   if (sym == nullptr)
     return MATHPRESSO_TRACE_ERROR(kErrorSymbolNotFound);
 
-  if (_ops.hasOperation(name, sym->getLength()))
-  {
-	  _ops.removeOperation(name, sym->getLength());
-  }
-
+  _ops.remove(name, sym->getLength());
   d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
-
-  
 
   return kErrorOk;
 }
@@ -563,7 +555,7 @@ Error ErrorReporter::onError(Error error, uint32_t position, const StringBuilder
   return MATHPRESSO_TRACE_ERROR(error);
 }
 
-std::string Operations::findName(MpOperation * ptr) const
+std::string Operations::name(const MpOperation * ptr) const
 {
 	auto test = std::find_if(_symbols.begin(), _symbols.end(), [&](const std::pair<std::pair<std::string, size_t>, std::shared_ptr<MpOperation>> &pair)
 	{
@@ -576,19 +568,15 @@ std::string Operations::findName(MpOperation * ptr) const
 		return "Operation unknown.";
 }
 
-std::string Operations::findName(std::shared_ptr<MpOperation> ptr) const
-{
-	return findName(ptr.get());
-}
 
-std::shared_ptr<MpOperation> Operations::getOperation(std::string name, size_t numArgs) const
+std::shared_ptr<MpOperation> Operations::find(const std::string &name, size_t numArgs) const
 {
 	return _symbols.at(std::make_pair(name, numArgs));
 }
 
-std::vector<std::shared_ptr<MpOperation>> Operations::findOperations(std::string name) const
+std::vector<Operations::op_ptr_type> Operations::find(const std::string &name) const
 {
-	std::vector<std::shared_ptr<MpOperation>> ret{};
+	std::vector<op_ptr_type> ret;
 
 	for (auto p : _symbols)
 	{
@@ -599,19 +587,26 @@ std::vector<std::shared_ptr<MpOperation>> Operations::findOperations(std::string
 	return ret;
 }
 
-void Operations::addOperation(std::string name, std::shared_ptr<MpOperation> obj)
+void Operations::add(const std::string &name, std::shared_ptr<MpOperation> obj)
 {
 	_symbols[std::make_pair(name, obj->nargs())] = obj;
 }
 
-bool Operations::hasOperation(std::string name, size_t numArgs) const
+void Operations::remove(const std::string &name, size_t numArgs)
 {
-	return _symbols.find(std::make_pair(name, numArgs)) != _symbols.end();
+	auto it = _symbols.find(std::make_pair(name, numArgs));
+	if (it != _symbols.end())
+		_symbols.erase(it);
 }
 
-void Operations::removeOperation(std::string name, size_t numArgs)
+std::vector<std::string> Operations::names() const
 {
-	_symbols.erase(std::make_pair(name, numArgs));
+	std::vector<std::string> names;
+	for (auto p : _symbols)
+	{
+		names.push_back(p.first.first);
+	}
+	return names;
 }
 
 } // mathpresso namespace

@@ -277,44 +277,24 @@ struct ContextImpl {
 // [mathpresso::Operations]
 // ============================================================================
 
-typedef std::map<std::pair<std::string, size_t>, std::shared_ptr<MpOperation>> symbolMap;
-
 //! Holds MpOperation-objects and gives an easy way to finding them.
 class Operations
 {
+	using op_ptr_type = std::shared_ptr<MpOperation>;
+	using op_map_type = std::map<std::pair<std::string, size_t>, op_ptr_type>;
+
 public:
+	std::string name(const MpOperation * ptr) const;
 
-	//! Get The name of a function, where you have a pointer to MpOperation.
-	std::string findName(MpOperation* ptr) const;
+	op_ptr_type find(const std::string &name, size_t nargs) const;
+	std::vector<op_ptr_type> find(const std::string &name) const;
 
-	//! get the mame of a function where have a shared_ptr to MpOperation
-	std::string findName(std::shared_ptr<MpOperation> ptr) const;	
+	void add(const std::string &name, op_ptr_type obj);
+	void remove(const std::string &name, size_t nargs);
 
-	//! Get a shared_ptr to a MpOperation, by its name and number of arguments.
-	std::shared_ptr<MpOperation> getOperation(std::string name, size_t numArgs) const;	
-
-	//! Get all MpOperations with a specific name, regardless of the number of arguments.
-	std::vector<std::shared_ptr<MpOperation>> findOperations(std::string name) const;	
-
-	//! Add a MpOperation-Object to the internal map.
-	void addOperation(std::string name, std::shared_ptr<MpOperation> obj);
-
-	//! Check whether a MpOperation-Object with a known name and number of arguments exists.
-	bool hasOperation(std::string name, size_t numArgs) const;
-
-	//! Return the name of every MpOperation in names.
-	void getNames(std::vector<std::string> &names) const
-	{
-		for (auto p : _symbols)
-		{
-			names.push_back(p.first.first);
-		}
-	}
-
-	void removeOperation(std::string name, size_t numArgs);
-
+	std::vector<std::string> names() const;
 private:
-	symbolMap _symbols;
+	op_map_type _symbols;
 };
 
 // ============================================================================

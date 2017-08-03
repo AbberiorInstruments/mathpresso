@@ -233,7 +233,7 @@ namespace mathpresso {
 			AstVarDecl* decl = _ast->newNode<AstVarDecl>();
 			MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
 			//decl->_mpOp = _ops->at(std::make_pair("=", 2)).get();
-			decl->_mpOp = _ops->getOperation("=", 2).get();
+			decl->_mpOp = _ops->find("=", 2).get();
 
 			decl->setPosition(position);
 			decl->setSymbol(vSym);
@@ -461,7 +461,8 @@ namespace mathpresso {
 			case kTokenOperator:
 			{
 				std::string name(_tokenizer._start + token.position, token.length);
-				if (!_ops->hasOperation(name, 1))
+				auto op = _ops->find(name, 1);
+				if (!op)
 					MATHPRESSO_PARSER_ERROR(token, "Invalid unary operator.");
 
 				
@@ -470,7 +471,7 @@ namespace mathpresso {
 				MATHPRESSO_NULLCHECK(opNode);
 				opNode->setPosition(token.getPosAsUInt());
 
-				opNode->_mpOp = _ops->getOperation(name, 1).get();
+				opNode->_mpOp = op.get();
 				
 				if (lastUnaryNode == nullptr)
 					currentNode = opNode;
@@ -522,7 +523,8 @@ namespace mathpresso {
 			case kTokenOperator:
 			{
 				std::string name(_tokenizer._start + token.position, token.length);
-				if (!_ops->hasOperation(name, 2))
+				auto op = _ops->find(name, 2);
+				if (!op)
 					MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
 
 
@@ -545,7 +547,7 @@ namespace mathpresso {
 				AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>();
 				MATHPRESSO_NULLCHECK(newNode);
 
-				newNode->_mpOp = _ops->getOperation(name, 2).get();
+				newNode->_mpOp = op.get();
 
 				newNode->setPosition(token.getPosAsUInt());
 
@@ -702,10 +704,9 @@ namespace mathpresso {
 
 		_tokenizer.consume();
 
-
-		if (_ops->hasOperation(fnName, callNode->getLength()))
+		if (_ops->find(fnName, callNode->getLength()))
 		{
-			callNode->_mpOp = _ops->getOperation(fnName, callNode->getLength()).get();
+			callNode->_mpOp = _ops->find(fnName, callNode->getLength()).get();
 		}
 		else
 		{

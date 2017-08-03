@@ -463,7 +463,7 @@ const char * sym_name(T * node)
 
 std::string op_name(AstNode * node, const Operations * ops)
 {
-	return ops->findName(node->_mpOp);
+	return ops->name(node->_mpOp);
 }
 
 const char * node_type(AstNode * node)
