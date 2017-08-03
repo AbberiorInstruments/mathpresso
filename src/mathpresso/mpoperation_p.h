@@ -4,7 +4,7 @@
 namespace mathpresso
 {
 	// isfinite
-	class MpOperationIsFinite : public MpOperationFuncAsm
+	class MpOperationIsFinite : public MpOperationFunc
 	{
 	public:
 		MpOperationIsFinite();
@@ -12,7 +12,7 @@ namespace mathpresso
 	};
 
 	// isinf
-	class MpOperationIsInfinite : public MpOperationFuncAsm
+	class MpOperationIsInfinite : public MpOperationFunc
 	{
 	public:
 		MpOperationIsInfinite();
@@ -20,7 +20,7 @@ namespace mathpresso
 	};
 
 	// isnan
-	class MpOperationIsNan : public MpOperationFuncAsm
+	class MpOperationIsNan : public MpOperationFunc
 	{
 	public:
 		MpOperationIsNan();
@@ -28,7 +28,7 @@ namespace mathpresso
 	};
 
 	// real
-	class MpOperationGetReal : public MpOperationFuncAsm
+	class MpOperationGetReal : public MpOperationFunc
 	{
 	public:
 		MpOperationGetReal();
@@ -36,7 +36,7 @@ namespace mathpresso
 	};
 
 	// imag
-	class MpOperationGetImag : public MpOperationFuncAsm
+	class MpOperationGetImag : public MpOperationFunc
 	{
 	public:
 		MpOperationGetImag();
@@ -44,7 +44,7 @@ namespace mathpresso
 	};
 
 	// Square root
-	class MpOperationSqrt : public MpOperationFuncAsm
+	class MpOperationSqrt : public MpOperationFunc
 	{
 	public:
 		MpOperationSqrt();
@@ -52,7 +52,7 @@ namespace mathpresso
 	};
 
 	// Negation
-	class MpOperationNeg : public MpOperationFuncAsm
+	class MpOperationNeg : public MpOperationFunc
 	{
 	public:
 		MpOperationNeg();
@@ -62,7 +62,7 @@ namespace mathpresso
 	};
 
 	// Not
-	class MpOperationNot : public MpOperationFuncAsm
+	class MpOperationNot : public MpOperationFunc
 	{
 	public:
 		MpOperationNot();
@@ -70,7 +70,7 @@ namespace mathpresso
 	};
 
 	// conjugate
-	class MpOperationConjug :public MpOperationFuncAsm
+	class MpOperationConjug :public MpOperationFunc
 	{
 	public:
 		MpOperationConjug();
@@ -80,7 +80,7 @@ namespace mathpresso
 	};
 
 	// Reciprocate
-	class MpOperationRecip :public MpOperationFuncAsm
+	class MpOperationRecip :public MpOperationFunc
 	{
 	public:
 		MpOperationRecip();
@@ -88,7 +88,7 @@ namespace mathpresso
 	};
 
 	// trigonometric functions (sin, cos, tan, etc)
-	class MpOperationTrigonometrie : public MpOperationFuncAsm
+	class MpOperationTrigonometrie : public MpOperationFunc
 	{
 	public:
 		enum class Type {
@@ -104,7 +104,7 @@ namespace mathpresso
 	};
 
 	// Sign bit
-	class MpOperationSignBit : public MpOperationFuncAsm
+	class MpOperationSignBit : public MpOperationFunc
 	{
 	public:
 		MpOperationSignBit();		
@@ -112,7 +112,7 @@ namespace mathpresso
 	};
 
 	// copy sign
-	class MpOperationCopySign : public MpOperationFuncAsm
+	class MpOperationCopySign : public MpOperationFunc
 	{
 	public:
 		MpOperationCopySign();
@@ -120,7 +120,7 @@ namespace mathpresso
 	};
 
 	// Average
-	class MpOperationAvg : public MpOperationFuncAsm
+	class MpOperationAvg : public MpOperationFunc
 	{
 	public:
 		MpOperationAvg();
@@ -128,7 +128,7 @@ namespace mathpresso
 	};
 
 	// Absolute
-	class MpOperationAbs : public MpOperationFuncAsm
+	class MpOperationAbs : public MpOperationFunc
 	{
 	public:
 		MpOperationAbs();
@@ -136,7 +136,7 @@ namespace mathpresso
 	};
 
 	// round
-	class MpOperationRound : public MpOperationFuncAsm
+	class MpOperationRound : public MpOperationFunc
 	{
 	public:
 		MpOperationRound();
@@ -146,7 +146,7 @@ namespace mathpresso
 	};
 
 	// roundeven
-	class MpOperationRoundEven : public MpOperationFuncAsm
+	class MpOperationRoundEven : public MpOperationFunc
 	{
 	public:
 		MpOperationRoundEven();
@@ -156,7 +156,7 @@ namespace mathpresso
 	};
 
 	// trunc
-	class MpOperationTrunc : public MpOperationFuncAsm
+	class MpOperationTrunc : public MpOperationFunc
 	{
 	public:
 		MpOperationTrunc();
@@ -164,7 +164,7 @@ namespace mathpresso
 	};
 
 	// frac
-	class MpOperationFrac : public MpOperationFuncAsm
+	class MpOperationFrac : public MpOperationFunc
 	{
 	public:
 		MpOperationFrac();
@@ -172,7 +172,7 @@ namespace mathpresso
 	};
 
 	// floor
-	class MpOperationFloor : public MpOperationFuncAsm
+	class MpOperationFloor : public MpOperationFunc
 	{
 	public:
 		MpOperationFloor();
@@ -180,7 +180,7 @@ namespace mathpresso
 	};
 
 	// ceil
-	class MpOperationcCeil : public MpOperationFuncAsm
+	class MpOperationcCeil : public MpOperationFunc
 	{
 	public:
 		MpOperationcCeil();

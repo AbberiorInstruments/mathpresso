@@ -143,27 +143,6 @@ namespace mathpresso {
 		void * fnD_;
 	};
 
-	class MATHPRESSO_API MpOperationFuncAsm : public MpOperationFunc
-	{
-	public:
-		MpOperationFuncAsm(uint32_t nargs, uint32_t flags, void * fnD, void * fnC, mpAsmFunc asmC, mpAsmFunc asmD) :
-			MpOperationFunc(nargs, flags | MpOperationFlags::OpFlagHasAsm, fnD, fnC),
-			asmC_(asmC),
-			asmD_(asmD)
-		{}
-
-		virtual ~MpOperationFuncAsm()
-		{}
-
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-
-		virtual void setFnAsm(mpAsmFunc fn, bool isComplex = false);
-
-	protected:
-		mpAsmFunc asmC_;
-		mpAsmFunc asmD_;
-	};
-
 	class MATHPRESSO_API MpOperationBinary : public MpOperation
 	{
 	public:

@@ -190,59 +190,6 @@ using asmjit::ZoneHeap;
 using asmjit::ZoneVector;
 
 // ============================================================================
-// [mathpresso::OpFlags]
-// ============================================================================
-
-/*
-//! Operator flags.
-enum OpFlags {
-  //! The operator has one parameter (unary node).
-  kOpFlagUnary         = 0x00000001,
-  //! The operator has two parameters (binary node).
-  kOpFlagBinary        = 0x00000002,
-  //! The operator is an intrinsic function.
-  kOpFlagIntrinsic     = 0x00000004,
-  //! The operator has right-to-left associativity.
-  kOpFlagRightToLeft   = 0x00000008,
-
-  //! The operator does an assignment to a variable.
-  kOpFlagAssign        = 0x00000010,
-
-  //! The operator 3 parameters (ternary node).
-  kOpFlagTernary	   = 0x00000020,
-
-  //! this Operator is complex -> complex.
-  kOpFlagComplexToComplex = 0x00001000,
-  //! this Operator is real -> real
-  kOpFlagRealToReal = 0x00002000,
-  //! this Operator is complex -> real
-  kOpFlagComplexToReal = 0x0004000,
-  //! this Operator is real -> complex
-  kOpFlagRealToComplex = 0x0008000,
-
-  //! The operator performs an arithmetic operation.
-  kOpFlagArithmetic    = 0x00000100,
-  //! The operator performs a conditional operation.
-  kOpFlagCondition     = 0x00000200,
-  //! The operator performs a floating-point rounding.
-  kOpFlagRounding      = 0x00000400,
-  //! The operator calculates a trigonometric function.
-  kOpFlagTrigonometric = 0x00000800,
-
-  // set if there is an object for this function.
-  _kOpFlagHasobject = 0x00010000,
-
-  kOpFlagNopIfLZero    = 0x10000000,
-  kOpFlagNopIfRZero    = 0x20000000,
-  kOpFlagNopIfLOne     = 0x40000000,
-  kOpFlagNopIfROne     = 0x80000000,
-
-  kOpFlagNopIfZero     = kOpFlagNopIfLZero | kOpFlagNopIfRZero,
-  kOpFlagNopIfOne      = kOpFlagNopIfLOne  | kOpFlagNopIfROne
-};
-*/
-
-// ============================================================================
 // [mpsl::InternalConsts]
 // ============================================================================
 
