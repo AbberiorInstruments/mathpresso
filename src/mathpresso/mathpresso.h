@@ -306,7 +306,7 @@ public:
 		}
 	}
 
-	void removeObject(std::string name, size_t numArgs);
+	void removeOperation(std::string name, size_t numArgs);
 
 private:
 	symbolMap _symbols;

@@ -20,7 +20,9 @@ namespace mathpresso {
 
 #define VPTR(function) reinterpret_cast<void*>(function)
 
-	// helpers:
+//#define _REALREWORK
+
+#ifdef _REALREWORK
 	double _sin(double * arg) { return std::sin(arg[0]); }
 	double _cos(double * arg) { return std::cos(arg[0]); }
 	double _tan(double * arg) { return std::tan(arg[0]); }
@@ -30,6 +32,84 @@ namespace mathpresso {
 	double _sinh(double * arg) { return std::sinh(arg[0]); }
 	double _cosh(double * arg) { return std::cosh(arg[0]); }
 	double _tanh(double * arg) { return std::tanh(arg[0]); }
+
+	double dummyRR(double * args) { return 0; }
+	double logRR(double* x) { return std::log(x[0]); }
+	double log2RR(double * x) { return std::log2(x[0]); }
+	double log10RR(double * x) { return std::log10(x[0]); }
+	double powRR(double * x) { return std::pow(x[0], x[1]); }
+	double expRR(double * x) { return std::exp(x[0]); }
+	double atan2RR(double * x) { return std::atan2(x[0], x[1]); }
+	double hypotRR(double * x) { return std::hypot(x[0], x[1]); }
+
+	double isfiniteRR(double * args) { return std::isfinite(args[0]) ? 1.0 : 0.0; }
+	double isinfRR(double * args) { return std::isinf(args[0]) ? 1.0 : 0.0; }
+	double isnanRR(double *  args) { return std::isnan(args[0]) ? 1.0 : 0.0; }
+	double sqrtRR(double * args) { return std::sqrt(args[0]); }
+	double negRR(double * args) { return -args[0]; }
+	double notRR(double * args) { return args[0] == 0 ? 1.0 : 0.0; }
+	double recipRR(double * args) { return 1.0 / args[0]; }
+
+	double signbitRR(double * args) { return std::signbit(args[0]) ? 1.0 : 0.0; }
+	double copysignRR(double * args) { return std::copysign(args[0], args[1]); }
+	double avgRR(double * args) { return (args[0] + args[1]) * 0.5; }
+	double absRR(double * args) { return std::abs(args[0]); }
+	double roundRR(double * args)
+	{
+		double y = ::floor(args[0]);
+		return y + (args[0] - y >= 0.5 ? double(1.0) : double(0.0));
+	}
+	double roundevenRR(double * args) { return std::rint(args[0]); }
+	double truncRR(double * args) { return std::trunc(args[0]); }
+	double fracRR(double * args) { return args[0] - std::floor(args[0]); }
+	double floorRR(double * args) { return std::floor(args[0]); }
+	double ceilRR(double * args) { return std::ceil(args[0]); }
+#else
+	double _sin(double arg) { return std::sin(arg); }
+	double _cos(double arg) { return std::cos(arg); }
+	double _tan(double arg) { return std::tan(arg); }
+	double _asin(double arg) { return std::asin(arg); }
+	double _acos(double arg) { return std::acos(arg); }
+	double _atan(double arg) { return std::atan(arg); }
+	double _sinh(double arg) { return std::sinh(arg); }
+	double _cosh(double arg) { return std::cosh(arg); }
+	double _tanh(double arg) { return std::tanh(arg); }
+
+	double dummyRR(double args) { return 0; }
+	double logRR(double x) { return std::log(x); }
+	double log2RR(double x) { return std::log2(x); }
+	double log10RR(double x) { return std::log10(x); }
+	double expRR(double x) { return std::exp(x); }
+	double powRR(double x, double y) { return std::pow(x, y); }
+	double atan2RR(double x, double y) { return std::atan2(x, y); }
+	double hypotRR(double x, double y) { return std::hypot(x, y); }
+
+	double isfiniteRR(double args) { return std::isfinite(args) ? 1.0 : 0.0; }
+	double isinfRR(double args) { return std::isinf(args) ? 1.0 : 0.0; }
+	double isnanRR(double args) { return std::isnan(args) ? 1.0 : 0.0; }
+	double sqrtRR(double args) { return std::sqrt(args); }
+	double negRR(double args) { return -args; }
+	double notRR(double args) { return args == 0 ? 1.0 : 0.0; }
+	double recipRR(double args) { return 1.0 / args; }
+	double signbitRR(double args) { return std::signbit(args) ? 1.0 : 0.0; }
+	double copysignRR(double args0, double args1) { return std::copysign(args0, args1); }
+	double avgRR(double args0, double args1) { return (args0 + args1) * 0.5; }
+	double absRR(double args) { return std::abs(args); }
+	double roundRR(double args)
+	{
+		double y = ::floor(args);
+		return y + (args - y >= 0.5 ? double(1.0) : double(0.0));
+	}
+	double roundevenRR(double args) { return std::rint(args); }
+	double truncRR(double args) { return std::trunc(args); }
+	double fracRR(double args) { return args - std::floor(args); }
+	double floorRR(double args) { return std::floor(args); }
+	double ceilRR(double args) { return std::ceil(args); }
+
+#endif
+
+	// helpers:
+	
 	std::complex<double> _sinC(std::complex<double>* arg) { return std::sin(arg[0]); }
 	std::complex<double> _cosC(std::complex<double>* arg) { return std::cos(arg[0]); }
 	std::complex<double> _tanC(std::complex<double>* arg) { return std::tan(arg[0]); }
@@ -42,23 +122,18 @@ namespace mathpresso {
 
 	// helpers for inline.
 	std::complex<double> dummyCC(std::complex<double> * args) { return std::complex<double>(0, 0); }
-	double dummyRR(double args) { return 0; }
+	
+	
 
 
 
 	// helpers, no derived object
-	double logRR(double x) { return std::log(x); }
+	//
 	std::complex<double> logCC(std::complex<double> *  x) { return std::log(x[0]); }
-	double log2RR(double x) { return std::log2(x); }
 	std::complex<double> log2CC(std::complex<double> *  x) { return std::log(x[0]) / log(2); }
-	double log10RR(double x) { return std::log10(x); }
 	std::complex<double> log10CC(std::complex<double> *  x) { return std::log10(x[0]); }
-	double expRR(double x) { return std::exp(x); }
 	std::complex<double> expCC(std::complex<double> *  x) { return std::exp(x[0]); }
-	double powRR(double x, double y) { return std::pow(x, y); }
 	std::complex<double> powCC(std::complex<double> *  x) { return std::pow(x[0], x[1]); }
-	double atan2RR(double x, double y) { return std::atan2(x, y); }
-	double hypotRR(double x, double y) { return std::hypot(x, y); }
 	std::complex<double> sqrtRC(double  * x) { return std::sqrt(std::complex<double>(x[0], 0)); }
 	std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
 
@@ -294,16 +369,16 @@ namespace mathpresso {
 
 	double MpOperationFunc::evaluateDRetD(double * args)
 	{
+#ifdef _REALREWORK
 		if (!fnD_)
 		{
 			throw std::runtime_error("Function does not exist.");
 		}
 		return ((mpFuncDtoD)fnD_)(args);
 
+#else
+		switch (nargs_)
 
-		return ((mpFuncDtoD)fnD_)(args);
-
-		/*switch (nargs_)
 		{
 		case 0: return ((Arg0Func)fnD_)();
 		case 1: return ((Arg1Func)fnD_)(args[0]);
@@ -316,7 +391,8 @@ namespace mathpresso {
 		case 8: return ((Arg8Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
 		default:
 			throw std::runtime_error("Too many arguments.");
-		}*/
+		}
+#endif // _REALREWORK
 	}
 
 	std::complex<double> MpOperationFunc::evaluateDRetC(double * args)
@@ -407,7 +483,6 @@ namespace mathpresso {
 	}
 
 	// MpOperationIsFinite
-	double isfiniteRR(double args) { return std::isfinite(args) ? 1.0 : 0.0; }
 	std::complex<double> isfiniteCC(std::complex<double>* args)
 	{
 		return std::complex<double>(std::isfinite(args[0].real()) ? 1.0 : 0.0, std::isfinite(args[0].imag()) ? 1.0 : 0.0);
@@ -438,7 +513,6 @@ namespace mathpresso {
 	}
 
 	// MpOperationIsInFinite
-	double isinfRR(double args) { return std::isinf(args) ? 1.0 : 0.0; }
 	std::complex<double> isinfCC(std::complex<double>* args)
 	{
 		return std::complex<double>(std::isinf(args[0].real()) ? 1.0 : 0.0, std::isinf(args[0].imag()) ? 1.0 : 0.0);
@@ -469,8 +543,7 @@ namespace mathpresso {
 		return var;
 	}
 
-	// MpOperationIsNan
-	double isnanRR(double args) { return std::isnan(args) ? 1.0 : 0.0; }
+	// MpOperationIsNan	
 	std::complex<double> isnanCC(std::complex<double>* args)
 	{
 		return std::complex<double>(std::isnan(args[0].real()) ? 1.0 : 0.0, std::isnan(args[0].imag()) ? 1.0 : 0.0);
@@ -557,8 +630,6 @@ namespace mathpresso {
 	}
 
 	// Square root
-	double sqrtRR(double args) { return std::sqrt(args); }
-
 	MpOperationSqrt::MpOperationSqrt() :
 		MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(sqrtRR), nullptr, nullptr, nullptr)
 	{}
@@ -575,7 +646,6 @@ namespace mathpresso {
 	}
 
 	// Negation
-	double negRR(double args) { return -args; }
 	std::complex<double> negCC(std::complex<double>* args) { return -args[0]; }
 
 	MpOperationNeg::MpOperationNeg() :
@@ -616,7 +686,6 @@ namespace mathpresso {
 	}
 
 	// Not
-	double notRR(double args) { return args == 0 ? 1.0 : 0.0; }
 	std::complex<double> notCC(std::complex<double>* args) { return std::complex<double>(args[0] == std::complex<double>(0, 0) ? 1.0 : 0.0, 0.0); }
 
 	MpOperationNot::MpOperationNot() :
@@ -674,8 +743,7 @@ namespace mathpresso {
 
 	// Reciprocal
 	std::complex<double> recipCC(std::complex<double>* args) { return 1.0 / args[0]; }
-	double recipRR(double args) { return 1.0 / args; }
-
+	
 	MpOperationRecip::MpOperationRecip() :
 		MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(recipRR), VPTR(recipCC), nullptr, nullptr)
 	{}
@@ -707,9 +775,7 @@ namespace mathpresso {
 		return result;
 	}
 
-
 	// MpOperationTrigonometrie
-
 	MpOperationTrigonometrie::MpOperationTrigonometrie(uint32_t type) :
 		MpOperationFuncAsm(1, OpFlagHasAsm, VPTR(dummyRR), VPTR(dummyCC), nullptr, nullptr),
 		type_(type)
@@ -803,8 +869,6 @@ namespace mathpresso {
 	}
 
 	// sign bit
-	double signbitRR(double args) { return std::signbit(args) ? 1.0 : 0.0; }
-
 	MpOperationSignBit::MpOperationSignBit() :
 		MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(signbitRR), nullptr, nullptr, nullptr)
 	{}
@@ -819,8 +883,6 @@ namespace mathpresso {
 	}
 
 	// Copy sign
-	double copysignRR(double args0, double args1) { return std::copysign(args0, args1); }
-
 	MpOperationCopySign::MpOperationCopySign() : MpOperationFuncAsm(2, MpOperationFlags::OpFlagNone, VPTR(copysignRR), nullptr, nullptr, nullptr)
 	{}
 
@@ -838,7 +900,6 @@ namespace mathpresso {
 
 
 	// Average
-	double avgRR(double args0, double args1) { return (args0 + args1) * 0.5; }
 	std::complex<double> avgCC(std::complex<double>* args) { return (args[0] + args[1]) * 0.5; }
 
 	MpOperationAvg::MpOperationAvg() : MpOperationFuncAsm(2, MpOperationFlags::OpFlagNone, VPTR(avgRR), VPTR(avgCC), nullptr, nullptr)
@@ -879,7 +940,6 @@ namespace mathpresso {
 	}
 	
 	// Absolute
-	double absRR(double args) { return std::abs(args); }
 	double absCR(std::complex<double>* args) { return std::abs(args[0]); }
 
 	MpOperationAbs::MpOperationAbs() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagCReturnsD, VPTR(absRR), VPTR(absCR), nullptr, nullptr)
@@ -904,15 +964,7 @@ namespace mathpresso {
 		return result;
 	}
 
-
-
 	// round
-	double roundRR(double args)
-	{
-		double y = ::floor(args);
-		return y + (args - y >= 0.5 ? double(1.0) : double(0.0));
-	}
-
 	MpOperationRound::MpOperationRound() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(roundRR), nullptr, nullptr, nullptr)
 	{}
 
@@ -962,8 +1014,6 @@ namespace mathpresso {
 	}
 	
 	// roundeven
-	double roundevenRR(double args) { return std::rint(args); }
-
 	MpOperationRoundEven::MpOperationRoundEven() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(roundevenRR), nullptr, nullptr, nullptr)
 	{}
 
@@ -997,12 +1047,8 @@ namespace mathpresso {
 		}
 		return result;
 	}
-
-
-
+	
 	// trunc
-	double truncRR(double args) { return std::trunc(args); }
-
 	MpOperationTrunc::MpOperationTrunc() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(truncRR), nullptr, nullptr, nullptr)
 	{}
 
@@ -1043,11 +1089,8 @@ namespace mathpresso {
 		}
 		return result;
 	}
-
-
+	
 	// frac
-	double fracRR(double args) { return args - std::floor(args); }
-
 	MpOperationFrac::MpOperationFrac() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(fracRR), nullptr, nullptr, nullptr)
 	{}
 
@@ -1090,11 +1133,8 @@ namespace mathpresso {
 		}
 		return var;
 	}
-
-
+	
 	// floor
-	double floorRR(double args) { return std::floor(args); }
-
 	MpOperationFloor::MpOperationFloor() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(floorRR), nullptr, nullptr, nullptr)
 	{}
 
@@ -1137,8 +1177,6 @@ namespace mathpresso {
 
 
 	// ceil
-	double ceilRR(double args) { return std::ceil(args); }
-
 	MpOperationcCeil::MpOperationcCeil() : MpOperationFuncAsm(1, MpOperationFlags::OpFlagNone, VPTR(ceilRR), nullptr, nullptr, nullptr)
 	{}
 
