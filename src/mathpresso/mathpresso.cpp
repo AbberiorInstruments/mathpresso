@@ -318,27 +318,6 @@ Error Context::addVariable(const char* name, int offset, unsigned int flags)
 	return kErrorOk;
 }
 
-Error Context::listSymbols(std::vector<std::string> &syms)
-{
-	syms.clear();
-
-	_ops.getNames(syms);
-
-	ContextInternalImpl* d;
-	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
-
-	HashIterator<StringRef, AstSymbol> it(d->_scope.getSymbols());
-	do
-	{
-		if (std::find(syms.begin(), syms.end(), it.get()->getName()) == syms.end())
-		{
-			syms.push_back(it.get()->getName());
-		}
-	} while (it.next());
-	
-	return kErrorOk;
-}
-
 Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
 {
 	AstSymbol * sym;
@@ -358,6 +337,28 @@ Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
 	return kErrorOk;
 }
 
+Error Context::listSymbols(std::vector<std::string> &syms)
+{
+	syms.clear();
+
+	_ops.getNames(syms);
+
+	ContextInternalImpl* d;
+	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
+
+	HashIterator<StringRef, AstSymbol> it(d->_scope.getSymbols());
+	do
+	{
+		// as some symbols are in _ops and in the d->_scope, only add those not found in _ops.
+		if (std::find(syms.begin(), syms.end(), it.get()->getName()) == syms.end())
+		{
+			syms.push_back(it.get()->getName());
+		}
+	} while (it.next());
+	
+	return kErrorOk;
+}
+
 Error Context::delSymbol(const char* name) {
   ContextInternalImpl* d;
   MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
@@ -369,7 +370,15 @@ Error Context::delSymbol(const char* name) {
   if (sym == nullptr)
     return MATHPRESSO_TRACE_ERROR(kErrorSymbolNotFound);
 
+  if (_ops.hasOperation(name, sym->getLength()))
+  {
+	  _ops.removeOperation(name, sym->getLength());
+  }
+
   d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
+
+  
+
   return kErrorOk;
 }
 
@@ -598,6 +607,11 @@ void Operations::addOperation(std::string name, std::shared_ptr<MpOperation> obj
 bool Operations::hasOperation(std::string name, size_t numArgs) const
 {
 	return _symbols.find(std::make_pair(name, numArgs)) != _symbols.end();
+}
+
+void Operations::removeOperation(std::string name, size_t numArgs)
+{
+	_symbols.erase(std::make_pair(name, numArgs));
 }
 
 } // mathpresso namespace

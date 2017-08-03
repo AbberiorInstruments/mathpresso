@@ -296,6 +296,7 @@ public:
 	//! Check whether a MpOperation-Object with a known name and number of arguments exists.
 	bool hasOperation(std::string name, size_t numArgs) const;
 
+	//! Return the name of every MpOperation in names.
 	void getNames(std::vector<std::string> &names) const
 	{
 		for (auto p : _symbols)
@@ -303,6 +304,8 @@ public:
 			names.push_back(p.first.first);
 		}
 	}
+
+	void removeObject(std::string name, size_t numArgs);
 
 private:
 	symbolMap _symbols;
@@ -371,8 +374,6 @@ struct Context {
 
   //! Private data not available to the MathPresso public API.
   ContextImpl* _d;
-
-
 
   Operations _ops;
 };
