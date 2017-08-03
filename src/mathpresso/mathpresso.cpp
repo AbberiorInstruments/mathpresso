@@ -217,46 +217,7 @@ struct GlobalConstant {
 
 Error Context::addBuiltIns(void)
 {
-  // add the builtin operations.	
   addBuiltinMpObjects(this);
-
-  ContextInternalImpl* d;
-  MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
-
-  const GlobalConstant mpGlobalConstants[] = {
-    { "NaN", mpGetNan() },
-    { "INF", mpGetInf() },
-    { "PI" , 3.14159265358979323846 },
-    { "E"  , 2.7182818284590452354  }
-  };
-
-  for (size_t i = 0; i < MATHPRESSO_ARRAY_SIZE(mpGlobalConstants); i++) {
-    const GlobalConstant& c = mpGlobalConstants[i];
-
-    StringRef name(c.name, ::strlen(c.name));
-    uint32_t hVal = HashUtils::hashString(name.getData(), name.getLength());
-
-    AstSymbol* sym = d->_builder.newSymbol(name, hVal, kAstSymbolVariable, kAstScopeGlobal);
-    MATHPRESSO_NULLCHECK(sym);
-
-    sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsAssigned | kAstSymbolIsReadOnly);
-    sym->setVarSlotId(kInvalidSlot);
-    sym->setVarOffset(0);
-    sym->setValue(c.value);
-
-    d->_scope.putSymbol(sym);
-  }
-
-  AstSymbol* sym = d->_builder.newSymbol(StringRef("i"), HashUtils::hashString("i",1), kAstSymbolVariable, kAstScopeGlobal);
-  MATHPRESSO_NULLCHECK(sym);
-
-  sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsAssigned | kAstSymbolIsReadOnly | kAstSymbolIsComplex);
-  sym->setVarSlotId(kInvalidSlot);
-  sym->setVarOffset(0);
-  sym->setValue({0, 1});
-
-  d->_scope.putSymbol(sym);
-
   return kErrorOk;
 }
 
@@ -565,7 +526,7 @@ std::string Operations::name(const MpOperation * ptr) const
 	if (test != _symbols.end())
 		return test->first.first;
 	else
-		return "Operation unknown.";
+		return "<unknown>";
 }
 
 

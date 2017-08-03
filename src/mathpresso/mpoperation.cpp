@@ -10,6 +10,7 @@
 #include <mathpresso/mpoperation_p.h>
 #include <mathpresso/mpast_p.h>
 #include <mathpresso/mpcompiler_p.h>
+#include <mathpresso/mpeval_p.h>
 #include <mathpresso/mpoptimizer_p.h>
 #include <asmjit/x86/x86operand.h>
 #include <asmjit/x86/x86inst.h>
@@ -180,6 +181,12 @@ namespace mathpresso {
 		ctx->addObject("atan2", std::make_shared<MpOperationFunc>(2, MpOperationFlags::OpFlagNone, VPTR(atan2RR), nullptr));
 		ctx->addObject("hypot", std::make_shared<MpOperationFunc>(2, MpOperationFlags::OpFlagNone, VPTR(hypotRR), nullptr));
 		ctx->addObject("_none_", std::make_shared<MpOperationFunc>(0, MpOperationFlags::OpFlagNone, nullptr, nullptr));
+
+		ctx->addConstant("NaN", mpGetNan());
+		ctx->addConstant("INF", mpGetInf());
+		ctx->addConstant("PI", 3.14159265358979323846);
+		ctx->addConstant("E", 2.7182818284590452354);
+		ctx->addConstant("i", { 0, 1 });
 		return 0;
 	}
 

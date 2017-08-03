@@ -283,7 +283,8 @@ struct AstSymbol : public HashNode {
 		_valueComp(),
 		_usedCount(0),
 		_writeCount(0)
-	{}
+	{
+	}
 
   // --------------------------------------------------------------------------
   // [Accessors]
