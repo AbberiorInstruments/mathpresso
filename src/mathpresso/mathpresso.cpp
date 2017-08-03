@@ -209,16 +209,10 @@ Context::~Context() {
 // [mathpresso::Context - Interface]
 // ============================================================================
 
-struct GlobalConstant {
-  char name[8];
-  double value;
-};
-
-
 Error Context::addBuiltIns(void)
 {
-  addBuiltinMpObjects(this);
-  return kErrorOk;
+	addBuiltinMpObjects(this);
+	return kErrorOk;
 }
 
 Error Context::addSymbol(AstSymbol* &sym, const char * name, int type)
@@ -318,21 +312,22 @@ Error Context::listSymbols(std::vector<std::string> &syms)
 	return kErrorOk;
 }
 
-Error Context::delSymbol(const char* name) {
-  ContextInternalImpl* d;
-  MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
+Error Context::delSymbol(const char* name)
+{
+	ContextInternalImpl* d;
+	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
 
-  size_t nlen = strlen(name);
-  uint32_t hVal = HashUtils::hashString(name, nlen);
+	size_t nlen = strlen(name);
+	uint32_t hVal = HashUtils::hashString(name, nlen);
 
-  AstSymbol* sym = d->_scope.getSymbol(StringRef(name, nlen), hVal);
-  if (sym == nullptr)
-    return MATHPRESSO_TRACE_ERROR(kErrorSymbolNotFound);
+	AstSymbol* sym = d->_scope.getSymbol(StringRef(name, nlen), hVal);
+	if (sym == nullptr)
+		return MATHPRESSO_TRACE_ERROR(kErrorSymbolNotFound);
 
-  _ops.remove(name, sym->getLength());
-  d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
+	_ops.remove(name, sym->getLength());
+	d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
 
-  return kErrorOk;
+	return kErrorOk;
 }
 
 
@@ -353,7 +348,8 @@ Expression::~Expression()
 // [mathpresso::Expression - Interface]
 // ============================================================================
 
-Error Expression::compile(const Context& ctx, const char* body, unsigned int options, OutputLog* log) {
+Error Expression::compile(const Context& ctx, const char* body, unsigned int options, OutputLog* log) 
+{
 	// Init options first.
 	options &= _kOptionsMask;
 
@@ -388,7 +384,9 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	}
 
 	// Perform basic optimizations at AST level.
-	{ MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, &ctx._ops).onProgram(ast.getProgramNode())); }
+	{ 
+		MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, &ctx._ops).onProgram(ast.getProgramNode())); 
+	}
 
 	if (options & kOptionDebugAst) {
 		ast.dump(sbTmp, &ctx._ops);
@@ -428,8 +426,12 @@ void Expression::reset()
 // [mathpresso::OutputLog - Construction / Destruction]
 // ============================================================================
 
-OutputLog::OutputLog() {}
-OutputLog::~OutputLog() {}
+OutputLog::OutputLog() 
+{
+}
+OutputLog::~OutputLog() 
+{
+}
 
 // ============================================================================
 // [mathpresso::ErrorReporter - Interface]
