@@ -836,6 +836,7 @@ namespace mathpresso {
 	{
 		switch (type_)
 		{
+#ifdef _REALREWORK
 		case trigonometrieFunc::sin: return _sin(args);
 		case trigonometrieFunc::cos: return _cos(args);
 		case trigonometrieFunc::tan: return _tan(args);
@@ -845,6 +846,19 @@ namespace mathpresso {
 		case trigonometrieFunc::sinh: return _sinh(args);
 		case trigonometrieFunc::cosh: return _cosh(args);
 		case trigonometrieFunc::tanh: return _tanh(args);
+#else
+		case trigonometrieFunc::sin: return _sin(args[0]);
+		case trigonometrieFunc::cos: return _cos(args[0]);
+		case trigonometrieFunc::tan: return _tan(args[0]);
+		case trigonometrieFunc::asin: return _asin(args[0]);
+		case trigonometrieFunc::acos: return _acos(args[0]);
+		case trigonometrieFunc::atan: return _atan(args[0]);
+		case trigonometrieFunc::sinh: return _sinh(args[0]);
+		case trigonometrieFunc::cosh: return _cosh(args[0]);
+		case trigonometrieFunc::tanh: return _tanh(args[0]);
+#endif // _REALREWORK
+
+		
 		default:
 			throw std::runtime_error("no function of this type available.");
 		}

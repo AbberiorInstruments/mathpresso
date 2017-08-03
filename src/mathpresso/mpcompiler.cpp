@@ -256,11 +256,13 @@ namespace mathpresso {
 
 	void JitCompiler::inlineCallDRetD(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
 	{
+
+#ifdef _REALREWORK
 		// Use function builder to build a function prototype.
 		X86Mem stack(cc->newStack(count * sizeof(double), sizeof(double)));
 		X86Gp dataPointerReg(cc->newUIntPtr());
 		cc->lea(dataPointerReg, stack);
-		
+
 		for (size_t i = 0; i < count; i++)
 		{
 			cc->movsd(stack, args[i]);
@@ -271,17 +273,34 @@ namespace mathpresso {
 		signature.setRetT<double>();
 		signature.addArgT<TypeId::UIntPtr>(); // parameters
 
-		//for (size_t i = 0; i < count; i++)
-			//signature.addArgT<double>();
+											  //for (size_t i = 0; i < count; i++)
+											  //signature.addArgT<double>();
 
-		// Create the function call.
+											  // Create the function call.
 		CCFuncCall* ctx = cc->call(reinterpret_cast<uint64_t>(fn), signature);
 		ctx->setRet(0, dst);
 
 		//for (size_t i = 0; i < count; i++)
-			//ctx->setArg(static_cast<uint32_t>(i), args[i]);
+		//ctx->setArg(static_cast<uint32_t>(i), args[i]);
 		ctx->setArg(0, dataPointerReg);
 
+#else
+
+		// Use function builder to build a function prototype.
+		FuncSignatureX signature;
+		signature.setRetT<double>();
+
+		for (size_t i = 0; i < count; i++)
+			signature.addArgT<double>();
+
+		//Create the function call.
+		CCFuncCall* ctx = cc->call(reinterpret_cast<uint64_t>(fn), signature);
+		ctx->setRet(0, dst);
+
+		for (size_t i = 0; i < count; i++)
+			ctx->setArg(static_cast<uint32_t>(i), args[i]);
+
+#endif // _REALREWORK
 	}
 
 	void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
