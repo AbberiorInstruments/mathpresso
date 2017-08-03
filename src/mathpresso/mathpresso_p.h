@@ -193,6 +193,7 @@ using asmjit::ZoneVector;
 // [mathpresso::OpFlags]
 // ============================================================================
 
+/*
 //! Operator flags.
 enum OpFlags {
   //! The operator has one parameter (unary node).
@@ -239,6 +240,7 @@ enum OpFlags {
   kOpFlagNopIfZero     = kOpFlagNopIfLZero | kOpFlagNopIfRZero,
   kOpFlagNopIfOne      = kOpFlagNopIfLOne  | kOpFlagNopIfROne
 };
+*/
 
 // ============================================================================
 // [mpsl::InternalConsts]

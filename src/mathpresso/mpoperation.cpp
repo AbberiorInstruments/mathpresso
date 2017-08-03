@@ -647,7 +647,7 @@ namespace mathpresso {
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 
-		if (!hasFlag(kAstReturnsComplex))
+		if (!node ->hasNodeFlag(kAstReturnsComplex))
 		{
 			var = jc->writableVar(var);
 			jc->cc->pxor(var.getXmm(), jc->getConstantU64(uint64_t(0x8000000000000000)).getMem());
@@ -687,7 +687,7 @@ namespace mathpresso {
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 
-		if (hasFlag(kAstReturnsComplex))
+		if (node ->hasNodeFlag(kAstReturnsComplex))
 		{
 			var = jc->writableVarComplex(var);
 			jc->cc->cmppd(var.getXmm(), jc->getConstantD64(std::complex<double>(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpEQ));

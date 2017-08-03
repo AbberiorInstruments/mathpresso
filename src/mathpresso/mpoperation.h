@@ -62,24 +62,34 @@ namespace mathpresso {
 			nargs_(nargs),
 			flags_(flags),
 			priority_(0)
-		{}
+		{
+		}
 
 		virtual ~MpOperation()
-		{}
+		{
+		}
 
 		// Add ASM code to compiler stack 
 		virtual JitVar compile(JitCompiler *jc, AstNode * node) = 0;
 		// Optimize AST 
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) = 0;
 
-		uint32_t nargs() const { return nargs_; }
-
-		bool isRightToLeft() const { return (flags_ & OpIsRighttoLeft) != 0; }
-
-		uint32_t getPrecedence() const { return priority_; }
-
-		uint32_t flags() const { return flags_; }
-
+		uint32_t nargs() const 
+		{ 
+			return nargs_; 
+		}
+		bool isRightToLeft() const 
+		{ 
+			return (flags_ & OpIsRighttoLeft) != 0; 
+		}
+		uint32_t precedence() const 
+		{ 
+			return priority_; 
+		}
+		uint32_t flags() const 
+		{ 
+			return flags_; 
+		}
 	protected:
 		uint32_t nargs_;
 		uint32_t flags_;

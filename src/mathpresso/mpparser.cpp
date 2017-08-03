@@ -563,8 +563,8 @@ namespace mathpresso {
 					break;
 				}
 
-				uint32_t currentBinaryPrec = currentBinaryNode->_mpOp->getPrecedence();
-				uint32_t newBinaryPrec = newNode->_mpOp->getPrecedence();
+				uint32_t currentBinaryPrec = currentBinaryNode->_mpOp->precedence();
+				uint32_t newBinaryPrec = newNode->_mpOp->precedence();
 
 				if (currentBinaryPrec > newBinaryPrec)
 				{
@@ -596,7 +596,7 @@ namespace mathpresso {
 						if (currentBinaryPrec > newBinaryPrec || (currentBinaryPrec == newBinaryPrec && currentBinaryNode->_mpOp->isRightToLeft()))
 							break;
 						currentBinaryNode = static_cast<AstBinaryOp*>(currentBinaryNode->getParent());
-						currentBinaryPrec = currentBinaryNode->_mpOp->getPrecedence();
+						currentBinaryPrec = currentBinaryNode->_mpOp->precedence();
 					}
 
 					// currentBinaryNode <+
