@@ -134,10 +134,6 @@ namespace mathpresso {
 		virtual double evaluateCRetD(std::complex<double> *args);
 		virtual std::complex<double> evaluateCRetC(std::complex<double> *args);
 
-		// Should be overridden, if there is a special opportunity for optimization.
-		// Will be called by optimize as the last operation.
-		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node);
-
 		// Function-pointer:
 		void * fnC_;
 		void * fnD_;

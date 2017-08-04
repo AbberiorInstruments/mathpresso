@@ -58,7 +58,7 @@ namespace mathpresso
 		MpOperationNeg();
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 	protected:
-		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node) override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 	};
 
 	// Not
@@ -76,7 +76,7 @@ namespace mathpresso
 		MpOperationConjug();
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 	private:
-		virtual uint32_t optimizeSpecial(AstOptimizer *opt, AstNode *node) override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 	};
 
 	// Reciprocate

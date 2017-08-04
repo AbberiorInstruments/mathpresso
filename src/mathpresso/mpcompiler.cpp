@@ -301,7 +301,7 @@ namespace mathpresso {
 	void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
 	{
 		// copy the parameters to Memory.
-		X86Mem stack(cc->newStack(count * sizeof(double), sizeof(double)));
+		X86Mem stack(cc->newStack(uint32_t(count * sizeof(double)), sizeof(double)));
 		X86Gp dataPointerReg(cc->newUIntPtr());
 		cc->lea(dataPointerReg, stack);
 
@@ -337,7 +337,7 @@ namespace mathpresso {
 	void JitCompiler::inlineCallCRetD(const X86Xmm& dst, const X86Xmm* args, const size_t count, void* fn)
 	{
 		// copy the data to Memory.
-		X86Mem stack(cc->newStack(count * 16, 16));
+		X86Mem stack(cc->newStack(uint32_t(count) * 16, 16));
 		X86Gp dataPointerReg(cc->newUIntPtr());
 		cc->lea(dataPointerReg, stack);
 
@@ -363,7 +363,7 @@ namespace mathpresso {
 	void JitCompiler::inlineCallCRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
 	{
 		// copy the data to Memory.
-		X86Mem stack(cc->newStack((count + 1) * 16, 16));
+		X86Mem stack(cc->newStack((uint32_t(count) + 1) * 16, 16));
 		X86Gp dataPointerReg(cc->newUIntPtr());
 		cc->lea(dataPointerReg, stack);
 

@@ -398,7 +398,6 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 
 	// Compile the function to machine code.
 	reset();
-
 	CompiledFunc fn = mpCompileFunction(&ast, options, log, &ctx._ops, _isComplex);
 
 	if (fn == nullptr)

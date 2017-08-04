@@ -965,29 +965,25 @@ struct AstUnaryOp : public AstUnary {
 // [mathpresso::AstBinaryOp]
 // ============================================================================
 
-struct AstBinaryOp : public AstBinary {
-  MATHPRESSO_NO_COPY(AstBinaryOp)
+struct AstBinaryOp : public AstBinary
+{
+	MATHPRESSO_NO_COPY(AstBinaryOp)
 
-  // --------------------------------------------------------------------------
-  // [Construction / Destruction]
-  // --------------------------------------------------------------------------
+	MATHPRESSO_INLINE AstBinaryOp(AstBuilder* ast) : AstBinary(ast, kAstNodeBinaryOp)
+	{
+	}
 
-  MATHPRESSO_INLINE AstBinaryOp(AstBuilder* ast)
-    : AstBinary(ast, kAstNodeBinaryOp)
-  {
-  }
+	MATHPRESSO_INLINE void destroy(AstBuilder* ast)
+	{
+		if ((_mpOp->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft())
+		{
+			AstVar* var = static_cast<AstVar*>(getLeft());
+			AstSymbol* sym = var->getSymbol();
 
-  MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
-	if ((_mpOp->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft()) {
-      AstVar* var = static_cast<AstVar*>(getLeft());
-      AstSymbol* sym = var->getSymbol();
-
-      if (sym != nullptr)
-        sym->decWriteCount();
-    }
-
-  }
-
+			if (sym != nullptr)
+				sym->decWriteCount();
+		}
+	}
 };
 
 // ============================================================================
