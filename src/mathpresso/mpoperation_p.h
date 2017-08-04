@@ -87,22 +87,6 @@ namespace mathpresso
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 	};
 
-	// trigonometric functions (sin, cos, tan, etc)
-	class MpOperationTrigonometrie : public MpOperationFunc
-	{
-	public:
-		enum class Type {
-			sin, cos, tan, asin, acos, atan, sinh, cosh, tanh
-		};
-		MpOperationTrigonometrie(Type type);
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-	protected:
-		virtual double evaluateDRetD(double *args) override;
-		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) override;
-	private:
-		Type type_;
-	};
-
 	// Sign bit
 	class MpOperationSignBit : public MpOperationFunc
 	{
