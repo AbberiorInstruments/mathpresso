@@ -594,17 +594,8 @@ namespace mathpresso {
 	JitVar MpOperationNeg::compile(JitCompiler * jc, AstNode * node)
 	{
 		JitVar var = jc->onNode(node->getAt(0));
-
-		if (!node ->hasNodeFlag(kAstReturnsComplex))
-		{
-			var = jc->writableVar(var);
-			jc->cc->pxor(var.getXmm(), jc->getConstantU64(uint64_t(0x8000000000000000)).getMem());
-		}
-		else
-		{
-			var = jc->writableVarComplex(var);
-			jc->cc->pxor(var.getXmm(), jc->getConstantU64(uint64_t(0x8000000000000000), uint64_t(0x8000000000000000)).getMem());
-		}
+		var = jc->writableVarComplex(var);
+		jc->cc->pxor(var.getXmm(), jc->getConstantU64(uint64_t(0x8000000000000000), uint64_t(0x8000000000000000)).getMem());
 		return var;
 	}
 
