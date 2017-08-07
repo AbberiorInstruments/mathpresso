@@ -24,46 +24,51 @@ namespace mathpresso
 
 	struct JitVar
 	{
-		// switch to bool.
-		enum FLAGS
-		{
-			FLAG_NONE = 0,
-			FLAG_RO = 1
-		};
 
-		MATHPRESSO_INLINE JitVar() : op(), flags(FLAGS::FLAG_NONE) {}
-		MATHPRESSO_INLINE JitVar(asmjit::Operand op, uint32_t flags) : op(op), flags(flags) {}
-		MATHPRESSO_INLINE JitVar(const JitVar& other) : op(other.op), flags(other.flags) {}
-		MATHPRESSO_INLINE ~JitVar() {}
+		JitVar() : op(), isReadOnly(false)
+		{
+		}
+
+		JitVar(asmjit::Operand op, bool isROnly) : op(op), isReadOnly(isROnly)
+		{
+		}
+
+		JitVar(const JitVar& other) : op(other.op), isReadOnly(other.isRO())
+		{
+		}
+
+		~JitVar()
+		{
+		}
 
 		// Reset
-		MATHPRESSO_INLINE void reset()
+		void reset()
 		{
 			op.reset();
-			flags = FLAGS::FLAG_NONE;
+			isReadOnly = false;
 		}
 
 		// Operator Overload.
-		MATHPRESSO_INLINE const JitVar& operator=(const JitVar& other)
+		const JitVar& operator=(const JitVar& other)
 		{
 			op = other.op;
-			flags = other.flags;
+			this->isReadOnly = other.isRO();
 			return *this;
 		}
 
 		// Operator Overload.
-		MATHPRESSO_INLINE const bool operator==(const JitVar& other)
+		const bool operator==(const JitVar& other)
 		{
-			return this->flags == other.flags && this->op.isEqual(other.op);
+			return this->isRO() == other.isRO() && this->op.isEqual(other.op);
 		}
 
-		MATHPRESSO_INLINE const bool operator!=(const JitVar& other)
+		const bool operator!=(const JitVar& other)
 		{
 			return !(this->operator==(other));
 		}
 
 		// Swap.
-		MATHPRESSO_INLINE void swapWith(JitVar& other)
+		void swapWith(JitVar& other)
 		{
 			JitVar t(*this);
 			*this = other;
@@ -71,22 +76,55 @@ namespace mathpresso
 		}
 
 		// Operand management.
-		MATHPRESSO_INLINE const asmjit::Operand& getOperand() const { return op; }
-		MATHPRESSO_INLINE const asmjit::X86Mem& getMem() const { return *static_cast<const asmjit::X86Mem*>(&op); }
-		MATHPRESSO_INLINE const asmjit::X86Xmm& getXmm() const { return *static_cast<const asmjit::X86Xmm*>(&op); }
+		const asmjit::Operand& getOperand() const
+		{
+			return op;
+		}
 
-		MATHPRESSO_INLINE bool isNone() const { return op.isNone(); }
-		MATHPRESSO_INLINE bool isMem() const { return op.isMem(); }
-		MATHPRESSO_INLINE bool isXmm() const { return op.isReg(asmjit::X86Reg::kRegXmm); }
+		const asmjit::X86Mem& getMem() const
+		{
+			return *static_cast<const asmjit::X86Mem*>(&op);
+		}
 
-		// Flags.
-		MATHPRESSO_INLINE bool isRO() const { return (flags & FLAGS::FLAG_RO) != 0; }
-		MATHPRESSO_INLINE void setRO() { flags |= FLAGS::FLAG_RO; }
-		MATHPRESSO_INLINE void clearRO() { flags &= ~FLAGS::FLAG_RO; }
+		const asmjit::X86Xmm& getXmm() const
+		{
+			return *static_cast<const asmjit::X86Xmm*>(&op);
+		}
+
+		bool isNone() const
+		{
+			return op.isNone();
+		}
+
+		bool isMem() const
+		{
+			return op.isMem();
+		}
+
+		bool isXmm() const
+		{
+			return op.isReg(asmjit::X86Reg::kRegXmm);
+		}
+
+		bool isRO() const
+		{
+			return isReadOnly;
+		}
+
+		void setRO()
+		{
+			isReadOnly = true;
+		}
+
+		void clearRO()
+		{
+			isReadOnly = false;
+		}
 
 		// Members.
+	private:
 		asmjit::Operand op;
-		uint32_t flags;
+		bool isReadOnly;
 	};
 
 	// ============================================================================
@@ -101,7 +139,6 @@ namespace mathpresso
 			varSlots(nullptr),
 			functionBody(nullptr),
 			constPool(&cc->_cbDataZone),
-			//_symbols(syms),
 			_ops(ops)
 		{
 			enableSSE4_1 = asmjit::CpuInfo::getHost().hasFeature(asmjit::CpuInfo::kX86FeatureSSE4_1);
@@ -114,11 +151,11 @@ namespace mathpresso
 		void endFunction();
 
 		// Variable Management.
-		JitVar copyVar(const JitVar& other, uint32_t flags);
+		JitVar copyVar(const JitVar& other, bool isRO);
 		JitVar writableVar(const JitVar& other);
 		JitVar registerVar(const JitVar& other);
 
-		JitVar copyVarComplex(const JitVar & other, uint32_t flags);
+		JitVar copyVarComplex(const JitVar & other, bool isRO);
 		JitVar writableVarComplex(const JitVar & other);
 		JitVar registerVarComplex(const JitVar & other, bool otherIsNonComplex = false);
 		JitVar registerVarAsComplex(const JitVar & other);

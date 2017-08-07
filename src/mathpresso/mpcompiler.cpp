@@ -49,9 +49,9 @@ namespace mathpresso {
 			cc->embedConstPool(constLabel, constPool);
 	}
 
-	JitVar JitCompiler::copyVar(const JitVar& other, uint32_t flags)
+	JitVar JitCompiler::copyVar(const JitVar& other, bool isRO)
 	{
-		JitVar v(cc->newXmmSd(), flags);
+		JitVar v(cc->newXmmSd(), isRO);
 		cc->emit(other.isXmm() ? X86Inst::kIdMovapd : X86Inst::kIdMovsd,
 			v.getXmm(), other.getOperand());
 		return v;
@@ -60,7 +60,7 @@ namespace mathpresso {
 	JitVar JitCompiler::writableVar(const JitVar& other)
 	{
 		if (other.isMem() || other.isRO())
-			return copyVar(other, other.flags & ~JitVar::FLAGS::FLAG_RO);
+			return copyVar(other, false);
 		else
 			return other;
 	}
@@ -69,14 +69,14 @@ namespace mathpresso {
 	JitVar JitCompiler::registerVar(const JitVar& other)
 	{
 		if (other.isMem())
-			return copyVar(other, other.flags);
+			return copyVar(other, other.isRO());
 		else
 			return other;
 	}
 
-	JitVar JitCompiler::copyVarComplex(const JitVar& other, uint32_t flags)
+	JitVar JitCompiler::copyVarComplex(const JitVar& other, bool isRO)
 	{
-		JitVar v(cc->newXmmPd(), flags);
+		JitVar v(cc->newXmmPd(), isRO);
 
 		cc->emit(X86Inst::kIdMovupd, v.getXmm(), other.getOperand());
 		return v;
@@ -85,7 +85,7 @@ namespace mathpresso {
 	JitVar JitCompiler::writableVarComplex(const JitVar& other)
 	{
 		if (other.isMem() || other.isRO())
-			return copyVarComplex(other, other.flags & ~JitVar::FLAG_RO);
+			return copyVarComplex(other, false);
 		else
 			return other;
 	}
@@ -96,7 +96,7 @@ namespace mathpresso {
 		if (otherIsNonComplex)
 			return registerVarAsComplex(other);
 		else if (other.isMem())
-			return copyVarComplex(other, JitVar::FLAGS::FLAG_NONE);
+			return copyVarComplex(other, false);
 		else
 			return other;
 	}
@@ -104,7 +104,7 @@ namespace mathpresso {
 	// makes a non-complex var complex
 	JitVar JitCompiler::registerVarAsComplex(const JitVar& other)
 	{
-		JitVar v(cc->newXmmPd(), other.flags);
+		JitVar v(cc->newXmmPd(), other.isRO());
 		cc->pxor(v.getXmm(), v.getXmm());
 		if (other.isMem())
 		{
@@ -226,14 +226,14 @@ namespace mathpresso {
 		{
 			if (sym->isGlobal())
 			{
-				result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAGS::FLAG_RO);
+				result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), true);
 				varSlots[slotId] = result;
 				if (sym->getWriteCount() > 0)
 				{
 					if (!b_complex)
-						result = copyVar(result, JitVar::FLAGS::FLAG_NONE);
+						result = copyVar(result, false);
 					else
-						result = copyVarComplex(result, JitVar::FLAGS::FLAG_NONE);
+						result = copyVarComplex(result, false);
 				}
 			}
 			else
@@ -409,7 +409,7 @@ namespace mathpresso {
 		if (constPool.add(&value, sizeof(uint64_t), offset) != ErrorCode::kErrorOk)
 			return JitVar();
 
-		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAGS::FLAG_NONE);
+		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), false);
 	}
 
 	JitVar JitCompiler::getConstantU64(uint64_t real, uint64_t imag)
@@ -421,7 +421,7 @@ namespace mathpresso {
 		if (constPool.add(value, 2 * sizeof(uint64_t), offset) != ErrorCode::kErrorOk)
 			return JitVar();
 
-		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAGS::FLAG_NONE);
+		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), false);
 	}
 
 	JitVar JitCompiler::getConstantU64AsPD(uint64_t value)
@@ -433,7 +433,7 @@ namespace mathpresso {
 		if (constPool.add(&vec, sizeof(Data128), offset) != ErrorCode::kErrorOk)
 			return JitVar();
 
-		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAGS::FLAG_NONE);
+		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), false);
 	}
 
 	JitVar JitCompiler::getConstantD64(double value)
