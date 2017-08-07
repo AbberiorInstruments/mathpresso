@@ -58,7 +58,7 @@ namespace mathpresso
 	// ============================================================================
 	// [mathpresso::HashBase - Reset / Rehash]
 	// ============================================================================
-
+	
 	void HashBase::_rehash(uint32_t newCount)
 	{
 		ZoneHeap* heap = _heap;

@@ -83,9 +83,9 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		HashBase(ZoneHeap* heap) :
+			_bucketsCount(1),
 			_heap(heap),
 			_length(0),
-			_bucketsCount(1),
 			_bucketsGrow(1)
 		{
 			_data = _embedded;
@@ -100,32 +100,32 @@ namespace mathpresso
 		}
 
 		// --------------------------------------------------------------------------
-		// [Accessors]
-		// --------------------------------------------------------------------------
-
-		ZoneHeap* getHeap() const { return _heap; }
-
-		// --------------------------------------------------------------------------
 		// [Ops]
 		// --------------------------------------------------------------------------
-
+		
+		// std::unordered_mpa::rehash
 		void _rehash(uint32_t newCount);
+
+		// effectively merge this HashBase to other
+		// std::unordered_map::merge (cpp17?)
 		void _mergeToInvisibleSlot(HashBase& other);
 
+		// std::unordered_map::emplace
 		HashNode* _put(HashNode* node);
+
+		// std::unordered_map::rease
 		HashNode* _del(HashNode* node);
 
-		// --------------------------------------------------------------------------
-		// [Reset / Rehash]
-		// --------------------------------------------------------------------------
+		// i would call these internal data -> priave or protected...
+		uint32_t _bucketsCount;
+		HashNode** _data;
 
+	protected:
 		ZoneHeap* _heap;
 
 		uint32_t _length;
-		uint32_t _bucketsCount;
 		uint32_t _bucketsGrow;
-
-		HashNode** _data;
+	
 		HashNode* _embedded[1 + kExtraCount];
 	};
 
@@ -168,6 +168,10 @@ namespace mathpresso
 		// [Ops]
 		// --------------------------------------------------------------------------
 
+		// std::unordere_map::reset? eventually problems with the release handler?
+		// ReleaseHandler = AstScopeReleaseHandler (in mpast.cpp, Z. 175)
+		// deletes every AstSymbol, via deleteSymbol(), then resets to defaults
+		// called by destructor of AstScope.
 		template<typename ReleaseHandler>
 		void reset(ReleaseHandler& handler)
 		{
@@ -199,16 +203,12 @@ namespace mathpresso
 				_embedded[i] = nullptr;
 		}
 
-		void mergeToInvisibleSlot(Hash<Key, Node>& other)
-		{
-			_mergeToInvisibleSlot(other);
-		}
-
+		
 		Node* get(const Key& key, uint32_t hVal) const
 		{
 			uint32_t hMod = hVal % _bucketsCount;
 			Node* node = static_cast<Node*>(_data[hMod]);
-
+			
 			while (node != nullptr)
 			{
 				if (node->eq(key))
@@ -218,7 +218,9 @@ namespace mathpresso
 
 			return nullptr;
 		}
-
+		
+		// wrappers, not necessary?
+		void mergeToInvisibleSlot(Hash<Key, Node>& other) { _mergeToInvisibleSlot(other); }
 		Node* put(Node* node) { return static_cast<Node*>(_put(node)); }
 		Node* del(Node* node) { return static_cast<Node*>(_del(node)); }
 	};
@@ -226,7 +228,7 @@ namespace mathpresso
 	// ============================================================================
 	// [mathpresso::HashIterator<Key, Node>]
 	// ============================================================================
-	 // just an Iterator over Hash
+	 // just an Iterator over Hash -> use std::iterator instead
 	template<typename Key, typename Node>
 	struct HashIterator
 	{
