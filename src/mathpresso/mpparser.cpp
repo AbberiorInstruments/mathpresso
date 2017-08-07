@@ -181,7 +181,7 @@ namespace mathpresso {
 	{
 		Token token;
 		uint32_t uToken = _tokenizer.next(&token);
-		StringRef str;
+		std::string str;
 
 		bool isFirst = true;
 		uint32_t position = token.getPosAsUInt();
@@ -208,7 +208,7 @@ namespace mathpresso {
 			AstSymbol* vSym;
 			AstScope* vScope;
 
-			str.set(_tokenizer._start + token.position, token.length);
+			str = std::string(_tokenizer._start + token.position, token.length);
 			if ((vSym = scope->resolveSymbol(str, token.hVal, &vScope)) != nullptr)
 			{
 				if (vSym->getSymbolType() != kAstSymbolVariable || scope == vScope)
@@ -353,13 +353,13 @@ namespace mathpresso {
 				// Parse a symbol (variable or function name).
 			case kTokenSymbol:
 			{
-				StringRef str(_tokenizer._start + token.position, token.length);
+				std::string str(_tokenizer._start + token.position, token.length);
 
 				AstScope* symScope;
 				AstSymbol* sym = scope->resolveSymbol(str, token.hVal, &symScope);
 
 				if (sym == nullptr)
-					MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %.*s.", static_cast<int>(str.getLength()), str.getData());
+					MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %.*s.", static_cast<int>(str.length()), str.c_str());
 
 				uint32_t symType = sym->getSymbolType();
 				AstNode* newNode;

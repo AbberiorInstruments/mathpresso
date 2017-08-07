@@ -108,7 +108,7 @@ static ContextImpl* mpContextClone(ContextImpl* otherD_) {
     while (it.has()) {
       AstSymbol* sym = it.get();
 
-      StringRef name(sym->getName(), sym->getLength());
+      std::string name(sym->getName(), sym->getLength());
       uint32_t hVal = sym->getHVal();
       uint32_t type = sym->getSymbolType();
 
@@ -222,11 +222,11 @@ Error Context::addSymbol(AstSymbol* &sym, const char * name, int type)
 
 	size_t nlen = strlen(name); 
 	uint32_t hVal = HashUtils::hashString(name, nlen); 
-	sym = d->_scope.getSymbol(StringRef(name, nlen), hVal); 
+	sym = d->_scope.getSymbol(std::string(name, nlen), hVal); 
 	if (sym != nullptr) 
 		return MATHPRESSO_TRACE_ERROR(kErrorSymbolAlreadyExists); 
     
-	sym = d->_builder.newSymbol(StringRef(name, nlen), hVal, type, kAstScopeGlobal);
+	sym = d->_builder.newSymbol(std::string(name, nlen), hVal, type, kAstScopeGlobal);
 	if (sym == nullptr) 
 		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory); 
 	d->_scope.putSymbol(sym); 
@@ -299,7 +299,7 @@ Error Context::listSymbols(std::vector<std::string> &syms)
 	ContextInternalImpl* d;
 	MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
 
-	HashIterator<StringRef, AstSymbol> it(d->_scope.getSymbols());
+	HashIterator<std::string, AstSymbol> it(d->_scope.getSymbols());
 	do
 	{
 		// as some symbols are in _ops and in the d->_scope, only add those not found in _ops.
@@ -320,7 +320,7 @@ Error Context::delSymbol(const char* name)
 	size_t nlen = strlen(name);
 	uint32_t hVal = HashUtils::hashString(name, nlen);
 
-	AstSymbol* sym = d->_scope.getSymbol(StringRef(name, nlen), hVal);
+	AstSymbol* sym = d->_scope.getSymbol(std::string(name, nlen), hVal);
 	if (sym == nullptr)
 		return MATHPRESSO_TRACE_ERROR(kErrorSymbolNotFound);
 

@@ -76,22 +76,22 @@ void AstBuilder::deleteScope(AstScope* scope) {
   _heap->release(scope, sizeof(AstScope));
 }
 
-AstSymbol* AstBuilder::newSymbol(const StringRef& key, uint32_t hVal, uint32_t symbolType, uint32_t scopeType) {
-  size_t kLen = key.getLength();
+AstSymbol* AstBuilder::newSymbol(const std::string& key, uint32_t hVal, uint32_t symbolType, uint32_t scopeType) {
+  size_t kLen = key.length();
   void* p = _heap->alloc(sizeof(AstSymbol) + kLen + 1);
 
   if (p == nullptr)
     return nullptr;
 
   char* kStr = static_cast<char*>(p) + sizeof(AstSymbol);
-  ::memcpy(kStr, key.getData(), kLen);
+  ::memcpy(kStr, key.c_str(), kLen);
 
   kStr[kLen] = '\0';
   return new(p) AstSymbol(kStr, static_cast<uint32_t>(kLen), hVal, symbolType, scopeType);
 }
 
 AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
-  StringRef name(other->getName(), other->getLength());
+  std::string name(other->getName(), other->getLength());
   AstSymbol* sym = newSymbol(name, other->getHVal(), other->getSymbolType(), kAstScopeShadow);
 
   if (sym == nullptr)
@@ -194,7 +194,7 @@ AstScope::~AstScope() {
 // [mathpresso::AstScope - Ops]
 // ============================================================================
 
-AstSymbol* AstScope::resolveSymbol(const StringRef& name, uint32_t hVal, AstScope** scopeOut) {
+AstSymbol* AstScope::resolveSymbol(const std::string& name, uint32_t hVal, AstScope** scopeOut) {
   AstScope* scope = this;
   AstSymbol* symbol;
 

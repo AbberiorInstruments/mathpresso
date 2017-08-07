@@ -200,7 +200,7 @@ struct AstBuilder {
   AstScope* newScope(AstScope* parent, uint32_t scopeType);
   void deleteScope(AstScope* scope);
 
-  AstSymbol* newSymbol(const StringRef& key, uint32_t hVal, uint32_t symbolType, uint32_t scopeType);
+  AstSymbol* newSymbol(const std::string& key, uint32_t hVal, uint32_t symbolType, uint32_t scopeType);
   AstSymbol* shadowSymbol(const AstSymbol* other);
   void deleteSymbol(AstSymbol* symbol);
 
@@ -290,8 +290,8 @@ struct AstSymbol : public HashNode {
   // [Accessors]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE bool eq(const StringRef& s) const {
-    return eq(s.getData(), s.getLength());
+  MATHPRESSO_INLINE bool eq(const std::string& s) const {
+    return eq(s.c_str(), s.length());
   }
 
   //! Get whether the symbol name is equal to string `s` of `len`.
@@ -403,8 +403,8 @@ private:
 	std::complex<double> _valueComp;
 };
 
-typedef Hash<StringRef, AstSymbol> AstSymbolHash;
-typedef HashIterator<StringRef, AstSymbol> AstSymbolHashIterator;
+typedef Hash<std::string, AstSymbol> AstSymbolHash;
+typedef HashIterator<std::string, AstSymbol> AstSymbolHashIterator;
 
 // ============================================================================
 // [mathpresso::AstScope]
@@ -447,7 +447,7 @@ struct AstScope {
   // --------------------------------------------------------------------------
 
   //! Get the symbol defined only in this scope.
-  MATHPRESSO_INLINE AstSymbol* getSymbol(const StringRef& name, uint32_t hVal) {
+  MATHPRESSO_INLINE AstSymbol* getSymbol(const std::string& name, uint32_t hVal) {
     return _symbols.get(name, hVal);
   }
 
@@ -464,10 +464,10 @@ struct AstScope {
   //! Resolve the symbol by traversing all parent scopes if not found in this
   //! one. An optional `scopeOut` argument can be used to get scope where the
   //! `name` has been found.
-  MATHPRESSO_NOAPI AstSymbol* resolveSymbol(const StringRef& name, uint32_t hVal, AstScope** scopeOut = nullptr);
+  MATHPRESSO_NOAPI AstSymbol* resolveSymbol(const std::string& name, uint32_t hVal, AstScope** scopeOut = nullptr);
 
-  MATHPRESSO_INLINE AstSymbol* resolveSymbol(const StringRef& name) {
-    return resolveSymbol(name, HashUtils::hashString(name.getData(), name.getLength()));
+  MATHPRESSO_INLINE AstSymbol* resolveSymbol(const std::string& name) {
+    return resolveSymbol(name, HashUtils::hashString(name.c_str(), name.length()));
   }
 
   MATHPRESSO_NOAPI AstSymbol* removeSymbol(AstSymbol* symbol) {
