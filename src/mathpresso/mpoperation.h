@@ -31,7 +31,6 @@ namespace mathpresso {
 		OpFlagHasState = 0x00000002,
 		OpFlagHasAsm = 0x00000004,
 		OpIsRighttoLeft = 0x00000008,
-
 		OpIsCommutativ = 0x00000010,
 
 		// Set, if no (complex|real) function is available.
@@ -65,7 +64,7 @@ namespace mathpresso {
 				complex = 1
 			};
 
-			Signature(size_t nargs) :
+			Signature(size_t nargs, uint32_t flags = 0) :
 				return_type_(type::real),
 				parameters_(nargs, { type::real, "" })
 			{
@@ -80,6 +79,7 @@ namespace mathpresso {
 			};
 
 			std::vector<param> parameters_;
+			uint32_t flags_;
 		};
 
 
@@ -165,12 +165,12 @@ namespace mathpresso {
 		void * fnD_;
 	};
 
+	template<class T>
 	class MATHPRESSO_API MpOperationBinary : public MpOperation
 	{
 	public:
-		MpOperationBinary(const Signature &s, uint32_t priority) :	MpOperation(nargs, flags),
+		MpOperationBinary(const Signature &s, uint32_t priority) :	MpOperation(s, priority)
 		{
-			priority_ = priority;
 		}
 
 		virtual ~MpOperationBinary()
@@ -179,8 +179,6 @@ namespace mathpresso {
 
 		// calls generatAsmReal() and comppComplex() after setting up.
 		virtual JitVar compile(JitCompiler* jc, AstNode * node) override;
-
-		// uses calculateReal() and calculateComplex() to calculate immediate values.
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 
 		bool hasFlag(uint32_t flag)
@@ -201,19 +199,13 @@ namespace mathpresso {
 	protected:
 		// These are called by compile() and should only contain the asm-statements. vl will always
 		// be in a register, vr can be in Register or in Memory.
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr);
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr);
-
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr);
+		
 		// Used to calculate optimization of immediates.
-		virtual double calculateReal(double vl, double vr) 
+		virtual T calculate(T vl, T vr) 
 		{ 
-			return std::numeric_limits<double>::quiet_NaN(); 
+			return T(std::numeric_limits<T>::quiet_NaN()); 
 		};
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) 
-		{ 
-			return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()); 
-		};
-		Signature signature_;
 	};
 }
 

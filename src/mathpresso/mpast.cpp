@@ -481,8 +481,9 @@ Error AstDump::onVar(AstVar* node)
   return info("%s %s", sym_name(node), node_type(node));
 }
 
-Error AstDump::onImm(AstImm* node) {
-	auto v = node ->getValueCplx();
+Error AstDump::onImm(AstImm* node) 
+{
+	auto v = node ->getValue<std::complex<double>>();
 
 	if (node ->returnsComplex())
 		return info("%lf%+lfi, %s", v.real(), v.imag(), node_type(node));

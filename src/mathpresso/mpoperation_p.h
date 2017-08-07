@@ -3,6 +3,8 @@
 
 namespace mathpresso
 {
+	using cplx_t = std::complex<double>;
+
 	// isfinite
 	class MpOperationIsFinite : public MpOperationFunc
 	{
@@ -172,73 +174,84 @@ namespace mathpresso
 	};
 	
 	// Addition
-	class MpOperationAdd : public MpOperationBinary
+	class MpOperationAddR : public MpOperationBinary<double>
 	{
 	public:
-		MpOperationAdd() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 6)
-		{}
-
+		MpOperationAddR() : MpOperationBinary(2, 6)
+		{
+			flags_ |= MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
-		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual double calculate(double vl, double vr) override;
 	};
 
+	class MpOperationAddC : public MpOperationBinary<cplx_t>
+	{
+	public:
+		MpOperationAddC() : MpOperationBinary(2, 6)
+		{
+			flags_ |= MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
+	protected:
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) override;
+		virtual cplx_t calculate(cplx_t vl, cplx_t vr) override;
+	};
+
+	/*
 	// Subtraction
 	class MpOperationSub : public MpOperationBinary
 	{
 	public:
-		MpOperationSub() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 6)
-		{}
-
+		MpOperationSub() : MpOperationBinary(2, 6)
+		{
+			flags_ |= MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+		virtual cplx_t calculateComplex(cplx_t vl, cplx_t vr) override;
 	};
 
 	// Multiplication
 	class MpOperationMul : public MpOperationBinary
 	{
 	public:
-		MpOperationMul() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 5)
-		{}
-
+		MpOperationMul() : MpOperationBinary(2, 5)
+		{
+			flags_ |= MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+		virtual cplx_t calculateComplex(cplx_t vl, cplx_t vr) override;
 	};
 
 	// Division
 	class MpOperationDiv : public MpOperationBinary
 	{
 	public:
-		MpOperationDiv() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 5)
-		{}
-
+		MpOperationDiv() : MpOperationBinary(2, 5)
+		{
+			flags_ |= MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+		virtual cplx_t calculateComplex(cplx_t vl, cplx_t vr) override;
 	};
 
 	// Minimum
 	class MpOperationMin : public MpOperationBinary
 	{
 	public:
-		MpOperationMin() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0)
-		{}
-
+		MpOperationMin() : MpOperationBinary(2, 0)
+		{
+			flags_ |= MpOperationFlags::OpFlagHasAsm;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
@@ -249,9 +262,10 @@ namespace mathpresso
 	{
 	public:
 		MpOperationMax() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0)
-		{}
-
+			MpOperationBinary(2, 0)
+		{
+			flags_ |= MpOperationFlags::OpFlagHasAsm;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
@@ -261,40 +275,40 @@ namespace mathpresso
 	class MpOperationEq : public MpOperationBinary
 	{
 	public:
-		MpOperationEq() :
-			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 9)
-		{}
-
+		MpOperationEq() : MpOperationBinary(2, 9)
+		{
+			flags_ |= MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+		virtual cplx_t calculateComplex(cplx_t vl, cplx_t vr) override;
 	};
 
 	// Inequality
 	class MpOperationNe : public MpOperationBinary
 	{
 	public:
-		MpOperationNe() :
-			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 9)
-		{}
-
+		MpOperationNe() : MpOperationBinary(2, 9)
+		{
+			flags_ |= MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) override;
+		virtual cplx_t calculateComplex(cplx_t vl, cplx_t vr) override;
 	};
 
 	// Lesser than
 	class MpOperationLt : public MpOperationBinary
 	{
 	public:
-		MpOperationLt() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
-		{}
-
+		MpOperationLt() : MpOperationBinary(2, 8)
+		{
+			flags_ |= MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
@@ -304,10 +318,10 @@ namespace mathpresso
 	class MpOperationLe : public MpOperationBinary
 	{
 	public:
-		MpOperationLe() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
-		{}
-
+		MpOperationLe() : MpOperationBinary(2, 8)
+		{
+			flags_ |= MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
@@ -317,10 +331,10 @@ namespace mathpresso
 	class MpOperationGt : public MpOperationBinary
 	{
 	public:
-		MpOperationGt() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
-		{}
-
+		MpOperationGt() : MpOperationBinary(2, 8)
+		{
+			flags_ |= MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
@@ -330,10 +344,10 @@ namespace mathpresso
 	class MpOperationGe : public MpOperationBinary
 	{
 	public:
-		MpOperationGe() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
-		{}
-
+		MpOperationGe() : MpOperationBinary(2, 8)
+		{
+			flags_ |= MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
@@ -343,10 +357,10 @@ namespace mathpresso
 	class MpOperationModulo : public MpOperationBinary
 	{
 	public:
-		MpOperationModulo() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 5)
-		{}
-
+		MpOperationModulo() : MpOperationBinary(2, 5)
+		{
+			flags_ |= MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator;
+		}
 	protected:
 		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) override;
 		virtual double calculateReal(double vl, double vr) override;
@@ -356,9 +370,9 @@ namespace mathpresso
 	class MpOperationTernary : public MpOperation
 	{
 	public:
-		MpOperationTernary(bool iscolon) : MpOperation(2, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), isColon_(iscolon)
+		MpOperationTernary(bool iscolon) : MpOperation(2, 15), isColon_(iscolon)
 		{
-			priority_ = 15;
+			flags_ |= MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator;
 		}
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -376,8 +390,8 @@ namespace mathpresso
 			priority_ = 15;
 		}
 
-
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
 	};
+	*/
 }

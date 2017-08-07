@@ -915,14 +915,19 @@ struct AstImm : public AstNode {
   // [Accessors]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE double getValue() const 
+  template<class T>
+  T getValue() const;
+
+  template<>
+  double getValue<double>() const 
   { 
 	  return _value.real(); 
   }
 
-  MATHPRESSO_INLINE std::complex<double> getValueCplx() const 
-  { 
-	  return _value; 
+  template<>
+  std::complex<double> getValue<std::complex<double>>() const
+  {
+	  return _value;
   }
 
   MATHPRESSO_INLINE void setValue(double value) 
