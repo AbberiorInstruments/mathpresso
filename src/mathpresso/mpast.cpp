@@ -36,16 +36,16 @@ struct AstNodeSize {
 
 #define ROW(type, size) { type, 0, static_cast<uint8_t>(size) }
 static const AstNodeSize mpAstNodeSize[] = {
-  ROW(kAstNodeNone     , 0                   ),
-  ROW(kAstNodeProgram  , sizeof(AstProgram)  ),
-  ROW(kAstNodeBlock    , sizeof(AstBlock)    ),
-  ROW(kAstNodeVarDecl  , sizeof(AstVarDecl)  ),
-  ROW(kAstNodeVar      , sizeof(AstVar)      ),
-  ROW(kAstNodeImm      , sizeof(AstImm)      ),
-  ROW(kAstNodeUnaryOp  , sizeof(AstUnaryOp)  ),
-  ROW(kAstNodeBinaryOp , sizeof(AstBinaryOp) ),
-  ROW(kAstNodeTernaryOp, sizeof(AstTernaryOp)),
-  ROW(kAstNodeCall     , sizeof(AstCall)     )
+  ROW(AstNodeType::kAstNodeNone     , 0                   ),
+  ROW(AstNodeType::kAstNodeProgram  , sizeof(AstProgram)  ),
+  ROW(AstNodeType::kAstNodeBlock    , sizeof(AstBlock)    ),
+  ROW(AstNodeType::kAstNodeVarDecl  , sizeof(AstVarDecl)  ),
+  ROW(AstNodeType::kAstNodeVar      , sizeof(AstVar)      ),
+  ROW(AstNodeType::kAstNodeImm      , sizeof(AstImm)      ),
+  ROW(AstNodeType::kAstNodeUnaryOp  , sizeof(AstUnaryOp)  ),
+  ROW(AstNodeType::kAstNodeBinaryOp , sizeof(AstBinaryOp) ),
+  ROW(AstNodeType::kAstNodeTernaryOp, sizeof(AstTernaryOp)),
+  ROW(AstNodeType::kAstNodeCall     , sizeof(AstCall)     )
 };
 #undef ROW
 
@@ -92,14 +92,14 @@ AstSymbol* AstBuilder::newSymbol(const std::string& key, uint32_t hVal, uint32_t
 
 AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other) {
   std::string name(other->getName(), other->getLength());
-  AstSymbol* sym = newSymbol(name, other->getHVal(), other->getSymbolType(), kAstScopeShadow);
+  AstSymbol* sym = newSymbol(name, other->getHVal(), other->getSymbolType(), AstScopeType::kAstScopeShadow);
 
   if (sym == nullptr)
     return nullptr;
 
   sym->setSymbolFlag(other->getSymbolFlags());
 
-  if (sym->getSymbolType() == kAstSymbolVariable) 
+  if (sym->getSymbolType() == AstSymbolType::kAstSymbolVariable)
   {
 	sym->setVarSlotId(other->getVarSlotId());
 	sym->setVarOffset(other->getVarOffset());
@@ -123,14 +123,14 @@ void AstBuilder::deleteNode(AstNode* node) {
   MATHPRESSO_ASSERT(mpAstNodeSize[nodeType].getNodeType() == nodeType);
 
   switch (nodeType) {
-    case kAstNodeProgram  : static_cast<AstProgram*  >(node)->destroy(this); break;
-    case kAstNodeBlock    : static_cast<AstBlock*    >(node)->destroy(this); break;
-    case kAstNodeVarDecl  : static_cast<AstVarDecl*  >(node)->destroy(this); break;
-    case kAstNodeVar      : static_cast<AstVar*      >(node)->destroy(this); break;
-    case kAstNodeImm      : static_cast<AstImm*      >(node)->destroy(this); break;
-    case kAstNodeUnaryOp  : static_cast<AstUnaryOp*  >(node)->destroy(this); break;
-    case kAstNodeBinaryOp : static_cast<AstBinaryOp* >(node)->destroy(this); break;
-    case kAstNodeCall     : static_cast<AstCall*     >(node)->destroy(this); break;
+    case AstNodeType::kAstNodeProgram  : static_cast<AstProgram*  >(node)->destroy(this); break;
+    case AstNodeType::kAstNodeBlock    : static_cast<AstBlock*    >(node)->destroy(this); break;
+    case AstNodeType::kAstNodeVarDecl  : static_cast<AstVarDecl*  >(node)->destroy(this); break;
+    case AstNodeType::kAstNodeVar      : static_cast<AstVar*      >(node)->destroy(this); break;
+    case AstNodeType::kAstNodeImm      : static_cast<AstImm*      >(node)->destroy(this); break;
+    case AstNodeType::kAstNodeUnaryOp  : static_cast<AstUnaryOp*  >(node)->destroy(this); break;
+    case AstNodeType::kAstNodeBinaryOp : static_cast<AstBinaryOp* >(node)->destroy(this); break;
+    case AstNodeType::kAstNodeCall     : static_cast<AstCall*     >(node)->destroy(this); break;
   }
 
   for (uint32_t i = 0; i < length; i++) {
@@ -148,7 +148,7 @@ void AstBuilder::deleteNode(AstNode* node) {
 
 Error AstBuilder::initProgramScope() {
   if (_rootScope == nullptr) {
-    _rootScope = newScope(nullptr, kAstScopeGlobal);
+    _rootScope = newScope(nullptr, AstScopeType::kAstScopeGlobal);
     MATHPRESSO_NULLCHECK(_rootScope);
   }
 
@@ -157,7 +157,7 @@ Error AstBuilder::initProgramScope() {
     MATHPRESSO_NULLCHECK(_programNode);
   }
 
-  return kErrorOk;
+  return ErrorCode::kErrorOk;
 }
 
 // ============================================================================
@@ -333,7 +333,7 @@ static Error mpBlockNodeGrow(AstBlock* self) {
     heap->release(oldArray, oldCapacity * sizeof(AstNode*));
   }
 
-  return kErrorOk;
+  return ErrorCode::kErrorOk;
 }
 
 // Tell the AST, we want to add a node, so it can allocate memory if necessary
@@ -341,7 +341,7 @@ Error AstBlock::willAdd() {
   // Grow if needed.
   if (_length == _capacity)
     MATHPRESSO_PROPAGATE(mpBlockNodeGrow(this));
-  return kErrorOk;
+  return ErrorCode::kErrorOk;
 }
 
 AstNode* AstBlock::removeNode(AstNode* node) {
@@ -400,18 +400,18 @@ AstVisitor::~AstVisitor() {}
 
 Error AstVisitor::onNode(AstNode* node) {
   switch (node->getNodeType()) {
-    case kAstNodeProgram  : return onProgram  (static_cast<AstProgram*  >(node));
-    case kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
-    case kAstNodeVarDecl  : return callMpOperation  (static_cast<AstVarDecl*  >(node));
-    case kAstNodeVar      : return onVar      (static_cast<AstVar*      >(node));
-	case kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
-	case kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
-    case kAstNodeBinaryOp : return onBinaryOp (static_cast<AstBinaryOp* >(node));
-	case kAstNodeTernaryOp: return onTernaryOp(static_cast<AstTernaryOp*>(node));
-    case kAstNodeCall     : return onCall     (static_cast<AstCall*     >(node));
+    case AstNodeType::kAstNodeProgram  : return onProgram  (static_cast<AstProgram*  >(node));
+    case AstNodeType::kAstNodeBlock    : return onBlock    (static_cast<AstBlock*    >(node));
+    case AstNodeType::kAstNodeVarDecl  : return callMpOperation  (static_cast<AstVarDecl*  >(node));
+    case AstNodeType::kAstNodeVar      : return onVar      (static_cast<AstVar*      >(node));
+	case AstNodeType::kAstNodeImm      : return onImm      (static_cast<AstImm*      >(node));
+	case AstNodeType::kAstNodeUnaryOp  : return onUnaryOp  (static_cast<AstUnaryOp*  >(node));
+    case AstNodeType::kAstNodeBinaryOp : return onBinaryOp (static_cast<AstBinaryOp* >(node));
+	case AstNodeType::kAstNodeTernaryOp: return onTernaryOp(static_cast<AstTernaryOp*>(node));
+    case AstNodeType::kAstNodeCall     : return onCall     (static_cast<AstCall*     >(node));
 
     default:
-      return MATHPRESSO_TRACE_ERROR(kErrorInvalidState);
+      return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorInvalidState);
   }
 }
 
@@ -442,7 +442,7 @@ Error AstDump::onBlock(AstBlock* node) {
   for (i = 0; i < count; i++)
     onNode(children[i]);
 
-  return kErrorOk;
+  return ErrorCode::ErrorCode::kErrorOk;
 }
 
 Error AstDump::callMpOperation(AstVarDecl* node) {
@@ -540,7 +540,7 @@ Error AstDump::info(const char* fmt, ...) {
   _sb.appendChar('\n');
 
   va_end(ap);
-  return kErrorOk;
+  return ErrorCode::kErrorOk;
 }
 
 Error AstDump::nest(const char* fmt, ...) {
@@ -554,14 +554,14 @@ Error AstDump::nest(const char* fmt, ...) {
   va_end(ap);
   _level++;
 
-  return kErrorOk;
+  return ErrorCode::kErrorOk;
 }
 
 Error AstDump::denest() {
   MATHPRESSO_ASSERT(_level > 0);
   _level--;
 
-  return kErrorOk;
+  return ErrorCode::kErrorOk;
 }
 
 } // mathpresso namespace

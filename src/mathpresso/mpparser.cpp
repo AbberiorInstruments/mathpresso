@@ -19,7 +19,7 @@ namespace mathpresso {
 
 #define MATHPRESSO_PARSER_ERROR(_Token_, ...) \
   return _errorReporter->onError( \
-    kErrorInvalidSyntax, static_cast<uint32_t>((size_t)(_Token_.position)), __VA_ARGS__)
+    ErrorCode::kErrorInvalidSyntax, static_cast<uint32_t>((size_t)(_Token_.position)), __VA_ARGS__)
 
 #define MATHPRESSO_PARSER_WARNING(_Token_, ...) \
   _errorReporter->onWarning( \
@@ -40,7 +40,7 @@ namespace mathpresso {
 			// --------------------------------------------------------------------------
 
 			MATHPRESSO_INLINE AstNestedScope(Parser* parser)
-			: AstScope(parser->_ast, parser->_currentScope, kAstScopeNested),
+			: AstScope(parser->_ast, parser->_currentScope, AstScopeType::kAstScopeNested),
 			_parser(parser)
 		{
 			_parser->_currentScope = this;
@@ -74,15 +74,15 @@ namespace mathpresso {
 			uint32_t uToken = _tokenizer.peek(&token);
 
 			// Parse the end of the input.
-			if (uToken == kTokenEnd)
+			if (uToken == TokenType::kTokenEnd)
 				break;
-			MATHPRESSO_PROPAGATE(parseStatement(block, kEnableVarDecls | kEnableNestedBlock));
+			MATHPRESSO_PROPAGATE(parseStatement(block, ParserFlags::kEnableVarDecls | ParserFlags::kEnableNestedBlock));
 		}
 
 		if (block->getLength() == 0)
-			return MATHPRESSO_TRACE_ERROR(kErrorNoExpression);
+			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoExpression);
 
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 	// Parse <statement>; or { [<statement>; ...] }
@@ -92,19 +92,19 @@ namespace mathpresso {
 		uint32_t uToken = _tokenizer.peek(&token);
 
 		// Parse the ';' token.
-		if (uToken == kTokenSemicolon)
+		if (uToken == TokenType::kTokenSemicolon)
 		{
 			_tokenizer.consume();
-			return kErrorOk;
+			return ErrorCode::kErrorOk;
 		}
 
 
 		// Parse a nested block.
-		if (uToken == kTokenLCurl)
+		if (uToken == TokenType::kTokenLCurl)
 		{
 			AstBlock* nested;
 
-			if (!(flags & kEnableNestedBlock))
+			if (!(flags & ParserFlags::kEnableNestedBlock))
 				MATHPRESSO_PARSER_ERROR(token, "Cannot declare a new block-scope here.");
 
 			MATHPRESSO_PROPAGATE(block->willAdd());
@@ -116,9 +116,9 @@ namespace mathpresso {
 		}
 
 		// Parse a variable declaration.
-		if (uToken == kTokenVar)
+		if (uToken == TokenType::kTokenVar)
 		{
-			if (!(flags & kEnableVarDecls))
+			if (!(flags & ParserFlags::kEnableVarDecls))
 				MATHPRESSO_PARSER_ERROR(token, "Cannot declare a new variable here.");
 			return parseVariableDecl(block);
 		}
@@ -131,14 +131,14 @@ namespace mathpresso {
 		block->appendNode(expression);
 
 		uToken = _tokenizer.peek(&token);
-		if (uToken == kTokenSemicolon)
+		if (uToken == TokenType::kTokenSemicolon)
 		{
 			_tokenizer.consume();
-			return kErrorOk;
+			return ErrorCode::kErrorOk;
 		}
 
-		if (uToken == kTokenEnd)
-			return kErrorOk;
+		if (uToken == TokenType::kTokenEnd)
+			return ErrorCode::kErrorOk;
 
 		MATHPRESSO_PARSER_ERROR(token, "Expected a ';' after an expression.");
 	}
@@ -151,28 +151,28 @@ namespace mathpresso {
 
 		// Parse the <block>, consume '{' token.
 		block->setPosition(token.getPosAsUInt());
-		if (uToken == kTokenLCurl)
+		if (uToken == TokenType::kTokenLCurl)
 		{
 			for (;;)
 			{
 				uToken = _tokenizer.peek(&token);
 
 				// Parse the end of the block '}'.
-				if (uToken == kTokenRCurl)
+				if (uToken == TokenType::kTokenRCurl)
 				{
 					// Consume the '}' token.
 					_tokenizer.consume();
-					return kErrorOk;
+					return ErrorCode::kErrorOk;
 				}
 				else
 				{
-					MATHPRESSO_PROPAGATE(parseStatement(block, kEnableVarDecls | kEnableNestedBlock));
+					MATHPRESSO_PROPAGATE(parseStatement(block, ParserFlags::kEnableVarDecls | ParserFlags::kEnableNestedBlock));
 				}
 			}
 		}
 		else
 		{
-			return parseStatement(block, kNoFlags);
+			return parseStatement(block, ParserFlags::kNoFlags);
 		}
 	}
 
@@ -187,14 +187,14 @@ namespace mathpresso {
 		uint32_t position = token.getPosAsUInt();
 
 		// Parse the 'var' keyword.
-		if (uToken != kTokenVar)
+		if (uToken != TokenType::kTokenVar)
 			MATHPRESSO_PARSER_ERROR(token, "Expected 'var' keyword.");
 
 		AstScope* scope = _currentScope;
 		for (;;)
 		{
 			// Parse the variable name.
-			if (_tokenizer.next(&token) != kTokenSymbol)
+			if (_tokenizer.next(&token) != TokenType::kTokenSymbol)
 				MATHPRESSO_PARSER_ERROR(token, isFirst
 					? "Expected a variable name after 'var' keyword."
 					: "Expected a variable name after colon ','.");
@@ -211,7 +211,7 @@ namespace mathpresso {
 			str = std::string(_tokenizer._start + token.position, token.length);
 			if ((vSym = scope->resolveSymbol(str, token.hVal, &vScope)) != nullptr)
 			{
-				if (vSym->getSymbolType() != kAstSymbolVariable || scope == vScope)
+				if (vSym->getSymbolType() != AstSymbolType::kAstSymbolVariable || scope == vScope)
 					MATHPRESSO_PARSER_ERROR(token, "Attempt to redefine '%s'.", vSym->getName());
 
 				if (vSym->hasNode())
@@ -226,7 +226,7 @@ namespace mathpresso {
 				}
 			}
 
-			vSym = _ast->newSymbol(str, token.hVal, kAstSymbolVariable, scope->getScopeType());
+			vSym = _ast->newSymbol(str, token.hVal, AstSymbolType::kAstSymbolVariable, scope->getScopeType());
 			MATHPRESSO_NULLCHECK(vSym);
 			scope->putSymbol(vSym);
 
@@ -245,7 +245,7 @@ namespace mathpresso {
 
 			// Parse possible assignment '='.
 			uToken = _tokenizer.next(&token);
-			bool isAssigned = (uToken == kTokenOperator && std::string(_tokenizer._start + token.position, token.length) == "=");
+			bool isAssigned = (uToken == TokenType::kTokenOperator && std::string(_tokenizer._start + token.position, token.length) == "=");
 
 			if (isAssigned)
 			{
@@ -262,12 +262,12 @@ namespace mathpresso {
 			vSym->setDeclared();
 
 			// Parse the ',' or ';' tokens.
-			if (uToken == kTokenComma || uToken == kTokenSemicolon || uToken == kTokenEnd) 
+			if (uToken == TokenType::kTokenComma || uToken == TokenType::kTokenSemicolon || uToken == TokenType::kTokenEnd)
 			{
 				block->appendNode(decl);
 
 				// Token ';' terminates the declaration.
-				if (uToken != kTokenComma)
+				if (uToken != TokenType::kTokenComma)
 					break;
 			}
 			else
@@ -279,7 +279,7 @@ namespace mathpresso {
 			isFirst = false;
 		}
 
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 	Error Parser::parseExpression(AstNode** pNode, bool isNested)
@@ -351,7 +351,7 @@ namespace mathpresso {
 				// node is created.
 
 				// Parse a symbol (variable or function name).
-			case kTokenSymbol:
+			case TokenType::kTokenSymbol:
 			{
 				std::string str(_tokenizer._start + token.position, token.length);
 
@@ -364,7 +364,7 @@ namespace mathpresso {
 				uint32_t symType = sym->getSymbolType();
 				AstNode* newNode;
 
-				if (symType == kAstSymbolVariable)
+				if (symType == AstSymbolType::kAstSymbolVariable)
 				{
 					if (!sym->isDeclared())
 						MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName());
@@ -385,8 +385,8 @@ namespace mathpresso {
 					MATHPRESSO_NULLCHECK(newNode);
 					static_cast<AstVar*>(newNode)->setSymbol(sym);
 
-					if (sym->hasSymbolFlag(kAstSymbolIsComplex))
-						newNode->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+					if (sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex))
+						newNode->addNodeFlags(AstNodeFlags::kAstTakesComplex | AstNodeFlags::kAstReturnsComplex);
 
 					newNode->setPosition(token.getPosAsUInt());
 					sym->incUsedCount();
@@ -406,9 +406,9 @@ namespace mathpresso {
 			}
 
 			// Parse a number.
-			case kTokenComplex:
+			case TokenType::kTokenComplex:
 				b_complex = true;
-			case kTokenNumber:
+			case TokenType::kTokenNumber:
 			{
 				AstImm* newNode = _ast->newNode<AstImm>();
 				MATHPRESSO_NULLCHECK(newNode);
@@ -431,22 +431,22 @@ namespace mathpresso {
 			}
 
 			// Parse expression terminators - ',', ';' or ')'.
-			case kTokenComma:
-			case kTokenSemicolon:
-			case kTokenRParen:
+			case TokenType::kTokenComma:
+			case TokenType::kTokenSemicolon:
+			case TokenType::kTokenRParen:
 			{
 				MATHPRESSO_PARSER_ERROR(token, "Expected an expression.");
 			}
 
 			// Parse a nested expression.
-			case kTokenLParen:
+			case TokenType::kTokenLParen:
 			{
 				uint32_t position = token.getPosAsUInt();
 
 				AstNode* newNode;
 				MATHPRESSO_PROPAGATE(parseExpression(&newNode, true));
 
-				if (_tokenizer.next(&token) != kTokenRParen)
+				if (_tokenizer.next(&token) != TokenType::kTokenRParen)
 					MATHPRESSO_PARSER_ERROR(token, "Expected a ')' token.");
 
 				if (lastUnaryNode == nullptr)
@@ -458,7 +458,7 @@ namespace mathpresso {
 			}
 
 			// Parse a right-to-left associative unary operator ('+', '-', "!").
-			case kTokenOperator:
+			case TokenType::kTokenOperator:
 			{
 				std::string name(_tokenizer._start + token.position, token.length);
 				auto op = _ops->find(name, 1);
@@ -484,7 +484,7 @@ namespace mathpresso {
 				goto _Repeat1;
 			}
 
-			case kTokenEnd:
+			case TokenType::kTokenEnd:
 			{
 				MATHPRESSO_PARSER_ERROR(token, "Unexpected end of the program.");
 			}
@@ -499,10 +499,10 @@ namespace mathpresso {
 			switch (_tokenizer.next(&token))
 			{
 				// Parse the expression terminators - ',', ';', ')' or EOI.
-			case kTokenComma:
-			case kTokenSemicolon:
-			case kTokenRParen:
-			case kTokenEnd:
+			case TokenType::kTokenComma:
+			case TokenType::kTokenSemicolon:
+			case TokenType::kTokenRParen:
+			case TokenType::kTokenEnd:
 			{
 				_tokenizer.set(&token);
 
@@ -516,11 +516,11 @@ namespace mathpresso {
 				}
 
 				*pNode = currentNode;
-				return kErrorOk;
+				return ErrorCode::kErrorOk;
 			}
 
 			// Parse Binary Operators
-			case kTokenOperator:
+			case TokenType::kTokenOperator:
 			{
 				std::string name(_tokenizer._start + token.position, token.length);
 				auto op = _ops->find(name, 2);
@@ -531,11 +531,11 @@ namespace mathpresso {
 				if (name == "=")
 				{
 					// Check whether the assignment is valid.
-					if (currentNode->getNodeType() != kAstNodeVar)
+					if (currentNode->getNodeType() != AstNodeType::kAstNodeVar)
 						MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
 
 					AstSymbol* sym = static_cast<AstVar*>(currentNode)->getSymbol();
-					if (sym->hasSymbolFlag(kAstSymbolIsReadOnly))
+					if (sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly))
 						MATHPRESSO_PARSER_ERROR(token, "Can't assign to a read-only variable '%s'.", sym->getName());
 
 					if (isNested)
@@ -656,13 +656,13 @@ namespace mathpresso {
 		uint32_t uToken;
 
 		uToken = _tokenizer.next(&token);
-		MATHPRESSO_ASSERT(uToken == kTokenSymbol);
+		MATHPRESSO_ASSERT(uToken == TokenType::kTokenSymbol);
 		uint32_t position = token.getPosAsUInt();
 
 		std::string fnName(_tokenizer.getTokenName());
 
 		uToken = _tokenizer.next(&token);
-		if (uToken != kTokenLParen)
+		if (uToken != TokenType::kTokenLParen)
 			MATHPRESSO_PARSER_ERROR(token, "Expected a '(' token after a function name."); 
 
 		AstCall* callNode = _ast->newNode<AstCall>(); 
@@ -671,7 +671,7 @@ namespace mathpresso {
 		callNode->setPosition(position);
 
 		uToken = _tokenizer.peek(&token);
-		if (uToken != kTokenRParen)
+		if (uToken != TokenType::kTokenRParen)
 		{ 
 			for (;;)
 			{
@@ -679,7 +679,7 @@ namespace mathpresso {
 				AstNode* expression;
 				Error err;
 
-				if ((err = callNode->willAdd()) != kErrorOk || (err = parseExpression(&expression, true)) != kErrorOk)
+				if ((err = callNode->willAdd()) != ErrorCode::kErrorOk || (err = parseExpression(&expression, true)) != ErrorCode::kErrorOk)
 				{
 					_ast->deleteNode(callNode);
 					return err;
@@ -689,10 +689,10 @@ namespace mathpresso {
 
 				// Parse ')' or ',' tokens.
 				uToken = _tokenizer.peek(&token);
-				if (uToken == kTokenRParen)
+				if (uToken == TokenType::kTokenRParen)
 					break;
 
-				if (uToken != kTokenComma)
+				if (uToken != TokenType::kTokenComma)
 				{
 					_ast->deleteNode(callNode);
 					MATHPRESSO_PARSER_ERROR(token, "Expected either ',' or ')' token.");
@@ -714,7 +714,7 @@ namespace mathpresso {
 		}
 
 		*pNodeOut = callNode;
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 } // mathpresso namespace

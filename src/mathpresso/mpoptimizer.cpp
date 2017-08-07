@@ -34,19 +34,19 @@ namespace mathpresso {
 	{
 		switch (node->getNodeType())
 		{
-		case kAstNodeProgram: return onProgram(static_cast<AstProgram*>(node));
-		case kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
-		case kAstNodeVar: return onVar(static_cast<AstVar*>(node));
-		case kAstNodeImm: return onImm(static_cast<AstImm*>(node));
-		case kAstNodeVarDecl:
-		case kAstNodeUnaryOp:
-		case kAstNodeBinaryOp:
-		case kAstNodeTernaryOp:
-		case kAstNodeCall:
+		case AstNodeType::kAstNodeProgram: return onProgram(static_cast<AstProgram*>(node));
+		case AstNodeType::kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
+		case AstNodeType::kAstNodeVar: return onVar(static_cast<AstVar*>(node));
+		case AstNodeType::kAstNodeImm: return onImm(static_cast<AstImm*>(node));
+		case AstNodeType::kAstNodeVarDecl:
+		case AstNodeType::kAstNodeUnaryOp:
+		case AstNodeType::kAstNodeBinaryOp:
+		case AstNodeType::kAstNodeTernaryOp:
+		case AstNodeType::kAstNodeCall:
 			return optimize(node);
 
 		default:
-			return MATHPRESSO_TRACE_ERROR(kErrorInvalidState);
+			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorInvalidState);
 		}
 	}
 
@@ -69,7 +69,7 @@ namespace mathpresso {
 
 			if (curCount < oldCount) {
 				if (!alterable)
-					return MATHPRESSO_TRACE_ERROR(kErrorInvalidState);
+					return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorInvalidState);
 				continue;
 			}
 
@@ -86,24 +86,24 @@ namespace mathpresso {
 
 		if (isComplex)
 		{
-			node->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
+			node->addNodeFlags(AstNodeFlags::kAstReturnsComplex | AstNodeFlags::kAstTakesComplex);
 		}
 
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 	Error AstOptimizer::callMpOperation(AstVarDecl* node) {
 		if (node->_mpOp)
 			return node->_mpOp->optimize(this, node);
-		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+		return _errorReporter->onError(ErrorCode::kErrorInvalidState, node->getPosition(),
 			"No MpOperation.");
 	}
 
 	Error AstOptimizer::onVar(AstVar* node) {
 		AstSymbol* sym = node->getSymbol();
-		bool b_complex = node->returnsComplex() || sym->hasSymbolFlag(kAstSymbolIsComplex);
+		bool b_complex = node->returnsComplex() || sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
 
-		if (sym->isAssigned() && !node->hasNodeFlag(kAstNodeHasSideEffect)) 
+		if (sym->isAssigned() && !node->hasNodeFlag(AstNodeFlags::kAstNodeHasSideEffect))
 		{
 			AstImm* imm;
 
@@ -117,11 +117,11 @@ namespace mathpresso {
 			}
 			_ast->deleteNode(node->getParent()->replaceNode(node, imm));
 		}
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 	Error AstOptimizer::onImm(AstImm* node) {
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 	Error AstOptimizer::optimize(AstNode * node)
@@ -130,7 +130,7 @@ namespace mathpresso {
 		{
 			return node->_mpOp->optimize(this, node);
 		}
-		return _errorReporter->onError(kErrorInvalidState, node->getPosition(),
+		return _errorReporter->onError(ErrorCode::kErrorInvalidState, node->getPosition(),
 			"No MpOperation.");
 	}
 

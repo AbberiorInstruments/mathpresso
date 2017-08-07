@@ -44,7 +44,7 @@ enum AstScopeType {
   kAstScopeShadow = 1,
 
   //! Local scope.
-  kAstScopeLocal = 2,
+  kAstScopeLocal = 2, // unused
 
   //! Nested scope.
   //!
@@ -103,12 +103,13 @@ enum AstSymbolFlags {
   //! The variable is a complex value.
   kAstSymbolIsComplex = 0x0020,
   
+  
   //! The function returns a complex value
-  kAstSymbolRealFunctionReturnsComplex = 0x00040,
+  kAstSymbolRealFunctionReturnsComplex = 0x00040, // unused
   //! The function takes complex arguments
-  kAstSymbolComplexFunctionReturnsReal = 0x00080,
+  kAstSymbolComplexFunctionReturnsReal = 0x00080, // unused
   //! See function flags
-  kAstSymbolHasState = 0x00100
+  kAstSymbolHasState = 0x00100 // unused
 };
 
 // ============================================================================
@@ -279,7 +280,7 @@ struct AstSymbol : public HashNode {
 		_name(name),
 		_node(nullptr),
 		_symbolType(static_cast<uint8_t>(symbolType)),
-		_symbolFlags(scopeType == kAstScopeGlobal ? (int)kAstSymbolIsGlobal : 0),
+		_symbolFlags(scopeType == AstScopeType::kAstScopeGlobal ? (int)AstSymbolFlags::kAstSymbolIsGlobal : 0),
 		_valueComp(),
 		_usedCount(0),
 		_writeCount(0)
@@ -325,11 +326,11 @@ struct AstSymbol : public HashNode {
   MATHPRESSO_INLINE void clearSymbolFlag(uint32_t flag) { _symbolFlags &= ~static_cast<uint16_t>(flag); }
 
   //! Check if the symbol is global (i.e. it was declared in a global scope).
-  MATHPRESSO_INLINE bool isGlobal() const { return hasSymbolFlag(kAstSymbolIsGlobal); }
+  MATHPRESSO_INLINE bool isGlobal() const { return hasSymbolFlag(AstSymbolFlags::kAstSymbolIsGlobal); }
   //! Check if the symbol was declared.
-  MATHPRESSO_INLINE bool isDeclared() const { return hasSymbolFlag(kAstSymbolIsDeclared); }
+  MATHPRESSO_INLINE bool isDeclared() const { return hasSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared); }
   //! Set the symbol to be declared (\ref kAstSymbolIsDeclared flag).
-  MATHPRESSO_INLINE void setDeclared() { setSymbolFlag(kAstSymbolIsDeclared); }
+  MATHPRESSO_INLINE void setDeclared() { setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared); }
 
   MATHPRESSO_INLINE uint32_t getVarSlotId() const { return _varSlotId; }
   MATHPRESSO_INLINE void setVarSlotId(uint32_t slotId) { _varSlotId = slotId; }
@@ -342,16 +343,16 @@ struct AstSymbol : public HashNode {
   //! If true, the `_value` is a valid constant that can be used to replace
   //! the variable node by a constant value. The value can change during AST
   //! traversal in case that the variable is mutable.
-  MATHPRESSO_INLINE bool isAssigned() const { return hasSymbolFlag(kAstSymbolIsAssigned); }
+  MATHPRESSO_INLINE bool isAssigned() const { return hasSymbolFlag(AstSymbolFlags::kAstSymbolIsAssigned); }
   //! Set symbol to be assigned (sets the \ref kAstSymbolIsAssigned flag).
-  MATHPRESSO_INLINE void setAssigned() { setSymbolFlag(kAstSymbolIsAssigned); }
+  MATHPRESSO_INLINE void setAssigned() { setSymbolFlag(AstSymbolFlags::kAstSymbolIsAssigned); }
   //! Set symbol to not be assigned (clears the \ref kAstSymbolIsAssigned flag).
-  MATHPRESSO_INLINE void clearAssigned() { clearSymbolFlag(kAstSymbolIsAssigned); }
+  MATHPRESSO_INLINE void clearAssigned() { clearSymbolFlag(AstSymbolFlags::kAstSymbolIsAssigned); }
 
   //! Get whether the global symbol has been altered.
-  MATHPRESSO_INLINE bool isAltered() const { return hasSymbolFlag(kAstSymbolIsAltered); }
+  MATHPRESSO_INLINE bool isAltered() const { return hasSymbolFlag(AstSymbolFlags::kAstSymbolIsAltered); }
   //! Make a global symbol altered.
-  MATHPRESSO_INLINE void setAltered() { setSymbolFlag(kAstSymbolIsAltered); }
+  MATHPRESSO_INLINE void setAltered() { setSymbolFlag(AstSymbolFlags::kAstSymbolIsAltered); }
 
   //! Get the constant value, see `isAssigned()`.
   MATHPRESSO_INLINE double getValue() const { return _valueComp.real(); }
@@ -433,13 +434,13 @@ struct AstScope {
   //! Get scope type, see \ref AstScopeType.
   MATHPRESSO_INLINE uint32_t getScopeType() const { return _scopeType; }
 
-  //! Get whether the scope type is `kAstScopeGlobal`.
-  MATHPRESSO_INLINE bool isGlobal() const { return _scopeType == kAstScopeGlobal; }
+  //! Get whether the scope type is `AstScopeType::kAstScopeGlobal`.
+  MATHPRESSO_INLINE bool isGlobal() const { return _scopeType == AstScopeType::kAstScopeGlobal; }
 
   //! Make this scope a shadow of `ctxScope`.
   MATHPRESSO_INLINE void shadowContextScope(AstScope* ctxScope) {
     _parent = ctxScope;
-    _scopeType = kAstScopeShadow;
+    _scopeType = AstScopeType::kAstScopeShadow;
   }
 
   // --------------------------------------------------------------------------
@@ -563,9 +564,9 @@ struct AstNode {
   //! Get node type.
   MATHPRESSO_INLINE uint32_t getNodeType() const { return _nodeType; }
   //! Get whether the node is `AstVar`.
-  MATHPRESSO_INLINE bool isVar() const { return _nodeType == kAstNodeVar; }
+  MATHPRESSO_INLINE bool isVar() const { return _nodeType == AstNodeType::kAstNodeVar; }
   //! Get whether the node is `AstImm`.
-  MATHPRESSO_INLINE bool isImm() const { return _nodeType == kAstNodeImm; }
+  MATHPRESSO_INLINE bool isImm() const { return _nodeType == AstNodeType::kAstNodeImm; }
   
   //! Get whether the node has flag `flag`.
   MATHPRESSO_INLINE bool hasNodeFlag(uint32_t flag) const { return (static_cast<uint32_t>(_nodeFlags) & flag) != 0; }
@@ -578,8 +579,8 @@ struct AstNode {
   //! remove a flag.
   MATHPRESSO_INLINE void removeNodeFlags(uint32_t flags) { _nodeFlags &= ~static_cast<uint8_t>(flags); }
 
-  MATHPRESSO_INLINE bool takesComplex()   const { return hasNodeFlag(kAstTakesComplex); }
-  MATHPRESSO_INLINE bool returnsComplex() const { return hasNodeFlag(kAstReturnsComplex); }
+  MATHPRESSO_INLINE bool takesComplex()   const { return hasNodeFlag(AstNodeFlags::kAstTakesComplex); }
+  MATHPRESSO_INLINE bool returnsComplex() const { return hasNodeFlag(AstNodeFlags::kAstReturnsComplex); }
 
   //! Get whether the node has associated position in source code.
   MATHPRESSO_INLINE bool hasPosition() const { return _position != ~static_cast<uint32_t>(0); }
@@ -646,7 +647,7 @@ struct AstBlock : public AstNode {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE AstBlock(AstBuilder* ast, uint32_t nodeType = kAstNodeBlock)
+  MATHPRESSO_INLINE AstBlock(AstBuilder* ast, uint32_t nodeType = AstNodeType::kAstNodeBlock)
     : AstNode(ast, nodeType),
       _capacity(0) {}
 
@@ -818,7 +819,7 @@ struct AstProgram : public AstBlock {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstProgram(AstBuilder* ast)
-    : AstBlock(ast, kAstNodeProgram) {}
+    : AstBlock(ast, AstNodeType::kAstNodeProgram) {}
 };
 
 // ============================================================================
@@ -833,7 +834,7 @@ struct AstVarDecl : public AstUnary {
   // --------------------------------------------------------------------------
 
 	  MATHPRESSO_INLINE AstVarDecl(AstBuilder* ast)
-	  : AstUnary(ast, kAstNodeVarDecl),
+	  : AstUnary(ast, AstNodeType::kAstNodeVarDecl),
 	  _symbol(nullptr)
   {}
 
@@ -870,7 +871,7 @@ struct AstVar : public AstNode {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstVar(AstBuilder* ast)
-    : AstNode(ast, kAstNodeVar),
+    : AstNode(ast, AstNodeType::kAstNodeVar),
       _symbol(nullptr) {}
 
   // --------------------------------------------------------------------------
@@ -900,14 +901,14 @@ struct AstImm : public AstNode {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstImm(AstBuilder* ast, double value = 0.0)
-    : AstNode(ast, kAstNodeImm),
+    : AstNode(ast, AstNodeType::kAstNodeImm),
 	  _value({ value, 0 }) {}
 
   MATHPRESSO_INLINE AstImm(AstBuilder* ast, std::complex<double> value)
-	  : AstNode(ast, kAstNodeImm),
+	  : AstNode(ast, AstNodeType::kAstNodeImm),
 	  _value(value) 
   {
-	  addNodeFlags(kAstReturnsComplex);
+	  addNodeFlags(AstNodeFlags::kAstReturnsComplex);
   }
 
   // --------------------------------------------------------------------------
@@ -956,7 +957,7 @@ struct AstUnaryOp : public AstUnary {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstUnaryOp(AstBuilder* ast)
-    : AstUnary(ast, kAstNodeUnaryOp)
+    : AstUnary(ast, AstNodeType::kAstNodeUnaryOp)
 	{}
 
 };
@@ -969,7 +970,7 @@ struct AstBinaryOp : public AstBinary
 {
 	MATHPRESSO_NO_COPY(AstBinaryOp)
 
-	MATHPRESSO_INLINE AstBinaryOp(AstBuilder* ast) : AstBinary(ast, kAstNodeBinaryOp)
+	MATHPRESSO_INLINE AstBinaryOp(AstBuilder* ast) : AstBinary(ast, AstNodeType::kAstNodeBinaryOp)
 	{
 	}
 
@@ -998,7 +999,7 @@ struct AstTernaryOp : public AstTernary {
 		// --------------------------------------------------------------------------
 
 	MATHPRESSO_INLINE AstTernaryOp(AstBuilder* ast) :
-		AstTernary(ast, kAstNodeTernaryOp)
+		AstTernary(ast, AstNodeType::kAstNodeTernaryOp)
 	{}
 
 };
@@ -1015,7 +1016,7 @@ struct AstCall : public AstBlock {
   // --------------------------------------------------------------------------
 
   MATHPRESSO_INLINE AstCall(AstBuilder* ast)
-    : AstBlock(ast, kAstNodeCall),
+    : AstBlock(ast, AstNodeType::kAstNodeCall),
       _symbol(nullptr) {}
 
   // --------------------------------------------------------------------------

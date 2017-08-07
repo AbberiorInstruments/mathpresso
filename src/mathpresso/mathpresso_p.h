@@ -138,7 +138,7 @@ typedef unsigned __int64 uint64_t;
 #define MATHPRESSO_PROPAGATE(...) \
   do { \
     ::mathpresso::Error _errorValue = __VA_ARGS__; \
-    if (MATHPRESSO_UNLIKELY(_errorValue != ::mathpresso::kErrorOk)) \
+    if (MATHPRESSO_UNLIKELY(_errorValue != ::mathpresso::ErrorCode::kErrorOk)) \
       return _errorValue; \
   } while (0)
 
@@ -146,7 +146,7 @@ typedef unsigned __int64 uint64_t;
 #define MATHPRESSO_PROPAGATE_(exp, cleanup) \
   do { \
     ::mathpresso::Error _errorCode = (exp); \
-    if (MATHPRESSO_UNLIKELY(_errorCode != ::mathpresso::kErrorOk)) { \
+    if (MATHPRESSO_UNLIKELY(_errorCode != ::mathpresso::ErrorCode::kErrorOk)) { \
       cleanup \
       return _errorCode; \
     } \
@@ -156,7 +156,7 @@ typedef unsigned __int64 uint64_t;
 #define MATHPRESSO_NULLCHECK(ptr) \
   do { \
     if (MATHPRESSO_UNLIKELY(!(ptr))) \
-      return MATHPRESSO_TRACE_ERROR(::mathpresso::kErrorNoMemory); \
+      return MATHPRESSO_TRACE_ERROR(::mathpresso::ErrorCode::kErrorNoMemory); \
   } while (0)
 
 //! \internal
@@ -164,7 +164,7 @@ typedef unsigned __int64 uint64_t;
   do { \
     if (MATHPRESSO_UNLIKELY(!(ptr))) { \
       cleanup \
-      return MATHPRESSO_TRACE_ERROR(::mathpresso::kErrorNoMemory); \
+      return MATHPRESSO_TRACE_ERROR(::mathpresso::ErrorCode::kErrorNoMemory); \
     } \
   } while (0)
 
@@ -206,7 +206,7 @@ enum InternalConsts {
 //! Compilation options MATHPRESSO uses internally.
 enum InternalOptions {
   //! Set if `OutputLog` is present. MATHPRESSO then checks only this flag to use it.
-  kInternalOptionLog = 0x00010000
+  InternalOptionLog = 0x00010000
 };
 
 // ============================================================================
@@ -244,15 +244,15 @@ struct ErrorReporter {
       _log(log) {
 
     // These should be handled by MATHPRESSO before the `ErrorReporter` is created.
-    MATHPRESSO_ASSERT((log == nullptr && (_options & kInternalOptionLog) == 0) ||
-                      (log != nullptr && (_options & kInternalOptionLog) != 0) );
+    MATHPRESSO_ASSERT((log == nullptr && (_options & InternalOptions::kInternalOptionLog) == 0) ||
+                      (log != nullptr && (_options & InternalOptions::kInternalOptionLog) != 0) );
   }
 
   // --------------------------------------------------------------------------
   // [Error Handling]
   // --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE bool reportsErrors() const { return (_options & kInternalOptionLog) != 0; }
+  MATHPRESSO_INLINE bool reportsErrors() const { return (_options & InternalOptions::kInternalOptionLog) != 0; }
   MATHPRESSO_INLINE bool reportsWarnings() const { return (_options & kOptionVerbose) != 0; }
 
   void getLineAndColumn(uint32_t position, uint32_t& line, uint32_t& column);

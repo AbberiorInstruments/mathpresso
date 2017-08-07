@@ -60,7 +60,7 @@ namespace mathpresso {
 	JitVar JitCompiler::writableVar(const JitVar& other)
 	{
 		if (other.isMem() || other.isRO())
-			return copyVar(other, other.flags & ~JitVar::FLAG_RO);
+			return copyVar(other, other.flags & ~JitVar::FLAGS::FLAG_RO);
 		else
 			return other;
 	}
@@ -187,14 +187,14 @@ namespace mathpresso {
 	{
 		switch (node->getNodeType())
 		{
-		case kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
-		case kAstNodeVar: return onVar(static_cast<AstVar*>(node));
-		case kAstNodeImm: return onImm(static_cast<AstImm*>(node));
-		case kAstNodeVarDecl:
-		case kAstNodeUnaryOp: 
-		case kAstNodeBinaryOp:
-		case kAstNodeTernaryOp:
-		case kAstNodeCall: 
+		case AstNodeType::kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
+		case AstNodeType::kAstNodeVar: return onVar(static_cast<AstVar*>(node));
+		case AstNodeType::kAstNodeImm: return onImm(static_cast<AstImm*>(node));
+		case AstNodeType::kAstNodeVarDecl:
+		case AstNodeType::kAstNodeUnaryOp:
+		case AstNodeType::kAstNodeBinaryOp:
+		case AstNodeType::kAstNodeTernaryOp:
+		case AstNodeType::kAstNodeCall:
 			return node->_mpOp->compile(this, node);
 
 		default:
@@ -226,14 +226,14 @@ namespace mathpresso {
 		{
 			if (sym->isGlobal())
 			{
-				result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAG_RO);
+				result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), JitVar::FLAGS::FLAG_RO);
 				varSlots[slotId] = result;
 				if (sym->getWriteCount() > 0)
 				{
 					if (!b_complex)
-						result = copyVar(result, JitVar::FLAG_NONE);
+						result = copyVar(result, JitVar::FLAGS::FLAG_NONE);
 					else
-						result = copyVarComplex(result, JitVar::FLAG_NONE);
+						result = copyVarComplex(result, JitVar::FLAGS::FLAG_NONE);
 				}
 			}
 			else
@@ -406,10 +406,10 @@ namespace mathpresso {
 		prepareConstPool();
 
 		size_t offset;
-		if (constPool.add(&value, sizeof(uint64_t), offset) != kErrorOk)
+		if (constPool.add(&value, sizeof(uint64_t), offset) != ErrorCode::kErrorOk)
 			return JitVar();
 
-		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
+		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAGS::FLAG_NONE);
 	}
 
 	JitVar JitCompiler::getConstantU64(uint64_t real, uint64_t imag)
@@ -418,10 +418,10 @@ namespace mathpresso {
 
 		uint64_t value[2] = { real, imag };
 		size_t offset;
-		if (constPool.add(value, 2 * sizeof(uint64_t), offset) != kErrorOk)
+		if (constPool.add(value, 2 * sizeof(uint64_t), offset) != ErrorCode::kErrorOk)
 			return JitVar();
 
-		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
+		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAGS::FLAG_NONE);
 	}
 
 	JitVar JitCompiler::getConstantU64AsPD(uint64_t value)
@@ -430,10 +430,10 @@ namespace mathpresso {
 
 		size_t offset;
 		Data128 vec = Data128::fromI64(value, 0);
-		if (constPool.add(&vec, sizeof(Data128), offset) != kErrorOk)
+		if (constPool.add(&vec, sizeof(Data128), offset) != ErrorCode::kErrorOk)
 			return JitVar();
 
-		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAG_NONE);
+		return JitVar(x86::ptr(constPtr, static_cast<int>(offset)), JitVar::FLAGS::FLAG_NONE);
 	}
 
 	JitVar JitCompiler::getConstantD64(double value)

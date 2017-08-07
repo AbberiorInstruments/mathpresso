@@ -31,7 +31,7 @@ namespace mathpresso {
 	struct Parser {
 		MATHPRESSO_NO_COPY(Parser)
 
-			enum Flags {
+			enum ParserFlags {
 			kNoFlags = 0x00,
 			kEnableVarDecls = 0x01,
 			kEnableNestedBlock = 0x02

@@ -10,6 +10,7 @@
 
 // [Dependencies]
 #include  <mathpresso/mathpresso_p.h>
+#include <unordered_map>
 
 namespace mathpresso
 {
@@ -224,6 +225,18 @@ namespace mathpresso
 		Node* put(Node* node) { return static_cast<Node*>(_put(node)); }
 		Node* del(Node* node) { return static_cast<Node*>(_del(node)); }
 	};
+
+
+	template<typename Key, typename Node>
+	struct HashNew
+	{
+
+	private:
+		std::unordered_map<Key, Node> _data;
+	};
+
+
+
 
 	// ============================================================================
 	// [mathpresso::HashIterator<Key, Node>]

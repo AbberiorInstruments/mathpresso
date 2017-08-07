@@ -75,7 +75,7 @@ struct ContextInternalImpl : public ContextImpl {
     : _zone(32768 - Zone::kZoneOverhead),
       _heap(&_zone),
       _builder(&_heap),
-      _scope(&_builder, static_cast<AstScope*>(NULL), kAstScopeGlobal) {
+      _scope(&_builder, static_cast<AstScope*>(NULL), AstScopeType::kAstScopeGlobal) {
     mpAtomicSet(&_refCount, 1);
   }
   MATHPRESSO_INLINE ~ContextInternalImpl() {}
@@ -120,14 +120,14 @@ static ContextImpl* mpContextClone(ContextImpl* otherD_) {
 
       clonedSym->setSymbolFlag(sym->getSymbolFlags());
       switch (type) {
-        case kAstSymbolVariable:
+        case AstSymbolType::kAstSymbolVariable:
           clonedSym->setVarSlotId(sym->getVarSlotId());
           clonedSym->setVarOffset(sym->getVarOffset());
           clonedSym->setValue(sym->getValueComp());
           break;
 
-        case kAstSymbolIntrinsic:
-        case kAstSymbolFunction:
+		case AstSymbolType::kAstSymbolIntrinsic:
+        case AstSymbolType::kAstSymbolFunction:
           break;
 
         default:
@@ -147,19 +147,19 @@ static Error mpContextMutable(Context* self, ContextInternalImpl** out) {
 
   if (d != &mpContextNull && mpAtomicGet(&d->_refCount) == 1) {
     *out = static_cast<ContextInternalImpl*>(d);
-    return kErrorOk;
+    return ErrorCode::kErrorOk;
   }
   else {
     d = mpContextClone(d);
     if (MATHPRESSO_UNLIKELY(d == nullptr))
-      return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
+      return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
 
     mpContextRelease(
       mpAtomicSetXchgT<ContextImpl*>(
         &self->_d, d));
 
     *out = static_cast<ContextInternalImpl*>(d);
-    return kErrorOk;
+    return ErrorCode::kErrorOk;
   }
 }
 
@@ -173,7 +173,7 @@ Error Context::reset() {
     mpAtomicSetXchgT<ContextImpl*>(
       &_d, const_cast<ContextImpl*>(&mpContextNull)));
 
-  return kErrorOk;
+  return ErrorCode::kErrorOk;
 }
 
 Context& Context::operator=(const Context& other) {
@@ -212,7 +212,7 @@ Context::~Context() {
 Error Context::addBuiltIns(void)
 {
 	addBuiltinMpObjects(this);
-	return kErrorOk;
+	return ErrorCode::kErrorOk;
 }
 
 Error Context::addSymbol(AstSymbol* &sym, const char * name, int type)
@@ -224,62 +224,62 @@ Error Context::addSymbol(AstSymbol* &sym, const char * name, int type)
 	uint32_t hVal = HashUtils::hashString(name, nlen); 
 	sym = d->_scope.getSymbol(std::string(name, nlen), hVal); 
 	if (sym != nullptr) 
-		return MATHPRESSO_TRACE_ERROR(kErrorSymbolAlreadyExists); 
+		return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorSymbolAlreadyExists);
     
-	sym = d->_builder.newSymbol(std::string(name, nlen), hVal, type, kAstScopeGlobal);
+	sym = d->_builder.newSymbol(std::string(name, nlen), hVal, type, AstScopeType::kAstScopeGlobal);
 	if (sym == nullptr) 
-		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory); 
+		return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
 	d->_scope.putSymbol(sym); 
 
-	return kErrorOk;
+	return ErrorCode::kErrorOk;
 }
 
 Error Context::addConstant(const char* name, double value) 
 {
   AstSymbol* sym;
-  MATHPRESSO_PROPAGATE(addSymbol(sym, name, kAstSymbolVariable));
+  MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
 
   sym->setValue(value);
-  sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsReadOnly | kAstSymbolIsAssigned);
+  sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
 
-  return kErrorOk;
+  return ErrorCode::kErrorOk;
 }
 
 Error Context::addConstant(const char* name, std::complex<double> value) {
 	AstSymbol* sym;
-	MATHPRESSO_PROPAGATE(addSymbol(sym, name, kAstSymbolVariable));
+	MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
 
 	sym->setValue(value);
-	sym->setSymbolFlag(kAstSymbolIsDeclared | kAstSymbolIsReadOnly | kAstSymbolIsAssigned | kAstSymbolIsComplex);
+	sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned | AstSymbolFlags::kAstSymbolIsComplex);
 
-	return kErrorOk;
+	return ErrorCode::kErrorOk;
 }
 
 Error Context::addVariable(const char* name, int offset, unsigned int flags) 
 {
 	AstSymbol* sym;
-	MATHPRESSO_PROPAGATE(addSymbol(sym, name, kAstSymbolVariable));
+	MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
 
-	sym->setSymbolFlag(kAstSymbolIsDeclared);
-	if (flags & kVariableCplx)
-		sym->setSymbolFlag(kAstSymbolIsComplex);
+	sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared);
+	if (flags & VariableFlags::kVariableCplx)
+		sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
 
-	sym->setVarSlotId(kInvalidSlot);
+	sym->setVarSlotId(InternalConsts::kInvalidSlot);
 	sym->setVarOffset(offset);
 
-	if (flags & kVariableRO)
-		sym->setSymbolFlag(kAstSymbolIsReadOnly);
+	if (flags & VariableFlags::kVariableRO)
+		sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly);
 
-	return kErrorOk;
+	return ErrorCode::kErrorOk;
 }
 
 Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
 {
 	AstSymbol * sym;
-	Error e = addSymbol(sym, name.c_str(), kAstSymbolFunction);
-	if (e != kErrorOk)
+	Error e = addSymbol(sym, name.c_str(), AstSymbolType::kAstSymbolFunction);
+	if (e != ErrorCode::kErrorOk)
 	{
-		if (e != kErrorSymbolAlreadyExists || sym->getSymbolType() != kAstSymbolFunction)
+		if (e != ErrorCode::kErrorSymbolAlreadyExists || sym->getSymbolType() != AstSymbolType::kAstSymbolFunction)
 			return e;
 	}
 	else
@@ -289,7 +289,7 @@ Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
 
 	_ops.add(name, obj);
 
-	return kErrorOk;
+	return ErrorCode::kErrorOk;
 }
 
 Error Context::listSymbols(std::vector<std::string> &syms)
@@ -309,7 +309,7 @@ Error Context::listSymbols(std::vector<std::string> &syms)
 		}
 	} while (it.next());
 	
-	return kErrorOk;
+	return ErrorCode::kErrorOk;
 }
 
 Error Context::delSymbol(const char* name)
@@ -322,12 +322,12 @@ Error Context::delSymbol(const char* name)
 
 	AstSymbol* sym = d->_scope.getSymbol(std::string(name, nlen), hVal);
 	if (sym == nullptr)
-		return MATHPRESSO_TRACE_ERROR(kErrorSymbolNotFound);
+		return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorSymbolNotFound);
 
 	_ops.remove(name, sym->getLength());
 	d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
 
-	return kErrorOk;
+	return ErrorCode::kErrorOk;
 }
 
 
@@ -354,7 +354,7 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	options &= _kOptionsMask;
 
 	if (log != nullptr)
-		options |= kInternalOptionLog;
+		options |= InternalOptions::kInternalOptionLog;
 	else
 		options &= ~(kOptionVerbose | kOptionDebugAst | kOptionDebugAsm);
 
@@ -401,10 +401,10 @@ Error Expression::compile(const Context& ctx, const char* body, unsigned int opt
 	CompiledFunc fn = mpCompileFunction(&ast, options, log, &ctx._ops, _isComplex);
 
 	if (fn == nullptr)
-		return MATHPRESSO_TRACE_ERROR(kErrorNoMemory);
+		return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
 	_func = fn;
 
-	return kErrorOk;
+	return ErrorCode::kErrorOk;
 }
 
 bool Expression::isCompiled() const 

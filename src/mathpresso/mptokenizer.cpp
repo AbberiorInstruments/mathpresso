@@ -95,15 +95,15 @@ namespace mathpresso {
 	static uint32_t mpGetKeyword(const uint8_t* s, size_t sLen)
 	{
 		if (sLen == 3 && s[0] == 'v' && s[1] == 'a' && s[2] == 'r')
-			return kTokenVar;
+			return TokenType::kTokenVar;
 
-		return kTokenSymbol;
+		return TokenType::kTokenSymbol;
 	}
 
 	uint32_t Tokenizer::peek(Token* token)
 	{
 		uint32_t uToken = _token.token;
-		if (uToken != kTokenInvalid || (uToken = next(&_token)) != kTokenInvalid)
+		if (uToken != TokenType::kTokenInvalid || (uToken = next(&_token)) != TokenType::kTokenInvalid)
 			*token = _token;
 		return uToken;
 	}
@@ -116,10 +116,10 @@ namespace mathpresso {
 		uint32_t c = _token.token;
 		uint32_t hVal;
 
-		if (c != kTokenInvalid)
+		if (c != TokenType::kTokenInvalid)
 		{
 			*token = _token;
-			_token.token = kTokenInvalid;
+			_token.token = TokenType::kTokenInvalid;
 			return c;
 		}
 
@@ -218,7 +218,7 @@ namespace mathpresso {
 				if (size_t(p - pToken) == 1)
 				{
 					_p = reinterpret_cast<const char*>(p);
-					return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, kTokenDot);
+					return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, TokenType::kTokenDot);
 				}
 			}
 
@@ -279,11 +279,11 @@ namespace mathpresso {
 			{
 				p++;
 				len++;
-				tokenType = kTokenComplex;
+				tokenType = TokenType::kTokenComplex;
 			}
 			else
 			{
-				tokenType = kTokenNumber;
+				tokenType = TokenType::kTokenNumber;
 			}
 
 
@@ -299,7 +299,7 @@ namespace mathpresso {
 				char* buf = tmp;
 
 				if (len >= MATHPRESSO_ARRAY_SIZE(tmp) && (buf = static_cast<char*>(::malloc(len + 1))) == nullptr)
-					return kTokenInvalid;
+					return TokenType::kTokenInvalid;
 
 				memcpy(buf, pToken, len);
 				buf[len] = '\0';
@@ -376,7 +376,7 @@ namespace mathpresso {
 			}
 
 			_p = reinterpret_cast<const char*>(p);
-			return token->setData(size_t(pToken - pStart), length, 0, kTokenOperator);
+			return token->setData(size_t(pToken - pStart), length, 0, TokenType::kTokenOperator);
 
 		}
 
@@ -386,7 +386,7 @@ namespace mathpresso {
 
 	_Invalid:
 		_p = reinterpret_cast<const char*>(pToken);
-		return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, kTokenInvalid);
+		return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, TokenType::kTokenInvalid);
 
 		// --------------------------------------------------------------------------
 		// [EOI]
@@ -394,7 +394,7 @@ namespace mathpresso {
 
 	_EndOfInput:
 		_p = _end;
-		return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, kTokenEnd);
+		return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, TokenType::kTokenEnd);
 	}
 
 } // mathpresso namespace

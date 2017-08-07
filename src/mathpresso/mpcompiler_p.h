@@ -24,13 +24,14 @@ namespace mathpresso
 
 	struct JitVar
 	{
+		// switch to bool.
 		enum FLAGS
 		{
 			FLAG_NONE = 0,
 			FLAG_RO = 1
 		};
 
-		MATHPRESSO_INLINE JitVar() : op(), flags(FLAG_NONE) {}
+		MATHPRESSO_INLINE JitVar() : op(), flags(FLAGS::FLAG_NONE) {}
 		MATHPRESSO_INLINE JitVar(asmjit::Operand op, uint32_t flags) : op(op), flags(flags) {}
 		MATHPRESSO_INLINE JitVar(const JitVar& other) : op(other.op), flags(other.flags) {}
 		MATHPRESSO_INLINE ~JitVar() {}
@@ -39,7 +40,7 @@ namespace mathpresso
 		MATHPRESSO_INLINE void reset()
 		{
 			op.reset();
-			flags = FLAG_NONE;
+			flags = FLAGS::FLAG_NONE;
 		}
 
 		// Operator Overload.
@@ -79,9 +80,9 @@ namespace mathpresso
 		MATHPRESSO_INLINE bool isXmm() const { return op.isReg(asmjit::X86Reg::kRegXmm); }
 
 		// Flags.
-		MATHPRESSO_INLINE bool isRO() const { return (flags & FLAG_RO) != 0; }
-		MATHPRESSO_INLINE void setRO() { flags |= FLAG_RO; }
-		MATHPRESSO_INLINE void clearRO() { flags &= ~FLAG_RO; }
+		MATHPRESSO_INLINE bool isRO() const { return (flags & FLAGS::FLAG_RO) != 0; }
+		MATHPRESSO_INLINE void setRO() { flags |= FLAGS::FLAG_RO; }
+		MATHPRESSO_INLINE void clearRO() { flags &= ~FLAGS::FLAG_RO; }
 
 		// Members.
 		asmjit::Operand op;

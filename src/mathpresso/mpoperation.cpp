@@ -233,7 +233,7 @@ namespace mathpresso {
 			}
 		}
 
-		return JitVar(result, JitVar::FLAG_NONE);
+		return JitVar(result, JitVar::FLAGS::FLAG_NONE);
 	}
 
 	Error MpOperationFunc::optimize(AstOptimizer * opt, AstNode * node)
@@ -256,7 +256,7 @@ namespace mathpresso {
 		if (b_need_cplx)
 		{
 			if (!fnC_)
-				return opt->_errorReporter->onError(kErrorInvalidArgument, node->getPosition(),
+				return opt->_errorReporter->onError(ErrorCode::kErrorInvalidArgument, node->getPosition(),
 					"No complex function available.");
 
 			node->addNodeFlags(AstNodeFlags::kAstTakesComplex);
@@ -276,7 +276,7 @@ namespace mathpresso {
 			}
 			else
 			{
-				return opt->_errorReporter->onError(kErrorSymbolNotFound, node->getPosition(),
+				return opt->_errorReporter->onError(ErrorCode::kErrorSymbolNotFound, node->getPosition(),
 					"No appropriate function available");
 			}
 		}
@@ -333,7 +333,7 @@ namespace mathpresso {
 
 			opt->getAst()->deleteNode(node);
 		}
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 	void MpOperationFunc::setFn(void* fn, bool isComplex)
@@ -542,7 +542,7 @@ namespace mathpresso {
 		JitVar varRet(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);;
 		if (node->takesComplex())
 		{
-			var = jc->registerVarComplex(var, !node->getAt(0)->hasNodeFlag(kAstReturnsComplex));
+			var = jc->registerVarComplex(var, !node->getAt(0)->hasNodeFlag(AstNodeFlags::kAstReturnsComplex));
 			jc->cc->xorpd(varRet.getXmm(), varRet.getXmm());
 			jc->cc->shufpd(var.getXmm(), varRet.getXmm(), asmjit::x86::shufImm(0, 1));
 		}
@@ -575,7 +575,7 @@ namespace mathpresso {
 		return -args[0]; 
 	}
 
-	MpOperationNeg::MpOperationNeg() : MpOperationFunc(1, MpOperationFlags::OpIsRighttoLeft, VPTR(negRR), VPTR(negCC))
+	MpOperationNeg::MpOperationNeg() : MpOperationFunc(1, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator, VPTR(negRR), VPTR(negCC))
 	{
 		priority_ = 3;
 	}
@@ -591,17 +591,17 @@ namespace mathpresso {
 	uint32_t MpOperationNeg::optimize(AstOptimizer * opt, AstNode * node)
 	{
 		auto ret = MpOperationFunc::optimize(opt, node);
-		if (ret != kErrorOk)
+		if (ret != ErrorCode::kErrorOk)
 			return ret;
 
 		// -(-(x)) = x
-		if (node->getAt(0)->getNodeType() == kAstNodeUnaryOp && static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
+		if (node->getAt(0)->getNodeType() == AstNodeType::kAstNodeUnaryOp && static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
 		{
 			AstNode* childOfChild = static_cast<AstUnaryOp*>(node->getAt(0))->unlinkChild();
 			node->getParent()->replaceNode(node, childOfChild);
 			opt->getAst()->deleteNode(node);
 		}
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 	// Not
@@ -611,7 +611,7 @@ namespace mathpresso {
 	}
 
 	MpOperationNot::MpOperationNot() :
-		MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(notRR), VPTR(notCC))
+		MpOperationFunc(1, MpOperationFlags::OpFlagIsOperator, VPTR(notRR), VPTR(notCC))
 	{
 		priority_ = 3;
 	}
@@ -620,7 +620,7 @@ namespace mathpresso {
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 
-		if (node ->hasNodeFlag(kAstReturnsComplex))
+		if (node ->hasNodeFlag(AstNodeFlags::kAstReturnsComplex))
 		{
 			var = jc->writableVarComplex(var);
 			jc->cc->cmppd(var.getXmm(), jc->getConstantD64(std::complex<double>(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpEQ));
@@ -653,18 +653,18 @@ namespace mathpresso {
 	uint32_t MpOperationConjug::optimize(AstOptimizer * opt, AstNode * node)
 	{
 		auto ret = MpOperationFunc::optimize(opt, node);
-		if (ret != kErrorOk)
+		if (ret != ErrorCode::kErrorOk)
 			return ret;
 
 		// conj(conj(x)) = x
-		if (node->getAt(0)->getNodeType() == kAstNodeUnaryOp
+		if (node->getAt(0)->getNodeType() == AstNodeType::kAstNodeUnaryOp
 			&& static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
 		{
 			AstNode* childOfChild = static_cast<AstUnaryOp*>(node->getAt(0))->unlinkChild();
 			node->getParent()->replaceNode(node, childOfChild);
 			opt->getAst()->deleteNode(node);
 		}
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 	// Reciprocal
@@ -685,7 +685,7 @@ namespace mathpresso {
 		{
 			// as of http://www.chemistrylearning.com/reciprocal-of-a-complex-number/
 			var = jc->writableVarComplex(var);
-			result = JitVar(jc->cc->newXmmPd(), JitVar::FLAG_NONE);
+			result = JitVar(jc->cc->newXmmPd(), JitVar::FLAGS::FLAG_NONE);
 			jc->cc->movapd(result.getXmm(), var.getXmm());
 			jc->cc->mulpd(var.getXmm(), var.getXmm());
 			jc->cc->haddpd(var.getXmm(), var.getXmm());
@@ -694,7 +694,7 @@ namespace mathpresso {
 		}
 		else
 		{
-			result = JitVar(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			result = JitVar(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 			jc->cc->movsd(result.getXmm(), jc->getConstantD64(1.0).getMem());
 			if (var.isMem())
 				jc->cc->divsd(result.getXmm(), var.getMem());
@@ -712,7 +712,7 @@ namespace mathpresso {
 	JitVar MpOperationSignBit::compile(JitCompiler * jc, AstNode * node)
 	{
 		JitVar var(jc->onNode(node->getAt(0)));
-		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 		jc->cc->pshufd(result.getXmm(), jc->registerVar(var).getXmm(), asmjit::x86::shufImm(3, 2, 1, 1));
 		jc->cc->psrad(result.getXmm(), 31);
 		jc->cc->andpd(result.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
@@ -802,7 +802,7 @@ namespace mathpresso {
 		else
 		{
 			var = jc->writableVar(var);
-			result = JitVar(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			result = JitVar(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 			jc->cc->xorpd(result.getXmm(), result.getXmm());
 			jc->cc->subsd(result.getXmm(), var.getXmm());
 			jc->cc->maxsd(result.getXmm(), var.getXmm());
@@ -817,11 +817,11 @@ namespace mathpresso {
 	JitVar MpOperationRound::compile(JitCompiler * jc, AstNode * node)
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
-		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 		if (jc->enableSSE4_1)
 		{
-			JitVar tmp(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar tmp(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 			jc->cc->roundsd(tmp.getXmm(), var.getXmm(), asmjit::x86::kRoundDown | asmjit::x86::kRoundInexact);
 			if (result.getXmm().getId() != var.getXmm().getId())
 				jc->cc->movsd(result.getXmm(), var.getXmm());
@@ -836,9 +836,9 @@ namespace mathpresso {
 			const double magic0 = 6755399441055744.0;
 			const double magic1 = 6755399441055745.0;
 
-			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
 			jc->cc->movsd(t3.getXmm(), var.getXmm());
@@ -866,7 +866,7 @@ namespace mathpresso {
 	JitVar MpOperationRoundEven::compile(JitCompiler * jc, AstNode * node)
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
-		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 		if (jc->enableSSE4_1)
 		{
@@ -877,8 +877,8 @@ namespace mathpresso {
 			const double maxn = 4503599627370496.0;
 			const double magic0 = 6755399441055744.0;
 
-			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 			jc->cc->movsd(t1.getXmm(), var.getXmm());
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
@@ -901,7 +901,7 @@ namespace mathpresso {
 	JitVar MpOperationTrunc::compile(JitCompiler * jc, AstNode * node)
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
-		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 		if (jc->enableSSE4_1)
 		{
@@ -912,9 +912,9 @@ namespace mathpresso {
 			const double maxn = 4503599627370496.0;
 			const double magic0 = 6755399441055744.0;
 
-			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 			jc->cc->movsd(t2.getXmm(), jc->getConstantU64(ASMJIT_UINT64_C(0x7FFFFFFFFFFFFFFF)).getMem());
 			jc->cc->andpd(t2.getXmm(), var.getXmm());
@@ -943,7 +943,7 @@ namespace mathpresso {
 	JitVar MpOperationFrac::compile(JitCompiler * jc, AstNode * node)
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
-		JitVar tmp(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		JitVar tmp(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 		if (jc->enableSSE4_1)
 		{
@@ -956,9 +956,9 @@ namespace mathpresso {
 			const double maxn = 4503599627370496.0;
 			const double magic0 = 6755399441055744.0;
 
-			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
 			jc->cc->movsd(t3.getXmm(), var.getXmm());
@@ -987,7 +987,7 @@ namespace mathpresso {
 	JitVar MpOperationFloor::compile(JitCompiler * jc, AstNode * node)
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
-		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 		if (jc->enableSSE4_1)
 		{
@@ -998,9 +998,9 @@ namespace mathpresso {
 			const double maxn = 4503599627370496.0;
 			const double magic0 = 6755399441055744.0;
 
-			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
 			jc->cc->movsd(t3.getXmm(), var.getXmm());
@@ -1029,7 +1029,7 @@ namespace mathpresso {
 	JitVar MpOperationcCeil::compile(JitCompiler * jc, AstNode * node)
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
-		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 		if (jc->enableSSE4_1)
 		{
@@ -1040,9 +1040,9 @@ namespace mathpresso {
 			const double maxn = 4503599627370496.0;
 			const double magic0 = 6755399441055744.0;
 
-			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 			jc->cc->movsd(t2.getXmm(), var.getXmm());
 			jc->cc->movsd(t3.getXmm(), var.getXmm());
@@ -1185,7 +1185,7 @@ namespace mathpresso {
 			}
 
 		}
-		return ErrorCode::kErrorOk;
+		return ErrorCode::ErrorCode::kErrorOk;
 	}
 
 	JitVar MpOperationBinary::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) 
@@ -1283,9 +1283,9 @@ namespace mathpresso {
 		}
 		if (vl == vr)
 		{
-			vr = jc->copyVarComplex(vl, JitVar::FLAG_NONE);
+			vr = jc->copyVarComplex(vl, JitVar::FLAGS::FLAG_NONE);
 		}
-		JitVar ret(jc->cc->newXmmPd(), JitVar::FLAG_NONE);
+		JitVar ret(jc->cc->newXmmPd(), JitVar::FLAGS::FLAG_NONE);
 		JitVar negateImag = jc->getConstantU64(uint64_t(0), uint64_t(0x8000000000000000));
 
 		// algorithm with modifications taken from:
@@ -1331,9 +1331,9 @@ namespace mathpresso {
 		}
 		if (vl == vr)
 		{
-			vr = jc->copyVarComplex(vl, JitVar::FLAG_NONE);
+			vr = jc->copyVarComplex(vl, JitVar::FLAGS::FLAG_NONE);
 		}
-		JitVar ret(jc->cc->newXmmPd(), JitVar::FLAG_NONE);
+		JitVar ret(jc->cc->newXmmPd(), JitVar::FLAGS::FLAG_NONE);
 		JitVar negateImag = jc->getConstantU64(uint64_t(0), uint64_t(0x8000000000000000));
 
 		jc->cc->pxor(vr.getXmm(), negateImag.getMem());
@@ -1562,13 +1562,13 @@ namespace mathpresso {
 	// Modulo
 	JitVar MpOperationModulo::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
 	{
-		JitVar result(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-		JitVar tmp(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+		JitVar result(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+		JitVar tmp(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 		vl = jc->writableVar(vl);
 		if (vl == vr)
 		{
-			vr = jc->copyVar(vl, JitVar::FLAG_NONE);
+			vr = jc->copyVar(vl, JitVar::FLAGS::FLAG_NONE);
 		}
 		else
 		{
@@ -1589,9 +1589,9 @@ namespace mathpresso {
 			const double maxn = 4503599627370496.0;
 			const double magic0 = 6755399441055744.0;
 
-			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
-			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAG_NONE);
+			JitVar t1(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t2(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
+			JitVar t3(jc->cc->newXmmSd(), JitVar::FLAGS::FLAG_NONE);
 
 			jc->cc->movsd(t2.getXmm(), jc->getConstantU64(ASMJIT_UINT64_C(0x7FFFFFFFFFFFFFFF)).getMem());
 			jc->cc->andpd(t2.getXmm(), var.getXmm());
@@ -1646,8 +1646,8 @@ namespace mathpresso {
 		asmjit::X86Xmm regErg = jc->cc->newXmmPd();
 		JitVar ergLeft = jc->onNode(left);
 
-		bool lIsVarOrImm = left->getNodeType() == kAstNodeVar || left->getNodeType() == kAstNodeImm;
-		bool rIsVarOrImm = right->getNodeType() == kAstNodeVar || right->getNodeType() == kAstNodeImm;
+		bool lIsVarOrImm = left->getNodeType() == AstNodeType::kAstNodeVar || left->getNodeType() == AstNodeType::kAstNodeImm;
+		bool rIsVarOrImm = right->getNodeType() == AstNodeType::kAstNodeVar || right->getNodeType() == AstNodeType::kAstNodeImm;
 
 		if (lIsVarOrImm)
 		{
@@ -1682,14 +1682,14 @@ namespace mathpresso {
 
 		jc->cc->bind(lblEnd);
 
-		return jc->copyVarComplex(JitVar(regErg, JitVar::FLAG_NONE), JitVar::FLAG_NONE);
+		return jc->copyVarComplex(JitVar(regErg, JitVar::FLAGS::FLAG_NONE), JitVar::FLAG_NONE);
 	}
 
 	uint32_t MpOperationTernary::optimize(AstOptimizer *opt, AstNode *node)
 	{
 		if (isColon_)
 		{
-			return opt->_errorReporter->onError(kErrorInvalidState, node->getPosition(),
+			return opt->_errorReporter->onError(ErrorCode::kErrorInvalidState, node->getPosition(),
 				"this is an implementation error.");
 		}
 
@@ -1709,7 +1709,7 @@ namespace mathpresso {
 
 		if (typeid(*lastColon->_mpOp) == typeid(*this) && !dynamic_cast<MpOperationTernary*>(lastColon->_mpOp)->isColon_)
 		{
-			return opt->_errorReporter->onError(kErrorInvalidSyntax, node->getPosition(),
+			return opt->_errorReporter->onError(ErrorCode::kErrorInvalidSyntax, node->getPosition(),
 				"Invalid ternary operation. Expected a ':'." );
 		}
 
@@ -1796,16 +1796,16 @@ namespace mathpresso {
 		}
 		else
 		{
-			ternaryNode->removeNodeFlags(kAstTakesComplex | kAstReturnsComplex);
+			ternaryNode->removeNodeFlags(AstNodeFlags::kAstTakesComplex | AstNodeFlags::kAstReturnsComplex);
 			MATHPRESSO_PROPAGATE(opt->onNode(ternaryNode->getLeft()));
 			MATHPRESSO_PROPAGATE(opt->onNode(ternaryNode->getRight()));
 			bool needs_complex = ternaryNode->getLeft()->returnsComplex() | ternaryNode->getRight()->returnsComplex();
 			if (needs_complex)
 			{
-				ternaryNode->addNodeFlags(kAstReturnsComplex | kAstTakesComplex);
+				ternaryNode->addNodeFlags(AstNodeFlags::kAstReturnsComplex | AstNodeFlags::kAstTakesComplex);
 			}
 		}
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 
 	}
 	
@@ -1830,13 +1830,13 @@ namespace mathpresso {
 	uint32_t mathpresso::MpOperationAssignment::optimize(AstOptimizer * opt, AstNode * node)
 	{
 		AstVarDecl * varDecl;
-		if (node->getNodeType() == kAstNodeVarDecl)
+		if (node->getNodeType() == AstNodeType::kAstNodeVarDecl)
 		{
 			varDecl = static_cast<AstVarDecl*>(node);
 		}
 		else
 		{
-			return kErrorInvalidState;
+			return ErrorCode::kErrorInvalidState;
 		}
 
 		AstSymbol* sym = varDecl->getSymbol();
@@ -1848,8 +1848,8 @@ namespace mathpresso {
 
 			if (child->returnsComplex())
 			{
-				varDecl->addNodeFlags(kAstTakesComplex | kAstReturnsComplex);
-				sym->setSymbolFlag(kAstSymbolIsComplex);
+				varDecl->addNodeFlags(AstNodeFlags::kAstTakesComplex | AstNodeFlags::kAstReturnsComplex);
+				sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
 			}
 
 			if (child->isImm())
@@ -1866,7 +1866,7 @@ namespace mathpresso {
 			}
 		}
 
-		return kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 } // end namespace mathpresso

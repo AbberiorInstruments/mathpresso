@@ -40,7 +40,9 @@ enum TokenType {
   kTokenLCurl,        // {
   kTokenRCurl,        // }
 
+  // unused:
   kTokenLBracket,     // [
+  // unused:
   kTokenRBracket,     // ]
 
   kTokenLParen,       // (
@@ -70,18 +72,18 @@ enum TokenChar {
 	kTokenCharSym,
 
 	// Punctuation.
-	kTokenCharDot = kTokenDot,          // .
-	kTokenCharCom = kTokenComma,        // ,
-	kTokenCharSem = kTokenSemicolon,    // ;
-	kTokenCharLCu = kTokenLCurl,        // {
-	kTokenCharRCu = kTokenRCurl,        // }
-	kTokenCharLBr = kTokenLBracket,     // [
-	kTokenCharRBr = kTokenRBracket,     // ]
-	kTokenCharLPa = kTokenLParen,       // (
-	kTokenCharRPa = kTokenRParen,       // )
+	kTokenCharDot = TokenType::kTokenDot,          // .
+	kTokenCharCom = TokenType::kTokenComma,        // ,
+	kTokenCharSem = TokenType::kTokenSemicolon,    // ;
+	kTokenCharLCu = TokenType::kTokenLCurl,        // {
+	kTokenCharRCu = TokenType::kTokenRCurl,        // }
+	kTokenCharLBr = TokenType::kTokenLBracket,     // [
+	kTokenCharRBr = TokenType::kTokenRBracket,     // ]
+	kTokenCharLPa = TokenType::kTokenLParen,       // (
+	kTokenCharRPa = TokenType::kTokenRParen,       // )
 
 	// Marks a Operator
-	kTokenCharOp = kTokenOperator,
+	kTokenCharOp = TokenType::kTokenOperator,
 	
 	// Space.
 	kTokenCharSpc = 63,
@@ -148,7 +150,7 @@ struct Token {
     position = 0;
     length = 0;
     value = 0.0;
-    token = kTokenInvalid;
+    token = TokenType::kTokenInvalid;
   }
 
   // --------------------------------------------------------------------------
@@ -183,7 +185,7 @@ struct Token {
   //! Token type.
   uint32_t token;
 
-  //! Token value (if the token is a number). If token = kTokenComplex this 
+  //! Token value (if the token is a number). If token = TokenType::kTokenComplex this 
   // should be interpreted as the imaginary part of a complex number.
   double value;
 
@@ -226,7 +228,7 @@ struct Tokenizer {
 
   //! Consume a token got by using peek().
   MATHPRESSO_INLINE void consume() {
-    _token.token = kTokenInvalid;
+    _token.token = TokenType::kTokenInvalid;
   }
 
   //! Consume a token got by using peek() and call `peek()`.

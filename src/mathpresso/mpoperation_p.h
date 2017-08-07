@@ -176,7 +176,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationAdd() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 6)
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 6)
 		{}
 
 	protected:
@@ -191,7 +191,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationSub() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagHasAsm, 6)
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 6)
 		{}
 
 	protected:
@@ -206,7 +206,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationMul() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 5)
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 5)
 		{}
 
 	protected:
@@ -221,7 +221,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationDiv() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagHasAsm, 5)
+			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 5)
 		{}
 
 	protected:
@@ -262,7 +262,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationEq() :
-			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 9)
+			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 9)
 		{}
 
 	protected:
@@ -277,7 +277,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationNe() :
-			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm, 9)
+			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 9)
 		{}
 
 	protected:
@@ -292,7 +292,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationLt() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
 		{}
 
 	protected:
@@ -305,7 +305,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationLe() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
 		{}
 
 	protected:
@@ -318,7 +318,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationGt() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
 		{}
 
 	protected:
@@ -331,7 +331,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationGe() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 8)
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
 		{}
 
 	protected:
@@ -344,7 +344,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationModulo() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm, 5)
+			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 5)
 		{}
 
 	protected:
@@ -356,7 +356,7 @@ namespace mathpresso
 	class MpOperationTernary : public MpOperation
 	{
 	public:
-		MpOperationTernary(bool iscolon) : MpOperation(2, MpOperationFlags::OpIsRighttoLeft), isColon_(iscolon)
+		MpOperationTernary(bool iscolon) : MpOperation(2, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), isColon_(iscolon)
 		{
 			priority_ = 15;
 		}

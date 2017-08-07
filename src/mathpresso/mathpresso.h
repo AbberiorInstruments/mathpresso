@@ -219,52 +219,6 @@ enum VariableFlags {
 };
 
 // ============================================================================
-// [mathpresso::FunctionFlags]
-// ============================================================================
-
-enum FunctionFlags {
-  //! Function has 0 arguments.
-  kFunctionArg0 = 0x00000000,
-  //! Function has 1 argument.
-  kFunctionArg1 = 0x00000001,
-  //! Function has 2 arguments.
-  kFunctionArg2 = 0x00000002,
-  //! Function has 3 arguments.
-  kFunctionArg3 = 0x00000003,
-  //! Function has 4 arguments.
-  kFunctionArg4 = 0x00000004,
-  //! Function has 5 arguments.
-  kFunctionArg5 = 0x00000005,
-  //! Function has 6 arguments.
-  kFunctionArg6 = 0x00000006,
-  //! Function has 7 arguments.
-  kFunctionArg7 = 0x00000007,
-  //! Function has 8 arguments.
-  kFunctionArg8 = 0x00000008,
-
-  //! \internal
-  _kFunctionArgMask = 0x0000000F,
-
-  kFunctionReturnsComplex = 0x00000010,
-  kFunctionTakesComplex = 0x00000020,
-
-  //! Function cannot be optimized out as the pointer carries state information
-  //! that can change
-  kFunctionHasState = 0x00000040,
-
-  //! The first argument of the function is the `data` pointer passed to the
-  //! evaluate function. This is a hidden parameter that is not accessible
-  //! within the expression itself.
-  kFunctionFirstArgData = 0x10000000,
-
-  //! Function doesn't have side-effects and can be evaluated (i.e. optimized
-  //! out) during a constant folding phase.
-  kFunctionNoSideEffects = 0x20000000,
-
-  _kFunctionHasObject = 0x20000000
-};
-
-// ============================================================================
 // [mathpresso::ContextImpl]
 // ============================================================================
 
@@ -342,7 +296,7 @@ struct Context {
   MATHPRESSO_API Error addConstant(const char* name, double value);
   MATHPRESSO_API Error addConstant(const char * name, std::complex<double> value);
   //! Add variable to this context.
-  MATHPRESSO_API Error addVariable(const char* name, int offset, unsigned int flags = kVariableRW);
+  MATHPRESSO_API Error addVariable(const char* name, int offset, unsigned int flags = VariableFlags::kVariableRW);
 
   //! Adding Operations to the Context, which can contain function calls. See mpoeration.h for more information.
   MATHPRESSO_API Error addObject(std::string name, std::shared_ptr<MpOperation> obj);

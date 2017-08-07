@@ -61,11 +61,9 @@ namespace mathpresso
 	
 	void HashBase::_rehash(uint32_t newCount)
 	{
-		ZoneHeap* heap = _heap;
-
 		HashNode** oldData = _data;
 		HashNode** newData = static_cast<HashNode**>(
-			heap->allocZeroed(
+			_heap->allocZeroed(
 				static_cast<size_t>(newCount + kExtraCount) * sizeof(void*)));
 
 		if (newData == nullptr)
@@ -101,7 +99,7 @@ namespace mathpresso
 
 		_data = newData;
 		if (oldData != _embedded)
-			heap->release(oldData,
+			_heap->release(oldData,
 						  static_cast<size_t>(oldCount + kExtraCount) * sizeof(void*));
 	}
 
