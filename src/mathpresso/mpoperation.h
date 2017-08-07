@@ -51,18 +51,44 @@ namespace mathpresso {
 		OpFlagNopIfLOne = 0x40000000,
 		OpFlagNopIfROne = 0x80000000,
 		OpFlagNopIfZero = OpFlagNopIfLZero | OpFlagNopIfRZero,
-		OpFlagNopIfOne = OpFlagNopIfLOne | OpFlagNopIfROne
+		OpFlagNopIfOne  = OpFlagNopIfLOne | OpFlagNopIfROne
 	};
 
 	class MATHPRESSO_API MpOperation
 	{
 	public:
-		// Con-/Destructor
-		MpOperation(uint32_t nargs, uint32_t flags) :
-			nargs_(nargs),
-			flags_(flags),
-			priority_(0)
+		struct Signature
 		{
+			enum class type
+			{
+				real = 0,
+				complex = 1
+			};
+
+			Signature(size_t nargs) :
+				return_type_(type::real),
+				parameters_(nargs, { type::real, "" })
+			{
+			}
+
+			type return_type_;
+
+			struct param
+			{
+				type type_;
+				std::string name_;
+			};
+
+			std::vector<param> parameters_;
+		};
+
+
+		// Con-/Destructor
+		MpOperation(const Signature &s, uint32_t priority = 0) :
+			priority_(priority)
+		{
+			nargs_ = uint32_t(s.parameters_.size());
+			// Todo: set flags_
 		}
 
 		virtual ~MpOperation()
@@ -142,8 +168,7 @@ namespace mathpresso {
 	class MATHPRESSO_API MpOperationBinary : public MpOperation
 	{
 	public:
-		MpOperationBinary(uint32_t nargs, uint32_t  flags, uint32_t priority) :
-			MpOperation(nargs, flags)
+		MpOperationBinary(const Signature &s, uint32_t priority) :	MpOperation(nargs, flags),
 		{
 			priority_ = priority;
 		}
@@ -188,15 +213,8 @@ namespace mathpresso {
 		{ 
 			return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()); 
 		};
+		Signature signature_;
 	};
-	
-	
-
-
-
-
-	
-
 }
 
 
