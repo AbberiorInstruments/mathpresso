@@ -1185,7 +1185,7 @@ namespace mathpresso {
 			}
 
 		}
-		return ErrorCode::ErrorCode::kErrorOk;
+		return ErrorCode::kErrorOk;
 	}
 
 	JitVar MpOperationBinary::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) 

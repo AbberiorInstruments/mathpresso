@@ -442,7 +442,7 @@ Error AstDump::onBlock(AstBlock* node) {
   for (i = 0; i < count; i++)
     onNode(children[i]);
 
-  return ErrorCode::ErrorCode::kErrorOk;
+  return ErrorCode::kErrorOk;
 }
 
 Error AstDump::callMpOperation(AstVarDecl* node) {

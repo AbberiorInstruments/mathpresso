@@ -206,7 +206,7 @@ enum InternalConsts {
 //! Compilation options MATHPRESSO uses internally.
 enum InternalOptions {
   //! Set if `OutputLog` is present. MATHPRESSO then checks only this flag to use it.
-  InternalOptionLog = 0x00010000
+  kInternalOptionLog = 0x00010000
 };
 
 // ============================================================================
