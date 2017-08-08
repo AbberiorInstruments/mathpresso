@@ -623,6 +623,8 @@ struct AstNode {
 
   MpOperation* _mpOp;
 
+  std::vector<MpOperation*> _availableOps;
+
 private:
   //! Node type, see `AstNodeType`.
   uint8_t _nodeType;

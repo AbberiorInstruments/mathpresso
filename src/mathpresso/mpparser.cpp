@@ -242,8 +242,12 @@ namespace mathpresso {
 
 			AstVarDecl* decl = _ast->newNode<AstVarDecl>();
 			MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
-			//decl->_mpOp = _ops->at(std::make_pair("=", 2)).get();
 			decl->_mpOp = _ops->find("=", 2).get();
+
+			for (auto p : _ops->find("="))
+			{
+				decl->_availableOps.push_back(p.get());
+			}
 
 			decl->setPosition(position);
 			decl->setSymbol(vSym);
@@ -482,6 +486,12 @@ namespace mathpresso {
 				opNode->setPosition(token.getPosAsUInt());
 
 				opNode->_mpOp = op.get();
+
+				for (auto p : _ops->find(name))
+				{
+					opNode->_availableOps.push_back(p.get());
+				}
+
 				
 				if (lastUnaryNode == nullptr)
 					currentNode = opNode;
@@ -558,6 +568,11 @@ namespace mathpresso {
 				MATHPRESSO_NULLCHECK(newNode);
 
 				newNode->_mpOp = op.get();
+
+				for (auto p : _ops->find(name))
+				{
+					newNode->_availableOps.push_back(p.get());
+				}
 
 				newNode->setPosition(token.getPosAsUInt());
 
@@ -796,6 +811,11 @@ namespace mathpresso {
 				ternaryNode->setLeft(branchLeft);
 				ternaryNode->setRight(branchRight);
 				ternaryNode->_mpOp = _ops->find("?", 2).get();
+
+				for (auto p : _ops->find("?"))
+				{
+					ternaryNode->_availableOps.push_back(p.get());
+				}
 
 
 				// add the new node to the AST.
