@@ -175,104 +175,108 @@ typedef unsigned __int64 uint64_t;
 // [mathpresso::]
 // ============================================================================
 
-namespace mathpresso {
+namespace mathpresso
+{
 
-// ============================================================================
-// [Reuse]
-// ============================================================================
+	// ============================================================================
+	// [Reuse]
+	// ============================================================================
 
-// Reuse these classes - we depend on asmjit anyway and these are internal.
-using asmjit::StringBuilder;
-using asmjit::StringBuilderTmp;
+	// Reuse these classes - we depend on asmjit anyway and these are internal.
+	using asmjit::StringBuilder;
+	using asmjit::StringBuilderTmp;
 
-using asmjit::Zone;
-using asmjit::ZoneHeap;
-using asmjit::ZoneVector;
+	using asmjit::Zone;
+	using asmjit::ZoneHeap;
+	using asmjit::ZoneVector;
 
-// ============================================================================
-// [mpsl::InternalConsts]
-// ============================================================================
+	// ============================================================================
+	// [mpsl::InternalConsts]
+	// ============================================================================
 
-enum InternalConsts {
-  kInvalidSlot = 0xFFFFFFFFU
-};
+	enum InternalConsts
+	{
+		kInvalidSlot = 0xFFFFFFFFU
+	};
 
-// ============================================================================
-// [mpsl::InternalOptions]
-// ============================================================================
+	// ============================================================================
+	// [mpsl::InternalOptions]
+	// ============================================================================
 
-//! \internal
-//!
-//! Compilation options MATHPRESSO uses internally.
-enum InternalOptions {
-  //! Set if `OutputLog` is present. MATHPRESSO then checks only this flag to use it.
-  kInternalOptionLog = 0x00010000
-};
+	//! \internal
+	//!
+	//! Compilation options MATHPRESSO uses internally.
+	enum InternalOptions
+	{
+		//! Set if `OutputLog` is present. MATHPRESSO then checks only this flag to use it.
+		kInternalOptionLog = 0x00010000
+	};
 
-// ============================================================================
-// [mathpresso::mpAssertionFailure]
-// ============================================================================
+	// ============================================================================
+	// [mathpresso::mpAssertionFailure]
+	// ============================================================================
 
-//! \internal
-//!
-//! MathPresso assertion handler.
-MATHPRESSO_NOAPI void mpAssertionFailure(const char* file, int line, const char* msg);
+	//! \internal
+	//!
+	//! MathPresso assertion handler.
+	MATHPRESSO_NOAPI void mpAssertionFailure(const char* file, int line, const char* msg);
 
-// ============================================================================
-// [mathpresso::mpTraceError]
-// ============================================================================
+	// ============================================================================
+	// [mathpresso::mpTraceError]
+	// ============================================================================
 
-MATHPRESSO_NOAPI Error mpTraceError(Error error);
+	MATHPRESSO_NOAPI Error mpTraceError(Error error);
 
 
-// ============================================================================
-// [mathpresso::addBuiltinObjects]
-// ============================================================================
-struct Context;
-uint32_t addBuiltinMpObjects(Context * ctx);
+	// ============================================================================
+	// [mathpresso::addBuiltinObjects]
+	// ============================================================================
+	struct Context;
+	uint32_t addBuiltinMpObjects(Context * ctx);
 
-// ============================================================================
-// [mpsl::ErrorReporter]
-// ============================================================================
+	// ============================================================================
+	// [mpsl::ErrorReporter]
+	// ============================================================================
 
-//! Error reporter.
-struct ErrorReporter {
-  MATHPRESSO_INLINE ErrorReporter(const char* body, size_t len, uint32_t options, OutputLog* log)
-    : _body(body),
-      _len(len),
-      _options(options),
-      _log(log) {
+	//! Error reporter.
+	struct ErrorReporter
+	{
+		MATHPRESSO_INLINE ErrorReporter(const char* body, size_t len, uint32_t options, OutputLog* log)
+			: _body(body),
+			_len(len),
+			_options(options),
+			_log(log)
+		{
+			// These should be handled by MATHPRESSO before the `ErrorReporter` is created.
+			MATHPRESSO_ASSERT((log == nullptr && (_options & InternalOptions::kInternalOptionLog) == 0) ||
+				(log != nullptr && (_options & InternalOptions::kInternalOptionLog) != 0));
+		}
 
-    // These should be handled by MATHPRESSO before the `ErrorReporter` is created.
-    MATHPRESSO_ASSERT((log == nullptr && (_options & InternalOptions::kInternalOptionLog) == 0) ||
-                      (log != nullptr && (_options & InternalOptions::kInternalOptionLog) != 0) );
-  }
+		// --------------------------------------------------------------------------
+		// [Error Handling]
+		// --------------------------------------------------------------------------
 
-  // --------------------------------------------------------------------------
-  // [Error Handling]
-  // --------------------------------------------------------------------------
+		bool reportsErrors() const { return (_options & InternalOptions::kInternalOptionLog) != 0; }
+		bool reportsWarnings() const { return (_options & kOptionVerbose) != 0; }
 
-  MATHPRESSO_INLINE bool reportsErrors() const { return (_options & InternalOptions::kInternalOptionLog) != 0; }
-  MATHPRESSO_INLINE bool reportsWarnings() const { return (_options & kOptionVerbose) != 0; }
+		void getLineAndColumn(uint32_t position, uint32_t& line, uint32_t& column);
 
-  void getLineAndColumn(uint32_t position, uint32_t& line, uint32_t& column);
+		void onWarning(uint32_t position, const char* fmt, ...);
+		void onWarning(uint32_t position, const StringBuilder& msg);
 
-  void onWarning(uint32_t position, const char* fmt, ...);
-  void onWarning(uint32_t position, const StringBuilder& msg);
+		Error onError(Error error, uint32_t position, const char* fmt, ...);
+		Error onError(Error error, uint32_t position, const StringBuilder& msg);
 
-  Error onError(Error error, uint32_t position, const char* fmt, ...);
-  Error onError(Error error, uint32_t position, const StringBuilder& msg);
+		// --------------------------------------------------------------------------
+		// [Members]
+		// --------------------------------------------------------------------------
+	private:
+		const char* _body;
+		size_t _len;
 
-  // --------------------------------------------------------------------------
-  // [Members]
-  // --------------------------------------------------------------------------
-private:
-  const char* _body;
-  size_t _len;
-
-  uint32_t _options;
-  OutputLog* _log;
-};
+		uint32_t _options;
+		OutputLog* _log;
+	};
 
 } // mathpresso namespace
 
