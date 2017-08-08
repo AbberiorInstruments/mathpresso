@@ -76,7 +76,16 @@ namespace mathpresso {
 			// Parse the end of the input.
 			if (uToken == TokenType::kTokenEnd)
 				break;
-			MATHPRESSO_PROPAGATE(parseStatement(block, ParserFlags::kEnableVarDecls | ParserFlags::kEnableNestedBlock));
+			//MATHPRESSO_PROPAGATE(parseStatement(block, ParserFlags::kEnableVarDecls | ParserFlags::kEnableNestedBlock));
+			auto ret = parseStatement(block, ParserFlags::kEnableVarDecls | ParserFlags::kEnableNestedBlock);
+			if (ret == ErrorCode::kErrorOk)
+			{
+				reparseTernary(block);
+			}
+			else
+			{
+				return ret;
+			}
 		}
 
 		if (block->getLength() == 0)
@@ -173,6 +182,7 @@ namespace mathpresso {
 		else
 		{
 			return parseStatement(block, ParserFlags::kNoFlags);
+			
 		}
 	}
 
@@ -579,6 +589,7 @@ namespace mathpresso {
 					// |            /       \    | function as a stack-like structure. We
 					// |    (currentNode)  (NULL)| have to advance back at some point.
 					// +-------------------------+
+
 					currentBinaryNode->setRight(newNode);
 					newNode->setLeft(currentNode);
 					currentBinaryNode = newNode;
@@ -714,6 +725,107 @@ namespace mathpresso {
 		}
 
 		*pNodeOut = callNode;
+		return ErrorCode::kErrorOk;
+	}
+
+	Error Parser::reparseTernary(AstNode * node)
+	{
+
+		for (size_t i = 0; i < node->getLength(); i++)
+		{
+			unsigned int ret;
+			if (node->getNodeType() == AstNodeType::kAstNodeBinaryOp && _ops->name(node->_mpOp) == "?")
+			{
+				
+				AstBinaryOp* lastColon = static_cast<AstBinaryOp*>(node);
+				// go to the last Colon after question-marks.
+				while (lastColon->_mpOp && _ops->name(lastColon->_mpOp) == "?")
+				{
+					lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
+				}
+
+				while (lastColon->getRight() && lastColon->getRight()->_mpOp && _ops->name(lastColon->getRight()->_mpOp) == ":") // check whether colon or Qmark
+				{
+					lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
+				}
+
+				if (_ops->name(lastColon->_mpOp) != ":")
+				{
+					return _errorReporter->onError(ErrorCode::kErrorInvalidSyntax, node->getPosition(),
+														"Invalid ternary operation. Expected a ':'.");
+				}
+
+				AstNode* branchCondition = static_cast<AstBinaryOp*>(node)->getLeft();
+				AstNode* branchLeft = lastColon->getLeft();
+				AstNode* branchRight = lastColon->getRight();
+
+				// remove branchCondition from the AST
+				static_cast<AstBinaryOp*>(node)->setLeft(nullptr);
+				branchCondition->_parent = nullptr;
+
+				// remove the right path from the AST.
+				lastColon->setRight(nullptr);
+				branchRight->_parent = nullptr;
+
+
+				// Distinguish between a complex and a non-complex case:
+				// i.e.: cond1 ? cond2 ? a : b : c
+				if (static_cast<AstBinaryOp*>(node)->getRight() != lastColon)
+				{
+					// remove left branch from the AST.
+					branchLeft = static_cast<AstBinaryOp*>(node)->getRight();
+					static_cast<AstBinaryOp*>(node)->setRight(nullptr);
+					branchLeft->_parent = nullptr;
+
+					// correct the right path.
+					AstBinaryOp* preLastColon = static_cast<AstBinaryOp*>(lastColon->getParent());
+					preLastColon->replaceAt(1, lastColon->getLeft());
+
+				}
+				// i.e.: cond1 ? a : b
+				else
+				{
+					// remove left branch from the AST.
+					lastColon->setLeft(nullptr);
+					branchLeft->_parent = nullptr;
+				}
+
+				// create the new Ternary Node.
+				AstTernaryOp* ternaryNode = node->getAst()->newNode<AstTernaryOp>();
+				ternaryNode->setCondition(branchCondition);
+				ternaryNode->setLeft(branchLeft);
+				ternaryNode->setRight(branchRight);
+				ternaryNode->_mpOp = _ops->find("?", 2).get();
+
+
+				// add the new node to the AST.
+				node->getParent()->replaceNode(node, ternaryNode);
+
+				// clean up:
+				lastColon->setLeft(nullptr);
+				_ast->deleteNode(lastColon);
+				_ast->deleteNode(node);
+				return reparseTernary(ternaryNode);
+			}
+			else
+			{
+				if (node->getAt(i))
+				{
+					ret = reparseTernary(node->getAt(i));
+				}
+				else
+				{
+					ret = ErrorCode::kErrorOk;
+				}
+			}
+
+			if (ret != ErrorCode::kErrorOk)
+			{
+				return ret;
+			}
+
+		}
+
 		return ErrorCode::kErrorOk;
 	}
 

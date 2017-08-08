@@ -130,6 +130,7 @@ void AstBuilder::deleteNode(AstNode* node) {
     case AstNodeType::kAstNodeImm      : static_cast<AstImm*      >(node)->destroy(this); break;
     case AstNodeType::kAstNodeUnaryOp  : static_cast<AstUnaryOp*  >(node)->destroy(this); break;
     case AstNodeType::kAstNodeBinaryOp : static_cast<AstBinaryOp* >(node)->destroy(this); break;
+	case AstNodeType::kAstNodeTernaryOp: static_cast<AstTernaryOp*>(node)->destroy(this); break;
     case AstNodeType::kAstNodeCall     : static_cast<AstCall*     >(node)->destroy(this); break;
   }
 

@@ -69,6 +69,8 @@ namespace mathpresso {
 		MATHPRESSO_NOAPI Error parseExpression(AstNode** pNodeOut, bool isNested);
 		MATHPRESSO_NOAPI Error parseCall(AstNode** pNodeOut);
 
+		Error reparseTernary(AstNode* node);
+
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
