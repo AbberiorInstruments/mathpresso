@@ -554,7 +554,7 @@ namespace mathpresso
 			_parent(nullptr),
 			_children(children),
 			_mpOp(nullptr),
-			_availableOps(),
+			_opName(),
 			_nodeType(static_cast<uint8_t>(nodeType)),
 			_nodeFlags(AstNodeFlags::kAstNone),
 			_position(~static_cast<uint32_t>(0)),
@@ -655,7 +655,7 @@ namespace mathpresso
 
 		std::shared_ptr<MpOperation> _mpOp;
 
-		std::vector<std::shared_ptr<MpOperation>> _availableOps;
+		std::string _opName;
 
 	private:
 		//! Node type, see `AstNodeType`.

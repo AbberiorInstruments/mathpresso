@@ -243,6 +243,7 @@ namespace mathpresso {
 			AstVarDecl* decl = _ast->newNode<AstVarDecl>();
 			MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
 			decl->_mpOp = _ops->find("=", 2);
+			decl->_opName = "=";
 
 			decl->setPosition(position);
 			decl->setSymbol(vSym);
@@ -481,6 +482,7 @@ namespace mathpresso {
 				opNode->setPosition(token.getPosAsUInt());
 
 				opNode->_mpOp = op;
+				opNode->_opName = name;
 				
 				if (lastUnaryNode == nullptr)
 					currentNode = opNode;
@@ -557,6 +559,7 @@ namespace mathpresso {
 				MATHPRESSO_NULLCHECK(newNode);
 
 				newNode->_mpOp = op;
+				newNode->_opName = name;
 
 				newNode->setPosition(token.getPosAsUInt());
 
@@ -716,7 +719,8 @@ namespace mathpresso {
 
 		if (_ops->find(fnName, callNode->getLength()))
 		{
-			callNode->_mpOp = _ops->find(fnName, callNode->getLength());
+			//callNode->_mpOp = _ops->find(fnName, callNode->getLength());
+			callNode->_opName = fnName;
 		}
 		else
 		{
@@ -732,22 +736,22 @@ namespace mathpresso {
 		for (size_t i = 0; i < node->getLength(); i++)
 		{
 			unsigned int ret;
-			if (node->getNodeType() == AstNodeType::kAstNodeBinaryOp && _ops->name(node->_mpOp) == "?")
+			if (node->getNodeType() == AstNodeType::kAstNodeBinaryOp && node->_opName == "?")
 			{
 				
 				AstBinaryOp* lastColon = static_cast<AstBinaryOp*>(node);
 				// go to the last Colon after question-marks.
-				while (lastColon->_mpOp && _ops->name(lastColon->_mpOp) == "?")
+				while (lastColon->_opName == "?")
 				{
 					lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 				}
 
-				while (lastColon->getRight() && lastColon->getRight()->_mpOp && _ops->name(lastColon->getRight()->_mpOp) == ":")
+				while (lastColon->getRight() && lastColon->getRight()->_opName == ":")
 				{
 					lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 				}
 
-				if (_ops->name(lastColon->_mpOp) != ":")
+				if (lastColon->_opName != ":")
 				{
 					return _errorReporter->onError(ErrorCode::kErrorInvalidSyntax, node->getPosition(),
 														"Invalid ternary operation. Expected a ':'.");
@@ -795,6 +799,7 @@ namespace mathpresso {
 				ternaryNode->setLeft(branchLeft);
 				ternaryNode->setRight(branchRight);
 				ternaryNode->_mpOp = _ops->find("?", 2);
+				ternaryNode->_opName = "?";
 
 				// add the new node to the AST.
 				node->getParent()->replaceNode(node, ternaryNode);

@@ -126,6 +126,17 @@ namespace mathpresso {
 
 	Error AstOptimizer::optimize(AstNode * node)
 	{
+		std::vector<std::shared_ptr<MpOperation>> availableOps = _ops->find(node->_opName);
+
+		for (auto p : availableOps)
+		{
+			if (p->nargs() == node->getLength())
+			{
+				node->_mpOp = p;
+				break;
+			}
+		}
+
 		if (node->_mpOp)
 		{
 			return node->_mpOp->optimize(this, node);
