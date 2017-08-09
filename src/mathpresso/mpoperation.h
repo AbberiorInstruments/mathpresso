@@ -57,6 +57,33 @@ namespace mathpresso {
 	class MATHPRESSO_API MpOperation
 	{
 	public:
+
+		struct Signature
+		{
+			enum class type
+			{
+				real = 0,
+				complex = 1
+			};
+
+			Signature(size_t nargs, uint32_t flags = 0) :
+				return_type_(type::real),
+				parameters_(nargs, { type::real, "" })
+			{
+			}
+
+			type return_type_;
+
+			struct param
+			{
+				type type_;
+				std::string name_;
+			};
+
+			std::vector<param> parameters_;
+			uint32_t flags_;
+		};
+
 		// Con-/Destructor
 		MpOperation(uint32_t nargs, uint32_t flags, uint32_t priority = 0) :
 			nargs_(nargs),
