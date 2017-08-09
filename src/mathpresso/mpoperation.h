@@ -51,17 +51,17 @@ namespace mathpresso {
 		OpFlagNopIfLOne = 0x40000000,
 		OpFlagNopIfROne = 0x80000000,
 		OpFlagNopIfZero = OpFlagNopIfLZero | OpFlagNopIfRZero,
-		OpFlagNopIfOne = OpFlagNopIfLOne | OpFlagNopIfROne
+		OpFlagNopIfOne  = OpFlagNopIfLOne | OpFlagNopIfROne
 	};
 
 	class MATHPRESSO_API MpOperation
 	{
 	public:
 		// Con-/Destructor
-		MpOperation(uint32_t nargs, uint32_t flags) :
+		MpOperation(uint32_t nargs, uint32_t flags, uint32_t priority = 0) :
 			nargs_(nargs),
 			flags_(flags),
-			priority_(0)
+			priority_(priority)
 		{
 		}
 
@@ -143,9 +143,8 @@ namespace mathpresso {
 	{
 	public:
 		MpOperationBinary(uint32_t nargs, uint32_t  flags, uint32_t priority) :
-			MpOperation(nargs, flags)
+			MpOperation(nargs, flags, priority)
 		{
-			priority_ = priority;
 		}
 
 		virtual ~MpOperationBinary()
@@ -189,14 +188,6 @@ namespace mathpresso {
 			return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()); 
 		};
 	};
-	
-	
-
-
-
-
-	
-
 }
 
 

@@ -560,15 +560,6 @@ namespace mathpresso
 		{
 		}
 
-		virtual ~AstNode()
-		{
-			for (size_t i = 0; i < getLength(); i++)
-			{
-				_children[i]->~AstNode();
-			}
-			_mpOp = nullptr;
-		}
-
 		void destroy(AstBuilder* ast) {}
 
 		// --------------------------------------------------------------------------
@@ -894,11 +885,6 @@ namespace mathpresso
 		{
 		}
 
-		virtual ~AstVarDecl()
-		{
-			this->destroy(_ast);
-		}
-
 		void destroy(AstBuilder* ast)
 		{
 			AstSymbol* sym = getSymbol();
@@ -939,13 +925,6 @@ namespace mathpresso
 		{
 		}
 
-		virtual ~AstVar()
-		{
-			if (_symbol)
-			{
-				_symbol->decWriteCount();
-			}
-		}
 		// --------------------------------------------------------------------------
 		// [Accessors]
 		// --------------------------------------------------------------------------
@@ -1051,11 +1030,6 @@ namespace mathpresso
 		{
 		}
 
-		virtual ~AstBinaryOp()
-		{
-			this->destroy(_ast);
-		}
-
 		void destroy(AstBuilder* ast)
 		{
 			if (_mpOp && (_mpOp->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft())
@@ -1104,14 +1078,6 @@ namespace mathpresso
 			: AstBlock(ast, AstNodeType::kAstNodeCall),
 			_symbol(nullptr)
 		{
-		}
-
-		virtual ~AstCall()
-		{
-			if (_symbol)
-			{
-				_symbol->decUsedCount();
-			}
 		}
 
 		// --------------------------------------------------------------------------

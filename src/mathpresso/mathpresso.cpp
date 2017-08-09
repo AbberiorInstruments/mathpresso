@@ -428,7 +428,8 @@ namespace mathpresso
 			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
 		_func = fn;
 
-		ast.getProgramNode()->~AstProgram();
+		//ast.getProgramNode();
+		//ast.deleteNode(ast.getProgramNode());
 
 		return ErrorCode::kErrorOk;
 	}

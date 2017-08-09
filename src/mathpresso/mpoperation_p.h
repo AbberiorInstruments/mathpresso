@@ -356,9 +356,8 @@ namespace mathpresso
 	class MpOperationTernary : public MpOperation
 	{
 	public:
-		MpOperationTernary(bool iscolon) : MpOperation(2, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), isColon_(iscolon)
+		MpOperationTernary(bool iscolon) : MpOperation(2, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator, 15), isColon_(iscolon)
 		{
-			priority_ = 15;
 		}
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
@@ -371,9 +370,8 @@ namespace mathpresso
 	class MpOperationAssignment : public MpOperation
 	{
 	public:
-		MpOperationAssignment() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment)
+		MpOperationAssignment() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment, 15)
 		{
-			priority_ = 15;
 		}
 
 

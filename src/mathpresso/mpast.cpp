@@ -62,7 +62,13 @@ namespace mathpresso
 		_numSlots(0)
 	{
 	}
-	AstBuilder::~AstBuilder() {}
+	AstBuilder::~AstBuilder()
+	{
+		if (_programNode)
+		{
+			deleteNode(_programNode);
+		}
+	}
 
 	// ============================================================================
 	// [mathpresso::AstBuilder - Factory]
