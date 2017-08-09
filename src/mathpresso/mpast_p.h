@@ -171,6 +171,7 @@ namespace mathpresso
 	//! `AstNode` flags.
 	enum AstNodeFlags
 	{
+		kAstNone = 0x00,
 		kAstNodeHasSideEffect = 0x01,
 		kAstTakesComplex = 0x02, // set, if a complex 'parameter' is expected.
 		kAstReturnsComplex = 0x04 // set, if the 'return' is complex.
@@ -553,14 +554,20 @@ namespace mathpresso
 			_parent(nullptr),
 			_children(children),
 			_mpOp(nullptr),
+			_availableOps(),
 			_nodeType(static_cast<uint8_t>(nodeType)),
-			_nodeFlags(0),
+			_nodeFlags(AstNodeFlags::kAstNone),
 			_position(~static_cast<uint32_t>(0)),
 			_length(length)
 		{
 		}
 
-		void destroy(AstBuilder* ast) {}
+		virtual ~AstNode()
+		{
+		}
+
+		void destroy(AstBuilder* ast)
+		{}
 
 		// --------------------------------------------------------------------------
 		// [Accessors]
@@ -647,6 +654,8 @@ namespace mathpresso
 		AstNode** _children;
 
 		std::shared_ptr<MpOperation> _mpOp;
+
+		std::vector<std::shared_ptr<MpOperation>> _availableOps;
 
 	private:
 		//! Node type, see `AstNodeType`.

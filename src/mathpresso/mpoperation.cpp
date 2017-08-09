@@ -1710,10 +1710,9 @@ namespace mathpresso {
 
 			nodeOptimized->_parent = nullptr;
 			ternaryNode->getParent()->replaceNode(ternaryNode, nodeOptimized);
-			ternaryNode->setCondition(nullptr);
-			ternaryNode->setLeft(nullptr);
-			ternaryNode->setRight(nullptr);
+
 			opt->_ast->deleteNode(ternaryNode);
+
 			MATHPRESSO_PROPAGATE(opt->onNode(nodeOptimized));
 
 		}

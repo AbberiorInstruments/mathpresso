@@ -155,9 +155,12 @@ namespace mathpresso
 		{
 			AstNode* child = children[i];
 			if (child != nullptr)
+			{
 				deleteNode(child);
+			}
 		}
-		node->_mpOp = nullptr;
+
+		node ->~AstNode();
 
 		_heap->release(node, mpAstNodeSize[nodeType].getNodeSize());
 	}

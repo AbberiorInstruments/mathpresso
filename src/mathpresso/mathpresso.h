@@ -241,7 +241,7 @@ public:
 	{
 		using op_ptr_type = std::shared_ptr<MpOperation>;
 		using op_map_type = std::map<std::pair<std::string, size_t>, op_ptr_type>;
-
+	
 	public:
 		std::string name(const MpOperation * ptr) const;
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;

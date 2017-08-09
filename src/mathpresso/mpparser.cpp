@@ -729,7 +729,6 @@ namespace mathpresso {
 
 	Error Parser::reparseTernary(AstNode * node)
 	{
-
 		for (size_t i = 0; i < node->getLength(); i++)
 		{
 			unsigned int ret;
@@ -743,7 +742,7 @@ namespace mathpresso {
 					lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 				}
 
-				while (lastColon->getRight() && lastColon->getRight()->_mpOp && _ops->name(lastColon->getRight()->_mpOp) == ":") // check whether colon or Qmark
+				while (lastColon->getRight() && lastColon->getRight()->_mpOp && _ops->name(lastColon->getRight()->_mpOp) == ":")
 				{
 					lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
 				}
@@ -779,7 +778,8 @@ namespace mathpresso {
 					// correct the right path.
 					AstBinaryOp* preLastColon = static_cast<AstBinaryOp*>(lastColon->getParent());
 					preLastColon->replaceAt(1, lastColon->getLeft());
-
+					lastColon->setLeft(nullptr);
+					_ast->deleteNode(lastColon);
 				}
 				// i.e.: cond1 ? a : b
 				else
@@ -790,7 +790,7 @@ namespace mathpresso {
 				}
 
 				// create the new Ternary Node.
-				AstTernaryOp* ternaryNode = node->getAst()->newNode<AstTernaryOp>();
+				AstTernaryOp* ternaryNode = _ast->newNode<AstTernaryOp>();
 				ternaryNode->setCondition(branchCondition);
 				ternaryNode->setLeft(branchLeft);
 				ternaryNode->setRight(branchRight);
@@ -799,10 +799,8 @@ namespace mathpresso {
 				// add the new node to the AST.
 				node->getParent()->replaceNode(node, ternaryNode);
 
-				// clean up:
-				lastColon->setLeft(nullptr);
-				_ast->deleteNode(lastColon);
 				_ast->deleteNode(node);
+
 				return reparseTernary(ternaryNode);
 			}
 			else
@@ -813,7 +811,7 @@ namespace mathpresso {
 				}
 				else
 				{
-					ret = ErrorCode::kErrorOk;
+					ret = ErrorCode::kErrorInvalidState;
 				}
 			}
 
