@@ -245,7 +245,6 @@ namespace mathpresso {
 		// Gather Information about the child-nodes.
 		for (size_t i = 0; i < count; i++)
 		{
-			MATHPRESSO_PROPAGATE(opt->onNode(node->getAt(i)));
 			b_need_cplx |= node->getAt(i)->returnsComplex();
 			b_all_imm &= node->getAt(i)->isImm();
 		}
@@ -329,7 +328,6 @@ namespace mathpresso {
 				}
 			}
 			node->getParent()->replaceNode(node, ret);
-			opt->onNode(ret);
 
 			opt->getAst()->deleteNode(node);
 		}
@@ -1114,10 +1112,7 @@ namespace mathpresso {
 
 	uint32_t MpOperationBinary::optimize(AstOptimizer *opt, AstNode *node)
 	{
-		MATHPRESSO_PROPAGATE(opt->onNode(node->getAt(0)));
 		AstNode* left = node->getAt(0);
-
-		MATHPRESSO_PROPAGATE(opt->onNode(node->getAt(1)));
 		AstNode* right = node->getAt(1);
 
 		bool lIsImm = left->isImm();
@@ -1688,7 +1683,6 @@ namespace mathpresso {
 	uint32_t MpOperationTernary::optimize(AstOptimizer *opt, AstNode *node)
 	{
 		AstTernaryOp * ternaryNode = reinterpret_cast<AstTernaryOp*>(node);
-		MATHPRESSO_PROPAGATE(opt->onNode(ternaryNode->getCondition()));
 		AstNode* branchCond = ternaryNode->getCondition();
 		if (branchCond->isImm())
 		{
@@ -1712,15 +1706,10 @@ namespace mathpresso {
 			ternaryNode->getParent()->replaceNode(ternaryNode, nodeOptimized);
 
 			opt->_ast->deleteNode(ternaryNode);
-
-			MATHPRESSO_PROPAGATE(opt->onNode(nodeOptimized));
-
 		}
 		else
 		{
 			ternaryNode->removeNodeFlags(AstNodeFlags::kAstTakesComplex | AstNodeFlags::kAstReturnsComplex);
-			MATHPRESSO_PROPAGATE(opt->onNode(ternaryNode->getLeft()));
-			MATHPRESSO_PROPAGATE(opt->onNode(ternaryNode->getRight()));
 			bool needs_complex = ternaryNode->getLeft()->returnsComplex() | ternaryNode->getRight()->returnsComplex();
 			if (needs_complex)
 			{
@@ -1765,7 +1754,6 @@ namespace mathpresso {
 
 		if (varDecl->hasChild())
 		{
-			MATHPRESSO_PROPAGATE(opt->onNode(varDecl->getChild()));
 			AstNode* child = varDecl->getChild();
 
 			if (child->returnsComplex())
