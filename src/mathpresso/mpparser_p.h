@@ -12,7 +12,8 @@
 #include <mathpresso/mpast_p.h>
 #include <mathpresso/mptokenizer_p.h>
 
-namespace mathpresso {
+namespace mathpresso
+{
 
 	// ============================================================================
 	// [Forward Declaration]
@@ -28,10 +29,12 @@ namespace mathpresso {
 	// [mathpresso::Parser]
 	// ============================================================================
 
-	struct Parser {
-		MATHPRESSO_NO_COPY(Parser)
+	struct Parser
+	{
+		MATHPRESSO_NO_COPY(Parser);
 
-			enum ParserFlags {
+		enum ParserFlags
+		{
 			kNoFlags = 0x00,
 			kEnableVarDecls = 0x01,
 			kEnableNestedBlock = 0x02
@@ -41,20 +44,21 @@ namespace mathpresso {
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_INLINE Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const Operations * ops)
+		Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const Operations * ops)
 			: _ast(ast),
 			_errorReporter(errorReporter),
 			_currentScope(ast->getRootScope()),
 			_tokenizer(body, len),
 			_ops(ops)
-		{}
-		MATHPRESSO_INLINE ~Parser() {}
+		{
+		}
+		~Parser() {}
 
 		// --------------------------------------------------------------------------
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_INLINE AstScope* getCurrentScope() const { return _currentScope; }
+		AstScope* getCurrentScope() const { return _currentScope; }
 
 		// --------------------------------------------------------------------------
 		// [Parse]
@@ -69,7 +73,7 @@ namespace mathpresso {
 		MATHPRESSO_NOAPI Error parseExpression(AstNode** pNodeOut, bool isNested);
 		MATHPRESSO_NOAPI Error parseCall(AstNode** pNodeOut);
 
-		Error reparseTernary(AstNode* node);
+		MATHPRESSO_NOAPI Error reparseTernary(AstNode* node);
 
 		// --------------------------------------------------------------------------
 		// [Members]

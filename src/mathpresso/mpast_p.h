@@ -287,6 +287,8 @@ struct AstSymbol : public HashNode {
 	{
 	}
 
+	
+
   // --------------------------------------------------------------------------
   // [Accessors]
   // --------------------------------------------------------------------------
@@ -520,21 +522,30 @@ struct AstScope {
 
 
 struct AstNode {
-  MATHPRESSO_NO_COPY(AstNode)
+	MATHPRESSO_NO_COPY(AstNode)
 
-  // --------------------------------------------------------------------------
-  // [Construction / Destruction]
-  // --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-  MATHPRESSO_INLINE AstNode(AstBuilder* ast, uint32_t nodeType, AstNode** children = nullptr, uint32_t length = 0)
-    : _ast(ast),
-      _parent(nullptr),
-      _children(children),
-	  _mpOp(nullptr),
+		MATHPRESSO_INLINE AstNode(AstBuilder* ast, uint32_t nodeType, AstNode** children = nullptr, uint32_t length = 0)
+		: _ast(ast),
+		_parent(nullptr),
+		_children(children),
+		_mpOp(nullptr),
       _nodeType(static_cast<uint8_t>(nodeType)),
       _nodeFlags(0),
       _position(~static_cast<uint32_t>(0)),
       _length(length) {}
+
+  virtual ~AstNode()
+  {
+	  for (size_t i = 0; i < getLength(); i++)
+	  {
+		  _children[i]->~AstNode();
+	  }
+	  _mpOp = nullptr;
+  }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {}
 
@@ -623,8 +634,6 @@ struct AstNode {
 
   MpOperation* _mpOp;
 
-  std::vector<MpOperation*> _availableOps;
-
 private:
   //! Node type, see `AstNodeType`.
   uint8_t _nodeType;
@@ -643,7 +652,7 @@ protected:
 // ============================================================================
 
 struct AstBlock : public AstNode {
-  MATHPRESSO_NO_COPY(AstBlock)
+	MATHPRESSO_NO_COPY(AstBlock);
 
   // --------------------------------------------------------------------------
   // [Construction / Destruction]
@@ -822,6 +831,8 @@ struct AstProgram : public AstBlock {
 
   MATHPRESSO_INLINE AstProgram(AstBuilder* ast)
     : AstBlock(ast, AstNodeType::kAstNodeProgram) {}
+
+
 };
 
 // ============================================================================
@@ -829,7 +840,7 @@ struct AstProgram : public AstBlock {
 // ============================================================================
 
 struct AstVarDecl : public AstUnary {
-  MATHPRESSO_NO_COPY(AstVarDecl)
+	MATHPRESSO_NO_COPY(AstVarDecl);
 
   // --------------------------------------------------------------------------
   // [Construction / Destruction]
@@ -839,6 +850,11 @@ struct AstVarDecl : public AstUnary {
 	  : AstUnary(ast, AstNodeType::kAstNodeVarDecl),
 	  _symbol(nullptr)
   {}
+
+	  virtual ~AstVarDecl()
+	  {
+		  this->destroy(_ast);
+	  }
 
   MATHPRESSO_INLINE void destroy(AstBuilder* ast) {
     AstSymbol* sym = getSymbol();
@@ -876,6 +892,13 @@ struct AstVar : public AstNode {
     : AstNode(ast, AstNodeType::kAstNodeVar),
       _symbol(nullptr) {}
 
+  virtual ~AstVar()
+  {
+	  if (_symbol)
+	  {
+		  _symbol->decWriteCount();
+	  }
+  }
   // --------------------------------------------------------------------------
   // [Accessors]
   // --------------------------------------------------------------------------
@@ -976,6 +999,11 @@ struct AstBinaryOp : public AstBinary
 	{
 	}
 
+	virtual ~AstBinaryOp()
+	{
+		this->destroy(_ast);
+	}
+
 	MATHPRESSO_INLINE void destroy(AstBuilder* ast)
 	{
 		if ((_mpOp->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft())
@@ -1020,6 +1048,14 @@ struct AstCall : public AstBlock {
   MATHPRESSO_INLINE AstCall(AstBuilder* ast)
     : AstBlock(ast, AstNodeType::kAstNodeCall),
       _symbol(nullptr) {}
+
+  virtual ~AstCall()
+  {
+	  if (_symbol)
+	  {
+		  _symbol->decUsedCount();
+	  }
+  }
 
   // --------------------------------------------------------------------------
   // [Accessors]
