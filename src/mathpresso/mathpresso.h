@@ -244,6 +244,7 @@ public:
 
 	public:
 		std::string name(const MpOperation * ptr) const;
+		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
 
 		op_ptr_type find(const std::string &name, size_t nargs) const;
 		std::vector<op_ptr_type> find(const std::string &name) const;

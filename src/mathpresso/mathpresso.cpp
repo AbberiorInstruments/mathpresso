@@ -570,6 +570,11 @@ namespace mathpresso
 			return "<unknown>";
 	}
 
+	std::string Operations::name(const std::shared_ptr<MpOperation> ptr) const
+	{
+		return name(ptr.get());
+	}
+
 
 	std::shared_ptr<MpOperation> Operations::find(const std::string &name, size_t numArgs) const
 	{

@@ -183,13 +183,13 @@ namespace mathpresso
 	//! \internal
 	struct AstBuilder
 	{
-		MATHPRESSO_NO_COPY(AstBuilder)
+		MATHPRESSO_NO_COPY(AstBuilder);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstBuilder(ZoneHeap* heap);
+		AstBuilder(ZoneHeap* heap);
 		~AstBuilder();
 
 		// --------------------------------------------------------------------------
@@ -428,13 +428,13 @@ namespace mathpresso
 
 	struct AstScope
 	{
-		MATHPRESSO_NO_COPY(AstScope)
+		MATHPRESSO_NO_COPY(AstScope);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			MATHPRESSO_NOAPI AstScope(AstBuilder* ast, AstScope* parent, uint32_t scopeType);
+		MATHPRESSO_NOAPI AstScope(AstBuilder* ast, AstScope* parent, uint32_t scopeType);
 		MATHPRESSO_NOAPI ~AstScope();
 
 		// --------------------------------------------------------------------------
@@ -655,7 +655,7 @@ namespace mathpresso
 		//! Child nodes.
 		AstNode** _children;
 
-		MpOperation* _mpOp;
+		std::shared_ptr<MpOperation> _mpOp;
 
 	private:
 		//! Node type, see `AstNodeType`.
@@ -762,13 +762,13 @@ namespace mathpresso
 
 	struct AstUnary : public AstNode
 	{
-		MATHPRESSO_NO_COPY(AstUnary)
+		MATHPRESSO_NO_COPY(AstUnary);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstUnary(AstBuilder* ast, uint32_t nodeType)
+		AstUnary(AstBuilder* ast, uint32_t nodeType)
 			: AstNode(ast, nodeType, &_child, 1),
 			_child(nullptr)
 		{
@@ -793,13 +793,13 @@ namespace mathpresso
 
 	struct AstBinary : public AstNode
 	{
-		MATHPRESSO_NO_COPY(AstBinary)
+		MATHPRESSO_NO_COPY(AstBinary);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstBinary(AstBuilder* ast, uint32_t nodeType)
+		AstBinary(AstBuilder* ast, uint32_t nodeType)
 			: AstNode(ast, nodeType, &_left, 2),
 			_left(nullptr),
 			_right(nullptr)
@@ -827,13 +827,13 @@ namespace mathpresso
 
 	struct AstTernary : public AstNode
 	{
-		MATHPRESSO_NO_COPY(AstTernary)
+		MATHPRESSO_NO_COPY(AstTernary);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstTernary(AstBuilder* ast, uint32_t nodeType)
+		AstTernary(AstBuilder* ast, uint32_t nodeType)
 			: AstNode(ast, nodeType, &_condition, 3),
 			_condition(nullptr),
 			_left(nullptr),
@@ -862,13 +862,13 @@ namespace mathpresso
 
 	struct AstProgram : public AstBlock
 	{
-		MATHPRESSO_NO_COPY(AstProgram)
+		MATHPRESSO_NO_COPY(AstProgram);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstProgram(AstBuilder* ast)
+		AstProgram(AstBuilder* ast)
 			: AstBlock(ast, AstNodeType::kAstNodeProgram)
 		{
 		}
@@ -927,13 +927,13 @@ namespace mathpresso
 
 	struct AstVar : public AstNode
 	{
-		MATHPRESSO_NO_COPY(AstVar)
+		MATHPRESSO_NO_COPY(AstVar);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstVar(AstBuilder* ast)
+		AstVar(AstBuilder* ast)
 			: AstNode(ast, AstNodeType::kAstNodeVar),
 			_symbol(nullptr)
 		{
@@ -967,13 +967,13 @@ namespace mathpresso
 
 	struct AstImm : public AstNode
 	{
-		MATHPRESSO_NO_COPY(AstImm)
+		MATHPRESSO_NO_COPY(AstImm);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstImm(AstBuilder* ast, double value = 0.0)
+		AstImm(AstBuilder* ast, double value = 0.0)
 			: AstNode(ast, AstNodeType::kAstNodeImm),
 			_value({ value, 0 })
 		{
@@ -1026,13 +1026,13 @@ namespace mathpresso
 
 	struct AstUnaryOp : public AstUnary
 	{
-		MATHPRESSO_NO_COPY(AstUnaryOp)
+		MATHPRESSO_NO_COPY(AstUnaryOp);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstUnaryOp(AstBuilder* ast)
+		AstUnaryOp(AstBuilder* ast)
 			: AstUnary(ast, AstNodeType::kAstNodeUnaryOp)
 		{
 		}
@@ -1045,9 +1045,9 @@ namespace mathpresso
 
 	struct AstBinaryOp : public AstBinary
 	{
-		MATHPRESSO_NO_COPY(AstBinaryOp)
+		MATHPRESSO_NO_COPY(AstBinaryOp);
 
-			AstBinaryOp(AstBuilder* ast) : AstBinary(ast, AstNodeType::kAstNodeBinaryOp)
+		AstBinaryOp(AstBuilder* ast) : AstBinary(ast, AstNodeType::kAstNodeBinaryOp)
 		{
 		}
 
@@ -1058,7 +1058,7 @@ namespace mathpresso
 
 		void destroy(AstBuilder* ast)
 		{
-			if ((_mpOp->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft())
+			if (_mpOp && (_mpOp->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft())
 			{
 				AstVar* var = static_cast<AstVar*>(getLeft());
 				AstSymbol* sym = var->getSymbol();
@@ -1075,13 +1075,13 @@ namespace mathpresso
 
 	struct AstTernaryOp : public AstTernary
 	{
-		MATHPRESSO_NO_COPY(AstTernaryOp)
+		MATHPRESSO_NO_COPY(AstTernaryOp);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstTernaryOp(AstBuilder* ast) :
+		AstTernaryOp(AstBuilder* ast) :
 			AstTernary(ast, AstNodeType::kAstNodeTernaryOp)
 		{
 		}
@@ -1094,13 +1094,13 @@ namespace mathpresso
 
 	struct AstCall : public AstBlock
 	{
-		MATHPRESSO_NO_COPY(AstCall)
+		MATHPRESSO_NO_COPY(AstCall);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstCall(AstBuilder* ast)
+		AstCall(AstBuilder* ast)
 			: AstBlock(ast, AstNodeType::kAstNodeCall),
 			_symbol(nullptr)
 		{
@@ -1134,13 +1134,13 @@ namespace mathpresso
 
 	struct AstVisitor
 	{
-		MATHPRESSO_NO_COPY(AstVisitor)
+		MATHPRESSO_NO_COPY(AstVisitor);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstVisitor(AstBuilder* ast);
+		AstVisitor(AstBuilder* ast);
 		virtual ~AstVisitor();
 
 		// --------------------------------------------------------------------------
@@ -1178,13 +1178,13 @@ namespace mathpresso
 
 	struct AstDump : public AstVisitor
 	{
-		MATHPRESSO_NO_COPY(AstDump)
+		MATHPRESSO_NO_COPY(AstDump);
 
-			// --------------------------------------------------------------------------
-			// [Construction / Destruction]
-			// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-			AstDump(AstBuilder* ast, StringBuilder& sb, const Operations * ctx);
+		AstDump(AstBuilder* ast, StringBuilder& sb, const Operations * ctx);
 		virtual ~AstDump();
 
 		// --------------------------------------------------------------------------

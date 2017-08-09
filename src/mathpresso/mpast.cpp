@@ -24,8 +24,8 @@ namespace mathpresso
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_INLINE uint32_t getNodeType() const { return _nodeType; }
-		MATHPRESSO_INLINE uint32_t getNodeSize() const { return _nodeSize; }
+		uint32_t getNodeType() const { return _nodeType; }
+		uint32_t getNodeSize() const { return _nodeSize; }
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -151,6 +151,7 @@ namespace mathpresso
 			if (child != nullptr)
 				deleteNode(child);
 		}
+		node->_mpOp = nullptr;
 
 		_heap->release(node, mpAstNodeSize[nodeType].getNodeSize());
 	}
@@ -191,8 +192,8 @@ namespace mathpresso
 
 	struct AstScopeReleaseHandler
 	{
-		MATHPRESSO_INLINE AstScopeReleaseHandler(AstBuilder* ast) : _ast(ast) {}
-		MATHPRESSO_INLINE void release(AstSymbol* node) { _ast->deleteSymbol(node); }
+		AstScopeReleaseHandler(AstBuilder* ast) : _ast(ast) {}
+		void release(AstSymbol* node) { _ast->deleteSymbol(node); }
 
 		AstBuilder* _ast;
 	};
