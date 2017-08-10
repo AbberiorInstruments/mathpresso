@@ -153,24 +153,24 @@ namespace mathpresso
 		ctx->addObject("ceil", std::make_shared<MpOperationcCeil>());
 		ctx->addObject("frac", std::make_shared<MpOperationFrac>());
 		ctx->addObject("trunc", std::make_shared<MpOperationTrunc>());
-		ctx->addObject("sin", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(sinRR), VPTR(sinCC)));
-		ctx->addObject("cos", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(cosRR), VPTR(cosCC)));
-		ctx->addObject("tan", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(tanRR), VPTR(tanCC)));
-		ctx->addObject("sinh", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(sinhRR), VPTR(sinhCC)));
-		ctx->addObject("cosh", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(coshRR), VPTR(coshCC)));
-		ctx->addObject("tanh", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(tanhRR), VPTR(tanhCC)));
-		ctx->addObject("asin", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(asinRR), VPTR(asinCC)));
-		ctx->addObject("acos", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(acosRR), VPTR(acosCC)));
-		ctx->addObject("atan", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(atanRR), VPTR(atanCC)));
-		ctx->addObject("sqrtc", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagDReturnsC, VPTR(sqrtRC), VPTR(sqrtCC)));
-		ctx->addObject("log", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(logRR), VPTR(logCC)));
-		ctx->addObject("log2", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(log2RR), VPTR(log2CC)));
-		ctx->addObject("log10", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(log10RR), VPTR(log10CC)));
-		ctx->addObject("exp", std::make_shared<MpOperationFunc>(1, MpOperationFlags::OpFlagNone, VPTR(expRR), VPTR(expCC)));
-		ctx->addObject("pow", std::make_shared<MpOperationFunc>(2, MpOperationFlags::OpFlagNone, VPTR(powRR), VPTR(powCC)));
-		ctx->addObject("atan2", std::make_shared<MpOperationFunc>(2, MpOperationFlags::OpFlagNone, VPTR(atan2RR), nullptr));
-		ctx->addObject("hypot", std::make_shared<MpOperationFunc>(2, MpOperationFlags::OpFlagNone, VPTR(hypotRR), nullptr));
-		ctx->addObject("_none_", std::make_shared<MpOperationFunc>(0, MpOperationFlags::OpFlagNone, nullptr, nullptr));
+		ctx->addObject("sin", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(sinRR), VPTR(sinCC)));
+		ctx->addObject("cos", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(cosRR), VPTR(cosCC)));
+		ctx->addObject("tan", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(tanRR), VPTR(tanCC)));
+		ctx->addObject("sinh", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(sinhRR), VPTR(sinhCC)));
+		ctx->addObject("cosh", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(coshRR), VPTR(coshCC)));
+		ctx->addObject("tanh", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(tanhRR), VPTR(tanhCC)));
+		ctx->addObject("asin", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(asinRR), VPTR(asinCC)));
+		ctx->addObject("acos", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(acosRR), VPTR(acosCC)));
+		ctx->addObject("atan", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(atanRR), VPTR(atanCC)));
+		ctx->addObject("sqrtc", std::make_shared<MpOperationFunc>(Signature(Signature::type::complex, { 1, { Signature::type::both , ""} }, MpOperationFlags::OpFlagDReturnsC), VPTR(sqrtRC), VPTR(sqrtCC)));
+		ctx->addObject("log", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(logRR), VPTR(logCC)));
+		ctx->addObject("log2", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(log2RR), VPTR(log2CC)));
+		ctx->addObject("log10", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(log10RR), VPTR(log10CC)));
+		ctx->addObject("exp", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(expRR), VPTR(expCC)));
+		ctx->addObject("pow", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(powRR), VPTR(powCC)));
+		ctx->addObject("atan2", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(atan2RR), nullptr));
+		ctx->addObject("hypot", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(hypotRR), nullptr));
+		ctx->addObject("_none_", std::make_shared<MpOperationFunc>(Signature(0, Signature::type::both, MpOperationFlags::OpFlagNone), nullptr, nullptr));
 
 		ctx->addConstant("NaN", mpGetNan());
 		ctx->addConstant("INF", mpGetInf());
@@ -178,6 +178,46 @@ namespace mathpresso
 		ctx->addConstant("E", 2.7182818284590452354);
 		ctx->addConstant("i", { 0, 1 });
 		return 0;
+	}
+
+	Signature::Signature(type retType, std::vector<param> params, uint32_t flags) :
+		return_type_(retType),
+		parameters_(params),
+		flags_(flags)
+	{
+		bool paramsReal(true);
+		bool paramsComplex(true);
+
+		for (auto p : parameters_)
+		{
+			paramsReal &= p.type_ == type::real || p.type_ == type::both;
+			paramsComplex &= p.type_ == type::complex || p.type_ == type::both;
+		}
+		uint32_t test_flags = 0;
+		if (paramsComplex)
+		{
+			if (return_type_ == type::real)
+			{
+				test_flags |= MpOperationFlags::OpFlagCReturnsD;
+			}
+		}
+		else
+		{
+			test_flags |= MpOperationFlags::OpHasNoComplex;
+		}
+
+		if (paramsReal)
+		{
+			if (return_type_ == type::complex)
+			{
+				test_flags |= MpOperationFlags::OpFlagDReturnsC;
+			}
+		}
+		else
+		{
+			test_flags |= MpOperationFlags::OpHasNoReal;
+		}
+		MATHPRESSO_ASSERT(test_flags == (flags & (MpOperationFlags::_OpFlagsignature)));
 	}
 
 
@@ -397,7 +437,7 @@ namespace mathpresso
 	}
 
 	MpOperationIsFinite::MpOperationIsFinite() :
-		MpOperationFunc(Signature(1), VPTR(isfiniteRR), VPTR(isfiniteCC))
+		MpOperationFunc(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(isfiniteRR), VPTR(isfiniteCC))
 	{
 	}
 	JitVar MpOperationIsFinite::compile(JitCompiler * jc, AstNode * node) const
@@ -428,7 +468,7 @@ namespace mathpresso
 	}
 
 	MpOperationIsInfinite::MpOperationIsInfinite() :
-		MpOperationFunc(Signature(1), VPTR(isinfRR), VPTR(isinfCC))
+		MpOperationFunc(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(isinfRR), VPTR(isinfCC))
 	{
 	}
 
@@ -460,7 +500,7 @@ namespace mathpresso
 	}
 
 	MpOperationIsNan::MpOperationIsNan() :
-		MpOperationFunc(Signature(1), VPTR(isnanRR), VPTR(isnanCC))
+		MpOperationFunc(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(isnanRR), VPTR(isnanCC))
 	{
 	}
 
@@ -487,7 +527,7 @@ namespace mathpresso
 	double realCR(std::complex<double>* args) { return args->real(); }
 
 	MpOperationGetReal::MpOperationGetReal() :
-		MpOperationFunc(Signature(Signature::type::real, { 1, {Signature::type::complex, ""} }, MpOperationFlags::OpFlagCReturnsD), nullptr, VPTR(realCR))
+		MpOperationFunc(Signature(Signature::type::real, { 1, {Signature::type::complex, ""} }, MpOperationFlags::OpFlagCReturnsD | MpOperationFlags::OpHasNoReal), nullptr, VPTR(realCR))
 	{
 	}
 
@@ -523,7 +563,7 @@ namespace mathpresso
 	}
 
 	MpOperationGetImag::MpOperationGetImag() : 
-		MpOperationFunc(Signature(Signature::type::real, { 1,{ Signature::type::complex, "" } }, MpOperationFlags::OpFlagCReturnsD), nullptr, VPTR(imagCR))
+		MpOperationFunc(Signature(Signature::type::real, { 1,{ Signature::type::complex, "" } }, MpOperationFlags::OpFlagCReturnsD | MpOperationFlags::OpHasNoReal), nullptr, VPTR(imagCR))
 	{
 	}
 
@@ -547,7 +587,7 @@ namespace mathpresso
 
 	// Square root
 	MpOperationSqrt::MpOperationSqrt() :
-		MpOperationFunc(Signature(1, Signature::type::real), VPTR(sqrtRR), nullptr)
+		MpOperationFunc(Signature(1, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(sqrtRR), nullptr)
 	{
 	}
 
@@ -632,7 +672,7 @@ namespace mathpresso
 	// Conjugate
 	std::complex<double> conjugCC(std::complex<double>* args) { return std::complex<double>(args->real(), -args->imag()); }
 
-	MpOperationConjug::MpOperationConjug() : MpOperationFunc(Signature(1, Signature::type::complex), nullptr, VPTR(conjugCC))
+	MpOperationConjug::MpOperationConjug() : MpOperationFunc(Signature(1, Signature::type::complex, MpOperationFlags::OpHasNoReal), nullptr, VPTR(conjugCC))
 	{
 	}
 
@@ -699,7 +739,7 @@ namespace mathpresso
 	}
 
 	// sign bit
-	MpOperationSignBit::MpOperationSignBit() : MpOperationFunc(Signature(1, Signature::type::real), VPTR(signbitRR), nullptr)
+	MpOperationSignBit::MpOperationSignBit() : MpOperationFunc(Signature(1, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(signbitRR), nullptr)
 	{
 	}
 
@@ -714,7 +754,7 @@ namespace mathpresso
 	}
 
 	// Copy sign
-	MpOperationCopySign::MpOperationCopySign() : MpOperationFunc(Signature(2, Signature::type::real), VPTR(copysignRR), nullptr)
+	MpOperationCopySign::MpOperationCopySign() : MpOperationFunc(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(copysignRR), nullptr)
 	{
 	}
 

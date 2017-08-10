@@ -42,6 +42,8 @@ namespace mathpresso
 		OpFlagCReturnsD = 0x0000100,
 		OpFlagDReturnsC = 0x0000200,
 
+		_OpFlagsignature = OpHasNoComplex | OpHasNoReal | OpFlagCReturnsD | OpFlagDReturnsC,
+
 		// some information, that is necessary for parsing:
 		OpIsAssgignment = 0x0001000,
 
@@ -54,61 +56,56 @@ namespace mathpresso
 		OpFlagNopIfOne = OpFlagNopIfLOne | OpFlagNopIfROne
 	};
 
+	struct MATHPRESSO_API Signature
+	{
+		enum class type
+		{
+			real = 0,
+			complex = 1,
+			both = 3 // intermediate, until MpOperation-Objects are separated.
+		};
+
+		struct param
+		{
+			type type_;
+			std::string name_;
+		};
+		Signature() {}
+
+		Signature(type retType, std::vector<param> params, uint32_t flags);
+
+		Signature(size_t nargs, type paramType, uint32_t flags) :
+			Signature(paramType, { nargs,{ paramType, "" } }, flags)
+		{
+		}
+
+		Signature(size_t nargs, uint32_t flags = MpOperationFlags::OpFlagNone) :
+			Signature(nargs, type::real, flags | MpOperationFlags::OpHasNoComplex)
+		{
+		}
+
+		type return_type_;
+		std::vector<param> parameters_;
+		uint32_t flags_;
+	};
+
 	class MATHPRESSO_API MpOperation
 	{
 	public:
-
-		struct Signature
-		{
-			enum class type
-			{
-				real = 0,
-				complex = 1,
-				both = 3 // intermediate, until MpOperation-Objects are separated.
-			};
-
-			struct param
-			{
-				type type_;
-				std::string name_;
-			};
-
-
-			Signature(size_t nargs, type type = type::real, uint32_t flags = MpOperationFlags::OpFlagNone) :
-				return_type_(type),
-				parameters_(nargs, { type, "" }),
-				flags_(flags)
-			{
-			}
-
-
-			Signature(type retType, std::vector<param> params, uint32_t flags) :
-				return_type_(retType),
-				parameters_(params),
-				flags_(flags)
-			{
-			}
-
-
-			type return_type_;
-			std::vector<param> parameters_;
-			uint32_t flags_;
-		};
-
 		// Con-/Destructor
 		MpOperation(size_t nargs, uint32_t flags, uint32_t priority = 0) :
+			signature_(nargs, Signature::type::real, flags),
 			nargs_(nargs),
 			flags_(flags),
-			priority_(priority),
-			signature_(nargs, Signature::type::real, flags)
+			priority_(priority)
 		{
 		}
 
 		MpOperation(const Signature &s, uint32_t priority = 0) :
+			signature_(s),
 			nargs_(s.parameters_.size()),
 			flags_(s.flags_),
-			priority_(priority),
-			signature_(s)
+			priority_(priority)
 		{
 		}
 
@@ -143,10 +140,10 @@ namespace mathpresso
 		}
 
 	protected:
+		Signature signature_;
 		size_t nargs_;
 		uint32_t flags_;
 		uint32_t priority_;
-		Signature signature_;
 	};
 
 	class MATHPRESSO_API MpOperationFunc : public MpOperation
