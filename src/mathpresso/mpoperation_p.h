@@ -176,7 +176,8 @@ namespace mathpresso
 	{
 	public:
 		MpOperationAdd() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 6)
+			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 6)
+			//MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator, 6)
 		{
 		}
 
@@ -192,7 +193,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationSub() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 6)
+			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNopIfRZero  | MpOperationFlags::OpFlagIsOperator), 6)
 		{
 		}
 
@@ -208,7 +209,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationMul() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 5)
+			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 5)
 		{
 		}
 
@@ -224,7 +225,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationDiv() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 5)
+			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNopIfLOne  | MpOperationFlags::OpFlagIsOperator), 5)
 		{
 		}
 
@@ -240,7 +241,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationMin() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0)
+			MpOperationBinary(Signature(2), 0)
 		{
 		}
 
@@ -254,7 +255,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationMax() :
-			MpOperationBinary(2, MpOperationFlags::OpFlagHasAsm, 0)
+			MpOperationBinary(Signature(2), 0)
 		{
 		}
 
@@ -268,7 +269,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationEq() :
-			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 9)
+			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 9)
 		{
 		}
 
@@ -284,7 +285,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationNe() :
-			MpOperationBinary(2, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 9)
+			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 9)
 		{
 		}
 
@@ -300,7 +301,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationLt() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
+			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 8)
 		{
 		}
 
@@ -314,7 +315,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationLe() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
+			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 8)
 		{
 		}
 
@@ -328,7 +329,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationGt() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
+			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 8)
 		{
 		}
 
@@ -342,7 +343,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationGe() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 8)
+			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 8)
 		{
 		}
 
@@ -356,7 +357,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationModulo() :
-			MpOperationBinary(2, MpOperationFlags::OpHasNoComplex | MpOperationFlags::OpFlagHasAsm | MpOperationFlags::OpFlagIsOperator, 5)
+			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 5)
 		{
 		}
 
@@ -369,7 +370,8 @@ namespace mathpresso
 	class MpOperationTernary : public MpOperation
 	{
 	public:
-		MpOperationTernary(bool iscolon) : MpOperation(2, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator, 15), isColon_(iscolon)
+		MpOperationTernary(bool iscolon) : MpOperation(Signature(2, Signature::type::real, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), 15),
+			isColon_(iscolon)
 		{
 		}
 
@@ -383,7 +385,7 @@ namespace mathpresso
 	class MpOperationAssignment : public MpOperation
 	{
 	public:
-		MpOperationAssignment() : MpOperation(2, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment, 15)
+		MpOperationAssignment() : MpOperation(Signature(2, Signature::type::real, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment), 15)
 		{
 		}
 

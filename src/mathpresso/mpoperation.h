@@ -30,7 +30,6 @@ namespace mathpresso
 		OpFlagNone = 0,
 		OpFlagIsOperator = 0x00000001,
 		OpFlagHasState = 0x00000002,
-		OpFlagHasAsm = 0x00000004,
 		OpIsRighttoLeft = 0x00000008,
 
 		OpIsCommutativ = 0x00000010,
@@ -75,7 +74,7 @@ namespace mathpresso
 			};
 
 
-			Signature(size_t nargs, type type = type::real, uint32_t flags = 0) :
+			Signature(size_t nargs, type type = type::real, uint32_t flags = MpOperationFlags::OpFlagNone) :
 				return_type_(type),
 				parameters_(nargs, { type, "" }),
 				flags_(flags)
@@ -85,7 +84,7 @@ namespace mathpresso
 
 			Signature(type retType, std::vector<param> params, uint32_t flags) :
 				return_type_(retType),
-				parameters_(parameters_),
+				parameters_(params),
 				flags_(flags)
 			{
 			}
@@ -105,7 +104,7 @@ namespace mathpresso
 		{
 		}
 
-		MpOperation(Signature &s, uint32_t priority = 0) :
+		MpOperation(const Signature &s, uint32_t priority = 0) :
 			nargs_(s.parameters_.size()),
 			flags_(s.flags_),
 			priority_(priority),
@@ -160,7 +159,7 @@ namespace mathpresso
 		{
 		}
 
-		MpOperationFunc(Signature &signature, void * fnD, void * fnC) : MpOperation(signature),
+		MpOperationFunc(const Signature & signature, void * fnD, void * fnC) : MpOperation(signature),
 			fnD_(fnD),
 			fnC_(fnC)
 		{
@@ -188,7 +187,6 @@ namespace mathpresso
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
 
-		virtual void setFn(void * fn, bool isComplex = false);
 	protected:
 		virtual double evaluateDRetD(double *args) const;
 		virtual std::complex<double> evaluateDRetC(double *args) const;
@@ -208,7 +206,7 @@ namespace mathpresso
 		{
 		}
 
-		MpOperationBinary(Signature &signature, uint32_t priority) :
+		MpOperationBinary(const Signature &signature, uint32_t priority) :
 			MpOperation(signature, priority)
 		{
 		}

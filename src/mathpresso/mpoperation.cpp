@@ -335,18 +335,6 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	void MpOperationFunc::setFn(void* fn, bool isComplex)
-	{
-		if (isComplex)
-		{
-			fnC_ = fn;
-		}
-		else
-		{
-			fnD_ = fn;
-		}
-	}
-
 	double MpOperationFunc::evaluateDRetD(double * args) const
 	{
 #ifdef _REALREWORK
@@ -409,7 +397,7 @@ namespace mathpresso
 	}
 
 	MpOperationIsFinite::MpOperationIsFinite() :
-		MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(isfiniteRR), VPTR(isfiniteCC))
+		MpOperationFunc(Signature(1), VPTR(isfiniteRR), VPTR(isfiniteCC))
 	{
 	}
 	JitVar MpOperationIsFinite::compile(JitCompiler * jc, AstNode * node) const
@@ -440,7 +428,7 @@ namespace mathpresso
 	}
 
 	MpOperationIsInfinite::MpOperationIsInfinite() :
-		MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(isinfRR), VPTR(isinfCC))
+		MpOperationFunc(Signature(1), VPTR(isinfRR), VPTR(isinfCC))
 	{
 	}
 
@@ -472,7 +460,7 @@ namespace mathpresso
 	}
 
 	MpOperationIsNan::MpOperationIsNan() :
-		MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(isnanRR), VPTR(isnanCC))
+		MpOperationFunc(Signature(1), VPTR(isnanRR), VPTR(isnanCC))
 	{
 	}
 
@@ -499,7 +487,7 @@ namespace mathpresso
 	double realCR(std::complex<double>* args) { return args->real(); }
 
 	MpOperationGetReal::MpOperationGetReal() :
-		MpOperationFunc(1, MpOperationFlags::OpFlagCReturnsD, nullptr, VPTR(realCR))
+		MpOperationFunc(Signature(Signature::type::real, { 1, {Signature::type::complex, ""} }, MpOperationFlags::OpFlagCReturnsD), nullptr, VPTR(realCR))
 	{
 	}
 
@@ -534,7 +522,8 @@ namespace mathpresso
 		return args->imag();
 	}
 
-	MpOperationGetImag::MpOperationGetImag() : MpOperationFunc(1, MpOperationFlags::OpFlagCReturnsD, nullptr, VPTR(imagCR))
+	MpOperationGetImag::MpOperationGetImag() : 
+		MpOperationFunc(Signature(Signature::type::real, { 1,{ Signature::type::complex, "" } }, MpOperationFlags::OpFlagCReturnsD), nullptr, VPTR(imagCR))
 	{
 	}
 
@@ -557,7 +546,8 @@ namespace mathpresso
 	}
 
 	// Square root
-	MpOperationSqrt::MpOperationSqrt() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(sqrtRR), nullptr)
+	MpOperationSqrt::MpOperationSqrt() :
+		MpOperationFunc(Signature(1, Signature::type::real), VPTR(sqrtRR), nullptr)
 	{
 	}
 
@@ -578,7 +568,8 @@ namespace mathpresso
 		return -args[0];
 	}
 
-	MpOperationNeg::MpOperationNeg() : MpOperationFunc(1, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator, VPTR(negRR), VPTR(negCC))
+	MpOperationNeg::MpOperationNeg() :
+		MpOperationFunc(Signature(1, Signature::type::both, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), VPTR(negRR), VPTR(negCC))
 	{
 		priority_ = 3;
 	}
@@ -614,7 +605,7 @@ namespace mathpresso
 	}
 
 	MpOperationNot::MpOperationNot() :
-		MpOperationFunc(1, MpOperationFlags::OpFlagIsOperator, VPTR(notRR), VPTR(notCC))
+		MpOperationFunc(Signature(1, Signature::type::both, MpOperationFlags::OpFlagIsOperator), VPTR(notRR), VPTR(notCC))
 	{
 		priority_ = 3;
 	}
@@ -641,7 +632,7 @@ namespace mathpresso
 	// Conjugate
 	std::complex<double> conjugCC(std::complex<double>* args) { return std::complex<double>(args->real(), -args->imag()); }
 
-	MpOperationConjug::MpOperationConjug() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, nullptr, VPTR(conjugCC))
+	MpOperationConjug::MpOperationConjug() : MpOperationFunc(Signature(1, Signature::type::complex), nullptr, VPTR(conjugCC))
 	{
 	}
 
@@ -676,7 +667,7 @@ namespace mathpresso
 		return 1.0 / args[0];
 	}
 
-	MpOperationRecip::MpOperationRecip() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(recipRR), VPTR(recipCC))
+	MpOperationRecip::MpOperationRecip() : MpOperationFunc(Signature(1), VPTR(recipRR), VPTR(recipCC))
 	{
 	}
 
@@ -708,7 +699,7 @@ namespace mathpresso
 	}
 
 	// sign bit
-	MpOperationSignBit::MpOperationSignBit() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(signbitRR), nullptr)
+	MpOperationSignBit::MpOperationSignBit() : MpOperationFunc(Signature(1, Signature::type::real), VPTR(signbitRR), nullptr)
 	{
 	}
 
@@ -723,7 +714,7 @@ namespace mathpresso
 	}
 
 	// Copy sign
-	MpOperationCopySign::MpOperationCopySign() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, VPTR(copysignRR), nullptr)
+	MpOperationCopySign::MpOperationCopySign() : MpOperationFunc(Signature(2, Signature::type::real), VPTR(copysignRR), nullptr)
 	{
 	}
 
@@ -746,7 +737,7 @@ namespace mathpresso
 		return (args[0] + args[1]) * 0.5;
 	}
 
-	MpOperationAvg::MpOperationAvg() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, VPTR(avgRR), VPTR(avgCC))
+	MpOperationAvg::MpOperationAvg() : MpOperationFunc(Signature(2), VPTR(avgRR), VPTR(avgCC))
 	{
 	}
 
@@ -790,7 +781,7 @@ namespace mathpresso
 		return std::abs(args[0]);
 	}
 
-	MpOperationAbs::MpOperationAbs() : MpOperationFunc(1, MpOperationFlags::OpFlagCReturnsD, VPTR(absRR), VPTR(absCR))
+	MpOperationAbs::MpOperationAbs() : MpOperationFunc(Signature(Signature::type::real, { 1, { Signature::type::both, "" } }, MpOperationFlags::OpFlagCReturnsD), VPTR(absRR), VPTR(absCR))
 	{
 	}
 
@@ -814,7 +805,7 @@ namespace mathpresso
 	}
 
 	// round
-	MpOperationRound::MpOperationRound() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(roundRR), nullptr)
+	MpOperationRound::MpOperationRound() : MpOperationFunc(Signature(1), VPTR(roundRR), nullptr)
 	{
 	}
 
@@ -864,7 +855,7 @@ namespace mathpresso
 	}
 
 	// roundeven
-	MpOperationRoundEven::MpOperationRoundEven() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(roundevenRR), nullptr)
+	MpOperationRoundEven::MpOperationRoundEven() : MpOperationFunc(Signature(1), VPTR(roundevenRR), nullptr)
 	{
 	}
 
@@ -900,7 +891,7 @@ namespace mathpresso
 	}
 
 	// trunc
-	MpOperationTrunc::MpOperationTrunc() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(truncRR), nullptr)
+	MpOperationTrunc::MpOperationTrunc() : MpOperationFunc(Signature(1), VPTR(truncRR), nullptr)
 	{
 	}
 
@@ -943,7 +934,7 @@ namespace mathpresso
 	}
 
 	// frac
-	MpOperationFrac::MpOperationFrac() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(fracRR), nullptr)
+	MpOperationFrac::MpOperationFrac() : MpOperationFunc(Signature(1), VPTR(fracRR), nullptr)
 	{
 	}
 
@@ -988,7 +979,7 @@ namespace mathpresso
 	}
 
 	// floor
-	MpOperationFloor::MpOperationFloor() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(floorRR), nullptr)
+	MpOperationFloor::MpOperationFloor() : MpOperationFunc(Signature(1), VPTR(floorRR), nullptr)
 	{
 	}
 
@@ -1031,7 +1022,7 @@ namespace mathpresso
 
 
 	// ceil
-	MpOperationcCeil::MpOperationcCeil() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(ceilRR), nullptr)
+	MpOperationcCeil::MpOperationcCeil() : MpOperationFunc(Signature(1), VPTR(ceilRR), nullptr)
 	{
 	}
 
@@ -1750,7 +1741,7 @@ namespace mathpresso
 	}
 
 	// Assignment
-	JitVar mathpresso::MpOperationAssignment::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationAssignment::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar result;
 		AstVarDecl * varDecl = static_cast<AstVarDecl*>(node);
@@ -1767,7 +1758,7 @@ namespace mathpresso
 		return result;
 	}
 
-	uint32_t mathpresso::MpOperationAssignment::optimize(AstOptimizer * opt, AstNode * node) const
+	uint32_t MpOperationAssignment::optimize(AstOptimizer * opt, AstNode * node) const
 	{
 		AstVarDecl * varDecl;
 		if (node->getNodeType() == AstNodeType::kAstNodeVarDecl)
