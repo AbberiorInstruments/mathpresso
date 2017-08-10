@@ -13,7 +13,8 @@
 #include <complex>
 #include <limits>
 
-namespace mathpresso {
+namespace mathpresso
+{
 
 	// Forward Declarations:
 	struct JitCompiler;
@@ -51,7 +52,7 @@ namespace mathpresso {
 		OpFlagNopIfLOne = 0x40000000,
 		OpFlagNopIfROne = 0x80000000,
 		OpFlagNopIfZero = OpFlagNopIfLZero | OpFlagNopIfRZero,
-		OpFlagNopIfOne  = OpFlagNopIfLOne | OpFlagNopIfROne
+		OpFlagNopIfOne = OpFlagNopIfLOne | OpFlagNopIfROne
 	};
 
 	class MATHPRESSO_API MpOperation
@@ -63,16 +64,9 @@ namespace mathpresso {
 			enum class type
 			{
 				real = 0,
-				complex = 1
+				complex = 1,
+				both = 3 // intermediate, until MpOperation-Objects are separated.
 			};
-
-			Signature(size_t nargs, uint32_t flags = 0) :
-				return_type_(type::real),
-				parameters_(nargs, { type::real, "" })
-			{
-			}
-
-			type return_type_;
 
 			struct param
 			{
@@ -80,6 +74,24 @@ namespace mathpresso {
 				std::string name_;
 			};
 
+
+			Signature(size_t nargs, type type = type::real, uint32_t flags = 0) :
+				return_type_(type),
+				parameters_(nargs, { type, "" }),
+				flags_(flags)
+			{
+			}
+
+
+			Signature(type retType, std::vector<param> params, uint32_t flags) :
+				return_type_(retType),
+				parameters_(parameters_),
+				flags_(flags)
+			{
+			}
+
+
+			type return_type_;
 			std::vector<param> parameters_;
 			uint32_t flags_;
 		};
@@ -88,7 +100,16 @@ namespace mathpresso {
 		MpOperation(uint32_t nargs, uint32_t flags, uint32_t priority = 0) :
 			nargs_(nargs),
 			flags_(flags),
-			priority_(priority)
+			priority_(priority),
+			signature_(nargs, Signature::type::real, flags)
+		{
+		}
+
+		MpOperation(Signature &s, uint32_t priority = 0) :
+			nargs_(s.parameters_.size()),
+			flags_(s.flags_),
+			priority_(priority),
+			signature_(s)
 		{
 		}
 
@@ -97,46 +118,59 @@ namespace mathpresso {
 		}
 
 		// Add ASM code to compiler stack 
-		virtual JitVar compile(JitCompiler *jc, AstNode * node) = 0;
+		virtual JitVar compile(JitCompiler *jc, AstNode * node) const = 0;
 		// Optimize AST 
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) = 0;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const = 0;
 
-		uint32_t nargs() const 
-		{ 
-			return nargs_; 
+		size_t nargs() const
+		{
+			return nargs_;
 		}
-		bool isRightToLeft() const 
-		{ 
-			return (flags_ & OpIsRighttoLeft) != 0; 
+		bool isRightToLeft() const
+		{
+			return (flags_ & OpIsRighttoLeft) != 0;
 		}
-		uint32_t precedence() const 
-		{ 
-			return priority_; 
+		uint32_t precedence() const
+		{
+			return priority_;
 		}
-		uint32_t flags() const 
-		{ 
-			return flags_; 
+		uint32_t flags() const
+		{
+			return flags_;
 		}
+		Signature signature() const
+		{
+			return signature_;
+		}
+
 	protected:
-		uint32_t nargs_;
+		size_t nargs_;
 		uint32_t flags_;
 		uint32_t priority_;
+		Signature signature_;
 	};
 
 	class MATHPRESSO_API MpOperationFunc : public MpOperation
 	{
 	public:
 		// Con-/Destructor
-		MpOperationFunc(uint32_t nargs, uint32_t flags, void * fnD, void * fnC) : MpOperation(nargs, flags),
+		MpOperationFunc(size_t nargs, uint32_t flags, void * fnD, void * fnC) : MpOperation(nargs, flags),
+			fnD_(fnD),
+			fnC_(fnC)
+		{
+		}
+
+		MpOperationFunc(Signature &signature, void * fnD, void * fnC) : MpOperation(signature),
 			fnD_(fnD),
 			fnC_(fnC)
 		{
 		}
 
 		virtual ~MpOperationFunc()
-		{}
+		{
+		}
 
-		bool hasFlag(uint32_t flag)
+		bool hasFlag(uint32_t flag) const
 		{
 			return flag & flags_;
 		}
@@ -151,15 +185,15 @@ namespace mathpresso {
 			flags_ &= ~flags;
 		}
 
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) override;
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
 
 		virtual void setFn(void * fn, bool isComplex = false);
 	protected:
-		virtual double evaluateDRetD(double *args);
-		virtual std::complex<double> evaluateDRetC(double *args);
-		virtual double evaluateCRetD(std::complex<double> *args);
-		virtual std::complex<double> evaluateCRetC(std::complex<double> *args);
+		virtual double evaluateDRetD(double *args) const;
+		virtual std::complex<double> evaluateDRetC(double *args) const;
+		virtual double evaluateCRetD(std::complex<double> *args) const;
+		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) const;
 
 		// Function-pointer:
 		void * fnC_;
@@ -174,17 +208,22 @@ namespace mathpresso {
 		{
 		}
 
+		MpOperationBinary(Signature &signature, uint32_t priority) :
+			MpOperation(signature, priority)
+		{
+		}
+
 		virtual ~MpOperationBinary()
 		{
 		}
 
 		// calls generatAsmReal() and comppComplex() after setting up.
-		virtual JitVar compile(JitCompiler* jc, AstNode * node) override;
+		virtual JitVar compile(JitCompiler* jc, AstNode * node) const override;
 
 		// uses calculateReal() and calculateComplex() to calculate immediate values.
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
 
-		bool hasFlag(uint32_t flag)
+		bool hasFlag(uint32_t flag) const
 		{
 			return flag & flags_;
 		}
@@ -202,17 +241,17 @@ namespace mathpresso {
 	protected:
 		// These are called by compile() and should only contain the asm-statements. vl will always
 		// be in a register, vr can be in Register or in Memory.
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr);
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr);
+		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const;
+		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const;
 
 		// Used to calculate optimization of immediates.
-		virtual double calculateReal(double vl, double vr) 
-		{ 
-			return std::numeric_limits<double>::quiet_NaN(); 
+		virtual double calculateReal(double vl, double vr)  const
+		{
+			return std::numeric_limits<double>::quiet_NaN();
 		};
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) 
-		{ 
-			return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()); 
+		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr)  const
+		{
+			return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
 		};
 	};
 }

@@ -17,7 +17,8 @@
 
 #include <complex>
 
-namespace mathpresso {
+namespace mathpresso
+{
 
 #define VPTR(function) reinterpret_cast<void*>(function)
 
@@ -181,7 +182,7 @@ namespace mathpresso {
 
 
 	// MpOperationFunc
-	JitVar MpOperationFunc::compile(JitCompiler* jc, AstNode * node)
+	JitVar MpOperationFunc::compile(JitCompiler* jc, AstNode * node) const
 	{
 		asmjit::X86Xmm result = node->returnsComplex() ? jc->cc->newXmmPd() : jc->cc->newXmmSd();
 		asmjit::X86Xmm args[8];
@@ -236,7 +237,7 @@ namespace mathpresso {
 		return JitVar(result, false);
 	}
 
-	Error MpOperationFunc::optimize(AstOptimizer * opt, AstNode * node)
+	Error MpOperationFunc::optimize(AstOptimizer * opt, AstNode * node) const
 	{
 		size_t count = node->getLength();
 		bool b_need_cplx = false;
@@ -256,7 +257,7 @@ namespace mathpresso {
 		{
 			if (!fnC_)
 				return opt->_errorReporter->onError(ErrorCode::kErrorInvalidArgument, node->getPosition(),
-					"No complex function available.");
+													"No complex function available.");
 
 			node->addNodeFlags(AstNodeFlags::kAstTakesComplex);
 			b_returns_complex = !hasFlag(MpOperationFlags::OpFlagCReturnsD);
@@ -276,7 +277,7 @@ namespace mathpresso {
 			else
 			{
 				return opt->_errorReporter->onError(ErrorCode::kErrorSymbolNotFound, node->getPosition(),
-					"No appropriate function available");
+													"No appropriate function available");
 			}
 		}
 
@@ -346,7 +347,7 @@ namespace mathpresso {
 		}
 	}
 
-	double MpOperationFunc::evaluateDRetD(double * args)
+	double MpOperationFunc::evaluateDRetD(double * args) const
 	{
 #ifdef _REALREWORK
 		if (!fnD_)
@@ -359,22 +360,22 @@ namespace mathpresso {
 		switch (nargs_)
 
 		{
-		case 0: return ((Arg0Func)fnD_)();
-		case 1: return ((Arg1Func)fnD_)(args[0]);
-		case 2: return ((Arg2Func)fnD_)(args[0], args[1]);
-		case 3: return ((Arg3Func)fnD_)(args[0], args[1], args[2]);
-		case 4: return ((Arg4Func)fnD_)(args[0], args[1], args[2], args[3]);
-		case 5: return ((Arg5Func)fnD_)(args[0], args[1], args[2], args[3], args[4]);
-		case 6: return ((Arg6Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5]);
-		case 7: return ((Arg7Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
-		case 8: return ((Arg8Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
-		default:
-			throw std::runtime_error("Too many arguments.");
+			case 0: return ((Arg0Func)fnD_)();
+			case 1: return ((Arg1Func)fnD_)(args[0]);
+			case 2: return ((Arg2Func)fnD_)(args[0], args[1]);
+			case 3: return ((Arg3Func)fnD_)(args[0], args[1], args[2]);
+			case 4: return ((Arg4Func)fnD_)(args[0], args[1], args[2], args[3]);
+			case 5: return ((Arg5Func)fnD_)(args[0], args[1], args[2], args[3], args[4]);
+			case 6: return ((Arg6Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5]);
+			case 7: return ((Arg7Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+			case 8: return ((Arg8Func)fnD_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+			default:
+				throw std::runtime_error("Too many arguments.");
 		}
 #endif // _REALREWORK
 	}
 
-	std::complex<double> MpOperationFunc::evaluateDRetC(double * args)
+	std::complex<double> MpOperationFunc::evaluateDRetC(double * args) const
 	{
 		if (!fnD_)
 		{
@@ -383,7 +384,7 @@ namespace mathpresso {
 		return ((mpFuncpDtoC)fnD_)(args);
 	}
 
-	double MpOperationFunc::evaluateCRetD(std::complex<double>* args)
+	double MpOperationFunc::evaluateCRetD(std::complex<double>* args) const
 	{
 		if (!fnC_)
 		{
@@ -392,7 +393,7 @@ namespace mathpresso {
 		return ((mpFuncpCtoD)fnC_)(args);
 	}
 
-	std::complex<double> MpOperationFunc::evaluateCRetC(std::complex<double>* args)
+	std::complex<double> MpOperationFunc::evaluateCRetC(std::complex<double>* args) const
 	{
 		if (!fnC_)
 		{
@@ -409,8 +410,9 @@ namespace mathpresso {
 
 	MpOperationIsFinite::MpOperationIsFinite() :
 		MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(isfiniteRR), VPTR(isfiniteCC))
-	{}
-	JitVar MpOperationIsFinite::compile(JitCompiler * jc, AstNode * node)
+	{
+	}
+	JitVar MpOperationIsFinite::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 
@@ -439,9 +441,10 @@ namespace mathpresso {
 
 	MpOperationIsInfinite::MpOperationIsInfinite() :
 		MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(isinfRR), VPTR(isinfCC))
-	{}
+	{
+	}
 
-	JitVar MpOperationIsInfinite::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationIsInfinite::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 
@@ -470,9 +473,10 @@ namespace mathpresso {
 
 	MpOperationIsNan::MpOperationIsNan() :
 		MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(isnanRR), VPTR(isnanCC))
-	{}
+	{
+	}
 
-	JitVar MpOperationIsNan::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationIsNan::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 
@@ -496,9 +500,10 @@ namespace mathpresso {
 
 	MpOperationGetReal::MpOperationGetReal() :
 		MpOperationFunc(1, MpOperationFlags::OpFlagCReturnsD, nullptr, VPTR(realCR))
-	{}
+	{
+	}
 
-	JitVar MpOperationGetReal::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationGetReal::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->onNode(node->getAt(0)));
 		JitVar varRet(jc->cc->newXmmSd(), false);;
@@ -524,16 +529,16 @@ namespace mathpresso {
 
 
 	// MpOperationGetImag
-	double imagCR(std::complex<double>* args) 
-	{ 
-		return args->imag(); 
+	double imagCR(std::complex<double>* args)
+	{
+		return args->imag();
 	}
 
 	MpOperationGetImag::MpOperationGetImag() : MpOperationFunc(1, MpOperationFlags::OpFlagCReturnsD, nullptr, VPTR(imagCR))
 	{
 	}
 
-	JitVar MpOperationGetImag::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationGetImag::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->onNode(node->getAt(0)));
 
@@ -556,7 +561,7 @@ namespace mathpresso {
 	{
 	}
 
-	JitVar MpOperationSqrt::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationSqrt::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -568,9 +573,9 @@ namespace mathpresso {
 	}
 
 	// Negation
-	std::complex<double> negCC(std::complex<double>* args) 
-	{ 
-		return -args[0]; 
+	std::complex<double> negCC(std::complex<double>* args)
+	{
+		return -args[0];
 	}
 
 	MpOperationNeg::MpOperationNeg() : MpOperationFunc(1, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator, VPTR(negRR), VPTR(negCC))
@@ -578,7 +583,7 @@ namespace mathpresso {
 		priority_ = 3;
 	}
 
-	JitVar MpOperationNeg::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationNeg::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
@@ -586,7 +591,7 @@ namespace mathpresso {
 		return var;
 	}
 
-	uint32_t MpOperationNeg::optimize(AstOptimizer * opt, AstNode * node)
+	uint32_t MpOperationNeg::optimize(AstOptimizer * opt, AstNode * node) const
 	{
 		auto ret = MpOperationFunc::optimize(opt, node);
 		if (ret != ErrorCode::kErrorOk)
@@ -603,9 +608,9 @@ namespace mathpresso {
 	}
 
 	// Not
-	std::complex<double> notCC(std::complex<double>* args) 
-	{ 
-		return std::complex<double>(args[0] == std::complex<double>(0, 0) ? 1.0 : 0.0, 0.0); 
+	std::complex<double> notCC(std::complex<double>* args)
+	{
+		return std::complex<double>(args[0] == std::complex<double>(0, 0) ? 1.0 : 0.0, 0.0);
 	}
 
 	MpOperationNot::MpOperationNot() :
@@ -614,11 +619,11 @@ namespace mathpresso {
 		priority_ = 3;
 	}
 
-	JitVar MpOperationNot::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationNot::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 
-		if (node ->hasNodeFlag(AstNodeFlags::kAstReturnsComplex))
+		if (node->hasNodeFlag(AstNodeFlags::kAstReturnsComplex))
 		{
 			var = jc->writableVarComplex(var);
 			jc->cc->cmppd(var.getXmm(), jc->getConstantD64(std::complex<double>(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpEQ));
@@ -640,7 +645,7 @@ namespace mathpresso {
 	{
 	}
 
-	JitVar MpOperationConjug::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationConjug::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar tmp = jc->onNode(node->getAt(0));
 		JitVar result = jc->registerVarComplex(tmp, !node->getAt(0)->returnsComplex());
@@ -648,7 +653,7 @@ namespace mathpresso {
 		return result;
 	}
 
-	uint32_t MpOperationConjug::optimize(AstOptimizer * opt, AstNode * node)
+	uint32_t MpOperationConjug::optimize(AstOptimizer * opt, AstNode * node) const
 	{
 		auto ret = MpOperationFunc::optimize(opt, node);
 		if (ret != ErrorCode::kErrorOk)
@@ -666,16 +671,16 @@ namespace mathpresso {
 	}
 
 	// Reciprocal
-	std::complex<double> recipCC(std::complex<double>* args) 
-	{ 
-		return 1.0 / args[0]; 
+	std::complex<double> recipCC(std::complex<double>* args)
+	{
+		return 1.0 / args[0];
 	}
-	
+
 	MpOperationRecip::MpOperationRecip() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(recipRR), VPTR(recipCC))
 	{
 	}
 
-	JitVar mathpresso::MpOperationRecip::compile(JitCompiler * jc, AstNode * node)
+	JitVar mathpresso::MpOperationRecip::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		JitVar result;
@@ -707,7 +712,7 @@ namespace mathpresso {
 	{
 	}
 
-	JitVar MpOperationSignBit::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationSignBit::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->onNode(node->getAt(0)));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -722,7 +727,7 @@ namespace mathpresso {
 	{
 	}
 
-	JitVar MpOperationCopySign::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationCopySign::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar vl = jc->writableVar(jc->onNode(node->getAt(0)));
 		JitVar vr = jc->writableVar(jc->onNode(node->getAt(1)));
@@ -736,16 +741,16 @@ namespace mathpresso {
 
 
 	// Average
-	std::complex<double> avgCC(std::complex<double>* args) 
-	{ 
-		return (args[0] + args[1]) * 0.5; 
+	std::complex<double> avgCC(std::complex<double>* args)
+	{
+		return (args[0] + args[1]) * 0.5;
 	}
 
 	MpOperationAvg::MpOperationAvg() : MpOperationFunc(2, MpOperationFlags::OpFlagNone, VPTR(avgRR), VPTR(avgCC))
 	{
 	}
 
-	JitVar MpOperationAvg::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationAvg::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar vl = jc->onNode(node->getAt(0));;
 		JitVar vr = jc->onNode(node->getAt(1));
@@ -778,18 +783,18 @@ namespace mathpresso {
 		}
 		return vl;
 	}
-	
+
 	// Absolute
-	double absCR(std::complex<double>* args) 
-	{ 
-		return std::abs(args[0]); 
+	double absCR(std::complex<double>* args)
+	{
+		return std::abs(args[0]);
 	}
 
 	MpOperationAbs::MpOperationAbs() : MpOperationFunc(1, MpOperationFlags::OpFlagCReturnsD, VPTR(absRR), VPTR(absCR))
 	{
 	}
 
-	JitVar MpOperationAbs::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationAbs::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->onNode(node->getAt(0)));
 		JitVar result;
@@ -810,9 +815,10 @@ namespace mathpresso {
 
 	// round
 	MpOperationRound::MpOperationRound() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(roundRR), nullptr)
-	{}
+	{
+	}
 
-	JitVar MpOperationRound::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationRound::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -856,12 +862,13 @@ namespace mathpresso {
 
 		return result;
 	}
-	
+
 	// roundeven
 	MpOperationRoundEven::MpOperationRoundEven() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(roundevenRR), nullptr)
-	{}
+	{
+	}
 
-	JitVar MpOperationRoundEven::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationRoundEven::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -891,12 +898,13 @@ namespace mathpresso {
 		}
 		return result;
 	}
-	
+
 	// trunc
 	MpOperationTrunc::MpOperationTrunc() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(truncRR), nullptr)
-	{}
+	{
+	}
 
-	JitVar MpOperationTrunc::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationTrunc::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -933,12 +941,13 @@ namespace mathpresso {
 		}
 		return result;
 	}
-	
+
 	// frac
 	MpOperationFrac::MpOperationFrac() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(fracRR), nullptr)
-	{}
+	{
+	}
 
-	JitVar MpOperationFrac::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationFrac::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar tmp(jc->cc->newXmmSd(), false);
@@ -977,12 +986,13 @@ namespace mathpresso {
 		}
 		return var;
 	}
-	
+
 	// floor
 	MpOperationFloor::MpOperationFloor() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(floorRR), nullptr)
-	{}
+	{
+	}
 
-	JitVar MpOperationFloor::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationFloor::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -1022,9 +1032,10 @@ namespace mathpresso {
 
 	// ceil
 	MpOperationcCeil::MpOperationcCeil() : MpOperationFunc(1, MpOperationFlags::OpFlagNone, VPTR(ceilRR), nullptr)
-	{}
+	{
+	}
 
-	JitVar MpOperationcCeil::compile(JitCompiler * jc, AstNode * node)
+	JitVar MpOperationcCeil::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -1062,7 +1073,7 @@ namespace mathpresso {
 	}
 
 	// mpOperationBinary
-	JitVar MpOperationBinary::compile(JitCompiler* jc, AstNode * node)
+	JitVar MpOperationBinary::compile(JitCompiler* jc, AstNode * node) const
 	{
 		JitVar vl, vr;
 		AstNode* left = node->getAt(0);
@@ -1110,7 +1121,7 @@ namespace mathpresso {
 		}
 	}
 
-	uint32_t MpOperationBinary::optimize(AstOptimizer *opt, AstNode *node)
+	uint32_t MpOperationBinary::optimize(AstOptimizer *opt, AstNode *node) const
 	{
 		AstNode* left = node->getAt(0);
 		AstNode* right = node->getAt(1);
@@ -1183,18 +1194,18 @@ namespace mathpresso {
 		return ErrorCode::kErrorOk;
 	}
 
-	JitVar MpOperationBinary::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) 
-	{ 
-		throw std::runtime_error("No Override available!"); 
+	JitVar MpOperationBinary::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
+	{
+		throw std::runtime_error("No Override available!");
 	}
 
-	JitVar MpOperationBinary::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) 
-	{ 
-		throw std::runtime_error("No Override available!"); 
+	JitVar MpOperationBinary::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const
+	{
+		throw std::runtime_error("No Override available!");
 	}
 
 	// Addition
-	JitVar MpOperationAdd::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationAdd::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1208,7 +1219,7 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationAdd::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationAdd::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1221,11 +1232,17 @@ namespace mathpresso {
 		return vl;
 	}
 
-	double MpOperationAdd::calculateReal(double vl, double vr) { return vl + vr; }
-	std::complex<double> MpOperationAdd::calculateComplex(std::complex<double> vl, std::complex<double> vr) { return vl + vr; }
+	double MpOperationAdd::calculateReal(double vl, double vr) const
+	{
+		return vl + vr;
+	}
+	std::complex<double> MpOperationAdd::calculateComplex(std::complex<double> vl, std::complex<double> vr) const
+	{
+		return vl + vr;
+	}
 
 	// Subtraction
-	JitVar MpOperationSub::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationSub::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1239,7 +1256,7 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationSub::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationSub::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1252,11 +1269,17 @@ namespace mathpresso {
 		return vl;
 	}
 
-	double MpOperationSub::calculateReal(double vl, double vr) { return vl - vr; }
-	std::complex<double> MpOperationSub::calculateComplex(std::complex<double> vl, std::complex<double> vr) { return vl - vr; }
+	double MpOperationSub::calculateReal(double vl, double vr) const
+	{
+		return vl - vr;
+	}
+	std::complex<double> MpOperationSub::calculateComplex(std::complex<double> vl, std::complex<double> vr) const
+	{
+		return vl - vr;
+	}
 
 	// Multiplication
-	JitVar MpOperationMul::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationMul::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1270,7 +1293,7 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationMul::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationMul::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1294,17 +1317,17 @@ namespace mathpresso {
 		return ret;
 	}
 
-	double MpOperationMul::calculateReal(double vl, double vr) 
-	{ 
-		return vl * vr; 
+	double MpOperationMul::calculateReal(double vl, double vr)  const
+	{
+		return vl * vr;
 	}
-	std::complex<double> MpOperationMul::calculateComplex(std::complex<double> vl, std::complex<double> vr) 
-	{ 
-		return vl * vr; 
+	std::complex<double> MpOperationMul::calculateComplex(std::complex<double> vl, std::complex<double> vr)  const
+	{
+		return vl * vr;
 	}
 
 	// Division
-	JitVar MpOperationDiv::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationDiv::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1318,7 +1341,7 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationDiv::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationDiv::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1346,17 +1369,17 @@ namespace mathpresso {
 		return ret;
 	}
 
-	double MpOperationDiv::calculateReal(double vl, double vr) 
-	{ 
-		return vl / vr; 
+	double MpOperationDiv::calculateReal(double vl, double vr)  const
+	{
+		return vl / vr;
 	}
-	std::complex<double> MpOperationDiv::calculateComplex(std::complex<double> vl, std::complex<double> vr) 
-	{ 
-		return vl / vr; 
+	std::complex<double> MpOperationDiv::calculateComplex(std::complex<double> vl, std::complex<double> vr)  const
+	{
+		return vl / vr;
 	}
 
 	// Minimum
-	JitVar MpOperationMin::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationMin::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1369,13 +1392,13 @@ namespace mathpresso {
 		return vl;
 	}
 
-	double MpOperationMin::calculateReal(double vl, double vr) 
-	{ 
-		return std::min(vl, vr); 
+	double MpOperationMin::calculateReal(double vl, double vr)  const
+	{
+		return std::min(vl, vr);
 	}
 
 	// Maximum
-	JitVar MpOperationMax::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationMax::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1388,13 +1411,13 @@ namespace mathpresso {
 		return vl;
 	}
 
-	double MpOperationMax::calculateReal(double vl, double vr) 
-	{ 
-		return std::max(vl, vr); 
+	double MpOperationMax::calculateReal(double vl, double vr)  const
+	{
+		return std::max(vl, vr);
 	}
 
 	// Equality
-	JitVar MpOperationEq::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationEq::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1409,7 +1432,7 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationEq::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationEq::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1424,17 +1447,17 @@ namespace mathpresso {
 		return vl;
 	}
 
-	double MpOperationEq::calculateReal(double vl, double vr) 
-	{ 
-		return vl == vr ? 1.0 : 0.0; 
+	double MpOperationEq::calculateReal(double vl, double vr)  const
+	{
+		return vl == vr ? 1.0 : 0.0;
 	}
-	std::complex<double> MpOperationEq::calculateComplex(std::complex<double> vl, std::complex<double> vr) 
-	{ 
-		return std::complex<double>(vl == vr ? 1.0 : 0.0, 0.0); 
+	std::complex<double> MpOperationEq::calculateComplex(std::complex<double> vl, std::complex<double> vr)  const
+	{
+		return std::complex<double>(vl == vr ? 1.0 : 0.0, 0.0);
 	}
 
 	// Inequality
-	JitVar MpOperationNe::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationNe::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1449,7 +1472,7 @@ namespace mathpresso {
 
 	}
 
-	JitVar MpOperationNe::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationNe::generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1464,17 +1487,17 @@ namespace mathpresso {
 		return vl;
 	}
 
-	double MpOperationNe::calculateReal(double vl, double vr) 
-	{ 
-		return vl != vr ? 1.0 : 0.0; 
+	double MpOperationNe::calculateReal(double vl, double vr)  const
+	{
+		return vl != vr ? 1.0 : 0.0;
 	}
-	std::complex<double> MpOperationNe::calculateComplex(std::complex<double> vl, std::complex<double> vr) 
-	{ 
-		return std::complex<double>(vl != vr ? 1.0 : 0.0, 0.0); 
+	std::complex<double> MpOperationNe::calculateComplex(std::complex<double> vl, std::complex<double> vr)  const
+	{
+		return std::complex<double>(vl != vr ? 1.0 : 0.0, 0.0);
 	}
 
 	// Lesser than
-	JitVar MpOperationLt::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationLt::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1489,13 +1512,13 @@ namespace mathpresso {
 
 	}
 
-	double MpOperationLt::calculateReal(double vl, double vr) 
-	{ 
-		return vl < vr ? 1.0 : 0.0; 
+	double MpOperationLt::calculateReal(double vl, double vr)  const
+	{
+		return vl < vr ? 1.0 : 0.0;
 	}
 
 	// Lesser equal
-	JitVar MpOperationLe::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationLe::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1510,13 +1533,13 @@ namespace mathpresso {
 
 	}
 
-	double MpOperationLe::calculateReal(double vl, double vr) 
-	{ 
-		return vl <= vr ? 1.0 : 0.0; 
+	double MpOperationLe::calculateReal(double vl, double vr)  const
+	{
+		return vl <= vr ? 1.0 : 0.0;
 	}
 
 	// Greater than
-	JitVar MpOperationGt::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationGt::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1531,13 +1554,13 @@ namespace mathpresso {
 
 	}
 
-	double MpOperationGt::calculateReal(double vl, double vr) 
-	{ 
-		return vl > vr ? 1.0 : 0.0; 
+	double MpOperationGt::calculateReal(double vl, double vr)  const
+	{
+		return vl > vr ? 1.0 : 0.0;
 	}
 
 	// Greater equal
-	JitVar MpOperationGe::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationGe::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
 		{
@@ -1552,10 +1575,13 @@ namespace mathpresso {
 
 	}
 
-	double MpOperationGe::calculateReal(double vl, double vr) { return vl >= vr ? 1.0 : 0.0; }
+	double MpOperationGe::calculateReal(double vl, double vr)  const
+	{
+		return vl >= vr ? 1.0 : 0.0;
+	}
 
 	// Modulo
-	JitVar MpOperationModulo::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr)
+	JitVar MpOperationModulo::generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		JitVar result(jc->cc->newXmmSd(), false);
 		JitVar tmp(jc->cc->newXmmSd(), false);
@@ -1614,10 +1640,13 @@ namespace mathpresso {
 		return result;
 	}
 
-	double MpOperationModulo::calculateReal(double vl, double vr) { return fmod(vl, vr); }
+	double MpOperationModulo::calculateReal(double vl, double vr) const
+	{
+		return fmod(vl, vr);
+	}
 
 	// Ternary operation
-	JitVar MpOperationTernary::compile(JitCompiler* jc, AstNode * node)
+	JitVar MpOperationTernary::compile(JitCompiler* jc, AstNode * node) const
 	{
 		if (isColon_)
 		{
@@ -1680,7 +1709,7 @@ namespace mathpresso {
 		return jc->copyVarComplex(JitVar(regErg, false), false);
 	}
 
-	uint32_t MpOperationTernary::optimize(AstOptimizer *opt, AstNode *node)
+	uint32_t MpOperationTernary::optimize(AstOptimizer *opt, AstNode *node) const
 	{
 		AstTernaryOp * ternaryNode = reinterpret_cast<AstTernaryOp*>(node);
 		AstNode* branchCond = ternaryNode->getCondition();
@@ -1719,9 +1748,9 @@ namespace mathpresso {
 		return ErrorCode::kErrorOk;
 
 	}
-	
+
 	// Assignment
-	JitVar mathpresso::MpOperationAssignment::compile(JitCompiler * jc, AstNode * node)
+	JitVar mathpresso::MpOperationAssignment::compile(JitCompiler * jc, AstNode * node) const
 	{
 		JitVar result;
 		AstVarDecl * varDecl = static_cast<AstVarDecl*>(node);
@@ -1738,7 +1767,7 @@ namespace mathpresso {
 		return result;
 	}
 
-	uint32_t mathpresso::MpOperationAssignment::optimize(AstOptimizer * opt, AstNode * node)
+	uint32_t mathpresso::MpOperationAssignment::optimize(AstOptimizer * opt, AstNode * node) const
 	{
 		AstVarDecl * varDecl;
 		if (node->getNodeType() == AstNodeType::kAstNodeVarDecl)
