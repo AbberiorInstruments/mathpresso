@@ -97,7 +97,7 @@ namespace mathpresso
 		};
 
 		// Con-/Destructor
-		MpOperation(uint32_t nargs, uint32_t flags, uint32_t priority = 0) :
+		MpOperation(size_t nargs, uint32_t flags, uint32_t priority = 0) :
 			nargs_(nargs),
 			flags_(flags),
 			priority_(priority),
