@@ -370,8 +370,7 @@ namespace mathpresso
 	class MpOperationTernary : public MpOperation
 	{
 	public:
-		MpOperationTernary(bool iscolon) : MpOperation(Signature(2, Signature::type::both, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), 15),
-			isColon_(iscolon)
+		MpOperationTernary() : MpOperation(Signature(3, Signature::type::both, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), 15)
 		{
 		}
 
@@ -385,7 +384,7 @@ namespace mathpresso
 	class MpOperationAssignment : public MpOperation
 	{
 	public:
-		MpOperationAssignment() : MpOperation(Signature(2, Signature::type::both, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment), 15)
+		MpOperationAssignment() : MpOperation(Signature(1, Signature::type::both, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment), 15)
 		{
 		}
 

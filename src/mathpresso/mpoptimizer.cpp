@@ -128,19 +128,26 @@ namespace mathpresso {
 	{
 		std::vector<std::shared_ptr<MpOperation>> availableOps = _ops->find(node->_opName);
 		
+		bool takesComplex = false;
 		for (size_t i = 0; i < node->getLength(); i++) 
 		{
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
+			takesComplex |= node->getAt(i)->returnsComplex();
 		}
 
+		bool found = false;
 		for (auto p : availableOps)
 		{
-			if (p->nargs() == node->getLength())
+			if (p->nargs() == node->getLength() && p->signature().fits(false, takesComplex))
 			{
+				
+				found = true;
 				node->_mpOp = p;
 				break;
 			}
 		}
+
+		MATHPRESSO_ASSERT(found);
 
 		if (node->_mpOp)
 		{

@@ -84,6 +84,23 @@ namespace mathpresso
 		{
 		}
 
+		bool fits(bool returnComplex, bool takeComplex) const;
+
+		bool takesComplex() const
+		{
+			bool ret = true;
+			for (auto p : parameters_)
+			{
+				ret &= (p.type_ != type::real);
+			}
+			return ret;
+		}
+
+		bool returnsComplex() const
+		{
+			return return_type_ != type::real;
+		}
+
 		type return_type_;
 		std::vector<param> parameters_;
 		uint32_t flags_;
@@ -156,7 +173,7 @@ namespace mathpresso
 		{
 		}
 
-		MpOperationFunc(const Signature & signature, void * fnD, void * fnC) : MpOperation(signature),
+		MpOperationFunc(const Signature & signature, void * fnD, void * fnC, uint32_t priority = 0) : MpOperation(signature, priority),
 			fnD_(fnD),
 			fnC_(fnC)
 		{

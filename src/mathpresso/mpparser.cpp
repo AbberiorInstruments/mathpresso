@@ -825,8 +825,8 @@ namespace mathpresso {
 				ternaryNode->setCondition(branchCondition);
 				ternaryNode->setLeft(branchLeft);
 				ternaryNode->setRight(branchRight);
-				ternaryNode->_mpOp = _ops->find("?", 2);
-				ternaryNode->_opName = "?";
+				ternaryNode->_mpOp = _ops->find("_ternary_", 3);
+				ternaryNode->_opName = "_ternary_";
 
 				// add the new node to the AST.
 				node->getParent()->replaceNode(node, ternaryNode);

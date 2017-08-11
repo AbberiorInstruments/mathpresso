@@ -126,8 +126,7 @@ namespace mathpresso
 		ctx->addObject(">", std::make_shared<MpOperationGt>());
 		ctx->addObject("<=", std::make_shared<MpOperationLe>());
 		ctx->addObject("<", std::make_shared<MpOperationLt>());
-		ctx->addObject("?", std::make_shared<MpOperationTernary>(false));
-		ctx->addObject(":", std::make_shared<MpOperationTernary>(true));
+		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary>());
 		ctx->addObject("=", std::make_shared<MpOperationAssignment>());
 		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite>());
 		ctx->addObject("isinf", std::make_shared<MpOperationIsInfinite>());
@@ -171,6 +170,8 @@ namespace mathpresso
 		ctx->addObject("atan2", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(atan2RR), nullptr));
 		ctx->addObject("hypot", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(hypotRR), nullptr));
 		ctx->addObject("_none_", std::make_shared<MpOperationFunc>(Signature(0, Signature::type::both, MpOperationFlags::OpFlagNone), nullptr, nullptr));
+		ctx->addObject("?", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::both, MpOperationFlags::OpIsRighttoLeft), nullptr, nullptr, 15));
+		ctx->addObject(":", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::both, MpOperationFlags::OpIsRighttoLeft), nullptr, nullptr, 15));
 
 		ctx->addConstant("NaN", mpGetNan());
 		ctx->addConstant("INF", mpGetInf());
@@ -218,6 +219,13 @@ namespace mathpresso
 			test_flags |= MpOperationFlags::OpHasNoReal;
 		}
 		MATHPRESSO_ASSERT(test_flags == (flags & (MpOperationFlags::_OpFlagsignature)));
+	}
+
+	bool Signature::fits(bool returnComplex, bool takeComplex) const
+	{
+		bool paramFits = !takeComplex || takesComplex();
+		bool retFits = !returnComplex || returnsComplex();
+		return paramFits && retFits;
 	}
 
 
@@ -738,7 +746,7 @@ namespace mathpresso
 		return 1.0 / args[0];
 	}
 
-	MpOperationRecip::MpOperationRecip() : MpOperationFunc(Signature(1), VPTR(recipRR), VPTR(recipCC))
+	MpOperationRecip::MpOperationRecip() : MpOperationFunc(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(recipRR), VPTR(recipCC))
 	{
 	}
 
@@ -808,7 +816,7 @@ namespace mathpresso
 		return (args[0] + args[1]) * 0.5;
 	}
 
-	MpOperationAvg::MpOperationAvg() : MpOperationFunc(Signature(2), VPTR(avgRR), VPTR(avgCC))
+	MpOperationAvg::MpOperationAvg() : MpOperationFunc(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(avgRR), VPTR(avgCC))
 	{
 	}
 
@@ -1710,10 +1718,6 @@ namespace mathpresso
 	// Ternary operation
 	JitVar MpOperationTernary::compile(JitCompiler* jc, AstNode * node) const
 	{
-		if (isColon_)
-		{
-			throw std::runtime_error("MpOperationHelper: should never be reached");
-		}
 		asmjit::Label lblElse = jc->cc->newLabel();
 		asmjit::Label lblEnd = jc->cc->newLabel();
 		JitVar erg;
