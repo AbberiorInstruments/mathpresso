@@ -371,6 +371,8 @@ namespace mathpresso
 			node->getParent()->replaceNode(node, ret);
 
 			opt->getAst()->deleteNode(node);
+			
+			node = ret;
 		}
 		return ErrorCode::kErrorOk;
 	}
@@ -624,15 +626,30 @@ namespace mathpresso
 
 	uint32_t MpOperationNeg::optimize(AstOptimizer * opt, AstNode * node) const
 	{
+		// as the reference to node might be invalidated by the call to MpOperationFunc::optimize,
+		// we get the parent and the index of node within parent->_children.
+		auto parent = node->getParent();
+		size_t i;
+		for (i = 0; i < parent->getLength(); i++)
+		{
+			if (parent->getAt(i) == node)
+				break;
+		}
+
 		auto ret = MpOperationFunc::optimize(opt, node);
 		if (ret != ErrorCode::kErrorOk)
 			return ret;
 
+		// correct the reference to node.
+		node = parent->getAt(i); 
+
 		// -(-(x)) = x
-		if (node->getAt(0)->getNodeType() == AstNodeType::kAstNodeUnaryOp && static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
+		if (node->getNodeType() == AstNodeType::kAstNodeUnaryOp &&
+			node->getAt(0)->getNodeType() == AstNodeType::kAstNodeUnaryOp 
+			&& static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
 		{
 			AstNode* childOfChild = static_cast<AstUnaryOp*>(node->getAt(0))->unlinkChild();
-			node->getParent()->replaceNode(node, childOfChild);
+			parent->replaceNode(node, childOfChild);
 			opt->getAst()->deleteNode(node);
 		}
 		return ErrorCode::kErrorOk;
@@ -686,16 +703,30 @@ namespace mathpresso
 
 	uint32_t MpOperationConjug::optimize(AstOptimizer * opt, AstNode * node) const
 	{
+		// as the reference to node might be invalidated by the call to MpOperationFunc::optimize,
+		// we get the parent and the index of node within parent->_children.
+		auto parent = node->getParent();
+		size_t i;
+		for (i = 0; i < parent->getLength(); i++)
+		{
+			if (parent->getAt(i) == node)
+				break;
+		}
+
 		auto ret = MpOperationFunc::optimize(opt, node);
 		if (ret != ErrorCode::kErrorOk)
 			return ret;
 
+		// correct the reference to node.
+		node = parent->getAt(i);
+
 		// conj(conj(x)) = x
-		if (node->getAt(0)->getNodeType() == AstNodeType::kAstNodeUnaryOp
+		if (node->getNodeType() == AstNodeType::kAstNodeUnaryOp &&
+			node->getAt(0)->getNodeType() == AstNodeType::kAstNodeUnaryOp
 			&& static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
 		{
 			AstNode* childOfChild = static_cast<AstUnaryOp*>(node->getAt(0))->unlinkChild();
-			node->getParent()->replaceNode(node, childOfChild);
+			parent->replaceNode(node, childOfChild);
 			opt->getAst()->deleteNode(node);
 		}
 		return ErrorCode::kErrorOk;

@@ -579,7 +579,7 @@ namespace mathpresso
 	{
 		AstSymbol* sym = node->getSymbol();
 
-		nest("%s(), %s -> %s", sym_name(node), parm_type(node), node_type(node));
+		nest("%s(), %s -> %s", node->_opName.c_str(), parm_type(node), node_type(node));
 		onBlock(node);
 		return denest();
 	}
