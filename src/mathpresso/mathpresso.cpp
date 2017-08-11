@@ -579,7 +579,16 @@ namespace mathpresso
 
 	std::shared_ptr<MpOperation> Operations::find(const std::string &name, size_t numArgs) const
 	{
-		return _symbols.at(std::make_pair(name, numArgs));
+		std::shared_ptr<MpOperation> ret;
+		try
+		{
+			ret = _symbols.at(std::make_pair(name, numArgs));
+		}
+		catch (std::out_of_range)
+		{
+			ret = nullptr;
+		}
+		return ret;
 	}
 
 	std::vector<Operations::op_ptr_type> Operations::find(const std::string &name) const

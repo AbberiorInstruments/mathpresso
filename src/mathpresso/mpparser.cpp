@@ -473,25 +473,52 @@ namespace mathpresso {
 				std::string name(_tokenizer._start + token.position, token.length);
 				auto op = _ops->find(name, 1);
 				if (!op)
-					MATHPRESSO_PARSER_ERROR(token, "Invalid unary operator.");
+				{
+					// for expressions like '----x'
+					for (size_t i = 0; i < name.size(); i++)
+					{
+						if (op = _ops->find(name.substr(i, 1), 1))
+						{
+							AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>();
+							MATHPRESSO_NULLCHECK(opNode);
+							opNode->setPosition(token.getPosAsUInt() + i);
 
-				
-				// Parse the unary operator.
-				AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>();
-				MATHPRESSO_NULLCHECK(opNode);
-				opNode->setPosition(token.getPosAsUInt());
+							opNode->_mpOp = op;
+							opNode->_opName = name.substr(i, 1);
 
-				opNode->_mpOp = op;
-				opNode->_opName = name;
-				
-				if (lastUnaryNode == nullptr)
-					currentNode = opNode;
+							if (lastUnaryNode == nullptr)
+								currentNode = opNode;
+							else
+								lastUnaryNode->setChild(opNode);
+
+							isNested = true;
+							lastUnaryNode = opNode;
+						}
+						else
+						{
+							MATHPRESSO_PARSER_ERROR(token, "Invalid unary operator %s.", name.c_str());
+						}
+					}
+
+				}
 				else
-					lastUnaryNode->setChild(opNode);
+				{
+					// Parse the unary operator.
+					AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>();
+					MATHPRESSO_NULLCHECK(opNode);
+					opNode->setPosition(token.getPosAsUInt());
 
-				isNested = true;
-				lastUnaryNode = opNode;
+					opNode->_mpOp = op;
+					opNode->_opName = name;
 
+					if (lastUnaryNode == nullptr)
+						currentNode = opNode;
+					else
+						lastUnaryNode->setChild(opNode);
+
+					isNested = true;
+					lastUnaryNode = opNode;
+				}
 				goto _Repeat1;
 			}
 
