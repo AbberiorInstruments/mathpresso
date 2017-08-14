@@ -172,12 +172,6 @@ namespace mathpresso
 	{
 	public:
 		// Con-/Destructor
-		MpOperationFunc(size_t nargs, uint32_t flags, void * fnD, void * fnC) : MpOperation(nargs, flags),
-			fnD_(fnD),
-			fnC_(fnC)
-		{
-		}
-
 		MpOperationFunc(const Signature & signature, void * fnD, void * fnC, uint32_t priority = 0) : MpOperation(signature, priority),
 			fnD_(fnD),
 			fnC_(fnC)
@@ -217,6 +211,48 @@ namespace mathpresso
 		void * fnD_;
 	};
 
+	template<typename RET, typename PARAM>
+	class MATHPRESSO_API MpOperationFuncTemp : public MpOperation
+	{
+	public:
+		// Con-/Destructor
+		MpOperationFuncTemp(const Signature & signature, void * fnPtr, uint32_t priority = 0) : MpOperation(signature, priority),
+			fnPtr_(fnPtr)
+		{
+		}
+
+		// Con-/Destructor
+		MpOperationFuncTemp(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority = 0);
+
+		virtual ~MpOperationFuncTemp()
+		{
+		}
+
+		bool hasFlag(uint32_t flag) const
+		{
+			return flag & flags_;
+		}
+
+		void addFlags(uint32_t flags)
+		{
+			flags_ |= flags;
+		}
+
+		void removeFlags(uint32_t flags)
+		{
+			flags_ &= ~flags;
+		}
+
+		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
+
+	protected:
+		virtual RET evaluate(PARAM * args) const;
+
+		// Function-pointer:
+		void * fnPtr_;
+	};
+
 	template<typename T>
 	class MATHPRESSO_API MpOperationBinary : public MpOperation
 	{
@@ -230,10 +266,10 @@ namespace mathpresso
 		{
 		}
 
-		// calls generatAsmReal() and compComplex() after setting up.
+		// calls generatAsm() after setting up.
 		virtual JitVar compile(JitCompiler* jc, AstNode * node) const override;
 
-		// uses calculateReal() and calculateComplex() to calculate immediate values.
+		// uses calculate() to calculate immediate values.
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
 
 		bool hasFlag(uint32_t flag) const
@@ -258,8 +294,6 @@ namespace mathpresso
 
 		// Used to calculate optimization of immediates.
 		virtual T calculate(T vl, T vr)  const;
-			
-
 	};
 
 }

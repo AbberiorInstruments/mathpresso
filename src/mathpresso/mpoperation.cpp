@@ -174,7 +174,8 @@ namespace mathpresso
 		ctx->addObject("exp", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(expRR), VPTR(expCC)));
 		ctx->addObject("pow", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(powRR), VPTR(powCC)));
 		ctx->addObject("atan2", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(atan2RR), nullptr));
-		ctx->addObject("hypot", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(hypotRR), nullptr));
+		//ctx->addObject("hypot", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(hypotRR), nullptr));
+		ctx->addObject("hypot", std::make_shared<MpOperationFuncTemp<double, double>>(0, 2, VPTR(hypotRR)));
 		ctx->addObject("_none_", std::make_shared<MpOperationFunc>(Signature(0, Signature::type::both, MpOperationFlags::OpFlagNone), nullptr, nullptr));
 		ctx->addObject("?", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::both, MpOperationFlags::OpIsRighttoLeft), nullptr, nullptr, 15));
 		ctx->addObject(":", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::both, MpOperationFlags::OpIsRighttoLeft), nullptr, nullptr, 15));
@@ -443,6 +444,209 @@ namespace mathpresso
 			throw std::runtime_error("Function does not exist.");
 		}
 		return ((mpFuncpCtoC)fnC_)(args);
+	}
+
+	template<>
+	MpOperationFuncTemp<double, double>::MpOperationFuncTemp(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) : 
+		MpOperation(Signature(numargs, Signature::type::real, flags), priority),
+		fnPtr_(fnPtr)
+	{
+	}
+
+	template<>
+	MpOperationFuncTemp<std::complex<double>, double>::MpOperationFuncTemp(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
+		MpOperation(Signature(Signature::type::complex, { numargs,{ Signature::type::real } }, flags), priority),
+		fnPtr_(fnPtr)
+	{
+	}
+
+	template<>
+	MpOperationFuncTemp<double, std::complex<double>>::MpOperationFuncTemp(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
+		MpOperation(Signature(Signature::type::real, { numargs, {Signature::type::complex} }, flags), priority),
+		fnPtr_(fnPtr)
+	{
+	}
+
+	template<>
+	MpOperationFuncTemp<std::complex<double>, std::complex<double>>::MpOperationFuncTemp(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
+		MpOperation(Signature(numargs, Signature::type::complex, flags), priority),
+		fnPtr_(fnPtr)
+	{
+	}
+
+
+	template<>
+	inline JitVar MpOperationFuncTemp<double, double>::compile(JitCompiler * jc, AstNode * node) const
+	{
+		asmjit::X86Xmm result = jc->cc->newXmmSd();
+		asmjit::X86Xmm args[8];
+
+
+		
+		if (!fnPtr_)
+		{
+			// Should never happen, as the optimizer should have taken care of that. Remove later
+			throw std::runtime_error("Implementation error!");
+		}
+
+		for (size_t i = 0; i < nargs_; i++)
+		{
+			args[i] = jc->registerVarComplex(jc->onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
+		}
+		jc->inlineCall<double, double>(result, args, nargs_, fnPtr_);
+
+		return JitVar(result, false);
+	}
+	template<>
+	inline JitVar MpOperationFuncTemp<double, std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	{
+		asmjit::X86Xmm result = jc->cc->newXmmPd();
+		asmjit::X86Xmm args[8];
+
+		bool returnsComplex = hasFlag(MpOperationFlags::OpFlagDReturnsC);
+		if (!fnPtr_)
+		{
+			// Should never happen, as the optimizer should have taken care of that. Remove later
+			throw std::runtime_error("Implementation error!");
+		}
+
+		for (size_t i = 0; i < nargs_; i++)
+		{
+			args[i] = jc->registerVar(jc->onNode(node->getAt(i))).getXmm();
+		}
+
+		jc->inlineCall<double, std::complex<double>>(result, args, nargs_, fnPtr_);
+
+		return JitVar(result, false);
+	}
+	template<>
+	inline JitVar MpOperationFuncTemp<std::complex<double>, double>::compile(JitCompiler * jc, AstNode * node) const
+	{
+		asmjit::X86Xmm result = jc->cc->newXmmSd();
+		asmjit::X86Xmm args[8];
+
+
+		bool returnsComplex = !hasFlag(MpOperationFlags::OpFlagCReturnsD);
+		if (!fnPtr_)
+		{
+			// Should never happen, as the optimizer should have taken care of that. Remove later
+			throw std::runtime_error("Implementation error!");
+		}
+
+		for (size_t i = 0; i < nargs_; i++)
+		{
+			args[i] = jc->registerVarComplex(jc->onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
+		}
+		jc->inlineCall<std::complex<double>, double>(result, args, nargs_, fnPtr_);
+
+		return JitVar(result, false);
+	}
+	template<>
+	inline JitVar MpOperationFuncTemp<std::complex<double>, std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	{
+		asmjit::X86Xmm result = jc->cc->newXmmPd();
+		asmjit::X86Xmm args[8];
+
+		bool returnsComplex = hasFlag(MpOperationFlags::OpFlagDReturnsC);
+		if (!fnPtr_)
+		{
+			// Should never happen, as the optimizer should have taken care of that. Remove later
+			throw std::runtime_error("Implementation error!");
+		}
+
+		for (size_t i = 0; i < nargs_; i++)
+		{
+			args[i] = jc->registerVar(jc->onNode(node->getAt(i))).getXmm();
+		}
+
+		jc->inlineCall<std::complex<double>, std::complex<double>>(result, args, nargs_, fnPtr_);
+
+		return JitVar(result, false);
+	}
+
+	template<typename RET, typename PARAM>
+	uint32_t MpOperationFuncTemp<RET, PARAM>::optimize(AstOptimizer * opt, AstNode * node) const
+	{
+		bool b_all_imm = true;
+
+		// Gather Information about the child-nodes.
+		for (size_t i = 0; i < node->getLength(); i++)
+		{
+			b_all_imm &= node->getAt(i)->isImm();
+		}
+
+		// optimize all-immediate calls:
+		if (b_all_imm && !hasFlag(MpOperationFlags::OpFlagHasState))
+		{
+			AstImm* ret = opt->getAst()->newNode<AstImm>(0);
+
+			std::vector<PARAM> args;
+			for (size_t i = 0; i < nargs_; i++)
+			{
+				args.push_back((static_cast<AstImm*>(node->getAt(i)))->getValue<PARAM>());
+			}
+
+			ret->setValue(evaluate(args.data()));
+
+			node->getParent()->replaceNode(node, ret);
+			opt->getAst()->deleteNode(node);
+			node = ret;
+		}
+		return ErrorCode::kErrorOk;
+	}
+
+	template<>
+	double MpOperationFuncTemp<double, double>::evaluate(double * args) const
+	{
+		if (!fnPtr_)
+		{
+			throw std::runtime_error("Function does not exist.");
+		}
+#ifdef _REALREWORK
+		return ((mpFuncDtoD)fnD_)(args);
+#else
+		switch (nargs_)
+		{
+			case 0: return ((Arg0Func)fnPtr_)();
+			case 1: return ((Arg1Func)fnPtr_)(args[0]);
+			case 2: return ((Arg2Func)fnPtr_)(args[0], args[1]);
+			case 3: return ((Arg3Func)fnPtr_)(args[0], args[1], args[2]);
+			case 4: return ((Arg4Func)fnPtr_)(args[0], args[1], args[2], args[3]);
+			case 5: return ((Arg5Func)fnPtr_)(args[0], args[1], args[2], args[3], args[4]);
+			case 6: return ((Arg6Func)fnPtr_)(args[0], args[1], args[2], args[3], args[4], args[5]);
+			case 7: return ((Arg7Func)fnPtr_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+			case 8: return ((Arg8Func)fnPtr_)(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+			default:
+				throw std::runtime_error("Too many arguments.");
+		}
+#endif // _REALREWORK
+	}
+	template<>
+	std::complex<double> MpOperationFuncTemp<std::complex<double>, double>::evaluate(double * args) const
+	{
+		if (!fnPtr_)
+		{
+			throw std::runtime_error("Function does not exist.");
+		}
+		return ((mpFuncpDtoC)fnPtr_)(args);
+	}
+	template<>
+	double MpOperationFuncTemp<double, std::complex<double>>::evaluate(std::complex<double>* args) const
+	{
+		if (!fnPtr_)
+		{
+			throw std::runtime_error("Function does not exist.");
+		}
+		return ((mpFuncpCtoD)fnPtr_)(args);
+	}
+	template<>
+	std::complex<double> MpOperationFuncTemp<std::complex<double>, std::complex<double>>::evaluate(std::complex<double>* args) const
+	{
+		if (!fnPtr_)
+		{
+			throw std::runtime_error("Function does not exist.");
+		}
+		return ((mpFuncpCtoC)fnPtr_)(args);
 	}
 
 	// MpOperationIsFinite
