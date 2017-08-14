@@ -481,7 +481,7 @@ namespace mathpresso {
 						{
 							AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>();
 							MATHPRESSO_NULLCHECK(opNode);
-							opNode->setPosition(token.getPosAsUInt() + i);
+							opNode->setPosition(token.getPosAsUInt() + uint32_t(i));
 
 							opNode->_mpOp = op;
 							opNode->_opName = name.substr(i, 1);
