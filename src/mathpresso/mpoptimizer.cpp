@@ -149,6 +149,11 @@ namespace mathpresso {
 
 		MATHPRESSO_ASSERT(found);
 
+		if (!node->_mpOp->signature().returnsReal())
+		{
+			node->addNodeFlags(AstNodeFlags::kAstReturnsComplex);
+		}
+
 		if (node->_mpOp)
 		{
 			return node->_mpOp->optimize(this, node);

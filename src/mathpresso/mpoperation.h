@@ -101,6 +101,11 @@ namespace mathpresso
 			return return_type_ != type::real;
 		}
 
+		bool returnsReal() const
+		{
+			return return_type_ != type::complex;
+		}
+
 		type return_type_;
 		std::vector<param> parameters_;
 		uint32_t flags_;
@@ -253,7 +258,7 @@ namespace mathpresso
 	protected:
 		// These are called by compile() and should only contain the asm-statements. vl will always
 		// be in a register, vr can be in Register or in Memory.
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const;
 
 		// Used to calculate optimization of immediates.
@@ -266,6 +271,52 @@ namespace mathpresso
 			return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
 		};
 	};
+
+	template<typename T>
+	class MATHPRESSO_API MpOperationBinarytemp : public MpOperation
+	{
+	public:
+		MpOperationBinarytemp(const Signature &signature, uint32_t priority) :
+			MpOperation(signature, priority)
+		{
+		}
+
+		virtual ~MpOperationBinarytemp()
+		{
+		}
+
+		// calls generatAsmReal() and compComplex() after setting up.
+		virtual JitVar compile(JitCompiler* jc, AstNode * node) const override;
+
+		// uses calculateReal() and calculateComplex() to calculate immediate values.
+		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
+
+		bool hasFlag(uint32_t flag) const
+		{
+			return flag & flags_;
+		}
+
+		void addFlags(uint32_t flags)
+		{
+			flags_ |= flags;
+		}
+
+		void removeFlags(uint32_t flags)
+		{
+			flags_ &= ~flags;
+		}
+
+	protected:
+		// These are called by compile() and should only contain the asm-statements. vl will always
+		// be in a register, vr can be in Register or in Memory.
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const;
+
+		// Used to calculate optimization of immediates.
+		virtual T calculate(T vl, T vr)  const;
+			
+
+	};
+
 }
 
 

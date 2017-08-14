@@ -172,20 +172,17 @@ namespace mathpresso
 	};
 
 	// Addition
-	class MpOperationAdd : public MpOperationBinary
+	template<typename T>
+	class MpOperationAdd : public MpOperationBinarytemp<T>
 	{
 	public:
-		MpOperationAdd() :
-			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 6)
-			//MpOperationBinary(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator, 6)
-		{
-		}
+		MpOperationAdd();
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
+
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+
+		virtual T calculate(T vl, T vr) const override;
 	};
 
 	// Subtraction
@@ -198,7 +195,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
@@ -214,7 +211,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
@@ -230,7 +227,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
@@ -246,7 +243,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 	};
 
@@ -260,7 +257,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 	};
 
@@ -274,7 +271,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
@@ -290,7 +287,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
@@ -306,7 +303,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 	};
 
@@ -320,7 +317,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 	};
 
@@ -334,7 +331,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 	};
 
@@ -348,7 +345,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 	};
 
@@ -362,7 +359,7 @@ namespace mathpresso
 		}
 
 	protected:
-		virtual JitVar generatAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual double calculateReal(double vl, double vr) const override;
 	};
 
