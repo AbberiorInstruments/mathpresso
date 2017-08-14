@@ -240,7 +240,7 @@ public:
 	class Operations
 	{
 		using op_ptr_type = std::shared_ptr<MpOperation>;
-		using op_map_type = std::map<std::pair<std::string, size_t>, op_ptr_type>;
+		using op_map_type = std::multimap<std::pair<std::string, size_t>, op_ptr_type>;
 	
 	public:
 		std::string name(const MpOperation * ptr) const;
