@@ -254,9 +254,11 @@ namespace mathpresso {
 			return getConstantD64(node->getValue<double>());
 	}
 
-	void JitCompiler::inlineCallDRetD(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
-	{
+	
 
+	template<>
+	void JitCompiler::inlineCall<double, double>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
+	{
 #ifdef _REALREWORK
 		// Use function builder to build a function prototype.
 		X86Mem stack(cc->newStack(count * sizeof(double), sizeof(double)));
@@ -273,14 +275,12 @@ namespace mathpresso {
 		signature.setRetT<double>();
 		signature.addArgT<TypeId::UIntPtr>(); // parameters
 
-		// Create the function call.
+											  // Create the function call.
 		CCFuncCall* ctx = cc->call(reinterpret_cast<uint64_t>(fn), signature);
 		ctx->setRet(0, dst);
 
 		ctx->setArg(0, dataPointerReg);
-
 #else
-
 		// Use function builder to build a function prototype.
 		FuncSignatureX signature;
 		signature.setRetT<double>();
@@ -298,7 +298,13 @@ namespace mathpresso {
 #endif // _REALREWORK
 	}
 
-	void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
+	void JitCompiler::inlineCallDRetD(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
+	{
+		inlineCall<double, double>(dst, args, count, fn);
+	}
+
+	template<>
+	void JitCompiler::inlineCall<std::complex<double>, double>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
 	{
 		// copy the parameters to Memory.
 		X86Mem stack(cc->newStack(uint32_t(count * sizeof(double)), sizeof(double)));
@@ -323,7 +329,7 @@ namespace mathpresso {
 		signature.addArgT<TypeId::UIntPtr>(); // pointer to the return
 		signature.addArgT<TypeId::UIntPtr>(); // parameters
 
-		// Create the function call.
+											  // Create the function call.
 		CCFuncCall* ctx = cc->call(reinterpret_cast<uint64_t>(mpWrapDtoC), signature);
 
 		ctx->setArg(0, imm_u(reinterpret_cast<uint64_t>(fn)));
@@ -333,8 +339,14 @@ namespace mathpresso {
 		cc->movapd(dst, ret);
 	}
 
+	void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
+	{
+		inlineCall<std::complex<double>, double>(dst, args, count, fn);
+	}
+
 	//! Calls a function with complex arguments and non-complex returns.
-	void JitCompiler::inlineCallCRetD(const X86Xmm& dst, const X86Xmm* args, const size_t count, void* fn)
+	template<>
+	void JitCompiler::inlineCall<double, std::complex<double>>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
 	{
 		// copy the data to Memory.
 		X86Mem stack(cc->newStack(uint32_t(count) * 16, 16));
@@ -357,10 +369,15 @@ namespace mathpresso {
 
 		ctx->setRet(0, dst);
 		ctx->setArg(0, dataPointerReg);
-
 	}
 
-	void JitCompiler::inlineCallCRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
+	void JitCompiler::inlineCallCRetD(const X86Xmm& dst, const X86Xmm* args, const size_t count, void* fn)
+	{
+		inlineCall<double, std::complex<double>>(dst, args, count, fn);
+	}
+
+	template<>
+	void JitCompiler::inlineCall<std::complex<double>, std::complex<double>>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
 	{
 		// copy the data to Memory.
 		X86Mem stack(cc->newStack((uint32_t(count) + 1) * 16, 16));
@@ -387,6 +404,11 @@ namespace mathpresso {
 		ctx->setArg(1, dataPointerReg);
 
 		cc->movapd(dst, stack);
+	}
+
+	void JitCompiler::inlineCallCRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
+	{
+		inlineCall<std::complex<double>, std::complex<double>>(dst, args, count, fn);
 	}
 
 	void JitCompiler::prepareConstPool()

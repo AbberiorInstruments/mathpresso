@@ -174,6 +174,9 @@ namespace mathpresso
 		void inlineCallCRetD(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
 		void inlineCallCRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
 
+		template<typename RET, typename PARAMS>
+		void inlineCall(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
+
 		// Constants.
 		void prepareConstPool();
 		JitVar getConstantU64(uint64_t value);
