@@ -173,194 +173,178 @@ namespace mathpresso
 
 	// Addition
 	template<typename T>
-	class MpOperationAdd : public MpOperationBinarytemp<T>
+	class MpOperationAdd : public MpOperationBinary<T>
 	{
 	public:
 		MpOperationAdd();
 
 	protected:
-
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-
 		virtual T calculate(T vl, T vr) const override;
 	};
 
 	// Subtraction
-	class MpOperationSub : public MpOperationBinary
+	template<typename T>
+	class MpOperationSub : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationSub() :
-			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNopIfRZero  | MpOperationFlags::OpFlagIsOperator), 6)
-		{
-		}
+		MpOperationSub();
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual T calculate(T vl, T vr) const override;
 	};
 
 	// Multiplication
-	class MpOperationMul : public MpOperationBinary
+	template<typename T>
+	class MpOperationMul : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationMul() :
-			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 5)
-		{
-		}
+		MpOperationMul();
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual T calculate(T vl, T vr) const override;
 	};
 
 	// Division
-	class MpOperationDiv : public MpOperationBinary
+	template<typename T>
+	class MpOperationDiv : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationDiv() :
-			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNopIfLOne  | MpOperationFlags::OpFlagIsOperator), 5)
-		{
-		}
+		MpOperationDiv();
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual T calculate(T vl, T vr) const override;
 	};
 
 	// Minimum
-	class MpOperationMin : public MpOperationBinary
+	class MpOperationMin : public MpOperationBinary<double>
 	{
 	public:
 		MpOperationMin() :
-			MpOperationBinary(Signature(2), 0)
+			MpOperationBinary<double>(Signature(2), 0)
 		{
 		}
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual double calculate(double vl, double vr) const override;
 	};
 
 	// Maximum
-	class MpOperationMax : public MpOperationBinary
+	class MpOperationMax : public  MpOperationBinary<double>
 	{
 	public:
 		MpOperationMax() :
-			MpOperationBinary(Signature(2), 0)
+			MpOperationBinary<double>(Signature(2), 0)
 		{
 		}
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual double calculate(double vl, double vr) const override;
 	};
 
 	// Equality
-	class MpOperationEq : public MpOperationBinary
+	template<typename T>
+	class MpOperationEq : public MpOperationBinary<T>
 	{
 	public:
 		MpOperationEq() :
-			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 9)
+			MpOperationBinary<T>(Signature(2, Signature::type::both, MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 9)
 		{
 		}
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual T calculate(T vl, T vr) const override;
 	};
 
 	// Inequality
-	class MpOperationNe : public MpOperationBinary
+	template<typename T>
+	class MpOperationNe : public MpOperationBinary<T>
 	{
 	public:
 		MpOperationNe() :
-			MpOperationBinary(Signature(2, Signature::type::both, MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 9)
+			MpOperationBinary<T>(Signature(2, Signature::type::both, MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 9)
 		{
 		}
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual JitVar generateAsmComplex(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
-		virtual std::complex<double> calculateComplex(std::complex<double> vl, std::complex<double> vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual T calculate(T vl, T vr) const override;
 	};
 
 	// Lesser than
-	class MpOperationLt : public MpOperationBinary
+	class MpOperationLt : public  MpOperationBinary<double>
 	{
 	public:
 		MpOperationLt() :
-			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 8)
+			MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagIsOperator), 8)
 		{
 		}
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual double calculate(double vl, double vr) const override;
 	};
 
 	// Lesser Equal
-	class MpOperationLe : public MpOperationBinary
+	class MpOperationLe : public  MpOperationBinary<double>
 	{
 	public:
 		MpOperationLe() :
-			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 8)
+			MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagIsOperator), 8)
 		{
 		}
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual double calculate(double vl, double vr) const override;
 	};
 
 	// Greater than
-	class MpOperationGt : public MpOperationBinary
+	class MpOperationGt : public  MpOperationBinary<double>
 	{
 	public:
 		MpOperationGt() :
-			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 8)
+			MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagIsOperator), 8)
 		{
 		}
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual double calculate(double vl, double vr) const override;
 	};
 
 	// Greater equal
-	class MpOperationGe : public MpOperationBinary
+	class MpOperationGe : public  MpOperationBinary<double>
 	{
 	public:
 		MpOperationGe() :
-			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 8)
+			MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagIsOperator), 8)
 		{
 		}
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual double calculate(double vl, double vr) const override;
 	};
 
 	// Modulo
-	class MpOperationModulo : public MpOperationBinary
+	class MpOperationModulo : public  MpOperationBinary<double>
 	{
 	public:
 		MpOperationModulo() :
-			MpOperationBinary(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex  | MpOperationFlags::OpFlagIsOperator), 5)
+			MpOperationBinary<double>(Signature(2, Signature::type::real,  MpOperationFlags::OpFlagIsOperator), 5)
 		{
 		}
 
 	protected:
-		virtual JitVar generateAsmReal(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double calculateReal(double vl, double vr) const override;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
+		virtual double calculate(double vl, double vr) const override;
 	};
 
 	// Ternary Operation
