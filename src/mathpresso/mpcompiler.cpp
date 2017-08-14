@@ -249,9 +249,9 @@ namespace mathpresso {
 	JitVar JitCompiler::onImm(AstImm* node)
 	{
 		if (node->returnsComplex())
-			return getConstantD64(node->getValueCplx());
+			return getConstantD64(node->getValue<std::complex<double>>());
 		else
-			return getConstantD64(node->getValue());
+			return getConstantD64(node->getValue<double>());
 	}
 
 	void JitCompiler::inlineCallDRetD(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)

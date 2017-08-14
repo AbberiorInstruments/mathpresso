@@ -978,15 +978,9 @@ namespace mathpresso
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		double getValue() const
-		{
-			return _value.real();
-		}
-
-		std::complex<double> getValueCplx() const
-		{
-			return _value;
-		}
+		template<typename T>
+		T getValue() const;
+		
 
 		void setValue(double value)
 		{

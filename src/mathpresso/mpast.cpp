@@ -330,6 +330,18 @@ namespace mathpresso
 		return child;
 	}
 
+	template<>
+	std::complex<double> AstImm::getValue() const
+	{
+		return _value;
+	}
+
+	template<>
+	double AstImm::getValue() const
+	{
+		return _value.real();
+	}
+
 	// ============================================================================
 	// [mathpresso::AstBlock - Ops]
 	// ============================================================================
@@ -536,7 +548,7 @@ namespace mathpresso
 
 	Error AstDump::onImm(AstImm* node)
 	{
-		auto v = node->getValueCplx();
+		auto v = node->getValue<std::complex<double>>();
 
 		if (node->returnsComplex())
 			return info("%lf%+lfi, %s", v.real(), v.imag(), node_type(node));

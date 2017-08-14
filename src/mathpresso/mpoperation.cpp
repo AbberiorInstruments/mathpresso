@@ -347,7 +347,7 @@ namespace mathpresso
 				std::vector<std::complex<double>> args;
 				for (size_t i = 0; i < nargs_; i++)
 				{
-					args.push_back((static_cast<AstImm*>(node->getAt(i)))->getValueCplx());
+					args.push_back((static_cast<AstImm*>(node->getAt(i)))->getValue<std::complex<double>>());
 				}
 
 				if (node->returnsComplex())
@@ -364,7 +364,7 @@ namespace mathpresso
 				std::vector<double> args;
 				for (size_t i = 0; i < nargs_; i++)
 				{
-					args.push_back((static_cast<AstImm*>(node->getAt(i)))->getValue());
+					args.push_back((static_cast<AstImm*>(node->getAt(i)))->getValue<double>());
 				}
 
 				if (node->returnsComplex())
@@ -1213,15 +1213,15 @@ namespace mathpresso
 			AstImm* rNode = static_cast<AstImm*>(right);
 			if (needs_complex && !hasFlag(MpOperationFlags::OpHasNoComplex))
 			{
-				lNode->setValue(calculateComplex(lNode->getValueCplx(), rNode->getValueCplx()));
+				lNode->setValue(calculateComplex(lNode->getValue<std::complex<double>>(), rNode->getValue<std::complex<double>>()));
 			}
 			else if (!needs_complex && !hasFlag(MpOperationFlags::OpHasNoReal))
 			{
-				lNode->setValue(calculateReal(lNode->getValue(), rNode->getValue()));
+				lNode->setValue(calculateReal(lNode->getValue<double>(), rNode->getValue<double>()));
 			}
 			else if (!needs_complex && !hasFlag(MpOperationFlags::OpHasNoComplex))
 			{
-				lNode->setValue(calculateComplex(lNode->getValueCplx(), rNode->getValueCplx()));
+				lNode->setValue(calculateComplex(lNode->getValue<std::complex<double>>(), rNode->getValue<std::complex<double>>()));
 			}
 			else
 			{
@@ -1238,8 +1238,8 @@ namespace mathpresso
 		{
 			AstImm* lNode = static_cast<AstImm*>(left);
 			// if the node is real, the imaginary part is set to zero by default.
-			if ((hasFlag(MpOperationFlags::OpFlagNopIfLZero) && lNode->getValueCplx() == std::complex<double>(0.0, 0.0)) ||
-				(hasFlag(MpOperationFlags::OpFlagNopIfLOne) && lNode->getValueCplx() == std::complex<double>(1.0, 0.0)))
+			if ((hasFlag(MpOperationFlags::OpFlagNopIfLZero) && lNode->getValue<std::complex<double>>() == std::complex<double>(0.0, 0.0)) ||
+				(hasFlag(MpOperationFlags::OpFlagNopIfLOne) && lNode->getValue<std::complex<double>>() == std::complex<double>(1.0, 0.0)))
 			{
 				node->_children[1]->_parent = nullptr;
 				node->_children[1] = nullptr;
@@ -1251,8 +1251,8 @@ namespace mathpresso
 		{
 			AstImm* rNode = static_cast<AstImm*>(right);
 
-			if ((hasFlag(MpOperationFlags::OpFlagNopIfRZero) && rNode->getValueCplx() == std::complex<double>(0.0, 0.0)) ||
-				(hasFlag(MpOperationFlags::OpFlagNopIfROne) && rNode->getValueCplx() == std::complex<double>(1.0, 0.0)))
+			if ((hasFlag(MpOperationFlags::OpFlagNopIfRZero) && rNode->getValue<std::complex<double>>() == std::complex<double>(0.0, 0.0)) ||
+				(hasFlag(MpOperationFlags::OpFlagNopIfROne) && rNode->getValue<std::complex<double>>() == std::complex<double>(1.0, 0.0)))
 			{
 				node->_children[0]->_parent = nullptr;
 				node->_children[0] = nullptr;
@@ -1782,7 +1782,7 @@ namespace mathpresso
 		if (branchCond->isImm())
 		{
 			// optimize an immediate condition
-			bool conditionIsTrue = static_cast<AstImm*>(branchCond)->getValueCplx() != std::complex<double>({ 0, 0 });
+			bool conditionIsTrue = static_cast<AstImm*>(branchCond)->getValue<std::complex<double>>() != std::complex<double>({ 0, 0 });
 
 			AstNode* nodeOptimized;
 
@@ -1861,11 +1861,11 @@ namespace mathpresso
 			{
 				if (child->returnsComplex())
 				{
-					sym->setValue(static_cast<AstImm*>(child)->getValueCplx());
+					sym->setValue(static_cast<AstImm*>(child)->getValue<std::complex<double>>());
 				}
 				else
 				{
-					sym->setValue(static_cast<AstImm*>(child)->getValue());
+					sym->setValue(static_cast<AstImm*>(child)->getValue<double>());
 				}
 				sym->setAssigned();
 			}
