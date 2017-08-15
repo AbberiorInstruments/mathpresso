@@ -1126,7 +1126,7 @@ namespace mathpresso
 
 		virtual Error onProgram(AstProgram* node);
 		virtual Error onBlock(AstBlock* node) = 0;
-		virtual Error callMpOperation(AstVarDecl* node) = 0;
+		virtual Error onVarDecl(AstVarDecl* node) = 0;
 		virtual Error onVar(AstVar* node) = 0;
 		virtual Error onImm(AstImm* node) = 0;
 		virtual Error onUnaryOp(AstUnaryOp* node) = 0;
@@ -1161,7 +1161,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		virtual Error onBlock(AstBlock* node);
-		virtual Error callMpOperation(AstVarDecl* node);
+		virtual Error onVarDecl(AstVarDecl* node);
 		virtual Error onVar(AstVar* node);
 		virtual Error onImm(AstImm* node);
 		virtual Error onUnaryOp(AstUnaryOp* node);

@@ -267,10 +267,7 @@ namespace mathpresso
 	class MpOperationNe : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationNe() :
-			MpOperationBinary<T>(Signature(2, Signature::type::both, MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 9)
-		{
-		}
+		MpOperationNe();
 
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;

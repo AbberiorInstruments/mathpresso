@@ -158,24 +158,38 @@ namespace mathpresso
 		ctx->addObject("ceil", std::make_shared<MpOperationcCeil>());
 		ctx->addObject("frac", std::make_shared<MpOperationFrac>());
 		ctx->addObject("trunc", std::make_shared<MpOperationTrunc>());
-		ctx->addObject("sin", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(sinRR), VPTR(sinCC)));
-		ctx->addObject("cos", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(cosRR), VPTR(cosCC)));
-		ctx->addObject("tan", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(tanRR), VPTR(tanCC)));
-		ctx->addObject("sinh", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(sinhRR), VPTR(sinhCC)));
-		ctx->addObject("cosh", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(coshRR), VPTR(coshCC)));
-		ctx->addObject("tanh", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(tanhRR), VPTR(tanhCC)));
-		ctx->addObject("asin", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(asinRR), VPTR(asinCC)));
-		ctx->addObject("acos", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(acosRR), VPTR(acosCC)));
-		ctx->addObject("atan", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(atanRR), VPTR(atanCC)));
-		ctx->addObject("sqrtc", std::make_shared<MpOperationFunc>(Signature(Signature::type::complex, { 1, { Signature::type::both , ""} }, MpOperationFlags::OpFlagDReturnsC), VPTR(sqrtRC), VPTR(sqrtCC)));
-		ctx->addObject("log", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(logRR), VPTR(logCC)));
-		ctx->addObject("log2", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(log2RR), VPTR(log2CC)));
-		ctx->addObject("log10", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(log10RR), VPTR(log10CC)));
-		ctx->addObject("exp", std::make_shared<MpOperationFunc>(Signature(1, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(expRR), VPTR(expCC)));
-		ctx->addObject("pow", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::both, MpOperationFlags::OpFlagNone), VPTR(powRR), VPTR(powCC)));
-		ctx->addObject("atan2", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(atan2RR), nullptr));
-		//ctx->addObject("hypot", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::real, MpOperationFlags::OpHasNoComplex), VPTR(hypotRR), nullptr));
-		ctx->addObject("hypot", std::make_shared<MpOperationFuncTemp<double, double>>(0, 2, VPTR(hypotRR)));
+		ctx->addObject("sin", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(sinRR)));
+		ctx->addObject("sin", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(sinCC)));
+		ctx->addObject("cos", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(cosRR)));
+		ctx->addObject("cos", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(cosCC)));
+		ctx->addObject("tan", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(tanRR)));
+		ctx->addObject("tan", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(tanCC)));
+		ctx->addObject("sinh", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(sinhRR)));
+		ctx->addObject("sinh", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(sinhCC)));
+		ctx->addObject("cosh", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(coshRR)));
+		ctx->addObject("cosh", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(coshCC)));
+		ctx->addObject("tanh", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(tanhRR)));
+		ctx->addObject("tanh", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(tanhCC)));
+		ctx->addObject("asin", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(asinRR)));
+		ctx->addObject("asin", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(asinCC)));
+		ctx->addObject("acos", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(acosRR)));
+		ctx->addObject("acos", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(acosCC)));
+		ctx->addObject("atan", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(atanRR)));
+		ctx->addObject("atan", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(atanCC)));
+		ctx->addObject("sqrtc", std::make_shared<MpOperationFuncTemp<std::complex<double>, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(sqrtRC)));
+		ctx->addObject("sqrtc", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(sqrtCC)));
+		ctx->addObject("log", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(logRR)));
+		ctx->addObject("log", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(logCC)));
+		ctx->addObject("log2", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(log2RR)));
+		ctx->addObject("log2", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(log2CC)));
+		ctx->addObject("log10", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(log10RR)));
+		ctx->addObject("log10", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(log10CC)));
+		ctx->addObject("exp", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 1, VPTR(expRR)));
+		ctx->addObject("exp", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 1, VPTR(expCC)));
+		ctx->addObject("pow", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 2, VPTR(powRR)));
+		ctx->addObject("pow", std::make_shared<MpOperationFuncTemp<std::complex<double>, std::complex<double>>>(MpOperationFlags::OpFlagNone, 2, VPTR(powCC)));
+		ctx->addObject("atan2", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 2, VPTR(atan2RR)));
+		ctx->addObject("hypot", std::make_shared<MpOperationFuncTemp<double, double>>(MpOperationFlags::OpFlagNone, 2, VPTR(hypotRR)));
 		ctx->addObject("_none_", std::make_shared<MpOperationFunc>(Signature(0, Signature::type::both, MpOperationFlags::OpFlagNone), nullptr, nullptr));
 		ctx->addObject("?", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::both, MpOperationFlags::OpIsRighttoLeft), nullptr, nullptr, 15));
 		ctx->addObject(":", std::make_shared<MpOperationFunc>(Signature(2, Signature::type::both, MpOperationFlags::OpIsRighttoLeft), nullptr, nullptr, 15));
@@ -225,15 +239,6 @@ namespace mathpresso
 			flags_ |= MpOperationFlags::OpHasNoReal;
 		}
 	}
-
-
-	bool Signature::fits(bool returnComplex, bool takeComplex) const
-	{
-		bool paramFits = !takeComplex || takesComplex();
-		bool retFits = !returnComplex || returnsComplex();
-		return paramFits && retFits;
-	}
-
 
 	// MpOperationFunc
 	JitVar MpOperationFunc::compile(JitCompiler* jc, AstNode * node) const
@@ -491,7 +496,7 @@ namespace mathpresso
 
 		for (size_t i = 0; i < nargs_; i++)
 		{
-			args[i] = jc->registerVarComplex(jc->onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
+			args[i] = jc->registerVar(jc->onNode(node->getAt(i))).getXmm();
 		}
 		jc->inlineCall<double, double>(result, args, nargs_, fnPtr_);
 
@@ -512,7 +517,7 @@ namespace mathpresso
 
 		for (size_t i = 0; i < nargs_; i++)
 		{
-			args[i] = jc->registerVar(jc->onNode(node->getAt(i))).getXmm();
+			args[i] = jc->registerVarComplex(jc->onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
 		}
 
 		jc->inlineCall<double, std::complex<double>>(result, args, nargs_, fnPtr_);
@@ -535,7 +540,7 @@ namespace mathpresso
 
 		for (size_t i = 0; i < nargs_; i++)
 		{
-			args[i] = jc->registerVarComplex(jc->onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
+			args[i] = jc->registerVar(jc->onNode(node->getAt(i))).getXmm();
 		}
 		jc->inlineCall<std::complex<double>, double>(result, args, nargs_, fnPtr_);
 
@@ -556,7 +561,7 @@ namespace mathpresso
 
 		for (size_t i = 0; i < nargs_; i++)
 		{
-			args[i] = jc->registerVar(jc->onNode(node->getAt(i))).getXmm();
+			args[i] = jc->registerVarComplex(jc->onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
 		}
 
 		jc->inlineCall<std::complex<double>, std::complex<double>>(result, args, nargs_, fnPtr_);
@@ -1727,6 +1732,17 @@ namespace mathpresso
 
 	// Equality
 	template<>
+	MpOperationEq<double>::MpOperationEq() :
+		MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 9)
+	{
+	}
+	template<>
+	MpOperationEq<std::complex<double>>::MpOperationEq() :
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 9)
+	{
+	}
+
+	template<>
 	JitVar MpOperationEq<double>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.getOperand().isMem())
@@ -1765,6 +1781,17 @@ namespace mathpresso
 	}
 
 	// Inequality
+	template<>
+	MpOperationNe<double>::MpOperationNe() :
+		MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 9)
+	{
+	}
+	template<>
+	MpOperationNe<std::complex<double>>::MpOperationNe() :
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 9)
+	{
+	}
+
 	template<>
 	JitVar MpOperationNe<double>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{

@@ -84,14 +84,22 @@ namespace mathpresso
 		{
 		}
 
-		bool fits(bool returnComplex, bool takeComplex) const;
-
 		bool takesComplex() const
 		{
 			bool ret = true;
 			for (auto p : parameters_)
 			{
 				ret &= (p.type_ != type::real);
+			}
+			return ret;
+		}
+
+		bool areParams(type _type) const
+		{
+			bool ret = true;
+			for (auto p : parameters_)
+			{
+				ret &= (p.type_ == _type);
 			}
 			return ret;
 		}
@@ -106,9 +114,40 @@ namespace mathpresso
 			return return_type_ != type::complex;
 		}
 
+		std::string to_string()
+		{
+			std::string out("");
+			out += typeToString(return_type_);
+			out += " (";
+			for (size_t i = 0; i < parameters_.size(); i++)
+			{
+				out += typeToString(parameters_[i].type_);
+				if (parameters_[i].name_ != "")
+					out += " " + parameters_[i].name_;
+				if (i != parameters_.size() -1)
+				out += ", ";
+			}
+			out += ")";
+			return out;
+		}
+
+
 		type return_type_;
 		std::vector<param> parameters_;
 		uint32_t flags_;
+
+	private :
+		std::string typeToString(type _type)
+		{
+			switch (_type)
+			{
+				case type::real: return "real";
+				case type::complex: return "complex";
+				case type::both: return "both";
+				default:
+					throw std::runtime_error("unknown type.");
+			}
+		}
 	};
 
 	class MATHPRESSO_API MpOperation

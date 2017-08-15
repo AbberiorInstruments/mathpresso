@@ -322,8 +322,7 @@ namespace mathpresso
 		HashIterator<std::string, AstSymbol> it(d->_scope.getSymbols());
 		do
 		{
-			// as some symbols are in _ops and in the d->_scope, only add those not found in _ops.
-			if (std::find(syms.begin(), syms.end(), it.get()->getName()) == syms.end())
+			if (it.get()->getSymbolType() == AstSymbolType::kAstSymbolVariable)
 			{
 				syms.push_back(it.get()->getName());
 			}
@@ -603,6 +602,34 @@ namespace mathpresso
 		return ret;
 	}
 
+	Operations::op_ptr_type Operations::find(const std::string & name, size_t nargs, bool paramsAreComplex) const
+	{
+		Operations::op_ptr_type weakFit = nullptr;
+		for (auto p : _symbols)
+		{
+			if (p.first.first == name && p.first.second == nargs)
+			{
+				if (paramsAreComplex)
+				{
+					if (p.second->signature().areParams(Signature::type::complex)
+						|| p.second->signature().areParams(Signature::type::both))
+						return p.second;
+				}
+				else
+				{
+					if (p.second->signature().areParams(Signature::type::real)
+						|| p.second->signature().areParams(Signature::type::both))
+						return p.second;
+					else if (!weakFit)
+					{
+						weakFit = p.second;
+					}
+				}
+			}
+		}
+		return weakFit;
+	}
+
 	void Operations::add(const std::string &name, std::shared_ptr<MpOperation> obj)
 	{
 		_symbols.emplace(std::make_pair(name, obj->nargs()), obj);
@@ -620,7 +647,7 @@ namespace mathpresso
 		std::vector<std::string> names;
 		for (auto p : _symbols)
 		{
-			names.push_back(p.first.first);
+			names.push_back(p.first.first + " (" + p.second->signature().to_string() + ")");
 		}
 		return names;
 	}

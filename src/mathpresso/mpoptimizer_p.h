@@ -34,7 +34,7 @@ struct AstOptimizer : public AstVisitor {
   virtual Error onNode(AstNode * node) override;
 
   virtual Error onBlock(AstBlock* node);
-  virtual Error callMpOperation(AstVarDecl* node);
+  virtual Error onVarDecl(AstVarDecl* node);
   virtual Error onVar(AstVar* node);
   virtual Error onImm(AstImm* node);
   virtual Error optimize(AstNode * node);

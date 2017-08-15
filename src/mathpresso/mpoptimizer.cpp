@@ -13,7 +13,8 @@
 #include <mathpresso/mpoptimizer_p.h>
 #include <mathpresso/mpoperation.h>
 
-namespace mathpresso {
+namespace mathpresso
+{
 
 	// ============================================================================
 	// [mpsl::AstOptimizer - Construction / Destruction]
@@ -23,7 +24,8 @@ namespace mathpresso {
 		: AstVisitor(ast),
 		_errorReporter(errorReporter),
 		_ops(ops)
-	{}
+	{
+	}
 	AstOptimizer::~AstOptimizer() {}
 
 	// ============================================================================
@@ -34,23 +36,24 @@ namespace mathpresso {
 	{
 		switch (node->getNodeType())
 		{
-		case AstNodeType::kAstNodeProgram: return onProgram(static_cast<AstProgram*>(node));
-		case AstNodeType::kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
-		case AstNodeType::kAstNodeVar: return onVar(static_cast<AstVar*>(node));
-		case AstNodeType::kAstNodeImm: return onImm(static_cast<AstImm*>(node));
-		case AstNodeType::kAstNodeVarDecl:
-		case AstNodeType::kAstNodeUnaryOp:
-		case AstNodeType::kAstNodeBinaryOp:
-		case AstNodeType::kAstNodeTernaryOp:
-		case AstNodeType::kAstNodeCall:
-			return optimize(node);
+			case AstNodeType::kAstNodeProgram: return onProgram(static_cast<AstProgram*>(node));
+			case AstNodeType::kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
+			case AstNodeType::kAstNodeVar: return onVar(static_cast<AstVar*>(node));
+			case AstNodeType::kAstNodeImm: return onImm(static_cast<AstImm*>(node));
+			case AstNodeType::kAstNodeVarDecl:
+			case AstNodeType::kAstNodeUnaryOp:
+			case AstNodeType::kAstNodeBinaryOp:
+			case AstNodeType::kAstNodeTernaryOp:
+			case AstNodeType::kAstNodeCall:
+				return optimize(node);
 
-		default:
-			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorInvalidState);
+			default:
+				return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorInvalidState);
 		}
 	}
 
-	Error AstOptimizer::onBlock(AstBlock* node) {
+	Error AstOptimizer::onBlock(AstBlock* node)
+	{
 		// Prevent removing nodes that are not stored in pure `AstBlock`. For example
 		// function call inherits from `AstBlock`, but it needs each expression passed.
 		bool alterable = node->getNodeType() == kAstNodeBlock;
@@ -60,20 +63,21 @@ namespace mathpresso {
 		bool isComplex = false;
 
 		size_t i = 0;
-		while (i < curCount) 
+		while (i < curCount)
 		{
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
 
 			oldCount = curCount;
 			curCount = node->getLength();
 
-			if (curCount < oldCount) {
+			if (curCount < oldCount)
+			{
 				if (!alterable)
 					return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorInvalidState);
 				continue;
 			}
 
-			if (alterable && (node->getAt(i)->isImm())) 
+			if (alterable && (node->getAt(i)->isImm()))
 			{
 				_ast->deleteNode(node->removeAt(i));
 				curCount--;
@@ -92,14 +96,16 @@ namespace mathpresso {
 		return ErrorCode::kErrorOk;
 	}
 
-	Error AstOptimizer::callMpOperation(AstVarDecl* node) {
+	Error AstOptimizer::onVarDecl(AstVarDecl* node)
+	{
 		if (node->_mpOp)
 			return node->_mpOp->optimize(this, node);
 		return _errorReporter->onError(ErrorCode::kErrorInvalidState, node->getPosition(),
-			"No MpOperation.");
+									   "No MpOperation.");
 	}
 
-	Error AstOptimizer::onVar(AstVar* node) {
+	Error AstOptimizer::onVar(AstVar* node)
+	{
 		AstSymbol* sym = node->getSymbol();
 		bool b_complex = node->returnsComplex() || sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
 
@@ -120,46 +126,38 @@ namespace mathpresso {
 		return ErrorCode::kErrorOk;
 	}
 
-	Error AstOptimizer::onImm(AstImm* node) {
+	Error AstOptimizer::onImm(AstImm* node)
+	{
 		return ErrorCode::kErrorOk;
 	}
 
 	Error AstOptimizer::optimize(AstNode * node)
 	{
-		std::vector<std::shared_ptr<MpOperation>> availableOps = _ops->find(node->_opName);
-		
+
 		bool takesComplex = false;
-		for (size_t i = 0; i < node->getLength(); i++) 
+		for (size_t i = 0; i < node->getLength(); i++)
 		{
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
 			takesComplex |= node->getAt(i)->returnsComplex();
 		}
 
-		bool found = false;
-		for (auto p : availableOps)
-		{
-			if (p->nargs() == node->getLength() && p->signature().fits(false, takesComplex))
-			{
-				
-				found = true;
-				node->_mpOp = p;
-				break;
-			}
-		}
-
-		MATHPRESSO_ASSERT(found);
-
-		if (!node->_mpOp->signature().returnsReal())
-		{
-			node->addNodeFlags(AstNodeFlags::kAstReturnsComplex);
-		}
+		node->_mpOp = _ops->find(node->_opName, node->getLength(), takesComplex);
 
 		if (node->_mpOp)
 		{
+			if (!node->_mpOp->signature().returnsReal())
+			{
+				node->addNodeFlags(AstNodeFlags::kAstReturnsComplex);
+			}
+			if (takesComplex)
+			{
+				node->addNodeFlags(AstNodeFlags::kAstTakesComplex);
+			}
+
 			return node->_mpOp->optimize(this, node);
 		}
 		return _errorReporter->onError(ErrorCode::kErrorInvalidState, node->getPosition(),
-			"No MpOperation.");
+									   "No MpOperation.");
 	}
 
 	Error AstOptimizer::onUnaryOp(AstUnaryOp* node)

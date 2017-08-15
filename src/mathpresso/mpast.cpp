@@ -463,7 +463,7 @@ namespace mathpresso
 		{
 			case AstNodeType::kAstNodeProgram: return onProgram(static_cast<AstProgram*>(node));
 			case AstNodeType::kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
-			case AstNodeType::kAstNodeVarDecl: return callMpOperation(static_cast<AstVarDecl*>(node));
+			case AstNodeType::kAstNodeVarDecl: return onVarDecl(static_cast<AstVarDecl*>(node));
 			case AstNodeType::kAstNodeVar: return onVar(static_cast<AstVar*>(node));
 			case AstNodeType::kAstNodeImm: return onImm(static_cast<AstImm*>(node));
 			case AstNodeType::kAstNodeUnaryOp: return onUnaryOp(static_cast<AstUnaryOp*>(node));
@@ -509,11 +509,11 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error AstDump::callMpOperation(AstVarDecl* node)
+	Error AstDump::onVarDecl(AstVarDecl* node)
 	{
 		AstSymbol* sym = node->getSymbol();
 
-		nest("%s [VarDecl%s]", sym ? sym->getName() : static_cast<const char*>(NULL), (node->takesComplex() ? ", complex" : ""));
+		nest("%s [VarDecl%s]", sym ? sym->getName() : static_cast<const char*>(nullptr), (node->takesComplex() ? ", complex" : ""));
 		if (node->hasChild())
 			MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 		return denest();

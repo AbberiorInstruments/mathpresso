@@ -246,7 +246,15 @@ public:
 		std::string name(const MpOperation * ptr) const;
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
 
-		op_ptr_type find(const std::string &name, size_t nargs) const;
+		op_ptr_type find(const std::string & name, size_t nargs) const;
+
+		//! looks for a MpOperation-Object, where the parameters are complex or real.
+		//! if no direct match is found (ie there is no Operation with real parameters),
+		//! a conversion from real to complex is return.
+		//! generally the first direct match is return, and after that the first match with conversions.
+		//! returns nullptr, if no match is found.
+		op_ptr_type find(const std::string & name, size_t nargs, bool paramsAreComplex) const;
+
 		std::vector<op_ptr_type> find(const std::string &name) const;
 
 		void add(const std::string &name, op_ptr_type obj);
