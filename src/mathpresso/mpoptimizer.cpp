@@ -135,21 +135,28 @@ namespace mathpresso
 	{
 
 		bool takesComplex = false;
+
 		for (size_t i = 0; i < node->getLength(); i++)
 		{
 			MATHPRESSO_PROPAGATE(onNode(node->getAt(i)));
 			takesComplex |= node->getAt(i)->returnsComplex();
 		}
 
+		if (node->getNodeType() == AstNodeType::kAstNodeTernaryOp)
+		{
+			takesComplex = node->getAt(1)->returnsComplex() || node->getAt(2)->returnsComplex();
+		}
+
 		node->_mpOp = _ops->find(node->_opName, node->getLength(), takesComplex);
 
 		if (node->_mpOp)
 		{
-			if (!node->_mpOp->signature().returnsReal())
+			if (node->_mpOp->signature().returnsComplex())
 			{
 				node->addNodeFlags(AstNodeFlags::kAstReturnsComplex);
 			}
-			if (takesComplex)
+
+			if (node->_mpOp->signature().areParams(Signature::type::complex))
 			{
 				node->addNodeFlags(AstNodeFlags::kAstTakesComplex);
 			}

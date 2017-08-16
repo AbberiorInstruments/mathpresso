@@ -4,7 +4,8 @@
 namespace mathpresso
 {
 	// isfinite
-	class MpOperationIsFinite : public MpOperationFunc
+	template<typename T>
+	class MpOperationIsFinite : public MpOperationFunc<T, T>
 	{
 	public:
 		MpOperationIsFinite();
@@ -12,7 +13,8 @@ namespace mathpresso
 	};
 
 	// isinf
-	class MpOperationIsInfinite : public MpOperationFunc
+	template<typename T>
+	class MpOperationIsInfinite : public MpOperationFunc<T, T>
 	{
 	public:
 		MpOperationIsInfinite();
@@ -20,7 +22,8 @@ namespace mathpresso
 	};
 
 	// isnan
-	class MpOperationIsNan : public MpOperationFunc
+	template<typename T>
+	class MpOperationIsNan : public MpOperationFunc<T, T>
 	{
 	public:
 		MpOperationIsNan();
@@ -28,7 +31,7 @@ namespace mathpresso
 	};
 
 	// real
-	class MpOperationGetReal : public MpOperationFunc
+	class MpOperationGetReal : public MpOperationFunc<double, std::complex<double>>
 	{
 	public:
 		MpOperationGetReal();
@@ -36,7 +39,7 @@ namespace mathpresso
 	};
 
 	// imag
-	class MpOperationGetImag : public MpOperationFunc
+	class MpOperationGetImag : public MpOperationFunc<double, std::complex<double>>
 	{
 	public:
 		MpOperationGetImag();
@@ -44,7 +47,7 @@ namespace mathpresso
 	};
 
 	// Square root
-	class MpOperationSqrt : public MpOperationFunc
+	class MpOperationSqrt : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationSqrt();
@@ -52,7 +55,8 @@ namespace mathpresso
 	};
 
 	// Negation
-	class MpOperationNeg : public MpOperationFunc
+	template<typename T>
+	class MpOperationNeg : public MpOperationFunc<T, T>
 	{
 	public:
 		MpOperationNeg();
@@ -62,7 +66,8 @@ namespace mathpresso
 	};
 
 	// Not
-	class MpOperationNot : public MpOperationFunc
+	template<typename T>
+	class MpOperationNot : public MpOperationFunc<T, T>
 	{
 	public:
 		MpOperationNot();
@@ -70,7 +75,7 @@ namespace mathpresso
 	};
 
 	// conjugate
-	class MpOperationConjug :public MpOperationFunc
+	class MpOperationConjug :public MpOperationFunc<std::complex<double>, std::complex<double>>
 	{
 	public:
 		MpOperationConjug();
@@ -80,7 +85,8 @@ namespace mathpresso
 	};
 
 	// Reciprocate
-	class MpOperationRecip :public MpOperationFunc
+	template<typename T>
+	class MpOperationRecip :public MpOperationFunc<T,T>
 	{
 	public:
 		MpOperationRecip();
@@ -88,7 +94,7 @@ namespace mathpresso
 	};
 
 	// Sign bit
-	class MpOperationSignBit : public MpOperationFunc
+	class MpOperationSignBit : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationSignBit();
@@ -96,7 +102,7 @@ namespace mathpresso
 	};
 
 	// copy sign
-	class MpOperationCopySign : public MpOperationFunc
+	class MpOperationCopySign : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationCopySign();
@@ -104,7 +110,8 @@ namespace mathpresso
 	};
 
 	// Average
-	class MpOperationAvg : public MpOperationFunc
+	template<typename T>
+	class MpOperationAvg : public MpOperationFunc<T,T>
 	{
 	public:
 		MpOperationAvg();
@@ -112,7 +119,7 @@ namespace mathpresso
 	};
 
 	// Absolute
-	class MpOperationAbs : public MpOperationFunc
+	class MpOperationAbs : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationAbs();
@@ -120,7 +127,7 @@ namespace mathpresso
 	};
 
 	// round
-	class MpOperationRound : public MpOperationFunc
+	class MpOperationRound : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationRound();
@@ -130,7 +137,7 @@ namespace mathpresso
 	};
 
 	// roundeven
-	class MpOperationRoundEven : public MpOperationFunc
+	class MpOperationRoundEven : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationRoundEven();
@@ -140,7 +147,7 @@ namespace mathpresso
 	};
 
 	// trunc
-	class MpOperationTrunc : public MpOperationFunc
+	class MpOperationTrunc : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationTrunc();
@@ -148,7 +155,7 @@ namespace mathpresso
 	};
 
 	// frac
-	class MpOperationFrac : public MpOperationFunc
+	class MpOperationFrac : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationFrac();
@@ -156,7 +163,7 @@ namespace mathpresso
 	};
 
 	// floor
-	class MpOperationFloor : public MpOperationFunc
+	class MpOperationFloor : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationFloor();
@@ -164,7 +171,7 @@ namespace mathpresso
 	};
 
 	// ceil
-	class MpOperationcCeil : public MpOperationFunc
+	class MpOperationcCeil : public MpOperationFunc<double, double>
 	{
 	public:
 		MpOperationcCeil();
@@ -252,10 +259,7 @@ namespace mathpresso
 	class MpOperationEq : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationEq() :
-			MpOperationBinary<T>(Signature(2, Signature::type::both, MpOperationFlags::OpIsCommutativ  | MpOperationFlags::OpFlagIsOperator), 9)
-		{
-		}
+		MpOperationEq();
 
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
@@ -345,12 +349,11 @@ namespace mathpresso
 	};
 
 	// Ternary Operation
+	template<typename T>
 	class MpOperationTernary : public MpOperation
 	{
 	public:
-		MpOperationTernary() : MpOperation(Signature(3, Signature::type::both, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), 15)
-		{
-		}
+		MpOperationTernary();
 
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
@@ -359,14 +362,11 @@ namespace mathpresso
 	};
 
 	// Assignment
+	template<typename T>
 	class MpOperationAssignment : public MpOperation
 	{
 	public:
-		MpOperationAssignment() : MpOperation(Signature(1, Signature::type::both, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment), 15)
-		{
-		}
-
-
+		MpOperationAssignment();
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
 	};

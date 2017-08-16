@@ -611,14 +611,12 @@ namespace mathpresso
 			{
 				if (paramsAreComplex)
 				{
-					if (p.second->signature().areParams(Signature::type::complex)
-						|| p.second->signature().areParams(Signature::type::both))
+					if (p.second->signature().areParams(Signature::type::complex))
 						return p.second;
 				}
 				else
 				{
-					if (p.second->signature().areParams(Signature::type::real)
-						|| p.second->signature().areParams(Signature::type::both))
+					if (p.second->signature().areParams(Signature::type::real))
 						return p.second;
 					else if (!weakFit)
 					{

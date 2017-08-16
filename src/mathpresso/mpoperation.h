@@ -61,8 +61,7 @@ namespace mathpresso
 		enum class type
 		{
 			real = 0,
-			complex = 1,
-			both = 3 // intermediate, until MpOperation-Objects are separated.
+			complex = 1
 		};
 
 		struct param
@@ -89,7 +88,7 @@ namespace mathpresso
 			bool ret = true;
 			for (auto p : parameters_)
 			{
-				ret &= (p.type_ != type::real);
+				ret &= (p.type_ == type::complex);
 			}
 			return ret;
 		}
@@ -106,7 +105,7 @@ namespace mathpresso
 
 		bool returnsComplex() const
 		{
-			return return_type_ != type::real;
+			return return_type_ == type::complex;
 		}
 
 		bool returnsReal() const
@@ -143,7 +142,6 @@ namespace mathpresso
 			{
 				case type::real: return "real";
 				case type::complex: return "complex";
-				case type::both: return "both";
 				default:
 					throw std::runtime_error("unknown type.");
 			}
@@ -207,63 +205,20 @@ namespace mathpresso
 		uint32_t priority_;
 	};
 
+	template<typename RET, typename PARAM>
 	class MATHPRESSO_API MpOperationFunc : public MpOperation
 	{
 	public:
 		// Con-/Destructor
-		MpOperationFunc(const Signature & signature, void * fnD, void * fnC, uint32_t priority = 0) : MpOperation(signature, priority),
-			fnD_(fnD),
-			fnC_(fnC)
-		{
-		}
-
-		virtual ~MpOperationFunc()
-		{
-		}
-
-		bool hasFlag(uint32_t flag) const
-		{
-			return flag & flags_;
-		}
-
-		void addFlags(uint32_t flags)
-		{
-			flags_ |= flags;
-		}
-
-		void removeFlags(uint32_t flags)
-		{
-			flags_ &= ~flags;
-		}
-
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
-
-	protected:
-		virtual double evaluateDRetD(double *args) const;
-		virtual std::complex<double> evaluateDRetC(double *args) const;
-		virtual double evaluateCRetD(std::complex<double> *args) const;
-		virtual std::complex<double> evaluateCRetC(std::complex<double> *args) const;
-
-		// Function-pointer:
-		void * fnC_;
-		void * fnD_;
-	};
-
-	template<typename RET, typename PARAM>
-	class MATHPRESSO_API MpOperationFuncTemp : public MpOperation
-	{
-	public:
-		// Con-/Destructor
-		MpOperationFuncTemp(const Signature & signature, void * fnPtr, uint32_t priority = 0) : MpOperation(signature, priority),
+		MpOperationFunc(const Signature & signature, void * fnPtr, uint32_t priority = 0) : MpOperation(signature, priority),
 			fnPtr_(fnPtr)
 		{
 		}
 
 		// Con-/Destructor
-		MpOperationFuncTemp(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority = 0);
+		MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority = 0);
 
-		virtual ~MpOperationFuncTemp()
+		virtual ~MpOperationFunc()
 		{
 		}
 
