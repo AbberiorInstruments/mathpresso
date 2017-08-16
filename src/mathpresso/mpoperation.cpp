@@ -408,7 +408,7 @@ namespace mathpresso
 			throw std::runtime_error("Function does not exist.");
 		}
 #ifdef _REALREWORK
-		return ((mpFuncDtoD)fnD_)(args);
+		return ((mpFuncDtoD)fnPtr_)(args);
 #else
 		switch (nargs_)
 		{

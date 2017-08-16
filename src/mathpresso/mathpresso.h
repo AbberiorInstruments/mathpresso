@@ -20,6 +20,9 @@
 #include <stdint.h>
 #endif
 
+// uncomment, if you want to use the same syntax for function-calls.
+//#define _REALREWORK
+
 namespace mathpresso
 {
 
