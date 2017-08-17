@@ -151,7 +151,7 @@ namespace mathpresso
 
 		if (node->_mpOp)
 		{
-			if (node->_mpOp->signature().returnsComplex())
+			if (node->_mpOp->signature().return_type_ == Signature::type::complex)
 			{
 				node->addNodeFlags(AstNodeFlags::kAstReturnsComplex);
 			}

@@ -34,16 +34,6 @@ namespace mathpresso
 
 		OpIsCommutativ = 0x00000010,
 
-		// Set, if no (complex|real) function is available.
-		OpHasNoComplex = 0x00000020,
-		OpHasNoReal = 0x00000040,
-
-		// Types of Operation that are allowed.
-		OpFlagCReturnsD = 0x0000100,
-		OpFlagDReturnsC = 0x0000200,
-
-		_OpFlagsignature = OpHasNoComplex | OpHasNoReal | OpFlagCReturnsD | OpFlagDReturnsC,
-
 		// some information, that is necessary for parsing:
 		OpIsAssgignment = 0x0001000,
 
@@ -69,28 +59,24 @@ namespace mathpresso
 			type type_;
 			std::string name_;
 		};
-		Signature() {}
 
-		Signature(type retType, std::vector<param> params, uint32_t flags);
-
-		Signature(size_t nargs, type paramType, uint32_t flags) :
-			Signature(paramType, { nargs,{ paramType, "" } }, flags)
+		Signature() 
 		{
 		}
 
-		Signature(size_t nargs, uint32_t flags = MpOperationFlags::OpFlagNone) :
-			Signature(nargs, type::real, flags | MpOperationFlags::OpHasNoComplex)
+		Signature(type retType, std::vector<param> params, uint32_t flags)
 		{
+			init(retType, params, flags);
 		}
 
-		bool takesComplex() const
+		Signature(size_t nargs, type paramType, uint32_t flags)
 		{
-			bool ret = true;
-			for (auto p : parameters_)
-			{
-				ret &= (p.type_ == type::complex);
-			}
-			return ret;
+			init(paramType, { nargs, { paramType, "" } }, flags);
+		}
+
+		Signature(size_t nargs, uint32_t flags = MpOperationFlags::OpFlagNone)
+		{
+			init(type::real, { nargs, {type::real, ""} }, flags);
 		}
 
 		bool areParams(type _type) const
@@ -103,15 +89,15 @@ namespace mathpresso
 			return ret;
 		}
 
-		bool returnsComplex() const
+		/*bool returnsComplex() const
 		{
 			return return_type_ == type::complex;
-		}
+		}*/
 
-		bool returnsReal() const
+		/*bool returnsReal() const
 		{
 			return return_type_ != type::complex;
-		}
+		}*/
 
 		std::string to_string()
 		{
@@ -146,6 +132,8 @@ namespace mathpresso
 					throw std::runtime_error("unknown type.");
 			}
 		}
+
+		void init(type retType, std::vector<param> params, uint32_t flags);
 	};
 
 	class MATHPRESSO_API MpOperation

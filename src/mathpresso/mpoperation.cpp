@@ -220,42 +220,11 @@ namespace mathpresso
 		return 0;
 	}
 
-	Signature::Signature(type retType, std::vector<param> params, uint32_t flags) :
-		return_type_(retType),
-		parameters_(params),
-		flags_(flags)
+	void Signature::init(type retType, std::vector<param> params, uint32_t flags)
 	{
-		bool paramsReal(true);
-		bool paramsComplex(true);
-
-		for (auto p : parameters_)
-		{
-			paramsReal &= p.type_ == type::real;
-			paramsComplex &= p.type_ == type::complex;
-		}
-		if (paramsComplex)
-		{
-			if (return_type_ == type::real)
-			{
-				flags_ |= MpOperationFlags::OpFlagCReturnsD;
-			}
-		}
-		else
-		{
-			flags_ |= MpOperationFlags::OpHasNoComplex;
-		}
-
-		if (paramsReal)
-		{
-			if (return_type_ == type::complex)
-			{
-				flags_ |= MpOperationFlags::OpFlagDReturnsC;
-			}
-		}
-		else
-		{
-			flags_ |= MpOperationFlags::OpHasNoReal;
-		}
+		return_type_ = retType;
+		parameters_ = params;
+		flags_ = flags;
 	}
 
 	template<>
@@ -311,7 +280,6 @@ namespace mathpresso
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmSd();
 		asmjit::X86Xmm args[8];
-		bool returnsComplex = hasFlag(MpOperationFlags::OpFlagDReturnsC);
 		if (!fnPtr_)
 		{
 			// Should never happen, as the optimizer should have taken care of that. Remove later
@@ -332,7 +300,6 @@ namespace mathpresso
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmPd();
 		asmjit::X86Xmm args[8];
-		bool returnsComplex = !hasFlag(MpOperationFlags::OpFlagCReturnsD);
 		if (!fnPtr_)
 		{
 			// Should never happen, as the optimizer should have taken care of that. Remove later
@@ -352,7 +319,6 @@ namespace mathpresso
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmPd();
 		asmjit::X86Xmm args[8];
-		bool returnsComplex = hasFlag(MpOperationFlags::OpFlagDReturnsC);
 		if (!fnPtr_)
 		{
 			// Should never happen, as the optimizer should have taken care of that. Remove later
