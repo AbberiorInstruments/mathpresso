@@ -60,23 +60,14 @@ namespace mathpresso
 			std::string name_;
 		};
 
-		Signature() 
+		Signature(type retType, std::vector<param> params)
 		{
+			init(retType, params);
 		}
 
-		Signature(type retType, std::vector<param> params, uint32_t flags)
+		Signature(size_t nargs, type paramType = type::real)
 		{
-			init(retType, params, flags);
-		}
-
-		Signature(size_t nargs, type paramType, uint32_t flags)
-		{
-			init(paramType, { nargs, { paramType, "" } }, flags);
-		}
-
-		Signature(size_t nargs, uint32_t flags = MpOperationFlags::OpFlagNone)
-		{
-			init(type::real, { nargs, {type::real, ""} }, flags);
+			init(paramType, { nargs, { paramType, "" } });
 		}
 
 		bool areParams(type _type) const
@@ -88,16 +79,6 @@ namespace mathpresso
 			}
 			return ret;
 		}
-
-		/*bool returnsComplex() const
-		{
-			return return_type_ == type::complex;
-		}*/
-
-		/*bool returnsReal() const
-		{
-			return return_type_ != type::complex;
-		}*/
 
 		std::string to_string()
 		{
@@ -119,8 +100,6 @@ namespace mathpresso
 
 		type return_type_;
 		std::vector<param> parameters_;
-		uint32_t flags_;
-
 	private :
 		std::string typeToString(type _type)
 		{
@@ -133,7 +112,7 @@ namespace mathpresso
 			}
 		}
 
-		void init(type retType, std::vector<param> params, uint32_t flags);
+		void init(type retType, std::vector<param> params);
 	};
 
 	class MATHPRESSO_API MpOperation
@@ -141,17 +120,17 @@ namespace mathpresso
 	public:
 		// Con-/Destructor
 		MpOperation(size_t nargs, uint32_t flags, uint32_t priority = 0) :
-			signature_(nargs, Signature::type::real, flags),
+			signature_(nargs, Signature::type::real),
 			nargs_(nargs),
 			flags_(flags),
 			priority_(priority)
 		{
 		}
 
-		MpOperation(const Signature &s, uint32_t priority = 0) :
+		MpOperation(const Signature &s, uint32_t flags, uint32_t priority = 0) :
 			signature_(s),
 			nargs_(s.parameters_.size()),
-			flags_(s.flags_),
+			flags_(flags),
 			priority_(priority)
 		{
 		}
@@ -239,8 +218,8 @@ namespace mathpresso
 	class MATHPRESSO_API MpOperationBinary : public MpOperation
 	{
 	public:
-		MpOperationBinary(const Signature &signature, uint32_t priority) :
-			MpOperation(signature, priority)
+		MpOperationBinary(const Signature &signature, uint32_t flags, uint32_t priority) :
+			MpOperation(signature, flags, priority)
 		{
 		}
 

@@ -220,37 +220,36 @@ namespace mathpresso
 		return 0;
 	}
 
-	void Signature::init(type retType, std::vector<param> params, uint32_t flags)
+	void Signature::init(type retType, std::vector<param> params)
 	{
 		return_type_ = retType;
 		parameters_ = params;
-		flags_ = flags;
 	}
 
 	template<>
 	MpOperationFunc<double, double>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
-		MpOperation(Signature(numargs, Signature::type::real, flags), priority),
+		MpOperation(Signature(numargs, Signature::type::real), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}
 
 	template<>
 	MpOperationFunc<std::complex<double>, double>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
-		MpOperation(Signature(Signature::type::complex, { numargs,{ Signature::type::real } }, flags), priority),
+		MpOperation(Signature(Signature::type::complex, { numargs,{ Signature::type::real } }), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}
 
 	template<>
 	MpOperationFunc<double, std::complex<double>>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
-		MpOperation(Signature(Signature::type::real, { numargs, {Signature::type::complex} }, flags), priority),
+		MpOperation(Signature(Signature::type::real, { numargs, {Signature::type::complex} }), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}
 
 	template<>
 	MpOperationFunc<std::complex<double>, std::complex<double>>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
-		MpOperation(Signature(numargs, Signature::type::complex, flags), priority),
+		MpOperation(Signature(numargs, Signature::type::complex), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}
@@ -1286,12 +1285,12 @@ namespace mathpresso
 
 	template<>
 	MpOperationAdd<double>::MpOperationAdd() :
-		MpOperationBinary<double>(Signature(2, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 6)
+		MpOperationBinary<double>(Signature(2), MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator, 6)
 	{
 	}
 	template<>
 	MpOperationAdd<std::complex<double>>::MpOperationAdd() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 6)
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator, 6)
 	{
 	}
 
@@ -1335,12 +1334,12 @@ namespace mathpresso
 	// Subtraction
 	template<>
 	MpOperationSub<double>::MpOperationSub() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagIsOperator), 6)
+		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagIsOperator, 6)
 	{
 	}
 	template<>
 	MpOperationSub<std::complex<double>>::MpOperationSub() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex, MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagIsOperator), 6)
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationFlags::OpFlagNopIfRZero | MpOperationFlags::OpFlagIsOperator, 6)
 	{
 	}
 
@@ -1383,12 +1382,12 @@ namespace mathpresso
 	// Multiplication
 	template<>
 	MpOperationMul<double>::MpOperationMul() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 5)
+		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator, 5)
 	{
 	}
 	template<>
 	MpOperationMul<std::complex<double>>::MpOperationMul() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex, MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 5)
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationFlags::OpFlagNopIfZero | MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator, 5)
 	{
 	}
 
@@ -1440,12 +1439,12 @@ namespace mathpresso
 	// Division
 	template<>
 	MpOperationDiv<double>::MpOperationDiv() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagIsOperator), 5)
+		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagIsOperator, 5)
 	{
 	}
 	template<>
 	MpOperationDiv<std::complex<double>>::MpOperationDiv() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex, MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagIsOperator), 5)
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationFlags::OpFlagNopIfLOne | MpOperationFlags::OpFlagIsOperator, 5)
 	{
 	}
 	template<>
@@ -1538,12 +1537,12 @@ namespace mathpresso
 	// Equality
 	template<>
 	MpOperationEq<double>::MpOperationEq() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 9)
+		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator,9)
 	{
 	}
 	template<>
 	MpOperationEq<std::complex<double>>::MpOperationEq() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 9)
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator,9)
 	{
 	}
 
@@ -1588,12 +1587,12 @@ namespace mathpresso
 	// Inequality
 	template<>
 	MpOperationNe<double>::MpOperationNe() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 9)
+		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator,9)
 	{
 	}
 	template<>
 	MpOperationNe<std::complex<double>>::MpOperationNe() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex, MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator), 9)
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationFlags::OpIsCommutativ | MpOperationFlags::OpFlagIsOperator,9)
 	{
 	}
 
@@ -1786,11 +1785,11 @@ namespace mathpresso
 	// Ternary operation
 
 	template<>
-	MpOperationTernary<double>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::real, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), 15)
+	MpOperationTernary<double>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::real), MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator,15)
 	{
 	}
 	template<>
-	MpOperationTernary<std::complex<double>>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::complex, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator), 15)
+	MpOperationTernary<std::complex<double>>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::complex), MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpFlagIsOperator,15)
 	{
 	}
 
@@ -1890,11 +1889,11 @@ namespace mathpresso
 
 	// Assignment
 	template<>
-	MpOperationAssignment<double>::MpOperationAssignment() : MpOperation(Signature(1, Signature::type::real, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment), 15)
+	MpOperationAssignment<double>::MpOperationAssignment() : MpOperation(Signature(1, Signature::type::real), MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment,15)
 	{
 	}
 	template<>
-	MpOperationAssignment<std::complex<double>>::MpOperationAssignment() : MpOperation(Signature(1, Signature::type::complex, MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment), 15)
+	MpOperationAssignment<std::complex<double>>::MpOperationAssignment() : MpOperation(Signature(1, Signature::type::complex), MpOperationFlags::OpIsRighttoLeft | MpOperationFlags::OpIsAssgignment,15)
 	{
 	}
 

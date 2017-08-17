@@ -231,7 +231,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationMin() :
-			MpOperationBinary<double>(Signature(2), 0)
+			MpOperationBinary<double>(Signature(2), MpOperationFlags::OpFlagNone, 0)
 		{
 		}
 
@@ -245,7 +245,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationMax() :
-			MpOperationBinary<double>(Signature(2), 0)
+			MpOperationBinary<double>(Signature(2), MpOperationFlags::OpFlagNone, 0)
 		{
 		}
 
@@ -283,7 +283,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationLt() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagIsOperator), 8)
+			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpFlagIsOperator, 8)
 		{
 		}
 
@@ -297,7 +297,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationLe() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagIsOperator), 8)
+			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpFlagIsOperator, 8)
 		{
 		}
 
@@ -311,7 +311,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationGt() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagIsOperator), 8)
+			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpFlagIsOperator, 8)
 		{
 		}
 
@@ -325,7 +325,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationGe() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real, MpOperationFlags::OpFlagIsOperator), 8)
+			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpFlagIsOperator, 8)
 		{
 		}
 
@@ -339,7 +339,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationModulo() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real,  MpOperationFlags::OpFlagIsOperator), 5)
+			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationFlags::OpFlagIsOperator, 5)
 		{
 		}
 
