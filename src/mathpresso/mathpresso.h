@@ -243,12 +243,10 @@ public:
 	class Operations
 	{
 		using op_ptr_type = std::shared_ptr<MpOperation>;
-		using op_map_type = std::multimap<std::pair<std::string, size_t>, op_ptr_type>;
+		using op_map_type = std::map<std::string, std::vector<op_ptr_type>>;
 	
 	public:
-		std::string name(const MpOperation * ptr) const;
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
-
 		op_ptr_type find(const std::string & name, size_t nargs) const;
 
 		//! looks for a MpOperation-Object, where the parameters are complex or real.
@@ -261,7 +259,7 @@ public:
 		std::vector<op_ptr_type> find(const std::string &name) const;
 
 		void add(const std::string &name, op_ptr_type obj);
-		void remove(const std::string &name, size_t nargs);
+		void remove(const std::string &name);
 
 		std::vector<std::string> names() const;
 	private:
@@ -311,18 +309,18 @@ public:
 		MATHPRESSO_API Error addBuiltIns(void);
 
 		//! Add constant to this context.
-		MATHPRESSO_API Error addConstant(const char* name, double value);
-		MATHPRESSO_API Error addConstant(const char * name, std::complex<double> value);
+		MATHPRESSO_API Error addConstant(const std::string &name, double value);
+		MATHPRESSO_API Error addConstant(const std::string &name, std::complex<double> value);
 		//! Add variable to this context.
-		MATHPRESSO_API Error addVariable(const char* name, int offset, unsigned int flags = VariableFlags::kVariableRW);
+		MATHPRESSO_API Error addVariable(const std::string &name, int offset, unsigned int flags = VariableFlags::kVariableRW);
 
 		//! Adding Operations to the Context, which can contain function calls. See mpoeration.h for more information.
-		MATHPRESSO_API Error addObject(std::string name, std::shared_ptr<MpOperation> obj);
+		MATHPRESSO_API Error addObject(const std::string &name, std::shared_ptr<MpOperation> obj);
 
 		//! Internal implementation
-		MATHPRESSO_API Error addSymbol(AstSymbol* &sym, const char * name, int type);
+		MATHPRESSO_API Error addSymbol(AstSymbol* &sym, const std::string &name, int type);
 		//! Delete symbol from this context.
-		MATHPRESSO_API Error delSymbol(const char* name);
+		MATHPRESSO_API Error delSymbol(const std::string &name);
 
 		//! Retrieve a list of all available symbols (Functions, operators and constants)
 		MATHPRESSO_API Error listSymbols(std::vector<std::string> &syms);

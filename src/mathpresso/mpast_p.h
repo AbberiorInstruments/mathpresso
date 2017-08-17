@@ -1035,7 +1035,7 @@ namespace mathpresso
 
 		void destroy(AstBuilder* ast)
 		{
-			if (_mpOp && (_mpOp->flags() & MpOperationFlags::OpIsAssgignment) && hasLeft())
+			if (_mpOp && (_mpOp->flags() & MpOperation::IsAssignment) && hasLeft())
 			{
 				AstVar* var = static_cast<AstVar*>(getLeft());
 				AstSymbol* sym = var->getSymbol();

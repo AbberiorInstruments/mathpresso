@@ -147,6 +147,7 @@ namespace mathpresso
 			takesComplex = node->getAt(1)->returnsComplex() || node->getAt(2)->returnsComplex();
 		}
 
+		// Find optimal signature
 		node->_mpOp = _ops->find(node->_opName, node->getLength(), takesComplex);
 
 		if (node->_mpOp)

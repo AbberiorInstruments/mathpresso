@@ -25,27 +25,6 @@ namespace mathpresso
 
 	typedef JitVar(*mpAsmFunc)(JitCompiler*, JitVar*);
 
-	enum MpOperationFlags
-	{
-		OpFlagNone = 0,
-		OpFlagIsOperator = 0x00000001,
-		OpFlagHasState = 0x00000002,
-		OpIsRighttoLeft = 0x00000008,
-
-		OpIsCommutativ = 0x00000010,
-
-		// some information, that is necessary for parsing:
-		OpIsAssgignment = 0x0001000,
-
-		// Set for optimization of binary operations
-		OpFlagNopIfLZero = 0x10000000,
-		OpFlagNopIfRZero = 0x20000000,
-		OpFlagNopIfLOne = 0x40000000,
-		OpFlagNopIfROne = 0x80000000,
-		OpFlagNopIfZero = OpFlagNopIfLZero | OpFlagNopIfRZero,
-		OpFlagNopIfOne = OpFlagNopIfLOne | OpFlagNopIfROne
-	};
-
 	struct MATHPRESSO_API Signature
 	{
 		enum class type
@@ -60,78 +39,34 @@ namespace mathpresso
 			std::string name_;
 		};
 
-		Signature(type retType, std::vector<param> params)
-		{
-			init(retType, params);
-		}
+		Signature(type retType, std::vector<param> params);
+		Signature(size_t nargs, type paramType = type::real);
 
-		Signature(size_t nargs, type paramType = type::real)
-		{
-			init(paramType, { nargs, { paramType, "" } });
-		}
-
-		bool areParams(type _type) const
-		{
-			bool ret = true;
-			for (auto p : parameters_)
-			{
-				ret &= (p.type_ == _type);
-			}
-			return ret;
-		}
-
-		std::string to_string()
-		{
-			std::string out("");
-			out += typeToString(return_type_);
-			out += " (";
-			for (size_t i = 0; i < parameters_.size(); i++)
-			{
-				out += typeToString(parameters_[i].type_);
-				if (parameters_[i].name_ != "")
-					out += " " + parameters_[i].name_;
-				if (i != parameters_.size() -1)
-				out += ", ";
-			}
-			out += ")";
-			return out;
-		}
-
+		bool areParams(type _type) const;
+		std::string to_string();
 
 		type return_type_;
 		std::vector<param> parameters_;
 	private :
-		std::string typeToString(type _type)
-		{
-			switch (_type)
-			{
-				case type::real: return "real";
-				case type::complex: return "complex";
-				default:
-					throw std::runtime_error("unknown type.");
-			}
-		}
-
+		std::string typeToString(type _type);
 		void init(type retType, std::vector<param> params);
 	};
 
 	class MATHPRESSO_API MpOperation
 	{
 	public:
-		// Con-/Destructor
-		MpOperation(size_t nargs, uint32_t flags, uint32_t priority = 0) :
-			signature_(nargs, Signature::type::real),
-			nargs_(nargs),
-			flags_(flags),
-			priority_(priority)
+		enum Flags
 		{
-		}
+			None = 0,
+			FlagHasState = 0x00000002,
+			RighttoLeft = 0x00000008,
+			IsAssignment = 0x0001000,
+		};
 
 		MpOperation(const Signature &s, uint32_t flags, uint32_t priority = 0) :
 			signature_(s),
-			nargs_(s.parameters_.size()),
 			flags_(flags),
-			priority_(priority)
+			precedence_(priority)
 		{
 		}
 
@@ -146,15 +81,15 @@ namespace mathpresso
 
 		size_t nargs() const
 		{
-			return nargs_;
+			return signature_.parameters_.size();
 		}
 		bool isRightToLeft() const
 		{
-			return (flags_ & OpIsRighttoLeft) != 0;
+			return (flags_ & RighttoLeft) != 0;
 		}
 		uint32_t precedence() const
 		{
-			return priority_;
+			return precedence_;
 		}
 		uint32_t flags() const
 		{
@@ -164,12 +99,10 @@ namespace mathpresso
 		{
 			return signature_;
 		}
-
 	protected:
 		Signature signature_;
-		size_t nargs_;
 		uint32_t flags_;
-		uint32_t priority_;
+		uint32_t precedence_;
 	};
 
 	template<typename RET, typename PARAM>
@@ -194,16 +127,6 @@ namespace mathpresso
 			return flag & flags_;
 		}
 
-		void addFlags(uint32_t flags)
-		{
-			flags_ |= flags;
-		}
-
-		void removeFlags(uint32_t flags)
-		{
-			flags_ &= ~flags;
-		}
-
 		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
 		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
 
@@ -218,6 +141,17 @@ namespace mathpresso
 	class MATHPRESSO_API MpOperationBinary : public MpOperation
 	{
 	public:
+		enum Flags
+		{
+			NopIfLZero = 0x10000000,
+			NopIfRZero = 0x20000000,
+			NopIfLOne = 0x40000000,
+			NopIfROne = 0x80000000,
+			NopIfZero = NopIfLZero | NopIfRZero,
+			NopIfOne = NopIfLOne | NopIfROne,
+			IsCommutativ = 0x00000010
+		};
+
 		MpOperationBinary(const Signature &signature, uint32_t flags, uint32_t priority) :
 			MpOperation(signature, flags, priority)
 		{
@@ -237,17 +171,6 @@ namespace mathpresso
 		{
 			return flag & flags_;
 		}
-
-		void addFlags(uint32_t flags)
-		{
-			flags_ |= flags;
-		}
-
-		void removeFlags(uint32_t flags)
-		{
-			flags_ &= ~flags;
-		}
-
 	protected:
 		// These are called by compile() and should only contain the asm-statements. vl will always
 		// be in a register, vr can be in Register or in Memory.

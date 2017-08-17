@@ -234,18 +234,17 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Context::addSymbol(AstSymbol* &sym, const char * name, int type)
+	Error Context::addSymbol(AstSymbol* &sym, const std::string &name, int type)
 	{
 		ContextInternalImpl* d;
 		MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
 
-		size_t nlen = strlen(name);
-		uint32_t hVal = HashUtils::hashString(name, nlen);
-		sym = d->_scope.getSymbol(std::string(name, nlen), hVal);
+		uint32_t hVal = HashUtils::hashString(name.c_str(), name.length());
+		sym = d->_scope.getSymbol(name, hVal);
 		if (sym != nullptr)
 			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorSymbolAlreadyExists);
 
-		sym = d->_builder.newSymbol(std::string(name, nlen), hVal, type, AstScopeType::kAstScopeGlobal);
+		sym = d->_builder.newSymbol(name, hVal, type, AstScopeType::kAstScopeGlobal);
 		if (sym == nullptr)
 			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
 		d->_scope.putSymbol(sym);
@@ -253,7 +252,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Context::addConstant(const char* name, double value)
+	Error Context::addConstant(const std::string &name, double value)
 	{
 		AstSymbol* sym;
 		MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
@@ -264,7 +263,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Context::addConstant(const char* name, std::complex<double> value)
+	Error Context::addConstant(const std::string &name, std::complex<double> value)
 	{
 		AstSymbol* sym;
 		MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
@@ -275,7 +274,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Context::addVariable(const char* name, int offset, unsigned int flags)
+	Error Context::addVariable(const std::string &name, int offset, unsigned int flags)
 	{
 		AstSymbol* sym;
 		MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
@@ -293,7 +292,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Context::addObject(std::string name, std::shared_ptr<MpOperation> obj)
+	Error Context::addObject(const std::string &name, std::shared_ptr<MpOperation> obj)
 	{
 		AstSymbol * sym;
 		Error e = addSymbol(sym, name.c_str(), AstSymbolType::kAstSymbolFunction);
@@ -331,19 +330,18 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Context::delSymbol(const char* name)
+	Error Context::delSymbol(const std::string &name)
 	{
 		ContextInternalImpl* d;
 		MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
 
-		size_t nlen = strlen(name);
-		uint32_t hVal = HashUtils::hashString(name, nlen);
+		uint32_t hVal = HashUtils::hashString(name.c_str(), name.length());
 
-		AstSymbol* sym = d->_scope.getSymbol(std::string(name, nlen), hVal);
+		AstSymbol* sym = d->_scope.getSymbol(name, hVal);
 		if (sym == nullptr)
 			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorSymbolNotFound);
 
-		_ops.remove(name, sym->getLength());
+		_ops.remove(name);
 		d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
 
 		return ErrorCode::kErrorOk;
@@ -557,70 +555,67 @@ namespace mathpresso
 		return MATHPRESSO_TRACE_ERROR(error);
 	}
 
-	std::string Operations::name(const MpOperation * ptr) const
-	{
-		auto test = std::find_if(_symbols.begin(), _symbols.end(), [&](const std::pair<std::pair<std::string, size_t>, std::shared_ptr<MpOperation>> &pair)
-		{
-			return pair.second.get() == ptr;
-		});
-
-		if (test != _symbols.end())
-			return test->first.first;
-		else
-			return "<unknown>";
-	}
-
+	
 	std::string Operations::name(const std::shared_ptr<MpOperation> ptr) const
 	{
-		return name(ptr.get());
+		for (auto &pn : _symbols)
+		{
+			for (auto &p : pn.second)
+			{
+				if (p == ptr)
+					return pn.first;
+			}
+		}
+		return "<unknown>";
 	}
-
 
 	std::shared_ptr<MpOperation> Operations::find(const std::string &name, size_t numArgs) const
 	{
-		auto ret = _symbols.find(std::make_pair(name, numArgs));
-		if (ret == _symbols.end())
+		auto ps = find(name);
+		for (auto &p : ps)
 		{
-			 return nullptr;
+			if (p->nargs() == numArgs)
+				return p;
 		}
-		else
-		{
-			return ret->second;
-		}
-	}
 
+		return nullptr;
+	}
+	
 	std::vector<Operations::op_ptr_type> Operations::find(const std::string &name) const
 	{
-		std::vector<op_ptr_type> ret;
-
-		for (auto p : _symbols)
-		{
-			if (p.first.first == name)
-				ret.push_back(p.second);
-		}
-
-		return ret;
+		auto it = _symbols.find(name);
+		if (it == _symbols.end())
+			return{};
+		else
+			return it->second;
 	}
 
 	Operations::op_ptr_type Operations::find(const std::string & name, size_t nargs, bool paramsAreComplex) const
 	{
+		auto it = _symbols.find(name);
+
+		if (it == _symbols.end())
+			return nullptr;
+
 		Operations::op_ptr_type weakFit = nullptr;
-		for (auto p : _symbols)
+
+		for (auto p : it ->second)
 		{
-			if (p.first.first == name && p.first.second == nargs)
+			// Need the right number of arguments
+			if (p->nargs() == nargs)
 			{
 				if (paramsAreComplex)
 				{
-					if (p.second->signature().areParams(Signature::type::complex))
-						return p.second;
+					if (p->signature().areParams(Signature::type::complex))
+						return p;
 				}
 				else
 				{
-					if (p.second->signature().areParams(Signature::type::real))
-						return p.second;
+					if (p->signature().areParams(Signature::type::real))
+						return p;
 					else if (!weakFit)
 					{
-						weakFit = p.second;
+						weakFit = p;
 					}
 				}
 			}
@@ -630,12 +625,13 @@ namespace mathpresso
 
 	void Operations::add(const std::string &name, std::shared_ptr<MpOperation> obj)
 	{
-		_symbols.emplace(std::make_pair(name, obj->nargs()), obj);
+		// TODO: check compatibility of right to left and left to right etc.
+		_symbols[name].push_back(obj);
 	}
 
-	void Operations::remove(const std::string &name, size_t numArgs)
+	void Operations::remove(const std::string &name)
 	{
-		auto it = _symbols.find(std::make_pair(name, numArgs));
+		auto it = _symbols.find(name);
 		if (it != _symbols.end())
 			_symbols.erase(it);
 	}
@@ -643,9 +639,10 @@ namespace mathpresso
 	std::vector<std::string> Operations::names() const
 	{
 		std::vector<std::string> names;
-		for (auto p : _symbols)
+		for (auto &pn : _symbols)
 		{
-			names.push_back(p.first.first + " (" + p.second->signature().to_string() + ")");
+			for(auto &p : pn.second)
+				names.push_back(pn.first + " (" + p->signature().to_string() + ")");
 		}
 		return names;
 	}
