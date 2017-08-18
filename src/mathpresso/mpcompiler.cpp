@@ -224,7 +224,7 @@ namespace mathpresso {
 		JitVar result = varSlots[slotId];
 		if (result.isNone())
 		{
-			if (sym->isGlobal())
+			if (sym->isGlobal()) // Variables defined by context::addVariable()
 			{
 				result = JitVar(x86::ptr(variablesAddress, sym->getVarOffset()), true);
 				varSlots[slotId] = result;

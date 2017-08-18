@@ -254,7 +254,7 @@ namespace mathpresso
 		// [Dump]
 		// --------------------------------------------------------------------------
 
-		Error dump(StringBuilder& sb, const Operations * ops = nullptr);
+		Error dump(StringBuilder& sb, const Operations * ops);
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -382,10 +382,10 @@ namespace mathpresso
 		uint32_t getWriteCount() const { return _writeCount; }
 
 		void incUsedCount(uint32_t n = 1) { _usedCount += n; }
-		void incWriteCount(uint32_t n = 1) { _writeCount += n; }
+		void incWriteCount(uint32_t n = 1) { _writeCount += n; _usedCount += n; }
 
 		void decUsedCount(uint32_t n = 1) { _usedCount -= n; }
-		void decWriteCount(uint32_t n = 1) { _writeCount -= n; }
+		void decWriteCount(uint32_t n = 1) { _writeCount -= n; _usedCount -= n; }
 
 		// --------------------------------------------------------------------------
 		// [Members]
