@@ -254,7 +254,7 @@ namespace mathpresso
 		// [Dump]
 		// --------------------------------------------------------------------------
 
-		Error dump(StringBuilder& sb, const Operations * ops = nullptr);
+		Error dump(StringBuilder& sb, const Operations * ops);
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -299,7 +299,7 @@ namespace mathpresso
 		{
 		}
 
-
+		~AstSymbol() {}
 
 		// --------------------------------------------------------------------------
 		// [Accessors]
@@ -319,7 +319,7 @@ namespace mathpresso
 		//! Get symbol name length.
 		uint32_t getLength() const { return _length; }
 		//! Get symbol name.
-		const char* getName() const { return _name; }
+		const char * getName() const { return _name; }
 
 		//! Check if the symbol has associated node with it.
 		bool hasNode() const { return _node != nullptr; }
@@ -382,10 +382,17 @@ namespace mathpresso
 		uint32_t getWriteCount() const { return _writeCount; }
 
 		void incUsedCount(uint32_t n = 1) { _usedCount += n; }
-		void incWriteCount(uint32_t n = 1) { _writeCount += n; }
+		void incWriteCount(uint32_t n = 1) { _writeCount += n; incUsedCount(n); }
 
-		void decUsedCount(uint32_t n = 1) { _usedCount -= n; }
-		void decWriteCount(uint32_t n = 1) { _writeCount -= n; }
+		void decUsedCount(uint32_t n = 1) 
+		{
+			_usedCount -= n; 
+			if (_usedCount == 0)
+			{
+				this->~AstSymbol();
+			}
+		}
+		void decWriteCount(uint32_t n = 1) { _writeCount -= n; decUsedCount(n); }
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -395,7 +402,7 @@ namespace mathpresso
 		//! Symbol name length.
 		uint32_t _length;
 		//! Symbol name (key).
-		const char* _name;
+		const char * _name;
 
 		//! Node where the symbol is defined.
 		AstNode* _node;
@@ -567,7 +574,8 @@ namespace mathpresso
 		}
 
 		void destroy(AstBuilder* ast)
-		{}
+		{
+		}
 
 		// --------------------------------------------------------------------------
 		// [Accessors]
@@ -898,7 +906,10 @@ namespace mathpresso
 		{
 			AstSymbol* sym = getSymbol();
 			if (sym != nullptr)
+			{
 				sym->decUsedCount();
+			}
+
 		}
 
 		// --------------------------------------------------------------------------
@@ -980,7 +991,7 @@ namespace mathpresso
 
 		template<typename T>
 		T getValue() const;
-		
+
 
 		void setValue(double value)
 		{

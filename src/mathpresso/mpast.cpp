@@ -520,7 +520,7 @@ namespace mathpresso
 	}
 
 	template<class T>
-	const char * sym_name(T * node)
+	std::string sym_name(T * node)
 	{
 		auto sym = node->getSymbol();
 		return sym ? sym->getName() : "(null)";
@@ -543,7 +543,7 @@ namespace mathpresso
 
 	Error AstDump::onVar(AstVar* node)
 	{
-		return info("%s %s", sym_name(node), node_type(node));
+		return info("%s %s", sym_name(node).c_str(), node_type(node));
 	}
 
 	Error AstDump::onImm(AstImm* node)

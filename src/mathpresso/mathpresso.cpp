@@ -80,18 +80,19 @@ namespace mathpresso
 			: _zone(32768 - Zone::kZoneOverhead),
 			_heap(&_zone),
 			_builder(&_heap),
-			_scope(&_builder, static_cast<AstScope*>(NULL), AstScopeType::kAstScopeGlobal)
+			_scope(&_builder, static_cast<AstScope*>(nullptr), AstScopeType::kAstScopeGlobal)
 		{
 			mpAtomicSet(&_refCount, 1);
 		}
 		MATHPRESSO_INLINE ~ContextInternalImpl() {}
 
-		Zone _zone;
-		ZoneHeap _heap;
-		AstBuilder _builder;
-		AstScope _scope;
+		Zone _zone; //! Basic Allocator for chunks of memory from asmjit
+		ZoneHeap _heap; //! Granular and fast access to a Zones memory, with alloc and release
+		AstBuilder _builder; //! used to create nodes for ie. AstVar.
+		AstScope _scope; //! hold references to the Variables and functions
 	};
 
+	//! Increases the ref-count
 	static MATHPRESSO_INLINE ContextImpl* mpContextAddRef(ContextImpl* d)
 	{
 		if (d != &mpContextNull)
@@ -99,12 +100,14 @@ namespace mathpresso
 		return d;
 	}
 
+	//! decreases the ref-count and deletes the ContextImpl, if it reaches 0.
 	static MATHPRESSO_INLINE void mpContextRelease(ContextImpl* d)
 	{
 		if (d != &mpContextNull && !mpAtomicDec(&d->_refCount))
 			delete static_cast<ContextInternalImpl*>(d);
 	}
 
+	//! Copies every Symbol saved within otherD into a new ContextImpl.
 	static ContextImpl* mpContextClone(ContextImpl* otherD_)
 	{
 		ContextInternalImpl* d = new(std::nothrow) ContextInternalImpl();
@@ -155,6 +158,7 @@ namespace mathpresso
 		return d;
 	}
 
+	//! Takes a Context and returns a reference to its ContextInternalImpl in **out.
 	static Error mpContextMutable(Context* self, ContextInternalImpl** out)
 	{
 		ContextImpl* d = self->_d;
@@ -170,9 +174,7 @@ namespace mathpresso
 			if (MATHPRESSO_UNLIKELY(d == nullptr))
 				return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
 
-			mpContextRelease(
-				mpAtomicSetXchgT<ContextImpl*>(
-					&self->_d, d));
+			mpContextRelease(mpAtomicSetXchgT<ContextImpl*>(&self->_d, d));
 
 			*out = static_cast<ContextInternalImpl*>(d);
 			return ErrorCode::kErrorOk;
@@ -186,18 +188,14 @@ namespace mathpresso
 
 	Error Context::reset()
 	{
-		mpContextRelease(
-			mpAtomicSetXchgT<ContextImpl*>(
-				&_d, const_cast<ContextImpl*>(&mpContextNull)));
+		mpContextRelease(mpAtomicSetXchgT<ContextImpl*>(&_d, const_cast<ContextImpl*>(&mpContextNull)));
 
 		return ErrorCode::kErrorOk;
 	}
 
 	Context& Context::operator=(const Context& other)
 	{
-		mpContextRelease(
-			mpAtomicSetXchgT<ContextImpl*>(
-				&_d, mpContextAddRef(other._d)));
+		mpContextRelease(mpAtomicSetXchgT<ContextImpl*>(&_d, mpContextAddRef(other._d)));
 		return *this;
 	}
 
@@ -294,18 +292,6 @@ namespace mathpresso
 
 	Error Context::addObject(const std::string &name, std::shared_ptr<MpOperation> obj)
 	{
-		AstSymbol * sym;
-		Error e = addSymbol(sym, name.c_str(), AstSymbolType::kAstSymbolFunction);
-		if (e != ErrorCode::kErrorOk)
-		{
-			if (e != ErrorCode::kErrorSymbolAlreadyExists || sym->getSymbolType() != AstSymbolType::kAstSymbolFunction)
-				return e;
-		}
-		else
-		{
-			sym->setSymbolFlag(kAstSymbolIsDeclared);
-		}
-
 		_ops.add(name, obj);
 		return ErrorCode::kErrorOk;
 	}
@@ -338,10 +324,9 @@ namespace mathpresso
 
 		AstSymbol* sym = d->_scope.getSymbol(name, hVal);
 		if (sym == nullptr)
-			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorSymbolNotFound);
-
-		_ops.remove(name);
-		d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
+			_ops.remove(name);
+		else
+			d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
 
 		return ErrorCode::kErrorOk;
 	}
@@ -392,7 +377,7 @@ namespace mathpresso
 
 		// Parse the expression into AST.
 		{
-			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len, &ctx._ops).parseProgram(ast.getProgramNode())); 
+			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len, &ctx._ops).parseProgram(ast.getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
@@ -554,7 +539,7 @@ namespace mathpresso
 		return MATHPRESSO_TRACE_ERROR(error);
 	}
 
-	
+
 	std::string Operations::name(const std::shared_ptr<MpOperation> ptr) const
 	{
 		for (auto &pn : _symbols)
@@ -579,7 +564,7 @@ namespace mathpresso
 
 		return nullptr;
 	}
-	
+
 	std::vector<Operations::op_ptr_type> Operations::find(const std::string &name) const
 	{
 		auto it = _symbols.find(name);
@@ -598,7 +583,7 @@ namespace mathpresso
 
 		Operations::op_ptr_type weakFit = nullptr;
 
-		for (auto p : it ->second)
+		for (auto p : it->second)
 		{
 			// Need the right number of arguments
 			if (p->nargs() == nargs)
@@ -640,7 +625,7 @@ namespace mathpresso
 		std::vector<std::string> names;
 		for (auto &pn : _symbols)
 		{
-			for(auto &p : pn.second)
+			for (auto &p : pn.second)
 				names.push_back(pn.first + " (" + p->signature().to_string() + ")");
 		}
 		return names;
