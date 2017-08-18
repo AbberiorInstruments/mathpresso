@@ -246,7 +246,9 @@ public:
 		using op_map_type = std::map<std::string, std::vector<op_ptr_type>>;
 	
 	public:
+		std::string name(const MpOperation * ptr) const;
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
+
 		op_ptr_type find(const std::string & name, size_t nargs) const;
 
 		//! looks for a MpOperation-Object, where the parameters are complex or real.

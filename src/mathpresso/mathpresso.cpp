@@ -307,7 +307,6 @@ namespace mathpresso
 		}
 
 		_ops.add(name, obj);
-
 		return ErrorCode::kErrorOk;
 	}
 
