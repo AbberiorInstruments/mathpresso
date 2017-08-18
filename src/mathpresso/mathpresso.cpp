@@ -292,20 +292,7 @@ namespace mathpresso
 
 	Error Context::addObject(const std::string &name, std::shared_ptr<MpOperation> obj)
 	{
-		AstSymbol * sym;
-		Error e = addSymbol(sym, name.c_str(), AstSymbolType::kAstSymbolFunction);
-		if (e != ErrorCode::kErrorOk)
-		{
-			if (e != ErrorCode::kErrorSymbolAlreadyExists || sym->getSymbolType() != AstSymbolType::kAstSymbolFunction)
-				return e;
-		}
-		else
-		{
-			sym->setSymbolFlag(kAstSymbolIsDeclared);
-		}
-
 		_ops.add(name, obj);
-
 		return ErrorCode::kErrorOk;
 	}
 
@@ -337,10 +324,9 @@ namespace mathpresso
 
 		AstSymbol* sym = d->_scope.getSymbol(name, hVal);
 		if (sym == nullptr)
-			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorSymbolNotFound);
-
-		_ops.remove(name);
-		d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
+			_ops.remove(name);
+		else
+			d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
 
 		return ErrorCode::kErrorOk;
 	}
