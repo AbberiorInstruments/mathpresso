@@ -88,7 +88,7 @@ namespace mathpresso
 		_heap->release(scope, sizeof(AstScope));
 	}
 
-	AstSymbol* AstBuilder::newSymbol(const std::string& key, uint32_t hVal, uint32_t symbolType, uint32_t scopeType)
+	AstSymbol* AstBuilder::newSymbol(const std::string& key, uint32_t hVal, AstSymbolType symbolType, uint32_t scopeType)
 	{
 		size_t kLen = key.length();
 		void* p = _heap->alloc(sizeof(AstSymbol) + kLen + 1);

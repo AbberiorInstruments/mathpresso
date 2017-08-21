@@ -64,16 +64,16 @@ namespace mathpresso
 		// [Parse]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_NOAPI Error parseProgram(AstProgram* block);
+		Error parseProgram(AstProgram* block);
 
-		MATHPRESSO_NOAPI Error parseStatement(AstBlock* block, uint32_t flags);
-		MATHPRESSO_NOAPI Error parseBlockOrStatement(AstBlock* block);
+		Error parseStatement(AstBlock* block, uint32_t flags);
+		Error parseBlockOrStatement(AstBlock* block);
 
-		MATHPRESSO_NOAPI Error parseVariableDecl(AstBlock* block);
-		MATHPRESSO_NOAPI Error parseExpression(AstNode** pNodeOut, bool isNested);
-		MATHPRESSO_NOAPI Error parseCall(AstNode** pNodeOut);
+		Error parseVariableDecl(AstBlock* block);
+		Error parseExpression(AstNode** pNodeOut, bool isNested);
+		Error parseCall(AstNode** pNodeOut);
 
-		MATHPRESSO_NOAPI Error reparseTernary(AstNode* node);
+		Error reparseTernary(AstNode* node);
 
 		// --------------------------------------------------------------------------
 		// [Members]

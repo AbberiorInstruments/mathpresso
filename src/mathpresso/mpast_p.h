@@ -62,7 +62,7 @@ namespace mathpresso
 	//! \internal
 	//!
 	//! Symbol type.
-	enum AstSymbolType
+	enum class AstSymbolType
 	{
 		//! Not used.
 		kAstSymbolNone = 0,
@@ -209,7 +209,7 @@ namespace mathpresso
 		AstScope* newScope(AstScope* parent, uint32_t scopeType);
 		void deleteScope(AstScope* scope);
 
-		AstSymbol* newSymbol(const std::string& key, uint32_t hVal, uint32_t symbolType, uint32_t scopeType);
+		AstSymbol* newSymbol(const std::string& key, uint32_t hVal, AstSymbolType symbolType, uint32_t scopeType);
 		AstSymbol* shadowSymbol(const AstSymbol* other);
 		void deleteSymbol(AstSymbol* symbol);
 
@@ -286,12 +286,12 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstSymbol(const char* name, uint32_t length, uint32_t hVal, uint32_t symbolType, uint32_t scopeType)
+		AstSymbol(const char* name, uint32_t length, uint32_t hVal, AstSymbolType symbolType, uint32_t scopeType)
 			: HashNode(hVal),
 			_length(length),
 			_name(name),
 			_node(nullptr),
-			_symbolType(static_cast<uint8_t>(symbolType)),
+			_symbolType(symbolType),
 			_symbolFlags(scopeType == AstScopeType::kAstScopeGlobal ? (int)AstSymbolFlags::kAstSymbolIsGlobal : 0),
 			_valueComp(),
 			_usedCount(0),
@@ -332,7 +332,7 @@ namespace mathpresso
 		uint32_t getHVal() const { return _hVal; }
 
 		//! Get symbol type, see \ref AstSymbolType.
-		uint32_t getSymbolType() const { return _symbolType; }
+		AstSymbolType getSymbolType() const { return _symbolType; }
 
 		//! Get symbol flags, see \ref AstSymbolFlags.
 		uint32_t getSymbolFlags() const { return _symbolFlags; }
@@ -408,7 +408,7 @@ namespace mathpresso
 		AstNode* _node;
 
 		//! Type of the symbol, see \ref AstSymbolType.
-		uint8_t _symbolType;
+		AstSymbolType _symbolType;
 		//! Flags, see \ref AstSymbolFlags.
 		uint16_t _symbolFlags;
 

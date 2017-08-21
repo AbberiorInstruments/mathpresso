@@ -273,6 +273,7 @@ public:
 	// ============================================================================
 
 	struct AstSymbol;
+	enum class AstSymbolType;
 
 	//! MathPresso context.
 	//!
@@ -300,7 +301,7 @@ public:
 
 		//! Delete all symbols.
 		MATHPRESSO_API Error reset();
-		//! Assignement operator.
+		//! Assignment operator.
 		MATHPRESSO_API Context& operator=(const Context& other);
 
 		// --------------------------------------------------------------------------
@@ -320,7 +321,7 @@ public:
 		MATHPRESSO_API Error addObject(const std::string &name, std::shared_ptr<MpOperation> obj);
 
 		//! Internal implementation
-		MATHPRESSO_API Error addSymbol(AstSymbol* &sym, const std::string &name, int type);
+		MATHPRESSO_API Error addSymbol(AstSymbol* &sym, const std::string &name, AstSymbolType type);
 		//! Delete symbol from this context.
 		MATHPRESSO_API Error delSymbol(const std::string &name);
 

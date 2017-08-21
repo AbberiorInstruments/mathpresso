@@ -76,7 +76,7 @@ namespace mathpresso
 	//! Internal context data.
 	struct ContextInternalImpl : public ContextImpl
 	{
-		MATHPRESSO_INLINE ContextInternalImpl()
+		ContextInternalImpl()
 			: _zone(32768 - Zone::kZoneOverhead),
 			_heap(&_zone),
 			_builder(&_heap),
@@ -84,12 +84,12 @@ namespace mathpresso
 		{
 			mpAtomicSet(&_refCount, 1);
 		}
-		MATHPRESSO_INLINE ~ContextInternalImpl() {}
+		~ContextInternalImpl() {}
 
 		Zone _zone; //! Basic Allocator for chunks of memory from asmjit
 		ZoneHeap _heap; //! Granular and fast access to a Zones memory, with alloc and release
 		AstBuilder _builder; //! used to create nodes for ie. AstVar.
-		AstScope _scope; //! hold references to the Variables and functions
+		AstScope _scope; //! hold references to the Variables and functions, the root-scope
 	};
 
 	//! Increases the ref-count
@@ -124,7 +124,7 @@ namespace mathpresso
 
 				std::string name(sym->getName(), sym->getLength());
 				uint32_t hVal = sym->getHVal();
-				uint32_t type = sym->getSymbolType();
+				AstSymbolType type = sym->getSymbolType();
 
 				AstSymbol* clonedSym = d->_builder.newSymbol(name, hVal, type, otherD->_scope.getScopeType());
 				if (MATHPRESSO_UNLIKELY(clonedSym == nullptr))
@@ -232,7 +232,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Context::addSymbol(AstSymbol* &sym, const std::string &name, int type)
+	Error Context::addSymbol(AstSymbol* &sym, const std::string &name, AstSymbolType type)
 	{
 		ContextInternalImpl* d;
 		MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
@@ -326,7 +326,9 @@ namespace mathpresso
 		if (sym == nullptr)
 			_ops.remove(name);
 		else
+		{
 			d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
+		}
 
 		return ErrorCode::kErrorOk;
 	}
@@ -408,9 +410,6 @@ namespace mathpresso
 		if (fn == nullptr)
 			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
 		_func = fn;
-
-		//ast.getProgramNode();
-		//ast.deleteNode(ast.getProgramNode());
 
 		return ErrorCode::kErrorOk;
 	}
@@ -607,7 +606,7 @@ namespace mathpresso
 		return weakFit;
 	}
 
-	void Operations::add(const std::string &name, std::shared_ptr<MpOperation> obj)
+	void Operations::add(const std::string &name, Operations::op_ptr_type obj)
 	{
 		// TODO: check compatibility of right to left and left to right etc.
 		_symbols[name].push_back(obj);
