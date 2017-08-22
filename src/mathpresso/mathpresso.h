@@ -271,6 +271,7 @@ public:
 	class SubContext
 	{
 	public:
+
 		SubContext(std::string name = "", SubContext * parent = nullptr) : 
 			_name(name), 
 			_ops(), 
@@ -279,7 +280,9 @@ public:
 		{
 		}
 		
-		~SubContext() {}
+		~SubContext() 
+		{
+		}
 		
 		// returns the fully qualified name
 		std::string FQN()

@@ -679,7 +679,7 @@ namespace mathpresso
 		auto fqn = separateFQN(name);
 		auto con = resolveInternal(fqn);
 
-		con->_children.emplace(fqn.back(), std::make_shared<SubContext>(name, con));
+		con->_children.emplace(fqn.back(), std::make_shared<SubContext>(name, con.get()));
 	}
 
 	std::shared_ptr<SubContext> SubContext::resolveInternal(std::vector<std::string> fqn)
@@ -698,7 +698,7 @@ namespace mathpresso
 		}
 		else if (fqn.size() == i + 2)
 		{
-			return std::make_shared<SubContext>(this);
+			return std::shared_ptr<SubContext>(this);
 		}
 		else
 		{
