@@ -19,9 +19,6 @@
 
 namespace mathpresso
 {
-
-#define VPTR(function) reinterpret_cast<void*>(function)
-
 #ifdef _REALREWORK
 	double sinRR(double * arg) { return std::sin(arg[0]); }
 	double cosRR(double * arg) { return std::cos(arg[0]); }
@@ -114,6 +111,8 @@ namespace mathpresso
 	std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
 	double absCR(std::complex<double>* args) { return std::abs(args[0]); }
 
+
+#define VPTR(function) reinterpret_cast<void*>(function)
 
 	uint32_t addBuiltinMpObjects(Context * ctx)
 	{

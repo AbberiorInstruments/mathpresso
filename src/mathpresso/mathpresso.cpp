@@ -206,13 +206,15 @@ namespace mathpresso
 
 	Context::Context()
 		: _d(const_cast<ContextImpl*>(&mpContextNull)),
-		_ops()
+		_ops(),
+		_subContext(std::make_shared<SubContext>())
 	{
 	}
 
 	Context::Context(const Context& other)
 		: _d(mpContextAddRef(other._d)),
-		_ops(other._ops)
+		_ops(other._ops),
+		_subContext(other._subContext)
 	{
 	}
 
@@ -628,6 +630,88 @@ namespace mathpresso
 				names.push_back(pn.first + " (" + p->signature().to_string() + ")");
 		}
 		return names;
+	}
+
+	std::vector<std::shared_ptr<MpOperation>> SubContext::resolve(std::string fnName)
+	{
+		auto  fqn = separateFQN(fnName);
+		if (fqn.size() > 1)
+		{
+			return resolveInternal(fqn)->_ops.find(fqn.back());
+		}
+		else if (fqn.size() == 1)
+		{
+			auto found = _ops.find(fnName);
+			if (found.size() != 0)
+				return found;
+			else
+				return _parent->resolve(fnName);
+		}
+		else
+		{
+			return{};
+		}
+	}
+
+	void SubContext::addFunction(const std::string & name, std::shared_ptr<MpOperation> obj)
+	{
+		auto fqn = separateFQN(name);
+		auto con = resolveInternal(fqn);
+
+		con->_ops.add(fqn.back(), obj);
+	}
+
+	void SubContext::addSubcontext(const std::string & name)
+	{
+		auto fqn = separateFQN(name);
+		auto con = resolveInternal(fqn);
+
+		con->_children.emplace(fqn.back(), std::make_shared<SubContext>(name, con));
+	}
+
+	std::shared_ptr<SubContext> SubContext::resolveInternal(std::vector<std::string> fqn)
+	{
+		size_t i = 0;
+		auto tmp = _parent;
+		while (tmp)
+		{
+			++i;
+			tmp = tmp->_parent;
+		}
+
+		if (fqn.size() >= i + 1)
+		{
+			throw std::runtime_error("unresolvable.");
+		}
+		else if (fqn.size() == i + 2)
+		{
+			return std::make_shared<SubContext>(this);
+		}
+		else
+		{
+			try {
+				return _children.at(fqn[i])->resolveInternal(fqn);
+			}
+			catch (std::out_of_range)
+			{
+					throw std::runtime_error("unresolvable");
+			}
+		}
+	}
+
+	std::vector<std::string> SubContext::separateFQN(std::string name) const
+	{
+		std::vector<std::string> out({});
+		size_t token = 0;
+		size_t old = 0;
+		while ((token = name.find('.', old)) != std::string::npos)
+		{
+			out.push_back(name.substr(old, token - old));
+			old = token + 1;
+		}
+		out.push_back(name.substr(old));
+
+		return out;
 	}
 
 } // mathpresso namespace

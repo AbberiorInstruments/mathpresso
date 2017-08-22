@@ -268,6 +268,49 @@ public:
 		op_map_type _symbols;
 	};
 
+	class SubContext
+	{
+	public:
+		SubContext(std::string name = "", SubContext * parent = nullptr) : 
+			_name(name), 
+			_ops(), 
+			_parent(parent), 
+			_children({}) 
+		{
+		}
+		
+		~SubContext() {}
+		
+		// returns the fully qualified name
+		std::string FQN()
+		{
+			if (_parent)
+				return _parent->FQN() + "." + _name;
+			else
+				return _name;
+		}
+
+		//! finds possible MpOperations, that might help.
+		std::vector<std::shared_ptr<MpOperation>> resolve(std::string fnName);
+
+		void addFunction(const std::string & name, std::shared_ptr<MpOperation> obj);
+		void addSubcontext(const std::string & name);
+
+	private:
+		// finds the correct SubContext, for a fully qualified name
+		std::shared_ptr<SubContext> resolveInternal(std::vector<std::string> fqn);
+
+		std::vector<std::string> separateFQN(std::string name) const;
+
+
+		// Members:
+		std::string _name;
+		Operations _ops;
+		// std::vector<Variables> _vars; // TODO
+		SubContext * _parent;
+		std::map<std::string, std::shared_ptr<SubContext>> _children;
+	};
+
 	// ============================================================================
 	// [mathpresso::Context]
 	// ============================================================================
@@ -335,6 +378,8 @@ public:
 		ContextImpl* _d;
 
 		Operations _ops;
+
+		std::shared_ptr<SubContext> _subContext;
 	};
 
 	// ============================================================================
