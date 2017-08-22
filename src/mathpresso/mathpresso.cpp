@@ -610,7 +610,20 @@ namespace mathpresso
 
 	void Operations::add(const std::string &name, Operations::op_ptr_type obj)
 	{
-		// TODO: check compatibility of right to left and left to right etc.
+		auto syms = _symbols[name];
+		for (auto p : syms)
+		{
+			if (p->nargs() == obj->nargs())
+			{
+				if (p->precedence() != obj->precedence()
+					|| (p->flags() & MpOperation::Flags::RighttoLeft) != (obj->flags() & MpOperation::Flags::RighttoLeft))
+				{
+					throw std::runtime_error("unable to add function.");
+				}
+			}
+		}
+
+
 		_symbols[name].push_back(obj);
 	}
 
