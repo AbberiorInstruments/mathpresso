@@ -24,7 +24,7 @@ struct AstOptimizer : public AstVisitor {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const Operations * ops);
+  AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, std::shared_ptr<SubContext> ops);
   virtual ~AstOptimizer();
 
   // --------------------------------------------------------------------------
@@ -48,7 +48,7 @@ struct AstOptimizer : public AstVisitor {
   // --------------------------------------------------------------------------
 
   ErrorReporter* _errorReporter;
-  const Operations* _ops;
+  std::shared_ptr<SubContext> _context;
 };
 
 } // mathpresso namespace

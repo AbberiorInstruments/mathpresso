@@ -250,6 +250,7 @@ public:
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
 
 		op_ptr_type find(const std::string & name, size_t nargs) const;
+		std::vector<op_ptr_type> find(const std::string &name) const;
 
 		//! looks for a MpOperation-Object, where the parameters are complex or real.
 		//! if no direct match is found (ie there is no Operation with real parameters),
@@ -258,7 +259,6 @@ public:
 		//! returns nullptr, if no match is found.
 		op_ptr_type find(const std::string & name, size_t nargs, bool paramsAreComplex) const;
 
-		std::vector<op_ptr_type> find(const std::string &name) const;
 
 		void add(const std::string &name, op_ptr_type obj);
 		void remove(const std::string &name);
@@ -274,7 +274,7 @@ public:
 
 		SubContext(std::string name = "", std::shared_ptr<SubContext> parent = nullptr) :
 			_name(name),
-			_ops(),
+			_context(),
 			_parent(parent),
 			_children({})
 		{
@@ -284,21 +284,28 @@ public:
 		{
 		}
 
-		// returns the fully qualified name
-		std::string FQN()
-		{
-			auto parent = _parent.lock();
-			if (parent)
-				return parent->FQN() + "." + _name;
-			else
-				return _name;
-		}
+		// MpOperation-Operations:
 
-		//! finds possible MpOperations, that might help.
-		std::vector<std::shared_ptr<MpOperation>> resolve(std::string fnName);
-
+		//! finds MpOperations
+		std::vector<std::shared_ptr<MpOperation>> resolveFunctionName(const std::string & fullyQuallifiedName);
+		std::shared_ptr<MpOperation> resolveFunctionName(const std::string & fullyQuallifiedName, size_t nargs);
+		std::shared_ptr<MpOperation> resolveFunctionName(const std::string & fullyQuallifiedName, size_t nargs, bool paramsAreComplex);
+		//! Add a Function.
 		void addFunction(const std::string & name, std::shared_ptr<MpOperation> obj);
+		//! remove a function.
+		void remvoeFunction(const std::string & name);
+		//! find Name of a Function:
+		std::string functionName(std::shared_ptr<MpOperation> name);
+
+
+		// Subcontext-Operations:
+
+		//! returns the fully qualified name
+		std::string FQN() const;
+		//! add oe context
 		void addSubcontext(const std::string & name);
+		//! delete a subcontext
+		void deleteContext(const std::string & name);
 
 	private:
 		// finds the correct SubContext, for a fully qualified name
@@ -309,7 +316,7 @@ public:
 
 		// Members:
 		std::string _name;
-		Operations _ops;
+		Operations _context;
 		// std::vector<Variables> _vars; // TODO
 		std::weak_ptr<SubContext> _parent;
 		std::map<std::string, std::shared_ptr<SubContext>> _children;

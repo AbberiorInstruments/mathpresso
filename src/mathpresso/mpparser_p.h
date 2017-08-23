@@ -44,12 +44,12 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const Operations * ops)
+		Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, std::shared_ptr<SubContext> ops)
 			: _ast(ast),
 			_errorReporter(errorReporter),
 			_currentScope(ast->getRootScope()),
 			_tokenizer(body, len),
-			_ops(ops)
+			_context(ops)
 		{
 		}
 		~Parser() {}
@@ -84,7 +84,7 @@ namespace mathpresso
 
 		AstScope* _currentScope;
 		Tokenizer _tokenizer;
-		const Operations * _ops;
+		const std::shared_ptr<SubContext> _context;
 	};
 
 } // mathpresso namespace

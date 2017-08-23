@@ -244,7 +244,7 @@ namespace mathpresso
 
 			AstVarDecl* decl = _ast->newNode<AstVarDecl>();
 			MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
-			decl->_mpOp = _ops->find("=", 2);
+			decl->_mpOp = _context->resolveFunctionName("=", 2);
 			decl->_opName = "=";
 
 			decl->setPosition(position);
@@ -399,7 +399,7 @@ namespace mathpresso
 						newNode->setPosition(token.getPosAsUInt());
 						sym->incUsedCount();
 					}
-					else if (_ops->find(symbolName).size() != 0)
+					else if (_context->resolveFunctionName(symbolName).size() != 0)
 					{
 						// Will be parsed by `parseCall()` again.
 						_tokenizer.set(&token);
@@ -473,13 +473,13 @@ namespace mathpresso
 				case TokenType::kTokenOperator:
 				{
 					std::string name(_tokenizer._start + token.position, token.length);
-					auto op = _ops->find(name, 1);
+					auto op = _context->resolveFunctionName(name, 1);
 					if (!op)
 					{
 						// for expressions like '----x'
 						for (size_t i = 0; i < name.size(); i++)
 						{
-							if (op = _ops->find(name.substr(i, 1), 1))
+							if (op = _context->resolveFunctionName(name.substr(i, 1), 1))
 							{
 								AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>();
 								MATHPRESSO_NULLCHECK(opNode);
@@ -563,7 +563,7 @@ namespace mathpresso
 				case TokenType::kTokenOperator:
 				{
 					std::string name(_tokenizer._start + token.position, token.length);
-					auto op = _ops->find(name, 2);
+					auto op = _context->resolveFunctionName(name, 2);
 					if (!op)
 						MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
 
@@ -746,9 +746,8 @@ namespace mathpresso
 
 		_tokenizer.consume();
 
-		if (_ops->find(fnName, callNode->getLength()))
+		if (_context->resolveFunctionName(fnName, callNode->getLength()))
 		{
-			//callNode->_mpOp = _ops->find(fnName, callNode->getLength());
 			callNode->_opName = fnName;
 		}
 		else
@@ -827,7 +826,7 @@ namespace mathpresso
 				ternaryNode->setCondition(branchCondition);
 				ternaryNode->setLeft(branchLeft);
 				ternaryNode->setRight(branchRight);
-				ternaryNode->_mpOp = _ops->find("_ternary_", 3);
+				ternaryNode->_mpOp = _context->resolveFunctionName("_ternary_", 3);
 				ternaryNode->_opName = "_ternary_";
 
 				// add the new node to the AST.

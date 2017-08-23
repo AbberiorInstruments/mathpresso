@@ -190,7 +190,7 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Dump]
 	// ============================================================================
 
-	Error AstBuilder::dump(StringBuilder& sb, const Operations * ops)
+	Error AstBuilder::dump(StringBuilder& sb, std::shared_ptr<SubContext> ops)
 	{
 		return AstDump(this, sb, ops).onProgram(getProgramNode());
 	}
@@ -485,11 +485,11 @@ namespace mathpresso
 	// [mathpresso::AstDump - Construction / Destruction]
 	// ============================================================================
 
-	AstDump::AstDump(AstBuilder* ast, StringBuilder& sb, const Operations * ops)
+	AstDump::AstDump(AstBuilder* ast, StringBuilder& sb, std::shared_ptr<SubContext> ops)
 		: AstVisitor(ast),
 		_sb(sb),
 		_level(0),
-		_ops(ops)
+		_context(ops)
 	{
 	}
 	AstDump::~AstDump() {}
@@ -526,9 +526,9 @@ namespace mathpresso
 		return sym ? sym->getName() : "(null)";
 	}
 
-	std::string op_name(AstNode * node, const Operations * ops)
+	std::string op_name(AstNode * node, std::shared_ptr<SubContext> ops)
 	{
-		return ops->name(node->_mpOp);
+		return ops->functionName(node->_mpOp);
 	}
 
 	const char * node_type(AstNode * node)
@@ -559,7 +559,7 @@ namespace mathpresso
 
 	Error AstDump::onUnaryOp(AstUnaryOp* node)
 	{
-		nest("%s [Unary, %s -> %s]", op_name(node, _ops).c_str(), parm_type(node), node_type(node));
+		nest("%s [Unary, %s -> %s]", op_name(node, _context).c_str(), parm_type(node), node_type(node));
 		if (node->hasChild())
 			MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 		return denest();
@@ -567,7 +567,7 @@ namespace mathpresso
 
 	Error AstDump::onBinaryOp(AstBinaryOp* node)
 	{
-		nest("%s [Binary, %s -> %s]", op_name(node, _ops).c_str(), parm_type(node), node_type(node));
+		nest("%s [Binary, %s -> %s]", op_name(node, _context).c_str(), parm_type(node), node_type(node));
 		if (node->hasLeft())
 			MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
 		if (node->hasRight())
@@ -577,7 +577,7 @@ namespace mathpresso
 
 	Error AstDump::onTernaryOp(AstTernaryOp* node)
 	{
-		nest("%s [Ternary, %s -> %s]", op_name(node, _ops).c_str(), parm_type(node), node_type(node));
+		nest("%s [Ternary, %s -> %s]", op_name(node, _context).c_str(), parm_type(node), node_type(node));
 		if (node->hasCondition())
 			MATHPRESSO_PROPAGATE(onNode(node->getCondition()));
 		if (node->hasLeft())

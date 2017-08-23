@@ -139,7 +139,7 @@ namespace mathpresso
 			varSlots(nullptr),
 			functionBody(nullptr),
 			constPool(&cc->_cbDataZone),
-			_ops(ops)
+			_context(ops)
 		{
 			enableSSE4_1 = asmjit::CpuInfo::getHost().hasFeature(asmjit::CpuInfo::kX86FeatureSSE4_1);
 		}
@@ -202,7 +202,7 @@ namespace mathpresso
 
 		bool enableSSE4_1;
 
-		const Operations * _ops;
+		const Operations * _context;
 
 	};
 

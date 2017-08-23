@@ -20,10 +20,10 @@ namespace mathpresso
 	// [mpsl::AstOptimizer - Construction / Destruction]
 	// ============================================================================
 
-	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const Operations* ops)
+	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, std::shared_ptr<SubContext> ops)
 		: AstVisitor(ast),
 		_errorReporter(errorReporter),
-		_ops(ops)
+		_context(ops)
 	{
 	}
 	AstOptimizer::~AstOptimizer() {}
@@ -148,8 +148,8 @@ namespace mathpresso
 		}
 
 		// Find optimal signature
-		node->_mpOp = _ops->find(node->_opName, node->getLength(), takesComplex);
-
+		node->_mpOp = _context->resolveFunctionName(node->_opName, node->getLength(), takesComplex);
+		
 		if (node->_mpOp)
 		{
 			if (node->_mpOp->signature().return_type_ == Signature::type::complex)

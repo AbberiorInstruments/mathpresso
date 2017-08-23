@@ -295,6 +295,7 @@ namespace mathpresso
 	Error Context::addObject(const std::string &name, std::shared_ptr<MpOperation> obj)
 	{
 		_ops.add(name, obj);
+		_subContext->addFunction(name, obj);
 		return ErrorCode::kErrorOk;
 	}
 
@@ -381,24 +382,24 @@ namespace mathpresso
 
 		// Parse the expression into AST.
 		{
-			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len, &ctx._ops).parseProgram(ast.getProgramNode()));
+			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len, ctx._subContext).parseProgram(ast.getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
 		{
-			ast.dump(sbTmp, &ctx._ops);
+			ast.dump(sbTmp, ctx._subContext);
 			log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
 
 		// Perform basic optimizations at AST level.
 		{
-			MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, &ctx._ops).onProgram(ast.getProgramNode()));
+			MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, ctx._subContext).onProgram(ast.getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
 		{
-			ast.dump(sbTmp, &ctx._ops);
+			ast.dump(sbTmp, ctx._subContext);
 			log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
@@ -551,12 +552,12 @@ namespace mathpresso
 					return pn.first;
 			}
 		}
-		return "<unknown>";
+		return unkownFunctionName;
 	}
 
 	std::shared_ptr<MpOperation> Operations::find(const std::string &name, size_t numArgs) const
 	{
-		auto ps = find(name);
+		auto ps(find(name));
 		for (auto &p : ps)
 		{
 			if (p->nargs() == numArgs)
@@ -568,7 +569,7 @@ namespace mathpresso
 
 	std::vector<Operations::op_ptr_type> Operations::find(const std::string &name) const
 	{
-		auto it = _symbols.find(name);
+		auto it(_symbols.find(name));
 		if (it == _symbols.end())
 			return{};
 		else
@@ -577,12 +578,12 @@ namespace mathpresso
 
 	Operations::op_ptr_type Operations::find(const std::string & name, size_t nargs, bool paramsAreComplex) const
 	{
-		auto it = _symbols.find(name);
+		auto it(_symbols.find(name));
 
 		if (it == _symbols.end())
 			return nullptr;
 
-		Operations::op_ptr_type weakFit = nullptr;
+		Operations::op_ptr_type weakFit(nullptr);
 
 		for (auto p : it->second)
 		{
@@ -610,7 +611,7 @@ namespace mathpresso
 
 	void Operations::add(const std::string &name, Operations::op_ptr_type obj)
 	{
-		auto syms = _symbols[name];
+		auto syms(_symbols[name]);
 		for (auto p : syms)
 		{
 			if (p->nargs() == obj->nargs())
@@ -629,14 +630,14 @@ namespace mathpresso
 
 	void Operations::remove(const std::string &name)
 	{
-		auto it = _symbols.find(name);
+		auto it(_symbols.find(name));
 		if (it != _symbols.end())
 			_symbols.erase(it);
 	}
 
 	std::vector<std::string> Operations::names() const
 	{
-		std::vector<std::string> names;
+		std::vector<std::string> names({});
 		for (auto &pn : _symbols)
 		{
 			for (auto &p : pn.second)
@@ -645,20 +646,32 @@ namespace mathpresso
 		return names;
 	}
 
-	std::vector<std::shared_ptr<MpOperation>> SubContext::resolve(std::string fnName)
+	std::string SubContext::FQN() const
 	{
-		auto  fqn = separateFQN(fnName);
+		auto parent(_parent.lock());
+		if (parent)
+			return parent->FQN() + "." + _name;
+		else
+			return _name;
+	}
+
+	std::vector<std::shared_ptr<MpOperation>> SubContext::resolveFunctionName(const std::string & fnName)
+	{
+		auto fqn(separateFQN(fnName));
 		if (fqn.size() > 1)
 		{
-			return resolveInternal(fqn)->_ops.find(fqn.back());
+			return resolveInternal(fqn)->_context.find(fqn.back());
 		}
 		else if (fqn.size() == 1)
 		{
-			auto found = _ops.find(fnName);
+			auto found = _context.find(fnName);
 			if (found.size() != 0)
 				return found;
 			else
-				return _parent.lock()->resolve(fnName);
+				if (auto parent = _parent.lock())
+					return _parent.lock()->resolveFunctionName(fnName);
+				else
+					return{};
 		}
 		else
 		{
@@ -666,20 +679,80 @@ namespace mathpresso
 		}
 	}
 
+	std::shared_ptr<MpOperation> SubContext::resolveFunctionName(const std::string & fnName, size_t nargs)
+	{
+		auto fn(resolveFunctionName(fnName));
+
+		for (auto f : fn)
+		{
+			if (f->nargs() == nargs)
+			{
+				return f;
+			}
+		}
+		return nullptr;
+
+	}
+
+	std::shared_ptr<MpOperation> SubContext::resolveFunctionName(const std::string & fullyQuallifiedName, size_t nargs, bool paramsAreComplex)
+	{
+		auto fqn(separateFQN(fullyQuallifiedName));
+		auto con(resolveInternal(fqn));
+
+		return con->_context.find(fqn.back(), nargs, paramsAreComplex);
+	}
+
 	void SubContext::addFunction(const std::string & name, std::shared_ptr<MpOperation> obj)
 	{
-		auto fqn = separateFQN(name);
-		auto con = resolveInternal(fqn);
+		auto fqn(separateFQN(name));
+		auto con(resolveInternal(fqn));
 
-		con->_ops.add(fqn.back(), obj);
+		con->_context.add(fqn.back(), obj);
+	}
+
+	void SubContext::remvoeFunction(const std::string & name)
+	{
+		auto fqn(separateFQN(name));
+		auto con(resolveInternal(fqn));
+
+		con->_context.remove(fqn.back());
+	}
+
+	std::string SubContext::functionName(std::shared_ptr<MpOperation> op)
+	{
+		std::string name(unkownFunctionName);
+		auto subcon(shared_from_this());
+
+		if ((name = _context.name(op)) == unkownFunctionName)
+		{
+			for (auto p : _children)
+			{
+				name = p.second->functionName(op);
+				if (name != unkownFunctionName)
+					break;
+			}
+		}
+		else
+		{
+			return FQN() + '.' + name;
+		}
+		return name;
 	}
 
 	void SubContext::addSubcontext(const std::string & name)
 	{
-		auto fqn = separateFQN(name);
-		auto con = resolveInternal(fqn);
+		auto fqn(separateFQN(name));
+		auto con(resolveInternal(fqn));
 
 		con->_children.emplace(fqn.back(), std::make_shared<SubContext>(fqn.back(), con));
+	}
+
+	void SubContext::deleteContext(const std::string & name)
+	{
+		auto fqn(separateFQN(name));
+		auto con(resolveInternal(fqn));
+
+		con->_children.erase(fqn.back());
 	}
 
 	std::shared_ptr<SubContext> SubContext::resolveInternal(std::vector<std::string> fqn)
@@ -716,8 +789,8 @@ namespace mathpresso
 	std::vector<std::string> SubContext::separateFQN(std::string name) const
 	{
 		std::vector<std::string> out({});
-		size_t token = 0;
-		size_t old = 0;
+		size_t token(0);
+		size_t old(0);
 		while ((token = name.find('.', old)) != std::string::npos)
 		{
 			out.push_back(name.substr(old, token - old));
