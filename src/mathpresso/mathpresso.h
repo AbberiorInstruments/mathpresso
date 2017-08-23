@@ -244,9 +244,9 @@ public:
 	{
 		using op_ptr_type = std::shared_ptr<MpOperation>;
 		using op_map_type = std::map<std::string, std::vector<op_ptr_type>>;
-	
+
 	public:
-		std::string name(const MpOperation * ptr) const;
+		//std::string name(const MpOperation * ptr) const;
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
 
 		op_ptr_type find(const std::string & name, size_t nargs) const;
@@ -268,27 +268,28 @@ public:
 		op_map_type _symbols;
 	};
 
-	class SubContext
+	class MATHPRESSO_API SubContext : public std::enable_shared_from_this<SubContext>
 	{
 	public:
 
-		SubContext(std::string name = "", SubContext * parent = nullptr) : 
-			_name(name), 
-			_ops(), 
-			_parent(parent), 
-			_children({}) 
+		SubContext(std::string name = "", std::shared_ptr<SubContext> parent = nullptr) :
+			_name(name),
+			_ops(),
+			_parent(parent),
+			_children({})
 		{
 		}
-		
-		~SubContext() 
+
+		~SubContext()
 		{
 		}
-		
+
 		// returns the fully qualified name
 		std::string FQN()
 		{
-			if (_parent)
-				return _parent->FQN() + "." + _name;
+			auto parent = _parent.lock();
+			if (parent)
+				return parent->FQN() + "." + _name;
 			else
 				return _name;
 		}
@@ -310,7 +311,7 @@ public:
 		std::string _name;
 		Operations _ops;
 		// std::vector<Variables> _vars; // TODO
-		SubContext * _parent;
+		std::weak_ptr<SubContext> _parent;
 		std::map<std::string, std::shared_ptr<SubContext>> _children;
 	};
 

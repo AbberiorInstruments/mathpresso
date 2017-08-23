@@ -658,7 +658,7 @@ namespace mathpresso
 			if (found.size() != 0)
 				return found;
 			else
-				return _parent->resolve(fnName);
+				return _parent.lock()->resolve(fnName);
 		}
 		else
 		{
@@ -679,35 +679,36 @@ namespace mathpresso
 		auto fqn = separateFQN(name);
 		auto con = resolveInternal(fqn);
 
-		con->_children.emplace(fqn.back(), std::make_shared<SubContext>(name, con.get()));
+		con->_children.emplace(fqn.back(), std::make_shared<SubContext>(fqn.back(), con));
 	}
 
 	std::shared_ptr<SubContext> SubContext::resolveInternal(std::vector<std::string> fqn)
 	{
 		size_t i = 0;
-		auto tmp = _parent;
+		auto tmp = _parent.lock();
 		while (tmp)
 		{
 			++i;
-			tmp = tmp->_parent;
+			tmp = tmp->_parent.lock();
 		}
 
-		if (fqn.size() >= i + 1)
+		if (fqn.size() <= i)
 		{
 			throw std::runtime_error("unresolvable.");
 		}
-		else if (fqn.size() == i + 2)
+		else if (fqn.size() == i + 1)
 		{
-			return std::shared_ptr<SubContext>(this);
+			return shared_from_this();
 		}
 		else
 		{
-			try {
+			try
+			{
 				return _children.at(fqn[i])->resolveInternal(fqn);
 			}
 			catch (std::out_of_range)
 			{
-					throw std::runtime_error("unresolvable");
+				throw std::runtime_error("unresolvable");
 			}
 		}
 	}
