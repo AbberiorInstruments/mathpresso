@@ -655,11 +655,11 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		//! AST builder.
-		AstBuilder* _ast;
+		AstBuilder* _ast; //-> std::shared_ptr<AstBuilder>
 		//! Parent node.
-		AstNode* _parent;
+		AstNode* _parent; // -> std::weak_ptr<AstNode>
 		//! Child nodes.
-		AstNode** _children;
+		AstNode** _children; // -> std::vector<std::shared_ptr<AstNode>>>
 
 		std::shared_ptr<MpOperation> _mpOp;
 
