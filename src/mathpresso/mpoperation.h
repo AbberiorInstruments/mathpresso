@@ -16,7 +16,7 @@
 namespace mathpresso
 {
 
-	static constexpr char* unkownFunctionName = "<unknown>";
+	static constexpr char unkownFunctionName[] = "<unknown>";
 
 	// Forward Declarations:
 	struct JitCompiler;

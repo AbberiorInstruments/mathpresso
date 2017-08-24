@@ -781,7 +781,7 @@ namespace mathpresso
 			}
 			catch (std::out_of_range)
 			{
-				throw std::runtime_error("unresolvable");
+				throw std::runtime_error("SubContext '" + fqn[i] + "' does not exist at level " + std::to_string(i));
 			}
 		}
 	}
