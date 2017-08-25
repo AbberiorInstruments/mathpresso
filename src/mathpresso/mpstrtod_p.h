@@ -21,37 +21,66 @@
 # include <xlocale.h>
 #endif
 
-namespace mathpresso {
+namespace mathpresso
+{
 
-// ============================================================================
-// [mathpresso::Parser]
-// ============================================================================
+	// ============================================================================
+	// [mathpresso::Parser]
+	// ============================================================================
 
-struct StrToD {
-  MATHPRESSO_NO_COPY(StrToD)
+	struct StrToD
+	{
+		MATHPRESSO_NO_COPY(StrToD);
 
 #if defined(MATHPRESSO_STRTOD_MSLOCALE)
-  MATHPRESSO_INLINE StrToD() { handle = _create_locale(LC_ALL, "C"); }
-  MATHPRESSO_INLINE ~StrToD() { _free_locale(handle); }
+		StrToD() 
+		{ 
+			handle = _create_locale(LC_ALL, "C"); 
+		}
+		~StrToD() 
+		{ 
+			_free_locale(handle); 
+		}
 
-  MATHPRESSO_INLINE bool isOk() const { return handle != NULL; }
-  MATHPRESSO_INLINE double conv(const char* s, char** end) const { return _strtod_l(s, end, handle); }
+		bool isOk() const 
+		{
+			return handle != nullptr;
+		}
+		double conv(const char* s, char** end) const
+		{ 
+			return _strtod_l(s, end, handle);
+		}
 
-  _locale_t handle;
+		_locale_t handle;
 #elif defined(MATHPRESSO_STRTOD_XLOCALE)
-  MATHPRESSO_INLINE StrToD() { handle = newlocale(LC_ALL_MASK, "C", NULL); }
-  MATHPRESSO_INLINE ~StrToD() { freelocale(handle); }
+		StrToD()
+		{ 
+			handle = newlocale(LC_ALL_MASK, "C", nullptr);
+		}
+		~StrToD() { freelocale(handle); }
 
-  MATHPRESSO_INLINE bool isOk() const { return handle != NULL; }
-  MATHPRESSO_INLINE double conv(const char* s, char** end) const { return strtod_l(s, end, handle); }
+		bool isOk() const
+		{
+			return handle != nullptr; 
+		}
+		double conv(const char* s, char** end) const 
+		{
+			return strtod_l(s, end, handle);
+		}
 
-  locale_t handle;
+		locale_t handle;
 #else
-  // Time bomb!
-  MATHPRESSO_INLINE bool isOk() const { return true; }
-  MATHPRESSO_INLINE double conv(const char* s, char** end) const { return strtod(s, end); }
+		// TODO: this is definitely unsafe.
+		bool isOk() const 
+		{ 
+			return true; 
+	}
+		double conv(const char* s, char** end) const 
+		{
+			return strtod(s, end);
+		}
 #endif
-};
+	};
 
 } // mathpresso namespace
 

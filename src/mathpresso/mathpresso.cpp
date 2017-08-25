@@ -93,7 +93,7 @@ namespace mathpresso
 	};
 
 	//! Increases the ref-count
-	static MATHPRESSO_INLINE ContextImpl* mpContextAddRef(ContextImpl* d)
+	static ContextImpl* mpContextAddRef(ContextImpl* d)
 	{
 		if (d != &mpContextNull)
 			mpAtomicInc(&d->_refCount);
@@ -101,7 +101,7 @@ namespace mathpresso
 	}
 
 	//! decreases the ref-count and deletes the ContextImpl, if it reaches 0.
-	static MATHPRESSO_INLINE void mpContextRelease(ContextImpl* d)
+	static void mpContextRelease(ContextImpl* d)
 	{
 		if (d != &mpContextNull && !mpAtomicDec(&d->_refCount))
 			delete static_cast<ContextInternalImpl*>(d);

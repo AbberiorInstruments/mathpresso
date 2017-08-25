@@ -69,16 +69,21 @@ namespace mathpresso {
 	//!
 	//! This method exploits how ASCII table has been designed. It expects ASCII
 	//! character on the input that will be lowercased by setting the 0x20 bit on.
-	static MATHPRESSO_INLINE uint32_t mpGetLower(uint32_t c) { return c | 0x20; }
+	static uint32_t mpGetLower(uint32_t c) 
+	{
+		return c | 0x20;
+	}
 
 	//! \internal
-	static const double mpPow10Table[] = {
+	static constexpr double mpPow10Table[] =
+	{
 	  1e+0 , 1e+1 , 1e+2 , 1e+3 , 1e+4 , 1e+5 , 1e+6 , 1e+7 ,
 	  1e+8 , 1e+9 , 1e+10, 1e+11, 1e+12, 1e+13, 1e+14, 1e+15
 	};
 
 	//! \internal
-	enum {
+	enum
+	{
 		kSafeDigits = 15,
 		kPow10TableSize = static_cast<int>(MATHPRESSO_ARRAY_SIZE(mpPow10Table))
 	};
