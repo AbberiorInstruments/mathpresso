@@ -121,10 +121,10 @@ namespace mathpresso
 		uint32_t _bucketsCount;
 		HashNode** _data;
 
+		uint32_t _length;
 	protected:
 		ZoneHeap* _heap;
 
-		uint32_t _length;
 		uint32_t _bucketsGrow;
 	
 		HashNode* _embedded[1 + kExtraCount];

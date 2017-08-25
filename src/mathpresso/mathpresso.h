@@ -85,10 +85,8 @@ namespace mathpresso
 #endif
 
 #define MATHPRESSO_NO_COPY(type) \
-private: \
-  MATHPRESSO_INLINE type(const type& other); \
-  MATHPRESSO_INLINE type& operator=(const type& other); \
-public:
+type(const type& other) = delete; \
+type& operator=(const type& other) = delete; \
 
 //! Get an offset of `field` in a struct `type`.
 #define MATHPRESSO_OFFSET(type, field) \
@@ -260,7 +258,10 @@ public:
 
 		std::vector<op_ptr_type> find(const std::string &name) const;
 
+		// Makes sure that functions with the same name have to have the 
+		// precedence and association.
 		void add(const std::string &name, op_ptr_type obj);
+
 		void remove(const std::string &name);
 
 		std::vector<std::string> names() const;
@@ -368,7 +369,7 @@ public:
 		//!        generate
 		//!
 		//! Returns MathPresso's error code, see \ref Error.
-		MATHPRESSO_API Error compile(const Context& ctx, const char* body, unsigned int options, OutputLog* log = nullptr);
+		MATHPRESSO_API Error compile(const Context& ctx, const std::string & body, unsigned int options, OutputLog* log = nullptr);
 
 		//! Get whether the `Expression` contains a valid compiled expression.
 		MATHPRESSO_API bool isCompiled() const;
@@ -382,7 +383,7 @@ public:
 		//! Evaluate expression with variable substitutions.
 		//!
 		//! Returns the result of the evaluated expression, NaN otherwise.
-		MATHPRESSO_INLINE double evaluate(void* data) const
+		double evaluate(void* data) const
 		{
 			double result[2];
 			_func(result, data);
@@ -394,7 +395,7 @@ public:
 		//!
 		//! This function cannot cope with complex variables, if they are not aligned to
 		//! 16 byte boundaries. Use 'alignas(16)' to force the alignment.
-		MATHPRESSO_INLINE std::complex<double> evaluateComplex(void* data) const
+		std::complex<double> evaluateComplex(void* data) const
 		{
 			double result[2] = { 0, 0 };
 			_func(result, data);

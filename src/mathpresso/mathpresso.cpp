@@ -170,6 +170,7 @@ namespace mathpresso
 		}
 		else
 		{
+			// multi threading
 			d = mpContextClone(d);
 			if (MATHPRESSO_UNLIKELY(d == nullptr))
 				return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
@@ -351,7 +352,7 @@ namespace mathpresso
 	// [mathpresso::Expression - Interface]
 	// ============================================================================
 
-	Error Expression::compile(const Context& ctx, const char* body, unsigned int options, OutputLog* log)
+	Error Expression::compile(const Context& ctx, const std::string & body, unsigned int options, OutputLog* log)
 	{
 		// Init options first.
 		options &= _kOptionsMask;
@@ -366,20 +367,24 @@ namespace mathpresso
 		StringBuilderTmp<512> sbTmp;
 
 		// Initialize AST.
+
+		// this AstBuilder will hold the AST and the symbols defined by assignment within the expression.
+		// Every other (global) Variable will be hold within ctx._d!
 		AstBuilder ast(&heap);
 		MATHPRESSO_PROPAGATE(ast.initProgramScope());
 
 		ContextImpl* d = ctx._d;
+
+		// here we make the Scope within ctx._d the parent of ast._scope, so a lookup can find local and global variables.
 		if (d != &mpContextNull)
 			ast.getRootScope()->shadowContextScope(&static_cast<ContextInternalImpl*>(d)->_scope);
 
 		// Setup basic data structures used during parsing and compilation.
-		size_t len = ::strlen(body);
-		ErrorReporter errorReporter(body, len, options, log);
+		ErrorReporter errorReporter(body.c_str(), body.length(), options, log);
 
 		// Parse the expression into AST.
 		{
-			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body, len, &ctx._ops).parseProgram(ast.getProgramNode()));
+			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body.c_str(), body.length(), &ctx._ops).parseProgram(ast.getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)

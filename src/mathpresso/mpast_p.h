@@ -206,7 +206,7 @@ namespace mathpresso
 		// [Factory]
 		// --------------------------------------------------------------------------
 
-		AstScope* newScope(AstScope* parent, uint32_t scopeType);
+		AstScope* newScope(AstScope* parent, AstScopeType scopeType);
 		void deleteScope(AstScope* scope);
 
 		AstSymbol* newSymbol(const std::string& key, uint32_t hVal, AstSymbolType symbolType, uint32_t scopeType);
@@ -442,7 +442,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_NOAPI AstScope(AstBuilder* ast, AstScope* parent, uint32_t scopeType);
+		MATHPRESSO_NOAPI AstScope(AstBuilder* ast, AstScope* parent, AstScopeType scopeType);
 		MATHPRESSO_NOAPI ~AstScope();
 
 		// --------------------------------------------------------------------------
@@ -456,7 +456,7 @@ namespace mathpresso
 		//! Get symbols hash-table.
 		const AstSymbolHash& getSymbols() const { return _symbols; }
 		//! Get scope type, see \ref AstScopeType.
-		uint32_t getScopeType() const { return _scopeType; }
+		AstScopeType getScopeType() const { return _scopeType; }
 
 		//! Get whether the scope type is `AstScopeType::kAstScopeGlobal`.
 		bool isGlobal() const { return _scopeType == AstScopeType::kAstScopeGlobal; }
@@ -517,7 +517,7 @@ namespace mathpresso
 		AstSymbolHash _symbols;
 
 		//! Scope type, see \ref AstScopeType.
-		uint32_t _scopeType;
+		AstScopeType _scopeType;
 	};
 
 	// ============================================================================

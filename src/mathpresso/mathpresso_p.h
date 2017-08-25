@@ -193,11 +193,10 @@ namespace mathpresso
 	// ============================================================================
 	// [mpsl::InternalConsts]
 	// ============================================================================
-
-	enum InternalConsts
+	namespace InternalConsts
 	{
-		kInvalidSlot = 0xFFFFFFFFU
-	};
+		static constexpr uint32_t kInvalidSlot = 0xFFFFFFFFU;
+	}
 
 	// ============================================================================
 	// [mpsl::InternalOptions]
@@ -219,13 +218,13 @@ namespace mathpresso
 	//! \internal
 	//!
 	//! MathPresso assertion handler.
-	MATHPRESSO_NOAPI void mpAssertionFailure(const char* file, int line, const char* msg);
+	void mpAssertionFailure(const char* file, int line, const char* msg);
 
 	// ============================================================================
 	// [mathpresso::mpTraceError]
 	// ============================================================================
 
-	MATHPRESSO_NOAPI Error mpTraceError(Error error);
+	Error mpTraceError(Error error);
 
 
 	// ============================================================================
@@ -241,7 +240,7 @@ namespace mathpresso
 	//! Error reporter.
 	struct ErrorReporter
 	{
-		MATHPRESSO_INLINE ErrorReporter(const char* body, size_t len, uint32_t options, OutputLog* log)
+		ErrorReporter(const char* body, size_t len, uint32_t options, OutputLog* log)
 			: _body(body),
 			_len(len),
 			_options(options),

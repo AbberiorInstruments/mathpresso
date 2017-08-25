@@ -63,10 +63,10 @@ namespace mathpresso
 			IsAssignment = 0x0001000,
 		};
 
-		MpOperation(const Signature &s, uint32_t flags, uint32_t priority = 0) :
+		MpOperation(const Signature &s, uint32_t flags, uint32_t precedence = 0) :
 			signature_(s),
 			flags_(flags),
-			precedence_(priority)
+			precedence_(precedence)
 		{
 		}
 

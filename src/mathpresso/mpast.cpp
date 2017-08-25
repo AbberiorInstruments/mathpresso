@@ -74,7 +74,7 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Factory]
 	// ============================================================================
 
-	AstScope* AstBuilder::newScope(AstScope* parent, uint32_t scopeType)
+	AstScope* AstBuilder::newScope(AstScope* parent, AstScopeType scopeType)
 	{
 		void* p = _heap->alloc(sizeof(AstScope));
 		if (p == nullptr)
@@ -207,11 +207,11 @@ namespace mathpresso
 		AstBuilder* _ast;
 	};
 
-	AstScope::AstScope(AstBuilder* ast, AstScope* parent, uint32_t scopeType)
+	AstScope::AstScope(AstBuilder* ast, AstScope* parent, AstScopeType scopeType)
 		: _ast(ast),
 		_parent(parent),
 		_symbols(ast->getHeap()),
-		_scopeType(static_cast<uint8_t>(scopeType))
+		_scopeType(scopeType)
 	{
 	}
 
