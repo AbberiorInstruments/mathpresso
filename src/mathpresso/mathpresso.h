@@ -244,7 +244,6 @@ type& operator=(const type& other) = delete; \
 		using op_map_type = std::map<std::string, std::vector<op_ptr_type>>;
 	
 	public:
-		std::string name(const MpOperation * ptr) const;
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
 
 		op_ptr_type find(const std::string & name, size_t nargs) const;
@@ -283,51 +282,53 @@ type& operator=(const type& other) = delete; \
 	//! Working with context is reentrant and making weak or deep copy is thread-safe
 	//! (reference counting is atomic). It is possible to create one master context
 	//! and use it from different threads to compile many expressions.
-	struct Context
+	//!
+	//! reading: thread-safe; writing: not thread-safe!
+	struct MATHPRESSO_API Context
 	{
 		// --------------------------------------------------------------------------
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
 		//! Create a new `Context` instance.
-		MATHPRESSO_API Context();
+		Context();
 		//! Create a new `Context` based on `other`.
-		MATHPRESSO_API Context(const Context& other);
+		Context(const Context& other);
 		//! Destroy the `Context` instance.
-		MATHPRESSO_API ~Context();
+		~Context();
 
 		// --------------------------------------------------------------------------
 		// [Copy / Reset]
 		// --------------------------------------------------------------------------
 
 		//! Delete all symbols.
-		MATHPRESSO_API Error reset();
+		Error reset();
 		//! Assignment operator.
-		MATHPRESSO_API Context& operator=(const Context& other);
+		Context& operator=(const Context& other);
 
 		// --------------------------------------------------------------------------
 		// [Interface]
 		// --------------------------------------------------------------------------
 
 		//! Add built-in intrinsics and constants.
-		MATHPRESSO_API Error addBuiltIns(void);
+		Error addBuiltIns(void);
 
 		//! Add constant to this context.
-		MATHPRESSO_API Error addConstant(const std::string &name, double value);
-		MATHPRESSO_API Error addConstant(const std::string &name, std::complex<double> value);
+		Error addConstant(const std::string &name, double value);
+		Error addConstant(const std::string &name, std::complex<double> value);
 		//! Add variable to this context.
-		MATHPRESSO_API Error addVariable(const std::string &name, int offset, unsigned int flags = VariableFlags::kVariableRW);
+		Error addVariable(const std::string &name, int offset, unsigned int flags = VariableFlags::kVariableRW);
 
 		//! Adding Operations to the Context, which can contain function calls. See mpoeration.h for more information.
-		MATHPRESSO_API Error addObject(const std::string &name, std::shared_ptr<MpOperation> obj);
+		Error addObject(const std::string &name, std::shared_ptr<MpOperation> obj);
 
 		//! Internal implementation
-		MATHPRESSO_API Error addSymbol(AstSymbol* &sym, const std::string &name, AstSymbolType type);
+		Error addSymbol(AstSymbol* &sym, const std::string &name, AstSymbolType type);
 		//! Delete symbol from this context.
-		MATHPRESSO_API Error delSymbol(const std::string &name);
+		Error delSymbol(const std::string &name);
 
 		//! Retrieve a list of all available symbols (Functions, operators and constants)
-		MATHPRESSO_API Error listSymbols(std::vector<std::string> &syms);
+		 Error listSymbols(std::vector<std::string> &syms);
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
@@ -343,7 +344,7 @@ type& operator=(const type& other) = delete; \
 	// ============================================================================
 
 	//! MathPresso expression.
-	struct Expression
+	struct MATHPRESSO_API Expression
 	{
 		MATHPRESSO_NO_COPY(Expression);
 
@@ -352,9 +353,9 @@ type& operator=(const type& other) = delete; \
 		// --------------------------------------------------------------------------
 
 		//! Create a new `Expression` instance.
-		MATHPRESSO_API Expression();
+		Expression();
 		//! Destroy the `Expression` instance.
-		MATHPRESSO_API ~Expression();
+		~Expression();
 
 		// --------------------------------------------------------------------------
 		// [Interface]
@@ -369,16 +370,16 @@ type& operator=(const type& other) = delete; \
 		//!        generate
 		//!
 		//! Returns MathPresso's error code, see \ref Error.
-		MATHPRESSO_API Error compile(const Context& ctx, const std::string & body, unsigned int options, OutputLog* log = nullptr);
+		Error compile(const Context& ctx, const std::string & body, unsigned int options, OutputLog* log = nullptr);
 
 		//! Get whether the `Expression` contains a valid compiled expression.
-		MATHPRESSO_API bool isCompiled() const;
+		bool isCompiled() const;
 
 		//! Get whether the  `expression` can returns a Complex result
-		MATHPRESSO_API bool isComplex() const { return _isComplex; }
+		bool isComplex() const { return _isComplex; }
 
 		//! Reset the expression.
-		MATHPRESSO_API void reset();
+		void reset();
 
 		//! Evaluate expression with variable substitutions.
 		//!

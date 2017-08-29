@@ -142,12 +142,11 @@ namespace mathpresso
 						clonedSym->setValue(sym->getValueComp());
 						break;
 
-					case AstSymbolType::kAstSymbolIntrinsic:
-					case AstSymbolType::kAstSymbolFunction:
-						break;
+					case AstSymbolType::kAstSymbolNone:
+						MATHPRESSO_ASSERT_NOT_REACHED();
 
 					default:
-						MATHPRESSO_ASSERT_NOT_REACHED();
+						break;
 				}
 
 				d->_scope.putSymbol(clonedSym);
@@ -170,7 +169,6 @@ namespace mathpresso
 		}
 		else
 		{
-			// multi threading
 			d = mpContextClone(d);
 			if (MATHPRESSO_UNLIKELY(d == nullptr))
 				return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
@@ -587,23 +585,24 @@ namespace mathpresso
 
 		Operations::op_ptr_type weakFit = nullptr;
 
-		for (auto p : it->second)
+		// use a reverse iterator, as overrides are added after the 'original'.
+		for (auto p = it->second.rbegin(); p != it->second.rend(); p++)
 		{
 			// Need the right number of arguments
-			if (p->nargs() == nargs)
+			if (p->get()->nargs() == nargs)
 			{
 				if (paramsAreComplex)
 				{
-					if (p->signature().areParams(Signature::type::complex))
-						return p;
+					if (p->get()->signature().areParams(Signature::type::complex))
+						return *p;
 				}
 				else
 				{
-					if (p->signature().areParams(Signature::type::real))
-						return p;
+					if (p->get()->signature().areParams(Signature::type::real))
+						return *p;
 					else if (!weakFit)
 					{
-						weakFit = p;
+						weakFit = *p;
 					}
 				}
 			}
