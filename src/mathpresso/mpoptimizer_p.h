@@ -24,7 +24,7 @@ struct AstOptimizer : public AstVisitor {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const Operations * ops);
+  AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const Symbols * ops);
   virtual ~AstOptimizer();
 
   // --------------------------------------------------------------------------
@@ -48,7 +48,7 @@ struct AstOptimizer : public AstVisitor {
   // --------------------------------------------------------------------------
 
   ErrorReporter* _errorReporter;
-  const Operations* _ops;
+  const Symbols* _ops;
 };
 
 } // mathpresso namespace

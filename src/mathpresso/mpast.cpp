@@ -175,7 +175,7 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Dump]
 	// ============================================================================
 
-	Error AstBuilder::dump(StringBuilder& sb, const Operations * ops)
+	Error AstBuilder::dump(StringBuilder& sb, const Symbols * ops)
 	{
 		return AstDump(this, sb, ops).onProgram(getProgramNode());
 	}
@@ -195,7 +195,7 @@ namespace mathpresso
 	AstScope::AstScope(AstBuilder* ast, AstScope* parent, AstScopeType scopeType)
 		: _ast(ast),
 		_parent(parent),
-		_symbols(ast->getHeap()),
+		_operations(ast->getHeap()),
 		_scopeType(scopeType)
 	{
 	}
@@ -203,7 +203,7 @@ namespace mathpresso
 	AstScope::~AstScope()
 	{
 		AstScopeReleaseHandler handler(_ast);
-		_symbols.reset(handler);
+		_operations.reset(handler);
 	}
 
 	// ============================================================================
@@ -217,7 +217,7 @@ namespace mathpresso
 
 		do
 		{
-			symbol = scope->_symbols.get(name, hVal);
+			symbol = scope->_operations.get(name, hVal);
 		} while (symbol == nullptr && (scope = scope->getParent()) != nullptr);
 
 		if (scopeOut != nullptr)
@@ -470,7 +470,7 @@ namespace mathpresso
 	// [mathpresso::AstDump - Construction / Destruction]
 	// ============================================================================
 
-	AstDump::AstDump(AstBuilder* ast, StringBuilder& sb, const Operations * ops)
+	AstDump::AstDump(AstBuilder* ast, StringBuilder& sb, const Symbols * ops)
 		: AstVisitor(ast),
 		_sb(sb),
 		_level(0),
@@ -511,7 +511,7 @@ namespace mathpresso
 		return sym ? sym->getName() : "(null)";
 	}
 
-	std::string op_name(AstNode * node, const Operations * ops)
+	std::string op_name(AstNode * node, const Symbols * ops)
 	{
 		return ops->name(node->_mpOp);
 	}

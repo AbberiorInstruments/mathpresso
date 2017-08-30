@@ -254,7 +254,7 @@ namespace mathpresso
 		// [Dump]
 		// --------------------------------------------------------------------------
 
-		Error dump(StringBuilder& sb, const Operations * ops);
+		Error dump(StringBuilder& sb, const Symbols * ops);
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -286,7 +286,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstSymbol(const char* name, uint32_t length, uint32_t hVal, AstSymbolType symbolType, uint32_t scopeType)
+		AstSymbol(const char* name, size_t length, uint32_t hVal, AstSymbolType symbolType, uint32_t scopeType)
 			: HashNode(hVal),
 			_length(length),
 			_name(name),
@@ -317,7 +317,7 @@ namespace mathpresso
 		}
 
 		//! Get symbol name length.
-		uint32_t getLength() const { return _length; }
+		size_t getLength() const { return _length; }
 		//! Get symbol name.
 		const char * getName() const { return _name; }
 
@@ -400,7 +400,7 @@ namespace mathpresso
 
 	private:
 		//! Symbol name length.
-		uint32_t _length;
+		size_t _length;
 		//! Symbol name (key).
 		const char * _name;
 
@@ -454,7 +454,7 @@ namespace mathpresso
 		//! Get the parent scope (or NULL).
 		AstScope* getParent() const { return _parent; }
 		//! Get symbols hash-table.
-		const AstSymbolHash& getSymbols() const { return _symbols; }
+		const AstSymbolHash& getSymbols() const { return _operations; }
 		//! Get scope type, see \ref AstScopeType.
 		AstScopeType getScopeType() const { return _scopeType; }
 
@@ -475,7 +475,7 @@ namespace mathpresso
 		//! Get the symbol defined only in this scope.
 		AstSymbol* getSymbol(const std::string& name, uint32_t hVal)
 		{
-			return _symbols.get(name, hVal);
+			return _operations.get(name, hVal);
 		}
 
 		//! Put a given symbol to this scope.
@@ -486,7 +486,7 @@ namespace mathpresso
 		//! the symbol is already there.
 		void putSymbol(AstSymbol* symbol)
 		{
-			_symbols.put(symbol);
+			_operations.put(symbol);
 		}
 
 		//! Resolve the symbol by traversing all parent scopes if not found in this
@@ -501,7 +501,7 @@ namespace mathpresso
 
 		MATHPRESSO_NOAPI AstSymbol* removeSymbol(AstSymbol* symbol)
 		{
-			return _symbols.del(symbol);
+			return _operations.del(symbol);
 		}
 
 		// --------------------------------------------------------------------------
@@ -513,8 +513,8 @@ namespace mathpresso
 		//! Parent scope.
 		AstScope* _parent;
 
-		//! Operations defined in this scope.
-		AstSymbolHash _symbols;
+		//! Symbols defined in this scope.
+		AstSymbolHash _operations;
 
 		//! Scope type, see \ref AstScopeType.
 		AstScopeType _scopeType;
@@ -1164,7 +1164,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstDump(AstBuilder* ast, StringBuilder& sb, const Operations * ctx);
+		AstDump(AstBuilder* ast, StringBuilder& sb, const Symbols * ctx);
 		virtual ~AstDump();
 
 		// --------------------------------------------------------------------------
@@ -1194,7 +1194,7 @@ namespace mathpresso
 
 		StringBuilder& _sb;
 		uint32_t _level;
-		const Operations * _ops;
+		const Symbols * _ops;
 	};
 
 } // mathpresso namespace

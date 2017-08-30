@@ -20,7 +20,7 @@ namespace mathpresso
 	// [mpsl::AstOptimizer - Construction / Destruction]
 	// ============================================================================
 
-	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const Operations* ops)
+	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const Symbols* ops)
 		: AstVisitor(ast),
 		_errorReporter(errorReporter),
 		_ops(ops)

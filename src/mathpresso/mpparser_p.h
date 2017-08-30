@@ -44,7 +44,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const Operations * ops)
+		Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const Symbols * ops)
 			: _ast(ast),
 			_errorReporter(errorReporter),
 			_currentScope(ast->getRootScope()),
@@ -84,7 +84,7 @@ namespace mathpresso
 
 		AstScope* _currentScope;
 		Tokenizer _tokenizer;
-		const Operations * _ops;
+		const Symbols * _ops;
 	};
 
 } // mathpresso namespace

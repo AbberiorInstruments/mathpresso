@@ -54,7 +54,7 @@ namespace mathpresso
 			MATHPRESSO_ASSERT(parent != nullptr);
 
 			_parser->_currentScope = parent;
-			parent->_symbols.mergeToInvisibleSlot(this->_symbols);
+			parent->_operations.mergeToInvisibleSlot(this->_operations);
 		}
 
 		// --------------------------------------------------------------------------
@@ -184,7 +184,6 @@ namespace mathpresso
 		else
 		{
 			return parseStatement(block, ParserFlags::kNoFlags);
-
 		}
 	}
 

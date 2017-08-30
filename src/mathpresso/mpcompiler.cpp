@@ -122,14 +122,7 @@ namespace mathpresso {
 	void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots, bool b_complex)
 	{
 		// Create Definitions for the Variables and add them as JitVar
-		if (numSlots != 0)
-		{
-			varSlots = static_cast<JitVar*>(heap->alloc(sizeof(JitVar) * numSlots));
-			if (varSlots == nullptr) return;
-
-			for (uint32_t i = 0; i < numSlots; i++)
-				varSlots[i] = JitVar();
-		}
+		varSlots = std::vector<JitVar>(numSlots);
 
 		// Result of the function or NaN. Here the AST is compiled.
 		JitVar result = onBlock(node);
@@ -179,8 +172,7 @@ namespace mathpresso {
 		}
 
 		// Release the Space allocated for the variables
-		if (numSlots != 0)
-			heap->release(varSlots, sizeof(JitVar) * numSlots);
+		varSlots.clear();
 	}
 
 	JitVar JitCompiler::onNode(AstNode* node)
@@ -480,7 +472,7 @@ namespace mathpresso {
 		return getConstantU64AsPD(bits.u);
 	}
 
-	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const Operations * ops, bool b_complex)
+	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const Symbols * ops, bool b_complex)
 	{
 		StringLogger logger;
 

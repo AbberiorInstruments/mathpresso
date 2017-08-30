@@ -118,7 +118,7 @@ namespace mathpresso
 		if (otherD_ != &mpContextNull)
 		{
 			ContextInternalImpl* otherD = static_cast<ContextInternalImpl*>(otherD_);
-			AstSymbolHashIterator it(otherD->_scope._symbols);
+			AstSymbolHashIterator it(otherD->_scope._operations);
 
 			while (it.has())
 			{
@@ -251,6 +251,7 @@ namespace mathpresso
 			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
 		d->_scope.putSymbol(sym);
 
+
 		return ErrorCode::kErrorOk;
 	}
 
@@ -261,6 +262,13 @@ namespace mathpresso
 
 		sym->setValue(value);
 		sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
+
+		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(), HashUtils::hashString(name.c_str(), name.length()), AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+
+		shared_sym->setValue(value);
+		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
+
+		_ops.add(name, shared_sym);
 
 		return ErrorCode::kErrorOk;
 	}
@@ -273,6 +281,13 @@ namespace mathpresso
 		sym->setValue(value);
 		sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned | AstSymbolFlags::kAstSymbolIsComplex);
 
+		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(), HashUtils::hashString(name.c_str(), name.length()), AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+
+		shared_sym->setValue(value);
+		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
+
+		_ops.add(name, shared_sym);
+
 		return ErrorCode::kErrorOk;
 	}
 
@@ -281,16 +296,29 @@ namespace mathpresso
 		AstSymbol* sym;
 		MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
 
+		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(), HashUtils::hashString(name.c_str(), name.length()), AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+		
 		sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared);
+		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared);
 		if (flags & VariableFlags::kVariableCplx)
+		{
 			sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
+			shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
+
+		}
 
 		sym->setVarSlotId(InternalConsts::kInvalidSlot);
 		sym->setVarOffset(offset);
+		shared_sym->setVarSlotId(InternalConsts::kInvalidSlot);
+		shared_sym->setVarOffset(offset);
 
 		if (flags & VariableFlags::kVariableRO)
+		{
 			sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly);
+			shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly);
+		}
 
+		_ops.add(name, shared_sym);
 		return ErrorCode::kErrorOk;
 	}
 
@@ -562,9 +590,9 @@ namespace mathpresso
 	}
 
 
-	std::string Operations::name(const std::shared_ptr<MpOperation> ptr) const
+	std::string Symbols::name(const std::shared_ptr<MpOperation> ptr) const
 	{
-		for (auto &pn : _symbols)
+		for (auto &pn : _operations)
 		{
 			for (auto &p : pn.second)
 			{
@@ -575,7 +603,7 @@ namespace mathpresso
 		return "<unknown>";
 	}
 
-	std::shared_ptr<MpOperation> Operations::find(const std::string &name, size_t numArgs) const
+	std::shared_ptr<MpOperation> Symbols::find(const std::string &name, size_t numArgs) const
 	{
 		auto ps = find(name);
 		for (auto &p : ps)
@@ -587,23 +615,23 @@ namespace mathpresso
 		return nullptr;
 	}
 
-	std::vector<Operations::op_ptr_type> Operations::find(const std::string &name) const
+	std::vector<Symbols::op_ptr_type> Symbols::find(const std::string &name) const
 	{
-		auto it = _symbols.find(name);
-		if (it == _symbols.end())
+		auto it = _operations.find(name);
+		if (it == _operations.end())
 			return{};
 		else
 			return it->second;
 	}
 
-	Operations::op_ptr_type Operations::find(const std::string & name, size_t nargs, bool paramsAreComplex) const
+	Symbols::op_ptr_type Symbols::find(const std::string & name, size_t nargs, bool paramsAreComplex) const
 	{
-		auto it = _symbols.find(name);
+		auto it = _operations.find(name);
 
-		if (it == _symbols.end())
+		if (it == _operations.end())
 			return nullptr;
 
-		Operations::op_ptr_type weakFit = nullptr;
+		Symbols::op_ptr_type weakFit = nullptr;
 
 		// use a reverse iterator, as overrides are added after the 'original'.
 		for (auto p = it->second.rbegin(); p != it->second.rend(); p++)
@@ -630,9 +658,9 @@ namespace mathpresso
 		return weakFit;
 	}
 
-	void Operations::add(const std::string &name, Operations::op_ptr_type obj)
+	void Symbols::add(const std::string &name, Symbols::op_ptr_type obj)
 	{
-		auto syms = _symbols[name];
+		auto syms = _operations[name];
 		for (auto p : syms)
 		{
 			if (p->nargs() == obj->nargs())
@@ -646,20 +674,28 @@ namespace mathpresso
 		}
 
 
-		_symbols[name].push_back(obj);
+		_operations[name].push_back(obj);
 	}
 
-	void Operations::remove(const std::string &name)
+	void Symbols::add(const std::string & name, var_ptr_type obj)
 	{
-		auto it = _symbols.find(name);
-		if (it != _symbols.end())
-			_symbols.erase(it);
+		if (_variables.find(name) != _variables.end())
+		{
+			_variables[name] = obj;
+		}
 	}
 
-	std::vector<std::string> Operations::names() const
+	void Symbols::remove(const std::string &name)
+	{
+		auto it = _operations.find(name);
+		if (it != _operations.end())
+			_operations.erase(it);
+	}
+
+	std::vector<std::string> Symbols::names() const
 	{
 		std::vector<std::string> names;
-		for (auto &pn : _symbols)
+		for (auto &pn : _operations)
 		{
 			for (auto &p : pn.second)
 				names.push_back(pn.first + " (" + p->signature().to_string() + ")");

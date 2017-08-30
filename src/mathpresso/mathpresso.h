@@ -102,6 +102,7 @@ type& operator=(const type& other) = delete; \
 	struct OutputLog;
 	struct Expression;
 	class MpOperation;
+	struct AstSymbol;
 
 	// ============================================================================
 	// [mathpresso::TypeDefs]
@@ -234,17 +235,17 @@ type& operator=(const type& other) = delete; \
 	};
 
 	// ============================================================================
-	// [mathpresso::Operations]
+	// [mathpresso::Symbols]
 	// ============================================================================
 
 	//! Holds MpOperation-objects and gives an easy way to finding them.
-	class Operations
+	class Symbols
 	{
 		using op_ptr_type = std::shared_ptr<MpOperation>;
 		using op_map_type = std::map<std::string, std::vector<op_ptr_type>>;
 		
-		//using var_ptr_type = std::shared_ptr<AstSymbol>;
-		//using var_map_type = std::map<std::string, std::vector<var_ptr_type>>;
+		using var_ptr_type = std::shared_ptr<AstSymbol>;
+		using var_map_type = std::map<std::string, var_ptr_type>;
 	
 	public:
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
@@ -260,15 +261,21 @@ type& operator=(const type& other) = delete; \
 
 		std::vector<op_ptr_type> find(const std::string &name) const;
 
-		// Makes sure that functions with the same name have to have the 
-		// precedence and association.
+		//! Makes sure that functions with the same name have to have the 
+		//! precedence and association.
 		void add(const std::string &name, op_ptr_type obj);
+
+		//! add a variable.
+		void add(const std::string &name, var_ptr_type obj);
 
 		void remove(const std::string &name);
 
 		std::vector<std::string> names() const;
+
 	private:
-		op_map_type _symbols;
+		op_map_type _operations;
+		var_map_type _variables;
+
 	};
 
 	// ============================================================================
@@ -322,7 +329,7 @@ type& operator=(const type& other) = delete; \
 		//! Add variable to this context.
 		Error addVariable(const std::string &name, int offset, unsigned int flags = VariableFlags::kVariableRW);
 
-		//! Adding Operations to the Context, which can contain function calls. See mpoeration.h for more information.
+		//! Adding Symbols to the Context, which can contain function calls. See mpoeration.h for more information.
 		Error addObject(const std::string &name, std::shared_ptr<MpOperation> obj);
 
 		//! Internal implementation
@@ -353,7 +360,7 @@ type& operator=(const type& other) = delete; \
 		//! Private data not available to the MathPresso public API.
 		ContextImpl* _d;
 
-		Operations _ops;
+		Symbols _ops;
 
 	protected:
 		std::weak_ptr<Context> _parent;
