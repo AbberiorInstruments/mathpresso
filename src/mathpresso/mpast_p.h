@@ -123,7 +123,7 @@ namespace mathpresso
 	//! \internal
 	//!
 	//! `AstNode` type.
-	enum AstNodeType
+	enum class AstNodeType
 	{
 		//! Not used.
 		kAstNodeNone = 0,
@@ -513,7 +513,7 @@ namespace mathpresso
 		//! Parent scope.
 		AstScope* _parent;
 
-		//! Symbols defined in this scope.
+		//! Operations defined in this scope.
 		AstSymbolHash _symbols;
 
 		//! Scope type, see \ref AstScopeType.
@@ -556,13 +556,13 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstNode(AstBuilder* ast, uint32_t nodeType, AstNode** children = nullptr, uint32_t length = 0)
+		AstNode(AstBuilder* ast, AstNodeType nodeType, AstNode** children = nullptr, uint32_t length = 0)
 			: _ast(ast),
 			_parent(nullptr),
 			_children(children),
 			_mpOp(nullptr),
 			_opName(),
-			_nodeType(static_cast<uint8_t>(nodeType)),
+			_nodeType(nodeType),
 			_nodeFlags(AstNodeFlags::kAstNone),
 			_position(~static_cast<uint32_t>(0)),
 			_length(length)
@@ -601,7 +601,7 @@ namespace mathpresso
 		size_t getLength() const { return _length; }
 
 		//! Get node type.
-		uint32_t getNodeType() const { return _nodeType; }
+		AstNodeType getNodeType() const { return _nodeType; }
 		//! Get whether the node is `AstVar`.
 		bool isVar() const { return _nodeType == AstNodeType::kAstNodeVar; }
 		//! Get whether the node is `AstImm`.
@@ -667,7 +667,7 @@ namespace mathpresso
 
 	private:
 		//! Node type, see `AstNodeType`.
-		uint8_t _nodeType;
+		AstNodeType _nodeType;
 		//! Node flags, see `AstNodeFlags`.
 		uint8_t _nodeFlags;
 		//! Position (in characters) to the beginning of the program (default -1).
@@ -690,7 +690,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstBlock(AstBuilder* ast, uint32_t nodeType = AstNodeType::kAstNodeBlock)
+		AstBlock(AstBuilder* ast, AstNodeType nodeType = AstNodeType::kAstNodeBlock)
 			: AstNode(ast, nodeType),
 			_capacity(0)
 		{
@@ -776,7 +776,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstUnary(AstBuilder* ast, uint32_t nodeType)
+		AstUnary(AstBuilder* ast, AstNodeType nodeType)
 			: AstNode(ast, nodeType, &_child, 1),
 			_child(nullptr)
 		{
@@ -807,7 +807,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstBinary(AstBuilder* ast, uint32_t nodeType)
+		AstBinary(AstBuilder* ast, AstNodeType nodeType)
 			: AstNode(ast, nodeType, &_left, 2),
 			_left(nullptr),
 			_right(nullptr)
@@ -841,7 +841,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstTernary(AstBuilder* ast, uint32_t nodeType)
+		AstTernary(AstBuilder* ast, AstNodeType nodeType)
 			: AstNode(ast, nodeType, &_condition, 3),
 			_condition(nullptr),
 			_left(nullptr),

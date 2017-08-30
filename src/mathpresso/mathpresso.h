@@ -242,6 +242,9 @@ type& operator=(const type& other) = delete; \
 	{
 		using op_ptr_type = std::shared_ptr<MpOperation>;
 		using op_map_type = std::map<std::string, std::vector<op_ptr_type>>;
+		
+		//using var_ptr_type = std::shared_ptr<AstSymbol>;
+		//using var_map_type = std::map<std::string, std::vector<var_ptr_type>>;
 	
 	public:
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
@@ -328,7 +331,21 @@ type& operator=(const type& other) = delete; \
 		Error delSymbol(const std::string &name);
 
 		//! Retrieve a list of all available symbols (Functions, operators and constants)
-		 Error listSymbols(std::vector<std::string> &syms);
+		Error listSymbols(std::vector<std::string> &syms);
+		
+		// getter/setter for the subcontexts and parents.
+		Error setParent(std::shared_ptr<Context> ctx);
+		Error addChild(const std::string & name, std::shared_ptr<Context> ctx);
+
+		std::shared_ptr<Context> getParent()
+		{
+			return _parent.lock();
+		}
+		std::shared_ptr<Context> getChild(const std::string & name)
+		{
+			return _children.at(name);
+		}
+		
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------

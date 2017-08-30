@@ -56,7 +56,7 @@ namespace mathpresso
 	{
 		// Prevent removing nodes that are not stored in pure `AstBlock`. For example
 		// function call inherits from `AstBlock`, but it needs each expression passed.
-		bool alterable = node->getNodeType() == kAstNodeBlock;
+		bool alterable = node->getNodeType() == AstNodeType::kAstNodeBlock;
 
 		size_t curCount = node->getLength();
 		size_t oldCount;

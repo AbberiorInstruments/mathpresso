@@ -18,38 +18,24 @@ namespace mathpresso
 	// [mathpresso::mpAstNodeSize]
 	// ============================================================================
 
-	struct AstNodeSize
+
+	static uint32_t getNodeSize(AstNodeType nodeType)
 	{
-		// --------------------------------------------------------------------------
-		// [Accessors]
-		// --------------------------------------------------------------------------
-
-		uint32_t getNodeType() const { return _nodeType; }
-		uint32_t getNodeSize() const { return _nodeSize; }
-
-		// --------------------------------------------------------------------------
-		// [Members]
-		// --------------------------------------------------------------------------
-
-		uint8_t _nodeType;
-		uint8_t _reserved;
-		uint16_t _nodeSize;
-	};
-
-#define ROW(type, size) { type, 0, static_cast<uint8_t>(size) }
-	static const AstNodeSize mpAstNodeSize[] = {
-	  ROW(AstNodeType::kAstNodeNone     , 0),
-	  ROW(AstNodeType::kAstNodeProgram  , sizeof(AstProgram)),
-	  ROW(AstNodeType::kAstNodeBlock    , sizeof(AstBlock)),
-	  ROW(AstNodeType::kAstNodeVarDecl  , sizeof(AstVarDecl)),
-	  ROW(AstNodeType::kAstNodeVar      , sizeof(AstVar)),
-	  ROW(AstNodeType::kAstNodeImm      , sizeof(AstImm)),
-	  ROW(AstNodeType::kAstNodeUnaryOp  , sizeof(AstUnaryOp)),
-	  ROW(AstNodeType::kAstNodeBinaryOp , sizeof(AstBinaryOp)),
-	  ROW(AstNodeType::kAstNodeTernaryOp, sizeof(AstTernaryOp)),
-	  ROW(AstNodeType::kAstNodeCall     , sizeof(AstCall))
-	};
-#undef ROW
+		switch (nodeType)
+		{
+			case AstNodeType::kAstNodeNone: return 0;
+			case AstNodeType::kAstNodeProgram: return sizeof(AstProgram);
+			case AstNodeType::kAstNodeBlock: return sizeof(AstBlock);
+			case AstNodeType::kAstNodeVarDecl: return sizeof(AstVarDecl);
+			case AstNodeType::kAstNodeVar: return sizeof(AstVar);
+			case AstNodeType::kAstNodeImm: return sizeof(AstImm);
+			case AstNodeType::kAstNodeUnaryOp: return sizeof(AstUnaryOp);
+			case AstNodeType::kAstNodeBinaryOp: return sizeof(AstBinaryOp);
+			case AstNodeType::kAstNodeTernaryOp: return sizeof(AstTernaryOp);
+			case AstNodeType::kAstNodeCall: return sizeof(AstCall);
+			default: return 0;
+		}
+	}
 
 	// ============================================================================
 	// [mathpresso::AstBuilder - Construction / Destruction]
@@ -135,8 +121,7 @@ namespace mathpresso
 		size_t length = node->getLength();
 		AstNode** children = node->getChildren();
 
-		uint32_t nodeType = node->getNodeType();
-		MATHPRESSO_ASSERT(mpAstNodeSize[nodeType].getNodeType() == nodeType);
+		AstNodeType nodeType = node->getNodeType();
 
 		switch (nodeType)
 		{
@@ -162,7 +147,7 @@ namespace mathpresso
 
 		node ->~AstNode();
 
-		_heap->release(node, mpAstNodeSize[nodeType].getNodeSize());
+		_heap->release(node, getNodeSize(nodeType));
 	}
 
 	// ============================================================================

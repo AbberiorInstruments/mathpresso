@@ -319,6 +319,21 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
+	Error Context::setParent(std::shared_ptr<Context> ctx)
+	{
+		_parent = ctx;
+		return ErrorCode::kErrorOk;
+	}
+
+	Error Context::addChild(const std::string & name, std::shared_ptr<Context> ctx)
+	{
+		auto ret = _children.emplace(name, ctx);
+		if (!ret.second)
+			return ErrorCode::kErrorInvalidArgument;
+		else
+			return ctx->setParent(shared_from_this());
+	}
+
 	Error Context::delSymbol(const std::string &name)
 	{
 		ContextInternalImpl* d;
