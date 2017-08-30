@@ -284,7 +284,7 @@ type& operator=(const type& other) = delete; \
 	//! and use it from different threads to compile many expressions.
 	//!
 	//! reading: thread-safe; writing: not thread-safe!
-	struct MATHPRESSO_API Context
+	struct MATHPRESSO_API Context : public std::enable_shared_from_this<Context>
 	{
 		// --------------------------------------------------------------------------
 		// [Construction / Destruction]
@@ -337,6 +337,11 @@ type& operator=(const type& other) = delete; \
 		ContextImpl* _d;
 
 		Operations _ops;
+
+	protected:
+		std::weak_ptr<Context> _parent;
+		std::map<std::string, std::shared_ptr<Context>> _children;
+
 	};
 
 	// ============================================================================
@@ -370,7 +375,7 @@ type& operator=(const type& other) = delete; \
 		//!        generate
 		//!
 		//! Returns MathPresso's error code, see \ref Error.
-		Error compile(const Context& ctx, const std::string & body, unsigned int options, OutputLog* log = nullptr);
+		Error compile(std::shared_ptr<Context> ctx, const std::string & body, unsigned int options, OutputLog* log = nullptr);
 
 		//! Get whether the `Expression` contains a valid compiled expression.
 		bool isCompiled() const;

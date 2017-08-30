@@ -84,7 +84,9 @@ namespace mathpresso
 		{
 			mpAtomicSet(&_refCount, 1);
 		}
-		~ContextInternalImpl() {}
+		~ContextInternalImpl() 
+		{
+		}
 
 		Zone _zone; //! Basic Allocator for chunks of memory from asmjit
 		ZoneHeap _heap; //! Granular and fast access to a Zones memory, with alloc and release
@@ -188,7 +190,6 @@ namespace mathpresso
 	Error Context::reset()
 	{
 		mpContextRelease(mpAtomicSetXchgT<ContextImpl*>(&_d, const_cast<ContextImpl*>(&mpContextNull)));
-
 		return ErrorCode::kErrorOk;
 	}
 
@@ -205,13 +206,17 @@ namespace mathpresso
 
 	Context::Context()
 		: _d(const_cast<ContextImpl*>(&mpContextNull)),
-		_ops()
+		_ops(),
+		_parent(),
+		_children({})
 	{
 	}
 
 	Context::Context(const Context& other)
 		: _d(mpContextAddRef(other._d)),
-		_ops(other._ops)
+		_ops(other._ops),
+		_parent(other._parent),
+		_children(other._children)
 	{
 	}
 
@@ -350,7 +355,7 @@ namespace mathpresso
 	// [mathpresso::Expression - Interface]
 	// ============================================================================
 
-	Error Expression::compile(const Context& ctx, const std::string & body, unsigned int options, OutputLog* log)
+	Error Expression::compile(std::shared_ptr<Context> ctx, const std::string & body, unsigned int options, OutputLog* log)
 	{
 		// Init options first.
 		options &= _kOptionsMask;
@@ -371,7 +376,7 @@ namespace mathpresso
 		AstBuilder ast(&heap);
 		MATHPRESSO_PROPAGATE(ast.initProgramScope());
 
-		ContextImpl* d = ctx._d;
+		ContextImpl* d = ctx->_d;
 
 		// here we make the Scope within ctx._d the parent of ast._scope, so a lookup can find local and global variables.
 		if (d != &mpContextNull)
@@ -382,24 +387,24 @@ namespace mathpresso
 
 		// Parse the expression into AST.
 		{
-			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body.c_str(), body.length(), &ctx._ops).parseProgram(ast.getProgramNode()));
+			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body.c_str(), body.length(), &ctx->_ops).parseProgram(ast.getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
 		{
-			ast.dump(sbTmp, &ctx._ops);
+			ast.dump(sbTmp, &ctx->_ops);
 			log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
 
 		// Perform basic optimizations at AST level.
 		{
-			MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, &ctx._ops).onProgram(ast.getProgramNode()));
+			MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, &ctx->_ops).onProgram(ast.getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
 		{
-			ast.dump(sbTmp, &ctx._ops);
+			ast.dump(sbTmp, &ctx->_ops);
 			log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
@@ -408,7 +413,7 @@ namespace mathpresso
 
 		// Compile the function to machine code.
 		reset();
-		CompiledFunc fn = mpCompileFunction(&ast, options, log, &ctx._ops, _isComplex);
+		CompiledFunc fn = mpCompileFunction(&ast, options, log, &ctx->_ops, _isComplex);
 
 		if (fn == nullptr)
 			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
