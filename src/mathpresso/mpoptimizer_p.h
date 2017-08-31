@@ -31,17 +31,18 @@ struct AstOptimizer : public AstVisitor {
   // [OnNode]
   // --------------------------------------------------------------------------
 
-  virtual Error onNode(AstNode * node) override;
+  virtual Error onNode(std::shared_ptr<AstNode> node) override;
 
-  virtual Error onBlock(AstBlock* node);
-  virtual Error onVarDecl(AstVarDecl* node);
-  virtual Error onVar(AstVar* node);
-  virtual Error onImm(AstImm* node);
-  virtual Error optimize(AstNode * node);
-  virtual Error onUnaryOp(AstUnaryOp* node);
-  virtual Error onBinaryOp(AstBinaryOp* node);
-  virtual Error onTernaryOp(AstTernaryOp * node);
-  virtual Error onCall(AstCall* node);
+  virtual Error onBlock(std::shared_ptr<AstBlock> node) override;
+  virtual Error onVarDecl(std::shared_ptr<AstVarDecl> node) override;
+  virtual Error onVar(std::shared_ptr<AstVar> node) override;
+  virtual Error onImm(std::shared_ptr<AstImm> node) override;
+  virtual Error onUnaryOp(std::shared_ptr<AstUnaryOp> node) override;
+  virtual Error onBinaryOp(std::shared_ptr<AstBinaryOp> node) override;
+  virtual Error onTernaryOp(std::shared_ptr<AstTernaryOp> node) override;
+  virtual Error onCall(std::shared_ptr<AstCall> node) override;
+
+  virtual Error optimize(std::shared_ptr<AstNode> node);
 
   // --------------------------------------------------------------------------
   // [Members]

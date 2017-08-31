@@ -200,7 +200,7 @@ namespace mathpresso
 		ZoneHeap* getHeap() const { return _heap; }
 
 		AstScope* getRootScope() const { return _rootScope; }
-		AstProgram* getProgramNode() const { return _programNode; }
+		std::shared_ptr<AstProgram> getProgramNode() const { return _programNode; }
 
 		// --------------------------------------------------------------------------
 		// [Factory]
@@ -218,29 +218,26 @@ namespace mathpresso
   if (MATHPRESSO_UNLIKELY(obj == nullptr)) return nullptr
 
 		template<typename T>
-		T* newNode()
+		std::shared_ptr<T> newNode()
 		{
-			MATHPRESSO_ALLOC_AST_OBJECT(sizeof(T));
-			return new(obj) T(this);
+			return std::make_shared<T>(this);
 		}
 
 		template<typename T, typename P0>
-		T* newNode(P0 p0)
+		std::shared_ptr<T> newNode(P0 p0)
 		{
-			MATHPRESSO_ALLOC_AST_OBJECT(sizeof(T));
-			return new(obj) T(this, p0);
+			return std::make_shared<T>(this, p0);
 		}
 
 		template<typename T, typename P0, typename P1>
-		T* newNode(P0 p0, P1 p1)
+		std::shared_ptr<T> newNode(P0 p0, P1 p1)
 		{
-			MATHPRESSO_ALLOC_AST_OBJECT(sizeof(T));
-			return new(obj) T(this, p0, p1);
+			return std::make_shared<T>(this, p0, p1);
 		}
 
 #undef MATHPRESSO_ALLOC_AST_OBJECT
 
-		void deleteNode(AstNode* node);
+		void deleteNode(std::shared_ptr<AstNode> node);
 
 		uint32_t newSlotId() { return _numSlots++; }
 
@@ -268,7 +265,7 @@ namespace mathpresso
 		//! Root scope.
 		AstScope* _rootScope;
 		//! Root node.
-		AstProgram* _programNode;
+		std::shared_ptr<AstProgram> _programNode;
 
 		//! Number of variable slots used.
 		uint32_t _numSlots;
@@ -278,7 +275,7 @@ namespace mathpresso
 	// [mathpresso::AstSymbol]
 	// ============================================================================
 
-	struct AstSymbol : public HashNode
+	struct AstSymbol : public HashNode, public std::enable_shared_from_this<AstSymbol>
 	{
 		MATHPRESSO_NO_COPY(AstSymbol);
 
@@ -324,9 +321,9 @@ namespace mathpresso
 		//! Check if the symbol has associated node with it.
 		bool hasNode() const { return _node != nullptr; }
 		//! Get node associated with the symbol (can be `NULL` for built-ins).
-		AstNode* getNode() const { return _node; }
+		std::shared_ptr<AstNode> getNode() const { return _node; }
 		//! Associate node with the symbol (basically the node that declares it).
-		void setNode(AstNode* node) { _node = node; }
+		void setNode(std::shared_ptr<AstNode> node) { _node = node; }
 
 		//! Get hash value of the symbol name.
 		uint32_t getHVal() const { return _hVal; }
@@ -384,9 +381,9 @@ namespace mathpresso
 		void incUsedCount(uint32_t n = 1) { _usedCount += n; }
 		void incWriteCount(uint32_t n = 1) { _writeCount += n; incUsedCount(n); }
 
-		void decUsedCount(uint32_t n = 1) 
+		void decUsedCount(uint32_t n = 1)
 		{
-			_usedCount -= n; 
+			_usedCount -= n;
 			if (_usedCount == 0)
 			{
 				this->~AstSymbol();
@@ -405,7 +402,7 @@ namespace mathpresso
 		const char * _name;
 
 		//! Node where the symbol is defined.
-		AstNode* _node;
+		std::shared_ptr<AstNode> _node;
 
 		//! Type of the symbol, see \ref AstSymbolType.
 		AstSymbolType _symbolType;
@@ -442,8 +439,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_NOAPI AstScope(AstBuilder* ast, AstScope* parent, AstScopeType scopeType);
-		MATHPRESSO_NOAPI ~AstScope();
+		AstScope(AstBuilder* ast, AstScope* parent, AstScopeType scopeType);
+		~AstScope();
 
 		// --------------------------------------------------------------------------
 		// [Accessors]
@@ -473,7 +470,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		//! Get the symbol defined only in this scope.
-		AstSymbol* getSymbol(const std::string& name, uint32_t hVal)
+		std::shared_ptr<AstSymbol> getSymbol(const std::string& name, uint32_t hVal)
 		{
 			return _operations.get(name, hVal);
 		}
@@ -484,7 +481,7 @@ namespace mathpresso
 		//! to call `resolveSymbol()` or `getSymbol()` and then `putSymbol()` based
 		//! on the result. You should never call `putSymbol()` without checking if
 		//! the symbol is already there.
-		void putSymbol(AstSymbol* symbol)
+		void putSymbol(std::shared_ptr<AstSymbol> symbol)
 		{
 			_operations.put(symbol);
 		}
@@ -492,14 +489,14 @@ namespace mathpresso
 		//! Resolve the symbol by traversing all parent scopes if not found in this
 		//! one. An optional `scopeOut` argument can be used to get scope where the
 		//! `name` has been found.
-		MATHPRESSO_NOAPI AstSymbol* resolveSymbol(const std::string& name, uint32_t hVal, AstScope** scopeOut = nullptr);
+		std::shared_ptr<AstSymbol> resolveSymbol(const std::string& name, uint32_t hVal, AstScope** scopeOut = nullptr);
 
-		AstSymbol* resolveSymbol(const std::string& name)
+		std::shared_ptr<AstSymbol> resolveSymbol(const std::string& name)
 		{
 			return resolveSymbol(name, HashUtils::hashString(name.c_str(), name.length()));
 		}
 
-		MATHPRESSO_NOAPI AstSymbol* removeSymbol(AstSymbol* symbol)
+		std::shared_ptr<AstSymbol> removeSymbol(std::shared_ptr<AstSymbol> symbol)
 		{
 			return _operations.del(symbol);
 		}
@@ -526,29 +523,31 @@ namespace mathpresso
 
 #define MATHPRESSO_AST_CHILD(_Index_, _Type_, _Name_, _Memb_) \
   bool has##_Name_() const { return _Memb_ != nullptr; } \
-  _Type_* get##_Name_() const { return _Memb_; } \
+  std::shared_ptr<_Type_> get##_Name_() const { return _Memb_; } \
   \
-  _Type_* set##_Name_(_Type_* node) { \
-    return static_cast<_Type_*>(replaceAt(_Index_, node)); \
+  std::shared_ptr<_Type_> set##_Name_(std::shared_ptr<_Type_> node) { \
+    _children[_Index_] = node; \
+    return std::static_pointer_cast<_Type_>(replaceAt(_Index_, node)); \
   } \
   \
-  _Type_* unlink##_Name_() { \
-    _Type_* node = _Memb_; \
+  std::shared_ptr<_Type_> unlink##_Name_() { \
+    std::shared_ptr<_Type_> node = _Memb_; \
     \
     MATHPRESSO_ASSERT(node != nullptr); \
-    MATHPRESSO_ASSERT(node->_parent == this); \
+    MATHPRESSO_ASSERT(node->getParent() == shared_from_this()); \
     \
-    node->_parent = nullptr; \
+    node->_parent.reset(); \
     _Memb_ = nullptr; \
+    _children[_Index_] = nullptr; \
     \
     return node; \
   } \
   private:\
-  _Type_* _Memb_;\
+  std::shared_ptr<_Type_> _Memb_;\
   public:
 
 
-	struct AstNode
+	struct AstNode : std::enable_shared_from_this<AstNode>
 	{
 		MATHPRESSO_NO_COPY(AstNode);
 
@@ -556,9 +555,9 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstNode(AstBuilder* ast, AstNodeType nodeType, AstNode** children = nullptr, uint32_t length = 0)
+		AstNode(AstBuilder* ast, AstNodeType nodeType, std::vector<std::shared_ptr<AstNode>> children = {}, uint32_t length = 0)
 			: _ast(ast),
-			_parent(nullptr),
+			_parent(),
 			_children(children),
 			_mpOp(nullptr),
 			_opName(),
@@ -585,9 +584,9 @@ namespace mathpresso
 		AstBuilder* getAst() const { return _ast; }
 
 		//! Check if the node has a parent.
-		bool hasParent() const { return _parent != nullptr; }
+		bool hasParent() const { return _parent.lock() != nullptr; }
 		//! Get the parent node.
-		AstNode* getParent() const { return _parent; }
+		std::shared_ptr<AstNode> getParent() const { return _parent.lock(); }
 
 		//! Get whether the node has children.
 		//!
@@ -596,7 +595,7 @@ namespace mathpresso
 		//! node is of `AstBlock` type.
 		bool hasChildren() const { return _length != 0; }
 		//! Get children array.
-		AstNode** getChildren() const { return reinterpret_cast<AstNode**>(_children); }
+		std::vector<std::shared_ptr<AstNode>> getChildren() const { return _children; }
 		//! Get length of the children array.
 		size_t getLength() const { return _length; }
 
@@ -634,21 +633,21 @@ namespace mathpresso
 		// [Children]
 		// --------------------------------------------------------------------------
 
-		AstNode* getAt(size_t index) const
+		std::shared_ptr<AstNode> getAt(size_t index) const
 		{
 			MATHPRESSO_ASSERT(index < _length);
 			return _children[index];
 		}
 
 		//! Replace `refNode` by `node`.
-		AstNode* replaceNode(AstNode* refNode, AstNode* node);
+		std::shared_ptr<AstNode> replaceNode(std::shared_ptr<AstNode> refNode, std::shared_ptr<AstNode> node);
 		//! Replace node at index `index` by `node`.
-		AstNode* replaceAt(uint32_t index, AstNode* node);
+		std::shared_ptr<AstNode> replaceAt(uint32_t index, std::shared_ptr<AstNode> node);
 
 		//! Inject `node` between this node and `refNode`.
-		AstNode* injectNode(AstNode* refNode, AstUnary* node);
+		std::shared_ptr<AstNode> injectNode(std::shared_ptr<AstNode> refNode, std::shared_ptr<AstUnary> node);
 		//! Inject `node` between this node and node at index `index`.
-		AstNode* injectAt(uint32_t index, AstUnary* node);
+		std::shared_ptr<AstNode> injectAt(uint32_t index, std::shared_ptr<AstUnary> node);
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -657,9 +656,9 @@ namespace mathpresso
 		//! AST builder.
 		AstBuilder* _ast; //-> std::shared_ptr<AstBuilder>
 		//! Parent node.
-		AstNode* _parent; // -> std::weak_ptr<AstNode>
+		std::weak_ptr<AstNode> _parent; // -> std::weak_ptr<AstNode>
 		//! Child nodes.
-		AstNode** _children; // -> std::vector<std::shared_ptr<AstNode>>>
+		std::vector<std::shared_ptr<AstNode>> _children; // -> std::vector<std::shared_ptr<AstNode>>>
 
 		std::shared_ptr<MpOperation> _mpOp;
 
@@ -712,7 +711,7 @@ namespace mathpresso
 		//!
 		//! NOTE: You have to call `willAdd()` before you use `appendNode()` for every
 		//! node you want to add to the block.
-		void appendNode(AstNode* node)
+		void appendNode(std::shared_ptr<AstNode> node)
 		{
 			MATHPRESSO_ASSERT(node != nullptr);
 			MATHPRESSO_ASSERT(node->getParent() == nullptr);
@@ -720,7 +719,7 @@ namespace mathpresso
 			// We expect `willAdd()` to be called before `appendNode()`.
 			MATHPRESSO_ASSERT(_length < _capacity);
 
-			node->_parent = this;
+			node->_parent = std::static_pointer_cast<AstBlock>(shared_from_this());
 
 			_children[_length] = node;
 			_length++;
@@ -730,7 +729,7 @@ namespace mathpresso
 		//!
 		//! NOTE: You have to call `willAdd()` before you use `insertAt()` for every
 		//! node you want to add to the block.
-		void insertAt(size_t i, AstNode* node)
+		void insertAt(size_t i, std::shared_ptr<AstNode> node)
 		{
 			MATHPRESSO_ASSERT(node != nullptr);
 			MATHPRESSO_ASSERT(node->getParent() == nullptr);
@@ -738,8 +737,8 @@ namespace mathpresso
 			// We expect `willAdd()` to be called before `insertAt()`.
 			MATHPRESSO_ASSERT(_length < _capacity);
 
-			AstNode** p = getChildren();
-			node->_parent = this;
+			std::vector<std::shared_ptr<AstNode>> p = getChildren();
+			node->_parent = std::static_pointer_cast<AstBlock>(shared_from_this());
 
 			size_t j = _length;
 			while (i < j)
@@ -753,9 +752,9 @@ namespace mathpresso
 		}
 
 		//! Remove the given `node`.
-		AstNode* removeNode(AstNode* node);
+		std::shared_ptr<AstNode> removeNode(std::shared_ptr<AstNode> node);
 		//! Remove the node at index `index`.
-		AstNode* removeAt(size_t index);
+		std::shared_ptr<AstNode> removeAt(size_t index);
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -777,17 +776,12 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstUnary(AstBuilder* ast, AstNodeType nodeType)
-			: AstNode(ast, nodeType, &_child, 1),
+			: AstNode(ast, nodeType, { _child }, 1),
 			_child(nullptr)
 		{
 		}
 
-		// --------------------------------------------------------------------------
-		// [Accessors]
-		// --------------------------------------------------------------------------
-
-		AstNode** getChildren() const { return (AstNode**)&_child; }
-
+		
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
@@ -808,7 +802,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstBinary(AstBuilder* ast, AstNodeType nodeType)
-			: AstNode(ast, nodeType, &_left, 2),
+			: AstNode(ast, nodeType, { _left, _right }, 2),
 			_left(nullptr),
 			_right(nullptr)
 		{
@@ -817,8 +811,6 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 		// [Accessors]
 		// --------------------------------------------------------------------------
-
-		AstNode** getChildren() const { return (AstNode**)&_left; }
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -842,7 +834,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstTernary(AstBuilder* ast, AstNodeType nodeType)
-			: AstNode(ast, nodeType, &_condition, 3),
+			: AstNode(ast, nodeType, { _condition, _left, _right }, 3),
 			_condition(nullptr),
 			_left(nullptr),
 			_right(nullptr)
@@ -853,7 +845,7 @@ namespace mathpresso
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		AstNode** getChildren() const { return (AstNode**)&_condition; }
+		std::shared_ptr<AstNode>* getChildren() { return std::addressof(_condition); }
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -904,7 +896,7 @@ namespace mathpresso
 
 		void destroy(AstBuilder* ast)
 		{
-			AstSymbol* sym = getSymbol();
+			std::shared_ptr<AstSymbol> sym = getSymbol();
 			if (sym != nullptr)
 			{
 				sym->decUsedCount();
@@ -916,14 +908,14 @@ namespace mathpresso
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		AstSymbol* getSymbol() const { return _symbol; }
-		void setSymbol(AstSymbol* symbol) { _symbol = symbol; }
+		std::shared_ptr<AstSymbol> getSymbol() const { return _symbol; }
+		void setSymbol(std::shared_ptr<AstSymbol> symbol) { _symbol = symbol; }
 
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
 	private:
-		AstSymbol* _symbol;
+		std::shared_ptr<AstSymbol> _symbol;
 
 	};
 
@@ -949,14 +941,14 @@ namespace mathpresso
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		AstSymbol* getSymbol() const { return _symbol; }
-		void setSymbol(AstSymbol* symbol) { _symbol = symbol; }
+		std::shared_ptr<AstSymbol> getSymbol() const { return _symbol; }
+		void setSymbol(std::shared_ptr<AstSymbol> symbol) { _symbol = symbol; }
 
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
 	private:
-		AstSymbol* _symbol;
+		std::shared_ptr<AstSymbol> _symbol;
 	};
 
 
@@ -1048,8 +1040,8 @@ namespace mathpresso
 		{
 			if (_mpOp && (_mpOp->flags() & MpOperation::IsAssignment) && hasLeft())
 			{
-				AstVar* var = static_cast<AstVar*>(getLeft());
-				AstSymbol* sym = var->getSymbol();
+				std::shared_ptr<AstVar> var = std::static_pointer_cast<AstVar>(getLeft());
+				std::shared_ptr<AstSymbol> sym = var->getSymbol();
 
 				if (sym != nullptr)
 					sym->decWriteCount();
@@ -1098,14 +1090,14 @@ namespace mathpresso
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		AstSymbol* getSymbol() const { return _symbol; }
-		void setSymbol(AstSymbol* symbol) { _symbol = symbol; }
+		std::shared_ptr<AstSymbol> getSymbol() const { return _symbol; }
+		void setSymbol(std::shared_ptr<AstSymbol> symbol) { _symbol = symbol; }
 
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		AstSymbol* _symbol;
+		std::shared_ptr<AstSymbol> _symbol;
 	};
 
 	// ============================================================================
@@ -1133,17 +1125,17 @@ namespace mathpresso
 		// [OnNode]
 		// --------------------------------------------------------------------------
 
-		virtual Error onNode(AstNode* node);
+		virtual Error onNode(std::shared_ptr<AstNode> node);
 
-		virtual Error onProgram(AstProgram* node);
-		virtual Error onBlock(AstBlock* node) = 0;
-		virtual Error onVarDecl(AstVarDecl* node) = 0;
-		virtual Error onVar(AstVar* node) = 0;
-		virtual Error onImm(AstImm* node) = 0;
-		virtual Error onUnaryOp(AstUnaryOp* node) = 0;
-		virtual Error onBinaryOp(AstBinaryOp* node) = 0;
-		virtual Error onTernaryOp(AstTernaryOp* node) = 0;
-		virtual Error onCall(AstCall* node) = 0;
+		virtual Error onProgram(std::shared_ptr<AstProgram> node);
+		virtual Error onBlock(std::shared_ptr<AstBlock> node) = 0;
+		virtual Error onVarDecl(std::shared_ptr<AstVarDecl> node) = 0;
+		virtual Error onVar(std::shared_ptr<AstVar> node) = 0;
+		virtual Error onImm(std::shared_ptr<AstImm> node) = 0;
+		virtual Error onUnaryOp(std::shared_ptr<AstUnaryOp> node) = 0;
+		virtual Error onBinaryOp(std::shared_ptr<AstBinaryOp> node) = 0;
+		virtual Error onTernaryOp(std::shared_ptr<AstTernaryOp> node) = 0;
+		virtual Error onCall(std::shared_ptr<AstCall> node) = 0;
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -1171,14 +1163,14 @@ namespace mathpresso
 		// [OnNode]
 		// --------------------------------------------------------------------------
 
-		virtual Error onBlock(AstBlock* node);
-		virtual Error onVarDecl(AstVarDecl* node);
-		virtual Error onVar(AstVar* node);
-		virtual Error onImm(AstImm* node);
-		virtual Error onUnaryOp(AstUnaryOp* node);
-		virtual Error onBinaryOp(AstBinaryOp* node);
-		virtual Error onTernaryOp(AstTernaryOp * node);
-		virtual Error onCall(AstCall* node);
+		virtual Error onBlock(std::shared_ptr<AstBlock> node) override;
+		virtual Error onVarDecl(std::shared_ptr<AstVarDecl> node) override;
+		virtual Error onVar(std::shared_ptr<AstVar> node) override;
+		virtual Error onImm(std::shared_ptr<AstImm> node) override;
+		virtual Error onUnaryOp(std::shared_ptr<AstUnaryOp> node) override;
+		virtual Error onBinaryOp(std::shared_ptr<AstBinaryOp> node) override;
+		virtual Error onTernaryOp(std::shared_ptr<AstTernaryOp> node) override;
+		virtual Error onCall(std::shared_ptr<AstCall> node) override;
 
 		// --------------------------------------------------------------------------
 		// [Helpers]

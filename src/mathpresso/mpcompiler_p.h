@@ -161,12 +161,12 @@ namespace mathpresso
 		JitVar registerVarAsComplex(const JitVar & other);
 
 		// Compiler.
-		void compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots, bool b_complex);
+		void compile(std::shared_ptr<AstBlock> node, AstScope* rootScope, uint32_t numSlots, bool b_complex);
 
-		JitVar onNode(AstNode* node);
-		JitVar onBlock(AstBlock* node);
-		JitVar onVar(AstVar* node);
-		JitVar onImm(AstImm* node);
+		JitVar onNode(std::shared_ptr<AstNode> node);
+		JitVar onBlock(std::shared_ptr<AstBlock> node);
+		JitVar onVar(std::shared_ptr<AstVar> node);
+		JitVar onImm(std::shared_ptr<AstImm> node);
 
 		// Helpers.
 		void inlineCallDRetD(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, size_t count, void* fn);

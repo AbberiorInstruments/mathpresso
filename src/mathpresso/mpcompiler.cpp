@@ -14,14 +14,16 @@
 #include <mathpresso/mpoperation.h>
 
 
-namespace mathpresso {
+namespace mathpresso
+{
 	using namespace asmjit;
 
 	// ============================================================================
 	// [mathpresso::JitGlobal]
 	// ============================================================================
 
-	struct JitGlobal {
+	struct JitGlobal
+	{
 		JitRuntime runtime;
 	};
 	static JitGlobal jitGlobal;
@@ -53,7 +55,7 @@ namespace mathpresso {
 	{
 		JitVar v(cc->newXmmSd(), isRO);
 		cc->emit(other.isXmm() ? X86Inst::kIdMovapd : X86Inst::kIdMovsd,
-			v.getXmm(), other.getOperand());
+				 v.getXmm(), other.getOperand());
 		return v;
 	}
 
@@ -119,7 +121,7 @@ namespace mathpresso {
 
 	//! Compiles an AstBlock into assembler.
 	//! NOTE: use beginFunction() before and endFunction() after calling this.
-	void JitCompiler::compile(AstBlock* node, AstScope* rootScope, uint32_t numSlots, bool b_complex)
+	void JitCompiler::compile(std::shared_ptr<AstBlock> node, AstScope* rootScope, uint32_t numSlots, bool b_complex)
 	{
 		// Create Definitions for the Variables and add them as JitVar
 		varSlots = std::vector<JitVar>(numSlots);
@@ -139,12 +141,12 @@ namespace mathpresso {
 					if (!b_complex)
 					{
 						cc->emit(X86Inst::kIdMovsd,
-							x86::ptr(variablesAddress, sym->getVarOffset()), registerVar(v).getXmm());
+								 x86::ptr(variablesAddress, sym->getVarOffset()), registerVar(v).getXmm());
 					}
 					else
 					{
 						cc->emit(X86Inst::kIdMovapd,
-							x86::ptr(variablesAddress, sym->getVarOffset()), registerVarComplex(v).getXmm());
+								 x86::ptr(variablesAddress, sym->getVarOffset()), registerVarComplex(v).getXmm());
 					}
 				}
 
@@ -175,27 +177,27 @@ namespace mathpresso {
 		varSlots.clear();
 	}
 
-	JitVar JitCompiler::onNode(AstNode* node)
+	JitVar JitCompiler::onNode(std::shared_ptr<AstNode> node)
 	{
 		switch (node->getNodeType())
 		{
-		case AstNodeType::kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
-		case AstNodeType::kAstNodeVar: return onVar(static_cast<AstVar*>(node));
-		case AstNodeType::kAstNodeImm: return onImm(static_cast<AstImm*>(node));
-		case AstNodeType::kAstNodeVarDecl:
-		case AstNodeType::kAstNodeUnaryOp:
-		case AstNodeType::kAstNodeBinaryOp:
-		case AstNodeType::kAstNodeTernaryOp:
-		case AstNodeType::kAstNodeCall:
-			return node->_mpOp->compile(this, node);
+			case AstNodeType::kAstNodeBlock: return onBlock(std::static_pointer_cast<AstBlock>(node));
+			case AstNodeType::kAstNodeVar: return onVar(std::static_pointer_cast<AstVar>(node));
+			case AstNodeType::kAstNodeImm: return onImm(std::static_pointer_cast<AstImm>(node));
+			case AstNodeType::kAstNodeVarDecl:
+			case AstNodeType::kAstNodeUnaryOp:
+			case AstNodeType::kAstNodeBinaryOp:
+			case AstNodeType::kAstNodeTernaryOp:
+			case AstNodeType::kAstNodeCall:
+				return node->_mpOp->compile(this, node);
 
-		default:
-			MATHPRESSO_ASSERT_NOT_REACHED();
-			return JitVar();
+			default:
+				MATHPRESSO_ASSERT_NOT_REACHED();
+				return JitVar();
 		}
 	}
 
-	JitVar JitCompiler::onBlock(AstBlock* node)
+	JitVar JitCompiler::onBlock(std::shared_ptr<AstBlock> node)
 	{
 		JitVar result;
 		size_t i, len = node->getLength();
@@ -207,7 +209,7 @@ namespace mathpresso {
 		return result;
 	}
 
-	JitVar JitCompiler::onVar(AstVar* node)
+	JitVar JitCompiler::onVar(std::shared_ptr<AstVar> node)
 	{
 		AstSymbol* sym = node->getSymbol();
 		uint32_t slotId = sym->getVarSlotId();
@@ -238,7 +240,7 @@ namespace mathpresso {
 		return result;
 	}
 
-	JitVar JitCompiler::onImm(AstImm* node)
+	JitVar JitCompiler::onImm(std::shared_ptr<AstImm> node)
 	{
 		if (node->returnsComplex())
 			return getConstantD64(node->getValue<std::complex<double>>());
@@ -246,7 +248,7 @@ namespace mathpresso {
 			return getConstantD64(node->getValue<double>());
 	}
 
-	
+
 
 	template<>
 	void JitCompiler::inlineCall<double, double>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)

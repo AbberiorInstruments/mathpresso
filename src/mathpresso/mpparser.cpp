@@ -68,7 +68,7 @@ namespace mathpresso
 	// [mathpresso::Parser - Parse]
 	// ============================================================================
 
-	Error Parser::parseProgram(AstProgram* block)
+	Error Parser::parseProgram(std::shared_ptr<AstProgram> block)
 	{
 		for (;;)
 		{
@@ -97,7 +97,7 @@ namespace mathpresso
 	}
 
 	// Parse <statement>; or { [<statement>; ...] }
-	Error Parser::parseStatement(AstBlock* block, uint32_t flags)
+	Error Parser::parseStatement(std::shared_ptr<AstBlock> block, uint32_t flags)
 	{
 		Token token;
 		uint32_t uToken = _tokenizer.peek(&token);
@@ -113,7 +113,7 @@ namespace mathpresso
 		// Parse a nested block.
 		if (uToken == TokenType::kTokenLCurl)
 		{
-			AstBlock* nested;
+			std::shared_ptr<AstBlock> nested;
 
 			if (!(flags & ParserFlags::kEnableNestedBlock))
 				MATHPRESSO_PARSER_ERROR(token, "Cannot declare a new block-scope here.");
@@ -135,7 +135,7 @@ namespace mathpresso
 		}
 
 		// Parse an expression.
-		AstNode* expression;
+		std::shared_ptr<AstNode> expression;
 
 		MATHPRESSO_PROPAGATE(block->willAdd());
 		MATHPRESSO_PROPAGATE(parseExpression(&expression, false));
@@ -155,7 +155,7 @@ namespace mathpresso
 	}
 
 	// Parse <block|statement>;.
-	Error Parser::parseBlockOrStatement(AstBlock* block)
+	Error Parser::parseBlockOrStatement(std::shared_ptr<AstBlock> block)
 	{
 		Token token;
 		uint32_t uToken = _tokenizer.next(&token);
@@ -188,7 +188,7 @@ namespace mathpresso
 	}
 
 	// Parse "var <name> = <expression>[, <name> = <expression>, ...];".
-	Error Parser::parseVariableDecl(AstBlock* block)
+	Error Parser::parseVariableDecl(std::shared_ptr<AstBlock> block)
 	{
 		Token token;
 		uint32_t uToken = _tokenizer.next(&token);
@@ -241,7 +241,7 @@ namespace mathpresso
 			MATHPRESSO_NULLCHECK(vSym);
 			scope->putSymbol(vSym);
 
-			AstVarDecl* decl = _ast->newNode<AstVarDecl>();
+			std::shared_ptr<AstVarDecl> decl = _ast->newNode<AstVarDecl>();
 			MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
 			decl->_mpOp = _ops->find("=", 2);
 			decl->_opName = "=";
@@ -260,7 +260,7 @@ namespace mathpresso
 
 			if (isAssigned)
 			{
-				AstNode* expression;
+				std::shared_ptr<AstNode> expression;
 				MATHPRESSO_PROPAGATE_(parseExpression(&expression, false), { _ast->deleteNode(decl); });
 
 				decl->setChild(expression);
@@ -275,6 +275,7 @@ namespace mathpresso
 			// Parse the ',' or ';' tokens.
 			if (uToken == TokenType::kTokenComma || uToken == TokenType::kTokenSemicolon || uToken == TokenType::kTokenEnd)
 			{
+				block->willAdd();
 				block->appendNode(decl);
 
 				// Token ';' terminates the declaration.
@@ -293,7 +294,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Parser::parseExpression(AstNode** pNode, bool isNested)
+	Error Parser::parseExpression(std::shared_ptr<AstNode>* pNode, bool isNested)
 	{
 		AstScope* scope = _currentScope;
 
@@ -339,10 +340,10 @@ namespace mathpresso
 		// Current binary operator node. Initial nullptr value means that the parsing
 		// just started and there is no binary operator yet. Once the first binary
 		// operator has been parsed `currentBinaryNode` will be set accordingly.
-		AstBinaryOp* currentBinaryNode = nullptr;
+		std::shared_ptr<AstBinaryOp> currentBinaryNode = nullptr;
 
 		// Currently parsed node.
-		AstNode* currentNode = nullptr;
+		std::shared_ptr<AstNode> currentNode = nullptr;
 
 		for (;;)
 		{
@@ -350,7 +351,7 @@ namespace mathpresso
 			// we found two or more unary expressions after each other. For example the
 			// expression "-!-1" contains only unary operators that will be parsed by
 			// a single `parseExpression()` call.
-			AstUnary* lastUnaryNode = nullptr;
+			std::shared_ptr<AstUnary> lastUnaryNode = nullptr;
 			bool b_complex = false;
 
 		_Repeat1:
@@ -369,7 +370,7 @@ namespace mathpresso
 					AstScope* symScope;
 					AstSymbol* sym = scope->resolveSymbol(symbolName, token.hVal, &symScope);
 
-					AstNode* newNode;
+					std::shared_ptr<AstNode> newNode;
 
 					if (sym)
 					{
@@ -390,7 +391,7 @@ namespace mathpresso
 
 						newNode = _ast->newNode<AstVar>();
 						MATHPRESSO_NULLCHECK(newNode);
-						static_cast<AstVar*>(newNode)->setSymbol(sym);
+						std::static_pointer_cast<AstVar>(newNode)->setSymbol(sym);
 
 						if (sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex))
 							newNode->addNodeFlags(AstNodeFlags::kAstTakesComplex | AstNodeFlags::kAstReturnsComplex);
@@ -421,7 +422,7 @@ namespace mathpresso
 					b_complex = true;
 				case TokenType::kTokenNumber:
 				{
-					AstImm* newNode = _ast->newNode<AstImm>();
+					std::shared_ptr<AstImm> newNode = _ast->newNode<AstImm>();
 					MATHPRESSO_NULLCHECK(newNode);
 
 					newNode->setPosition(token.getPosAsUInt());
@@ -454,7 +455,7 @@ namespace mathpresso
 				{
 					uint32_t position = token.getPosAsUInt();
 
-					AstNode* newNode;
+					std::shared_ptr<AstNode> newNode;
 					MATHPRESSO_PROPAGATE(parseExpression(&newNode, true));
 
 					if (_tokenizer.next(&token) != TokenType::kTokenRParen)
@@ -480,7 +481,7 @@ namespace mathpresso
 						{
 							if (op = _ops->find(name.substr(i, 1), 1))
 							{
-								AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>();
+								std::shared_ptr<AstUnaryOp> opNode = _ast->newNode<AstUnaryOp>();
 								MATHPRESSO_NULLCHECK(opNode);
 								opNode->setPosition(token.getPosAsUInt() + uint32_t(i));
 
@@ -505,7 +506,7 @@ namespace mathpresso
 					else
 					{
 						// Parse the unary operator.
-						AstUnaryOp* opNode = _ast->newNode<AstUnaryOp>();
+						std::shared_ptr<AstUnaryOp> opNode = _ast->newNode<AstUnaryOp>();
 						MATHPRESSO_NULLCHECK(opNode);
 						opNode->setPosition(token.getPosAsUInt());
 
@@ -550,7 +551,7 @@ namespace mathpresso
 						currentBinaryNode->setRight(currentNode);
 						// Iterate to the top-most node.
 						while (currentBinaryNode->hasParent())
-							currentBinaryNode = static_cast<AstBinaryOp*>(currentBinaryNode->getParent());
+							currentBinaryNode = std::static_pointer_cast<AstBinaryOp>(currentBinaryNode->getParent());
 						currentNode = currentBinaryNode;
 					}
 
@@ -573,7 +574,7 @@ namespace mathpresso
 						if (currentNode->getNodeType() != AstNodeType::kAstNodeVar)
 							MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
 
-						AstSymbol* sym = static_cast<AstVar*>(currentNode)->getSymbol();
+						AstSymbol* sym = std::static_pointer_cast<AstVar>(currentNode)->getSymbol();
 						if (sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly))
 							MATHPRESSO_PARSER_ERROR(token, "Can't assign to a read-only variable '%s'.", sym->getName());
 
@@ -583,7 +584,7 @@ namespace mathpresso
 						sym->incWriteCount();
 					}
 
-					AstBinaryOp* newNode = _ast->newNode<AstBinaryOp>();
+					std::shared_ptr<AstBinaryOp> newNode = _ast->newNode<AstBinaryOp>();
 					MATHPRESSO_NULLCHECK(newNode);
 
 					newNode->_mpOp = op;
@@ -638,7 +639,7 @@ namespace mathpresso
 							//   2. currentBinaryNode has equal precedence and right-to-left associativity.
 							if (currentBinaryPrec > newBinaryPrec || (currentBinaryPrec == newBinaryPrec && currentBinaryNode->_mpOp->isRightToLeft()))
 								break;
-							currentBinaryNode = static_cast<AstBinaryOp*>(currentBinaryNode->getParent());
+							currentBinaryNode = std::static_pointer_cast<AstBinaryOp>(currentBinaryNode->getParent());
 							currentBinaryPrec = currentBinaryNode->_mpOp->precedence();
 						}
 
@@ -668,7 +669,7 @@ namespace mathpresso
 						// +-------------------------+
 						else
 						{
-							AstNode* pNode = currentBinaryNode->unlinkRight();
+							std::shared_ptr<AstNode> pNode = currentBinaryNode->unlinkRight();
 							currentBinaryNode->setRight(newNode);
 							newNode->setLeft(pNode);
 						}
@@ -691,7 +692,7 @@ namespace mathpresso
 	}
 
 	// Parse "function([arg1 [, arg2, ...] ])".
-	Error Parser::parseCall(AstNode** pNodeOut)
+	Error Parser::parseCall(std::shared_ptr<AstNode>* pNodeOut)
 	{
 		Token token;
 		uint32_t uToken;
@@ -706,7 +707,7 @@ namespace mathpresso
 		if (uToken != TokenType::kTokenLParen)
 			MATHPRESSO_PARSER_ERROR(token, "Expected a '(' token after a function name.");
 
-		AstCall* callNode = _ast->newNode<AstCall>();
+		std::shared_ptr<AstCall> callNode = _ast->newNode<AstCall>();
 		MATHPRESSO_NULLCHECK(callNode);
 
 		callNode->setPosition(position);
@@ -717,7 +718,7 @@ namespace mathpresso
 			for (;;)
 			{
 				// Parse the argument expression.
-				AstNode* expression;
+				std::shared_ptr<AstNode> expression;
 				Error err;
 
 				if ((err = callNode->willAdd()) != ErrorCode::kErrorOk || (err = parseExpression(&expression, true)) != ErrorCode::kErrorOk)
@@ -759,7 +760,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Parser::reparseTernary(AstNode * node)
+	Error Parser::reparseTernary(std::shared_ptr<AstNode> node)
 	{
 		for (size_t i = 0; i < node->getLength(); i++)
 		{
@@ -767,16 +768,16 @@ namespace mathpresso
 			if (node->getNodeType() == AstNodeType::kAstNodeBinaryOp && node->_opName == "?")
 			{
 
-				AstBinaryOp* lastColon = static_cast<AstBinaryOp*>(node);
+				std::shared_ptr<AstBinaryOp> lastColon = std::static_pointer_cast<AstBinaryOp>(node);
 				// go to the last Colon after question-marks.
 				while (lastColon->_opName == "?")
 				{
-					lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
+					lastColon = std::static_pointer_cast<AstBinaryOp>(lastColon->getRight());
 				}
 
 				while (lastColon->getRight() && lastColon->getRight()->_opName == ":")
 				{
-					lastColon = static_cast<AstBinaryOp*>(lastColon->getRight());
+					lastColon = std::static_pointer_cast<AstBinaryOp>(lastColon->getRight());
 				}
 
 				if (lastColon->_opName != ":")
@@ -785,30 +786,30 @@ namespace mathpresso
 												   "Invalid ternary operation. Expected a ':'.");
 				}
 
-				AstNode* branchCondition = static_cast<AstBinaryOp*>(node)->getLeft();
-				AstNode* branchLeft = lastColon->getLeft();
-				AstNode* branchRight = lastColon->getRight();
+				std::shared_ptr<AstNode> branchCondition = std::static_pointer_cast<AstBinaryOp>(node)->getLeft();
+				std::shared_ptr<AstNode> branchLeft = lastColon->getLeft();
+				std::shared_ptr<AstNode> branchRight = lastColon->getRight();
 
 				// remove branchCondition from the AST
-				static_cast<AstBinaryOp*>(node)->setLeft(nullptr);
-				branchCondition->_parent = nullptr;
+				std::static_pointer_cast<AstBinaryOp>(node)->setLeft(nullptr);
+				branchCondition->_parent.reset();
 
 				// remove the right path from the AST.
 				lastColon->setRight(nullptr);
-				branchRight->_parent = nullptr;
+				branchRight->_parent.reset();
 
 
 				// Distinguish between a complex and a non-complex case:
 				// i.e.: cond1 ? cond2 ? a : b : c
-				if (static_cast<AstBinaryOp*>(node)->getRight() != lastColon)
+				if (std::static_pointer_cast<AstBinaryOp>(node)->getRight() != lastColon)
 				{
 					// remove left branch from the AST.
-					branchLeft = static_cast<AstBinaryOp*>(node)->getRight();
-					static_cast<AstBinaryOp*>(node)->setRight(nullptr);
-					branchLeft->_parent = nullptr;
+					branchLeft = std::static_pointer_cast<AstBinaryOp>(node)->getRight();
+					std::static_pointer_cast<AstBinaryOp>(node)->setRight(nullptr);
+					branchLeft->_parent.reset();
 
 					// correct the right path.
-					AstBinaryOp* preLastColon = static_cast<AstBinaryOp*>(lastColon->getParent());
+					std::shared_ptr<AstBinaryOp> preLastColon = std::static_pointer_cast<AstBinaryOp>(lastColon->getParent());
 					preLastColon->replaceAt(1, lastColon->getLeft());
 					lastColon->setLeft(nullptr);
 					_ast->deleteNode(lastColon);
@@ -818,11 +819,11 @@ namespace mathpresso
 				{
 					// remove left branch from the AST.
 					lastColon->setLeft(nullptr);
-					branchLeft->_parent = nullptr;
+					branchLeft->_parent.reset();
 				}
 
 				// create the new Ternary Node.
-				AstTernaryOp* ternaryNode = _ast->newNode<AstTernaryOp>();
+				std::shared_ptr<AstTernaryOp> ternaryNode = _ast->newNode<AstTernaryOp>();
 				ternaryNode->setCondition(branchCondition);
 				ternaryNode->setLeft(branchLeft);
 				ternaryNode->setRight(branchRight);

@@ -64,16 +64,16 @@ namespace mathpresso
 		// [Parse]
 		// --------------------------------------------------------------------------
 
-		Error parseProgram(AstProgram* block);
+		Error parseProgram(std::shared_ptr<AstProgram> block);
 
-		Error parseStatement(AstBlock* block, uint32_t flags);
-		Error parseBlockOrStatement(AstBlock* block);
+		Error parseStatement(std::shared_ptr<AstBlock> block, uint32_t flags);
+		Error parseBlockOrStatement(std::shared_ptr<AstBlock> block);
 
-		Error parseVariableDecl(AstBlock* block);
-		Error parseExpression(AstNode** pNodeOut, bool isNested);
-		Error parseCall(AstNode** pNodeOut);
+		Error parseVariableDecl(std::shared_ptr<AstBlock> block);
+		Error parseExpression(std::shared_ptr<AstNode>* pNodeOut, bool isNested);
+		Error parseCall(std::shared_ptr<AstNode>* pNodeOut);
 
-		Error reparseTernary(AstNode* node);
+		Error reparseTernary(std::shared_ptr<AstNode> node);
 
 		// --------------------------------------------------------------------------
 		// [Members]

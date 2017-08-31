@@ -304,7 +304,7 @@ namespace mathpresso
 
 
 	template<>
-	inline JitVar MpOperationFunc<double, double>::compile(JitCompiler * jc, AstNode * node) const
+	inline JitVar MpOperationFunc<double, double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmSd();
 		asmjit::X86Xmm args[8];
@@ -323,7 +323,7 @@ namespace mathpresso
 		return JitVar(result, false);
 	}
 	template<>
-	inline JitVar MpOperationFunc<double, std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	inline JitVar MpOperationFunc<double, std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmSd();
 		asmjit::X86Xmm args[8];
@@ -343,7 +343,7 @@ namespace mathpresso
 		return JitVar(result, false);
 	}
 	template<>
-	inline JitVar MpOperationFunc<std::complex<double>, double>::compile(JitCompiler * jc, AstNode * node) const
+	inline JitVar MpOperationFunc<std::complex<double>, double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmPd();
 		asmjit::X86Xmm args[8];
@@ -362,7 +362,7 @@ namespace mathpresso
 		return JitVar(result, false);
 	}
 	template<>
-	inline JitVar MpOperationFunc<std::complex<double>, std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	inline JitVar MpOperationFunc<std::complex<double>, std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmPd();
 		asmjit::X86Xmm args[8];
@@ -383,7 +383,7 @@ namespace mathpresso
 	}
 
 	template<typename RET, typename PARAM>
-	uint32_t MpOperationFunc<RET, PARAM>::optimize(AstOptimizer * opt, AstNode * node) const
+	uint32_t MpOperationFunc<RET, PARAM>::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
 	{
 		bool b_all_imm = true;
 
@@ -396,12 +396,12 @@ namespace mathpresso
 		// optimize all-immediate calls:
 		if (b_all_imm && !hasFlag(MpOperation::FlagHasState))
 		{
-			AstImm* ret = opt->getAst()->newNode<AstImm>(0);
+			std::shared_ptr<AstImm> ret = opt->getAst()->newNode<AstImm>(0);
 
 			std::vector<PARAM> args;
 			for (size_t i = 0; i < nargs(); i++)
 			{
-				args.push_back((static_cast<AstImm*>(node->getAt(i)))->getValue<PARAM>());
+				args.push_back((std::static_pointer_cast<AstImm>(node->getAt(i)))->getValue<PARAM>());
 			}
 
 			ret->setValue(evaluate(args.data()));
@@ -484,7 +484,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationIsFinite<double>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationIsFinite<double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVar(var);
@@ -495,7 +495,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationIsFinite<std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationIsFinite<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
@@ -523,7 +523,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationIsInfinite<double>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationIsInfinite<double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVar(var);
@@ -534,7 +534,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationIsInfinite<std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationIsInfinite<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
@@ -562,7 +562,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationIsNan<double>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationIsNan<double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVar(var);
@@ -572,7 +572,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationIsNan<std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationIsNan<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
@@ -592,7 +592,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationGetReal::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationGetReal::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->onNode(node->getAt(0)));
 		JitVar varRet(jc->cc->newXmmSd(), false);;
@@ -620,7 +620,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationGetImag::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationGetImag::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->onNode(node->getAt(0)));
 		JitVar varRet(jc->cc->newXmmSd(), false);;
@@ -636,7 +636,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationSqrt::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationSqrt::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -665,7 +665,7 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	JitVar MpOperationNeg<T>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationNeg<T>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
@@ -674,7 +674,7 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	uint32_t MpOperationNeg<T>::optimize(AstOptimizer * opt, AstNode * node) const
+	uint32_t MpOperationNeg<T>::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
 	{
 		// as the reference to node might be invalidated by the call to MpOperationFunc::optimize,
 		// we get the parent and the index of node within parent->_children.
@@ -696,9 +696,9 @@ namespace mathpresso
 		// -(-(x)) = x
 		if (node->getNodeType() == AstNodeType::kAstNodeUnaryOp &&
 			node->getAt(0)->getNodeType() == AstNodeType::kAstNodeUnaryOp
-			&& static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
+			&& std::static_pointer_cast<AstUnaryOp>(node)->_mpOp == std::static_pointer_cast<AstUnaryOp>(node->getAt(0))->_mpOp)
 		{
-			AstNode* childOfChild = static_cast<AstUnaryOp*>(node->getAt(0))->unlinkChild();
+			std::shared_ptr<AstNode> childOfChild = std::static_pointer_cast<AstUnaryOp>(node->getAt(0))->unlinkChild();
 			parent->replaceNode(node, childOfChild);
 			opt->getAst()->deleteNode(node);
 		}
@@ -723,7 +723,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationNot<double>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationNot<double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVar(var);
@@ -733,7 +733,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationNot<std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationNot<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
@@ -749,7 +749,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationConjug::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationConjug::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar tmp = jc->onNode(node->getAt(0));
 		JitVar result = jc->registerVarComplex(tmp, !node->getAt(0)->returnsComplex());
@@ -757,7 +757,7 @@ namespace mathpresso
 		return result;
 	}
 
-	uint32_t MpOperationConjug::optimize(AstOptimizer * opt, AstNode * node) const
+	uint32_t MpOperationConjug::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
 	{
 		// as the reference to node might be invalidated by the call to MpOperationFunc::optimize,
 		// we get the parent and the index of node within parent->_children.
@@ -779,9 +779,9 @@ namespace mathpresso
 		// conj(conj(x)) = x
 		if (node->getNodeType() == AstNodeType::kAstNodeUnaryOp &&
 			node->getAt(0)->getNodeType() == AstNodeType::kAstNodeUnaryOp
-			&& static_cast<AstUnaryOp*>(node)->_mpOp == static_cast<AstUnaryOp*>(node->getAt(0))->_mpOp)
+			&& std::static_pointer_cast<AstUnaryOp>(node)->_mpOp == std::static_pointer_cast<AstUnaryOp>(node->getAt(0))->_mpOp)
 		{
-			AstNode* childOfChild = static_cast<AstUnaryOp*>(node->getAt(0))->unlinkChild();
+			std::shared_ptr<AstNode> childOfChild = std::static_pointer_cast<AstUnaryOp>(node->getAt(0))->unlinkChild();
 			parent->replaceNode(node, childOfChild);
 			opt->getAst()->deleteNode(node);
 		}
@@ -804,7 +804,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationRecip<double>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationRecip<double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		JitVar result;
@@ -817,7 +817,7 @@ namespace mathpresso
 		return result;
 	}
 	template<>
-	JitVar MpOperationRecip<std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationRecip<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		JitVar result;
@@ -837,7 +837,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationSignBit::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationSignBit::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->onNode(node->getAt(0)));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -852,7 +852,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationCopySign::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationCopySign::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar vl = jc->writableVar(jc->onNode(node->getAt(0)));
 		JitVar vr = jc->writableVar(jc->onNode(node->getAt(1)));
@@ -880,7 +880,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationAvg<double>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationAvg<double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar vl = jc->onNode(node->getAt(0));;
 		JitVar vr = jc->onNode(node->getAt(1));
@@ -899,7 +899,7 @@ namespace mathpresso
 		return vl;
 	}
 	template<>
-	JitVar MpOperationAvg<std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationAvg<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar vl = jc->onNode(node->getAt(0));;
 		JitVar vr = jc->onNode(node->getAt(1));
@@ -936,7 +936,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationAbs::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationAbs::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->onNode(node->getAt(0)));
 		JitVar result;
@@ -954,7 +954,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationRound::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationRound::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -1004,7 +1004,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationRoundEven::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationRoundEven::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -1040,7 +1040,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationTrunc::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationTrunc::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -1083,7 +1083,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationFrac::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationFrac::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar tmp(jc->cc->newXmmSd(), false);
@@ -1128,7 +1128,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationFloor::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationFloor::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -1171,7 +1171,7 @@ namespace mathpresso
 	{
 	}
 
-	JitVar MpOperationcCeil::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationcCeil::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var(jc->writableVar(jc->onNode(node->getAt(0))));
 		JitVar result(jc->cc->newXmmSd(), false);
@@ -1209,15 +1209,15 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationBinary<double>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationBinary<double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar vl, vr;
-		AstNode* left = node->getAt(0);
-		AstNode* right = node->getAt(1);
+		std::shared_ptr<AstNode> left = node->getAt(0);
+		std::shared_ptr<AstNode> right = node->getAt(1);
 
 		// check whether the vars are the same, to reduce memory-operations
 		if (left->isVar() && right->isVar() &&
-			static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
+			std::static_pointer_cast<AstVar>(left)->getSymbol() == std::static_pointer_cast<AstVar>(right)->getSymbol())
 		{
 			vl = vr = jc->writableVar(jc->onNode(left));
 		}
@@ -1231,15 +1231,15 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationBinary<std::complex<double>>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationBinary<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar vl, vr;
-		AstNode* left = node->getAt(0);
-		AstNode* right = node->getAt(1);
+		std::shared_ptr<AstNode> left = node->getAt(0);
+		std::shared_ptr<AstNode> right = node->getAt(1);
 
 		// check whether the vars are the same, to reduce memory-operations
 		if (left->isVar() && right->isVar() &&
-			static_cast<AstVar*>(left)->getSymbol() == static_cast<AstVar*>(right)->getSymbol())
+			std::static_pointer_cast<AstVar>(left)->getSymbol() == std::static_pointer_cast<AstVar>(right)->getSymbol())
 		{
 			vl = vr = jc->writableVarComplex(jc->onNode(left));
 		}
@@ -1261,10 +1261,10 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	uint32_t MpOperationBinary<T>::optimize(AstOptimizer * opt, AstNode * node) const
+	uint32_t MpOperationBinary<T>::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
 	{
-		AstNode* left = node->getAt(0);
-		AstNode* right = node->getAt(1);
+		std::shared_ptr<AstNode> left = node->getAt(0);
+		std::shared_ptr<AstNode> right = node->getAt(1);
 
 		bool lIsImm = left->isImm();
 		bool rIsImm = right->isImm();
@@ -1272,25 +1272,25 @@ namespace mathpresso
 		if (lIsImm && rIsImm && !hasFlag(MpOperation::FlagHasState))
 		{
 			// optimize a calculation with two immediates.
-			AstImm* lNode = static_cast<AstImm*>(left);
-			AstImm* rNode = static_cast<AstImm*>(right);
+			std::shared_ptr<AstImm> lNode = std::static_pointer_cast<AstImm>(left);
+			std::shared_ptr<AstImm> rNode = std::static_pointer_cast<AstImm>(right);
 
 			lNode->setValue(calculate(lNode->getValue<T>(), rNode->getValue<T>()));
 
 			// setValue sets the correct flags automatically.
-			node->_children[0]->_parent = nullptr;
+			node->_children[0]->_parent.reset();
 			node->_children[0] = nullptr;
 			node->getParent()->replaceNode(node, lNode);
 			opt->getAst()->deleteNode(node);
 		}
 		else if (lIsImm && !hasFlag(MpOperation::FlagHasState))
 		{
-			AstImm* lNode = static_cast<AstImm*>(left);
+			std::shared_ptr<AstImm> lNode = std::static_pointer_cast<AstImm>(left);
 			// if the node is real, the imaginary part is set to zero by default.
 			if ((hasFlag(NopIfLZero) && lNode->getValue<std::complex<double>>() == std::complex<double>(0.0, 0.0)) ||
 				(hasFlag(NopIfLOne) && lNode->getValue<std::complex<double>>() == std::complex<double>(1.0, 0.0)))
 			{
-				node->_children[1]->_parent = nullptr;
+				node->_children[1]->_parent.reset();
 				node->_children[1] = nullptr;
 				node->getParent()->replaceNode(node, right);
 				opt->getAst()->deleteNode(node);
@@ -1298,12 +1298,12 @@ namespace mathpresso
 		}
 		else if (rIsImm && !hasFlag(MpOperation::FlagHasState))
 		{
-			AstImm* rNode = static_cast<AstImm*>(right);
+			std::shared_ptr<AstImm> rNode = std::static_pointer_cast<AstImm>(right);
 
 			if ((hasFlag(NopIfRZero) && rNode->getValue<std::complex<double>>() == std::complex<double>(0.0, 0.0)) ||
 				(hasFlag(NopIfROne) && rNode->getValue<std::complex<double>>() == std::complex<double>(1.0, 0.0)))
 			{
-				node->_children[0]->_parent = nullptr;
+				node->_children[0]->_parent.reset();
 				node->_children[0] = nullptr;
 				node->getParent()->replaceNode(node, left);
 				opt->getAst()->deleteNode(node);
@@ -1842,14 +1842,14 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	JitVar MpOperationTernary<T>::compile(JitCompiler* jc, AstNode * node) const
+	JitVar MpOperationTernary<T>::compile(JitCompiler* jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::Label lblElse = jc->cc->newLabel();
 		asmjit::Label lblEnd = jc->cc->newLabel();
 		JitVar erg;
-		AstNode* left = static_cast<AstTernaryOp*>(node)->getLeft();
-		AstNode* right = static_cast<AstTernaryOp*>(node)->getRight();
-		AstNode* condition = static_cast<AstTernaryOp*>(node)->getCondition();
+		std::shared_ptr<AstNode> left = std::static_pointer_cast<AstTernaryOp>(node)->getLeft();
+		std::shared_ptr<AstNode> right = std::static_pointer_cast<AstTernaryOp>(node)->getRight();
+		std::shared_ptr<AstNode> condition = std::static_pointer_cast<AstTernaryOp>(node)->getCondition();
 
 		JitVar ret = jc->onNode(condition);
 
@@ -1903,16 +1903,16 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	uint32_t MpOperationTernary<T>::optimize(AstOptimizer *opt, AstNode *node) const
+	uint32_t MpOperationTernary<T>::optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const
 	{
-		AstTernaryOp * ternaryNode = reinterpret_cast<AstTernaryOp*>(node);
-		AstNode* branchCond = ternaryNode->getCondition();
+		std::shared_ptr<AstTernaryOp> ternaryNode = std::static_pointer_cast<AstTernaryOp>(node);
+		std::shared_ptr<AstNode> branchCond = ternaryNode->getCondition();
 		if (branchCond->isImm())
 		{
 			// optimize an immediate condition
-			bool conditionIsTrue = static_cast<AstImm*>(branchCond)->getValue<std::complex<double>>() != std::complex<double>({ 0, 0 });
+			bool conditionIsTrue = std::static_pointer_cast<AstImm>(branchCond)->getValue<std::complex<double>>() != std::complex<double>({ 0, 0 });
 
-			AstNode* nodeOptimized;
+			std::shared_ptr<AstNode> nodeOptimized;
 
 			if (conditionIsTrue)
 			{
@@ -1925,7 +1925,7 @@ namespace mathpresso
 				ternaryNode->setRight(nullptr);
 			}
 
-			nodeOptimized->_parent = nullptr;
+			nodeOptimized->_parent.reset();
 			ternaryNode->getParent()->replaceNode(ternaryNode, nodeOptimized);
 
 			opt->_ast->deleteNode(ternaryNode);
@@ -1946,10 +1946,10 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	JitVar MpOperationAssignment<T>::compile(JitCompiler * jc, AstNode * node) const
+	JitVar MpOperationAssignment<T>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar result;
-		AstVarDecl * varDecl = static_cast<AstVarDecl*>(node);
+		std::shared_ptr<AstVarDecl> varDecl = std::static_pointer_cast<AstVarDecl>(node);
 
 		if (varDecl->hasChild())
 			result = jc->onNode(varDecl->getChild());
@@ -1964,12 +1964,12 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	uint32_t MpOperationAssignment<T>::optimize(AstOptimizer * opt, AstNode * node) const
+	uint32_t MpOperationAssignment<T>::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
 	{
-		AstVarDecl * varDecl;
+		std::shared_ptr<AstVarDecl> varDecl;
 		if (node->getNodeType() == AstNodeType::kAstNodeVarDecl)
 		{
-			varDecl = static_cast<AstVarDecl*>(node);
+			varDecl = std::static_pointer_cast<AstVarDecl>(node);
 		}
 		else
 		{
@@ -1981,7 +1981,7 @@ namespace mathpresso
 
 		if (varDecl->hasChild())
 		{
-			AstNode* child = varDecl->getChild();
+			std::shared_ptr<AstNode> child = varDecl->getChild();
 
 			if (child->returnsComplex())
 			{
@@ -1989,7 +1989,7 @@ namespace mathpresso
 			}
 			if (child->isImm())
 			{
-				sym->setValue(static_cast<AstImm*>(child)->getValue<T>());
+				sym->setValue(std::static_pointer_cast<AstImm>(child)->getValue<T>());
 				sym->setAssigned();
 			}
 		}

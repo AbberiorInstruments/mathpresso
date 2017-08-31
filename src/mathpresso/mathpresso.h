@@ -238,7 +238,7 @@ type& operator=(const type& other) = delete; \
 	// [mathpresso::Symbols]
 	// ============================================================================
 
-	//! Holds MpOperation-objects and gives an easy way to finding them.
+	//! Holds MpOperation-objects and variables, and gives an easy way to finding them.
 	class Symbols
 	{
 		using op_ptr_type = std::shared_ptr<MpOperation>;

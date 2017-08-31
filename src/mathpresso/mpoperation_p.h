@@ -9,7 +9,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationIsFinite();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// isinf
@@ -18,7 +18,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationIsInfinite();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// isnan
@@ -27,7 +27,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationIsNan();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// real
@@ -35,7 +35,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationGetReal();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// imag
@@ -43,7 +43,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationGetImag();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// Square root
@@ -51,7 +51,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationSqrt();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// Negation
@@ -60,9 +60,9 @@ namespace mathpresso
 	{
 	public:
 		MpOperationNeg();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	protected:
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
+		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// Not
@@ -71,7 +71,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationNot();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// conjugate
@@ -79,9 +79,9 @@ namespace mathpresso
 	{
 	public:
 		MpOperationConjug();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	private:
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
+		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// Reciprocate
@@ -90,7 +90,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationRecip();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// Sign bit
@@ -98,7 +98,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationSignBit();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// copy sign
@@ -106,7 +106,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationCopySign();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// Average
@@ -115,7 +115,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationAvg();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// Absolute
@@ -123,7 +123,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationAbs();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// round
@@ -131,7 +131,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationRound();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	protected:
 		std::string description_ = "Rounds *.5 towards infinity.";
 	};
@@ -141,7 +141,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationRoundEven();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	protected:
 		std::string description_ = "Rounds *.5 towards nearest even integer.";
 	};
@@ -151,7 +151,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationTrunc();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// frac
@@ -159,7 +159,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationFrac();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// floor
@@ -167,7 +167,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationFloor();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// ceil
@@ -175,7 +175,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationcCeil();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	// Addition
@@ -355,8 +355,8 @@ namespace mathpresso
 	public:
 		MpOperationTernary();
 
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
+		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
 	protected:
 		bool isColon_;
 	};
@@ -367,7 +367,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationAssignment();
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
+		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
 	};
 }

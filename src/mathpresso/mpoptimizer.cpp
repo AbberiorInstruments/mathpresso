@@ -32,14 +32,14 @@ namespace mathpresso
 	// [mpsl::AstOptimizer - OnNode]
 	// ============================================================================
 
-	Error AstOptimizer::onNode(AstNode * node)
+	Error AstOptimizer::onNode(std::shared_ptr<AstNode> node)
 	{
 		switch (node->getNodeType())
 		{
-			case AstNodeType::kAstNodeProgram: return onProgram(static_cast<AstProgram*>(node));
-			case AstNodeType::kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
-			case AstNodeType::kAstNodeVar: return onVar(static_cast<AstVar*>(node));
-			case AstNodeType::kAstNodeImm: return onImm(static_cast<AstImm*>(node));
+			case AstNodeType::kAstNodeProgram: return onProgram(std::static_pointer_cast<AstProgram>(node));
+			case AstNodeType::kAstNodeBlock: return onBlock(std::static_pointer_cast<AstBlock>(node));
+			case AstNodeType::kAstNodeVar: return onVar(std::static_pointer_cast<AstVar>(node));
+			case AstNodeType::kAstNodeImm: return onImm(std::static_pointer_cast<AstImm>(node));
 			case AstNodeType::kAstNodeVarDecl:
 			case AstNodeType::kAstNodeUnaryOp:
 			case AstNodeType::kAstNodeBinaryOp:
@@ -52,7 +52,7 @@ namespace mathpresso
 		}
 	}
 
-	Error AstOptimizer::onBlock(AstBlock* node)
+	Error AstOptimizer::onBlock(std::shared_ptr<AstBlock> node)
 	{
 		// Prevent removing nodes that are not stored in pure `AstBlock`. For example
 		// function call inherits from `AstBlock`, but it needs each expression passed.
@@ -96,7 +96,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error AstOptimizer::onVarDecl(AstVarDecl* node)
+	Error AstOptimizer::onVarDecl(std::shared_ptr<AstVarDecl> node)
 	{
 		if (node->_mpOp)
 			return node->_mpOp->optimize(this, node);
@@ -104,14 +104,14 @@ namespace mathpresso
 									   "No MpOperation.");
 	}
 
-	Error AstOptimizer::onVar(AstVar* node)
+	Error AstOptimizer::onVar(std::shared_ptr<AstVar> node)
 	{
 		AstSymbol* sym = node->getSymbol();
 		bool b_complex = node->returnsComplex() || sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
 
 		if (sym->isAssigned() && !node->hasNodeFlag(AstNodeFlags::kAstNodeHasSideEffect))
 		{
-			AstImm* imm;
+			std::shared_ptr<AstImm> imm;
 
 			if (!b_complex)
 			{
@@ -121,17 +121,17 @@ namespace mathpresso
 			{
 				imm = _ast->newNode<AstImm>(sym->getValueComp());
 			}
-			_ast->deleteNode(node->getParent()->replaceNode(node, imm));
+			node->getParent()->replaceNode(node, imm);
 		}
 		return ErrorCode::kErrorOk;
 	}
 
-	Error AstOptimizer::onImm(AstImm* node)
+	Error AstOptimizer::onImm(std::shared_ptr<AstImm> node)
 	{
 		return ErrorCode::kErrorOk;
 	}
 
-	Error AstOptimizer::optimize(AstNode * node)
+	Error AstOptimizer::optimize(std::shared_ptr<AstNode> node)
 	{
 
 		bool takesComplex = false;
@@ -168,22 +168,22 @@ namespace mathpresso
 									   "No MpOperation.");
 	}
 
-	Error AstOptimizer::onUnaryOp(AstUnaryOp* node)
+	Error AstOptimizer::onUnaryOp(std::shared_ptr<AstUnaryOp> node)
 	{
 		return optimize(node);
 	}
 
-	Error AstOptimizer::onBinaryOp(AstBinaryOp* node)
+	Error AstOptimizer::onBinaryOp(std::shared_ptr<AstBinaryOp> node)
 	{
 		return optimize(node);
 	}
 
-	Error AstOptimizer::onTernaryOp(AstTernaryOp* node)
+	Error AstOptimizer::onTernaryOp(std::shared_ptr<AstTernaryOp> node)
 	{
 		return optimize(node);
 	}
 
-	Error AstOptimizer::onCall(AstCall* node)
+	Error AstOptimizer::onCall(std::shared_ptr<AstCall> node)
 	{
 		return optimize(node);
 	}

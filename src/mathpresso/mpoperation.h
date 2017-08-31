@@ -75,9 +75,9 @@ namespace mathpresso
 		}
 
 		// Add ASM code to compiler stack 
-		virtual JitVar compile(JitCompiler *jc, AstNode * node) const = 0;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode>  node) const = 0;
 		// Optimize AST 
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const = 0;
+		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const = 0;
 
 		size_t nargs() const
 		{
@@ -127,8 +127,8 @@ namespace mathpresso
 			return flag & flags_;
 		}
 
-		virtual JitVar compile(JitCompiler *jc, AstNode *node) const override;
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
+		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
 
 	protected:
 		virtual RET evaluate(PARAM * args) const;
@@ -162,10 +162,10 @@ namespace mathpresso
 		}
 
 		// calls generatAsm() after setting up.
-		virtual JitVar compile(JitCompiler* jc, AstNode * node) const override;
+		virtual JitVar compile(JitCompiler* jc, std::shared_ptr<AstNode> node) const override;
 
 		// uses calculate() to calculate immediate values.
-		virtual uint32_t optimize(AstOptimizer *opt, AstNode *node) const override;
+		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
 
 		bool hasFlag(uint32_t flag) const
 		{

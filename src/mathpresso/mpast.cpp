@@ -116,29 +116,29 @@ namespace mathpresso
 		_heap->release(symbol, sizeof(AstSymbol) + kLen + 1);
 	}
 
-	void AstBuilder::deleteNode(AstNode* node)
+	void AstBuilder::deleteNode(std::shared_ptr<AstNode> node)
 	{
 		size_t length = node->getLength();
-		AstNode** children = node->getChildren();
+		std::vector<std::shared_ptr<AstNode>> children = node->getChildren();
 
 		AstNodeType nodeType = node->getNodeType();
 
 		switch (nodeType)
 		{
-			case AstNodeType::kAstNodeProgram: static_cast<AstProgram*>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeBlock: static_cast<AstBlock*>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeVarDecl: static_cast<AstVarDecl*>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeVar: static_cast<AstVar*>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeImm: static_cast<AstImm*>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeUnaryOp: static_cast<AstUnaryOp*>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeBinaryOp: static_cast<AstBinaryOp*>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeTernaryOp: static_cast<AstTernaryOp*>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeCall: static_cast<AstCall*>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeProgram: std::static_pointer_cast<AstProgram>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeBlock:  std::static_pointer_cast<AstBlock>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeVarDecl: std::static_pointer_cast<AstVarDecl>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeVar:  std::static_pointer_cast<AstVar>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeImm:  std::static_pointer_cast<AstImm>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeUnaryOp:  std::static_pointer_cast<AstUnaryOp>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeBinaryOp:  std::static_pointer_cast<AstBinaryOp>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeTernaryOp:  std::static_pointer_cast<AstTernaryOp>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeCall:  std::static_pointer_cast<AstCall>(node)->destroy(this); break;
 		}
 
 		for (uint32_t i = 0; i < length; i++)
 		{
-			AstNode* child = children[i];
+			std::shared_ptr<AstNode> child = children[i];
 			if (child != nullptr)
 			{
 				deleteNode(child);
@@ -146,8 +146,8 @@ namespace mathpresso
 		}
 
 		node ->~AstNode();
-
-		_heap->release(node, getNodeSize(nodeType));
+		// TODO: not good.
+		//_heap->release(node.get(), getNodeSize(nodeType));
 	}
 
 	// ============================================================================
@@ -230,27 +230,27 @@ namespace mathpresso
 	// [mathpresso::AstNode - Ops]
 	// ============================================================================
 
-	AstNode* AstNode::replaceNode(AstNode* refNode, AstNode* node)
+	std::shared_ptr<AstNode> AstNode::replaceNode(std::shared_ptr<AstNode> refNode, std::shared_ptr<AstNode> node)
 	{
 		MATHPRESSO_ASSERT(refNode != nullptr);
-		MATHPRESSO_ASSERT(refNode->getParent() == this);
+		MATHPRESSO_ASSERT(refNode->getParent() == shared_from_this());
 		MATHPRESSO_ASSERT(node == nullptr || !node->hasParent());
 
 		size_t length = _length;
-		AstNode** children = getChildren();
+		std::vector<std::shared_ptr<AstNode>> children = getChildren();
 
 		for (uint32_t i = 0; i < length; i++)
 		{
-			AstNode* child = children[i];
+			std::shared_ptr<AstNode> child = children[i];
 
 			if (child != refNode)
 				continue;
 
 			children[i] = node;
-			refNode->_parent = nullptr;
+			refNode->_parent.reset();
 
 			if (node != nullptr)
-				node->_parent = this;
+				node->_parent = shared_from_this();
 
 			return refNode;
 		}
@@ -258,31 +258,31 @@ namespace mathpresso
 		return nullptr;
 	}
 
-	AstNode* AstNode::replaceAt(uint32_t index, AstNode* node)
+	std::shared_ptr<AstNode> AstNode::replaceAt(uint32_t index, std::shared_ptr<AstNode> node)
 	{
-		AstNode* child = getAt(index);
+		std::shared_ptr<AstNode> child = getAt(index);
 		_children[index] = node;
 
 		if (child != nullptr)
-			child->_parent = nullptr;
+			child->_parent.reset();
 
 		if (node != nullptr)
-			node->_parent = this;
+			node->_parent.reset();
 
 		return child;
 	}
 
-	AstNode* AstNode::injectNode(AstNode* refNode, AstUnary* node)
+	std::shared_ptr<AstNode> AstNode::injectNode(std::shared_ptr<AstNode> refNode, std::shared_ptr<AstUnary> node)
 	{
-		MATHPRESSO_ASSERT(refNode != nullptr && refNode->getParent() == this);
+		MATHPRESSO_ASSERT(refNode != nullptr && refNode->getParent() == shared_from_this());
 		MATHPRESSO_ASSERT(node != nullptr && node->getParent() == nullptr);
 
 		size_t length = _length;
-		AstNode** children = getChildren();
+		std::vector<std::shared_ptr<AstNode>> children = getChildren();
 
 		for (uint32_t i = 0; i < length; i++)
 		{
-			AstNode* child = children[i];
+			std::shared_ptr<AstNode> child = children[i];
 
 			if (child != refNode)
 				continue;
@@ -290,7 +290,7 @@ namespace mathpresso
 			children[i] = node;
 			refNode->_parent = node;
 
-			node->_parent = this;
+			node->_parent = shared_from_this();
 			node->setChild(refNode);
 
 			return refNode;
@@ -299,9 +299,9 @@ namespace mathpresso
 		return nullptr;
 	}
 
-	AstNode* AstNode::injectAt(uint32_t index, AstUnary* node)
+	std::shared_ptr<AstNode> AstNode::injectAt(uint32_t index, std::shared_ptr<AstUnary> node)
 	{
-		AstNode* child = getAt(index);
+		std::shared_ptr<AstNode> child = getAt(index);
 
 		MATHPRESSO_ASSERT(node != nullptr && node->getParent() == nullptr);
 		MATHPRESSO_ASSERT(child != nullptr);
@@ -309,7 +309,7 @@ namespace mathpresso
 		_children[index] = node;
 		child->_parent = node;
 
-		node->_parent = this;
+		node->_parent = shared_from_this();
 		node->setChild(child);
 
 		return child;
@@ -331,7 +331,8 @@ namespace mathpresso
 	// [mathpresso::AstBlock - Ops]
 	// ============================================================================
 
-	static Error mpBlockNodeGrow(AstBlock* self)
+	//TODO: is this method necessary?
+	static Error mpBlockNodeGrow(std::shared_ptr<AstBlock> self)
 	{
 		size_t oldCapacity = self->_capacity;
 		size_t newCapacity = oldCapacity;
@@ -354,22 +355,10 @@ namespace mathpresso
 		else
 			newCapacity += 256;
 
-		ZoneHeap* heap = self->getAst()->getHeap();
-
-		AstNode** oldArray = self->getChildren();
-		AstNode** newArray = static_cast<AstNode**>(heap->alloc(newCapacity * sizeof(AstNode), newCapacity));
-
-		MATHPRESSO_NULLCHECK(newArray);
-		newCapacity /= sizeof(AstNode*);
-
-		self->_children = newArray;
+		
+		self->_children.resize(newCapacity);
 		self->_capacity = static_cast<uint32_t>(newCapacity);
 
-		if (oldCapacity != 0)
-		{
-			::memcpy(newArray, oldArray, length * sizeof(AstNode*));
-			heap->release(oldArray, oldCapacity * sizeof(AstNode*));
-		}
 
 		return ErrorCode::kErrorOk;
 	}
@@ -379,17 +368,17 @@ namespace mathpresso
 	{
 		// Grow if needed.
 		if (_length == _capacity)
-			MATHPRESSO_PROPAGATE(mpBlockNodeGrow(this));
+			MATHPRESSO_PROPAGATE(mpBlockNodeGrow(std::static_pointer_cast<AstBlock>(shared_from_this())));
 		return ErrorCode::kErrorOk;
 	}
 
-	AstNode* AstBlock::removeNode(AstNode* node)
+	std::shared_ptr<AstNode> AstBlock::removeNode(std::shared_ptr<AstNode> node)
 	{
 		MATHPRESSO_ASSERT(node != nullptr);
-		MATHPRESSO_ASSERT(node->getParent() == this);
+		MATHPRESSO_ASSERT(node->getParent() == shared_from_this());
 
-		AstNode** p = getChildren();
-		AstNode** pEnd = p + _length;
+		auto p = _children.begin();
+		auto pEnd = _children.end();
 
 		while (p != pEnd)
 		{
@@ -405,26 +394,27 @@ namespace mathpresso
 
 	_Found:
 		_length--;
-		::memmove(p, p + 1, static_cast<size_t>(pEnd - p - 1) * sizeof(AstNode*));
 
-		node->_parent = nullptr;
+		_children.erase(p);
+
+		node->_parent.reset();
 		return node;
 	}
 
-	AstNode* AstBlock::removeAt(size_t index)
+	std::shared_ptr<AstNode> AstBlock::removeAt(size_t index)
 	{
 		MATHPRESSO_ASSERT(index < _length);
 
 		if (index >= _length)
 			return nullptr;
 
-		AstNode** p = getChildren() + index;
-		AstNode* oldNode = p[0];
 
+		auto oldNode = _children[index];
 		_length--;
-		::memmove(p, p + 1, static_cast<size_t>(_length - index) * sizeof(AstNode*));
+		_children.erase(_children.begin() + index);
 
-		oldNode->_parent = nullptr;
+		oldNode->_parent.reset();
+
 		return oldNode;
 	}
 
@@ -442,26 +432,26 @@ namespace mathpresso
 	// [mathpresso::AstVisitor - OnNode]
 	// ============================================================================
 
-	Error AstVisitor::onNode(AstNode* node)
+	Error AstVisitor::onNode(std::shared_ptr<AstNode> node)
 	{
 		switch (node->getNodeType())
 		{
-			case AstNodeType::kAstNodeProgram: return onProgram(static_cast<AstProgram*>(node));
-			case AstNodeType::kAstNodeBlock: return onBlock(static_cast<AstBlock*>(node));
-			case AstNodeType::kAstNodeVarDecl: return onVarDecl(static_cast<AstVarDecl*>(node));
-			case AstNodeType::kAstNodeVar: return onVar(static_cast<AstVar*>(node));
-			case AstNodeType::kAstNodeImm: return onImm(static_cast<AstImm*>(node));
-			case AstNodeType::kAstNodeUnaryOp: return onUnaryOp(static_cast<AstUnaryOp*>(node));
-			case AstNodeType::kAstNodeBinaryOp: return onBinaryOp(static_cast<AstBinaryOp*>(node));
-			case AstNodeType::kAstNodeTernaryOp: return onTernaryOp(static_cast<AstTernaryOp*>(node));
-			case AstNodeType::kAstNodeCall: return onCall(static_cast<AstCall*>(node));
+			case AstNodeType::kAstNodeProgram: return onProgram(std::static_pointer_cast<AstProgram>(node));
+			case AstNodeType::kAstNodeBlock: return onBlock(std::static_pointer_cast<AstBlock>(node));
+			case AstNodeType::kAstNodeVarDecl: return onVarDecl(std::static_pointer_cast<AstVarDecl>(node));
+			case AstNodeType::kAstNodeVar: return onVar(std::static_pointer_cast<AstVar>(node));
+			case AstNodeType::kAstNodeImm: return onImm(std::static_pointer_cast<AstImm>(node));
+			case AstNodeType::kAstNodeUnaryOp: return onUnaryOp(std::static_pointer_cast<AstUnaryOp>(node));
+			case AstNodeType::kAstNodeBinaryOp: return onBinaryOp(std::static_pointer_cast<AstBinaryOp>(node));
+			case AstNodeType::kAstNodeTernaryOp: return onTernaryOp(std::static_pointer_cast<AstTernaryOp>(node));
+			case AstNodeType::kAstNodeCall: return onCall(std::static_pointer_cast<AstCall>(node));
 
 			default:
 				return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorInvalidState);
 		}
 	}
 
-	Error AstVisitor::onProgram(AstProgram* node)
+	Error AstVisitor::onProgram(std::shared_ptr<AstProgram> node)
 	{
 		return onBlock(node);
 	}
@@ -483,9 +473,9 @@ namespace mathpresso
 	// [mathpresso::AstDump - OnNode]
 	// ============================================================================
 
-	Error AstDump::onBlock(AstBlock* node)
+	Error AstDump::onBlock(std::shared_ptr<AstBlock> node)
 	{
-		AstNode** children = node->getChildren();
+		auto children = node->getChildren();
 		size_t i, count = node->getLength();
 
 		for (i = 0; i < count; i++)
@@ -494,7 +484,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error AstDump::onVarDecl(AstVarDecl* node)
+	Error AstDump::onVarDecl(std::shared_ptr<AstVarDecl> node)
 	{
 		AstSymbol* sym = node->getSymbol();
 
@@ -505,33 +495,33 @@ namespace mathpresso
 	}
 
 	template<class T>
-	std::string sym_name(T * node)
+	std::string sym_name(std::shared_ptr<T> node)
 	{
 		auto sym = node->getSymbol();
 		return sym ? sym->getName() : "(null)";
 	}
 
-	std::string op_name(AstNode * node, const Symbols * ops)
+	std::string op_name(std::shared_ptr<AstNode> node, const Symbols * ops)
 	{
 		return ops->name(node->_mpOp);
 	}
 
-	const char * node_type(AstNode * node)
+	const char * node_type(std::shared_ptr<AstNode> node)
 	{
 		return node->returnsComplex() ? "<cplx>" : "<real>";
 	}
 
-	const char * parm_type(AstNode * node)
+	const char * parm_type(std::shared_ptr<AstNode> node)
 	{
 		return node->takesComplex() ? "<cplx>" : "<real>";
 	}
 
-	Error AstDump::onVar(AstVar* node)
+	Error AstDump::onVar(std::shared_ptr<AstVar> node)
 	{
 		return info("%s %s", sym_name(node).c_str(), node_type(node));
 	}
 
-	Error AstDump::onImm(AstImm* node)
+	Error AstDump::onImm(std::shared_ptr<AstImm> node)
 	{
 		auto v = node->getValue<std::complex<double>>();
 
@@ -542,7 +532,7 @@ namespace mathpresso
 	}
 
 
-	Error AstDump::onUnaryOp(AstUnaryOp* node)
+	Error AstDump::onUnaryOp(std::shared_ptr<AstUnaryOp> node)
 	{
 		nest("%s [Unary, %s -> %s]", op_name(node, _ops).c_str(), parm_type(node), node_type(node));
 		if (node->hasChild())
@@ -550,7 +540,7 @@ namespace mathpresso
 		return denest();
 	}
 
-	Error AstDump::onBinaryOp(AstBinaryOp* node)
+	Error AstDump::onBinaryOp(std::shared_ptr<AstBinaryOp> node)
 	{
 		nest("%s [Binary, %s -> %s]", op_name(node, _ops).c_str(), parm_type(node), node_type(node));
 		if (node->hasLeft())
@@ -560,7 +550,7 @@ namespace mathpresso
 		return denest();
 	}
 
-	Error AstDump::onTernaryOp(AstTernaryOp* node)
+	Error AstDump::onTernaryOp(std::shared_ptr<AstTernaryOp> node)
 	{
 		nest("%s [Ternary, %s -> %s]", op_name(node, _ops).c_str(), parm_type(node), node_type(node));
 		if (node->hasCondition())
@@ -572,7 +562,7 @@ namespace mathpresso
 		return denest();
 	}
 
-	Error AstDump::onCall(AstCall* node)
+	Error AstDump::onCall(std::shared_ptr<AstCall> node)
 	{
 		AstSymbol* sym = node->getSymbol();
 
