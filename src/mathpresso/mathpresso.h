@@ -335,7 +335,7 @@ type& operator=(const type& other) = delete; \
 
 		//! Adding Symbols to the Context, which can contain function calls. See mpoeration.h for more information.
 		Error addObject(const std::string &name, std::shared_ptr<MpOperation> obj);
-
+		
 		//! Delete symbol from this context.
 		Error delSymbol(const std::string &name);
 

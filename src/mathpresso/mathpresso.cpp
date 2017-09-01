@@ -471,7 +471,14 @@ namespace mathpresso
 
 	Symbols::var_ptr_type Symbols::findVariable(const std::string & name) const
 	{
-		return var_ptr_type();
+		try
+		{
+			return _variables.at(name);
+		}
+		catch (std::out_of_range)
+		{
+			return nullptr;
+		}
 	}
 
 	void Symbols::add(const std::string &name, Symbols::op_ptr_type obj)
@@ -495,7 +502,7 @@ namespace mathpresso
 
 	void Symbols::add(const std::string & name, var_ptr_type obj)
 	{
-		if (_variables.find(name) != _variables.end())
+		if (_variables.find(name) == _variables.end())
 		{
 			_variables[name] = obj;
 		}
