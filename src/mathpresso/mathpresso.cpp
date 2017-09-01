@@ -63,168 +63,34 @@ namespace mathpresso
 	}
 
 	// ============================================================================
-	// [mathpresso::ContextInternalImpl]
-	// ============================================================================
-
-	//! \internal
-	//!
-	//! Null context data.
-	static const ContextImpl mpContextNull = { 0 };
-
-	//! \internal
-	//!
-	//! Internal context data.
-	struct ContextInternalImpl : public ContextImpl
-	{
-		ContextInternalImpl()
-			: _zone(32768 - Zone::kZoneOverhead),
-			_heap(&_zone),
-			_builder(&_heap),
-			_scope(&_builder, static_cast<AstScope*>(nullptr), AstScopeType::kAstScopeGlobal)
-		{
-			mpAtomicSet(&_refCount, 1);
-		}
-		~ContextInternalImpl() 
-		{
-		}
-
-		Zone _zone; //! Basic Allocator for chunks of memory from asmjit
-		ZoneHeap _heap; //! Granular and fast access to a Zones memory, with alloc and release
-		AstBuilder _builder; //! used to create nodes for ie. AstVar.
-		AstScope _scope; //! hold references to the Variables and functions, the root-scope
-	};
-
-	//! Increases the ref-count
-	static ContextImpl* mpContextAddRef(ContextImpl* d)
-	{
-		if (d != &mpContextNull)
-			mpAtomicInc(&d->_refCount);
-		return d;
-	}
-
-	//! decreases the ref-count and deletes the ContextImpl, if it reaches 0.
-	static void mpContextRelease(ContextImpl* d)
-	{
-		if (d != &mpContextNull && !mpAtomicDec(&d->_refCount))
-			delete static_cast<ContextInternalImpl*>(d);
-	}
-
-	//! Copies every Symbol saved within otherD into a new ContextImpl.
-	static ContextImpl* mpContextClone(ContextImpl* otherD_)
-	{
-		ContextInternalImpl* d = new(std::nothrow) ContextInternalImpl();
-		if (MATHPRESSO_UNLIKELY(d == nullptr)) return nullptr;
-
-		if (otherD_ != &mpContextNull)
-		{
-			ContextInternalImpl* otherD = static_cast<ContextInternalImpl*>(otherD_);
-			AstSymbolHashIterator it(otherD->_scope._operations);
-
-			while (it.has())
-			{
-				AstSymbol* sym = it.get();
-
-				std::string name(sym->getName(), sym->getLength());
-				uint32_t hVal = sym->getHVal();
-				AstSymbolType type = sym->getSymbolType();
-
-				AstSymbol* clonedSym = d->_builder.newSymbol(name, hVal, type, otherD->_scope.getScopeType());
-				if (MATHPRESSO_UNLIKELY(clonedSym == nullptr))
-				{
-					delete d;
-					return nullptr;
-				}
-
-				clonedSym->setSymbolFlag(sym->getSymbolFlags());
-				switch (type)
-				{
-					case AstSymbolType::kAstSymbolVariable:
-						clonedSym->setVarSlotId(sym->getVarSlotId());
-						clonedSym->setVarOffset(sym->getVarOffset());
-						clonedSym->setValue(sym->getValueComp());
-						break;
-
-					case AstSymbolType::kAstSymbolNone:
-						MATHPRESSO_ASSERT_NOT_REACHED();
-
-					default:
-						break;
-				}
-
-				d->_scope.putSymbol(clonedSym);
-				it.next();
-			}
-		}
-
-		return d;
-	}
-
-	//! Takes a Context and returns a reference to its ContextInternalImpl in **out.
-	static Error mpContextMutable(Context* self, ContextInternalImpl** out)
-	{
-		ContextImpl* d = self->_d;
-
-		if (d != &mpContextNull && mpAtomicGet(&d->_refCount) == 1)
-		{
-			*out = static_cast<ContextInternalImpl*>(d);
-			return ErrorCode::kErrorOk;
-		}
-		else
-		{
-			d = mpContextClone(d);
-			if (MATHPRESSO_UNLIKELY(d == nullptr))
-				return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
-
-			mpContextRelease(mpAtomicSetXchgT<ContextImpl*>(&self->_d, d));
-
-			*out = static_cast<ContextInternalImpl*>(d);
-			return ErrorCode::kErrorOk;
-		}
-	}
-
-
-	// ============================================================================
 	// [mathpresso::Context - Copy / Reset]
 	// ============================================================================
 
 	Error Context::reset()
 	{
-		mpContextRelease(mpAtomicSetXchgT<ContextImpl*>(&_d, const_cast<ContextImpl*>(&mpContextNull)));
+		_parent.reset();
+		_children.clear();
+		_symbols.clear();
 		return ErrorCode::kErrorOk;
 	}
-
-	Context& Context::operator=(const Context& other)
-	{
-		mpContextRelease(mpAtomicSetXchgT<ContextImpl*>(&_d, mpContextAddRef(other._d)));
-		return *this;
-	}
-
 
 	// ============================================================================
 	// [mathpresso::Context - Construction / Destruction]
 	// ============================================================================
 
 	Context::Context()
-		: _d(const_cast<ContextImpl*>(&mpContextNull)),
-		_ops(),
+		: _symbols(),
 		_parent(),
 		_children({})
 	{
 	}
 
 	Context::Context(const Context& other)
-		: _d(mpContextAddRef(other._d)),
-		_ops(other._ops),
+		:_symbols(other._symbols),
 		_parent(other._parent),
 		_children(other._children)
 	{
 	}
-
-	Context::~Context()
-	{
-		mpContextRelease(_d);
-	}
-
 
 	// ============================================================================
 	// [mathpresso::Context - Interface]
@@ -236,115 +102,75 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Context::addSymbol(AstSymbol* &sym, const std::string &name, AstSymbolType type)
-	{
-		ContextInternalImpl* d;
-		MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
-
-		uint32_t hVal = HashUtils::hashString(name.c_str(), name.length());
-		sym = d->_scope.getSymbol(name, hVal);
-		if (sym != nullptr)
-			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorSymbolAlreadyExists);
-
-		sym = d->_builder.newSymbol(name, hVal, type, AstScopeType::kAstScopeGlobal);
-		if (sym == nullptr)
-			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
-		d->_scope.putSymbol(sym);
-
-
-		return ErrorCode::kErrorOk;
-	}
-
 	Error Context::addConstant(const std::string &name, double value)
 	{
-		AstSymbol* sym;
-		MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
-
-		sym->setValue(value);
-		sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
-
-		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(), HashUtils::hashString(name.c_str(), name.length()), AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(), AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
 
 		shared_sym->setValue(value);
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
 
-		_ops.add(name, shared_sym);
+		_symbols.add(name, shared_sym);
 
 		return ErrorCode::kErrorOk;
 	}
 
 	Error Context::addConstant(const std::string &name, std::complex<double> value)
 	{
-		AstSymbol* sym;
-		MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
-
-		sym->setValue(value);
-		sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned | AstSymbolFlags::kAstSymbolIsComplex);
-
-		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(), HashUtils::hashString(name.c_str(), name.length()), AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(),  AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
 
 		shared_sym->setValue(value);
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
 
-		_ops.add(name, shared_sym);
+		_symbols.add(name, shared_sym);
 
 		return ErrorCode::kErrorOk;
 	}
 
 	Error Context::addVariable(const std::string &name, int offset, unsigned int flags)
 	{
-		AstSymbol* sym;
-		MATHPRESSO_PROPAGATE(addSymbol(sym, name, AstSymbolType::kAstSymbolVariable));
+		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(),  AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
 
-		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(), HashUtils::hashString(name.c_str(), name.length()), AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
-		
-		sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared);
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared);
 		if (flags & VariableFlags::kVariableCplx)
 		{
-			sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
 			shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
-
 		}
 
-		sym->setVarSlotId(InternalConsts::kInvalidSlot);
-		sym->setVarOffset(offset);
 		shared_sym->setVarSlotId(InternalConsts::kInvalidSlot);
 		shared_sym->setVarOffset(offset);
 
 		if (flags & VariableFlags::kVariableRO)
 		{
-			sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly);
 			shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly);
 		}
 
-		_ops.add(name, shared_sym);
+		_symbols.add(name, shared_sym);
 		return ErrorCode::kErrorOk;
 	}
 
 	Error Context::addObject(const std::string &name, std::shared_ptr<MpOperation> obj)
 	{
-		_ops.add(name, obj);
+		_symbols.add(name, obj);
 		return ErrorCode::kErrorOk;
 	}
 
 	Error Context::listSymbols(std::vector<std::string> &syms)
 	{
-		syms = _ops.names();
+		syms = _symbols.names();
+		return ErrorCode::kErrorOk;
+	}
 
-		ContextInternalImpl* d;
-		MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
-
-		HashIterator<std::string, AstSymbol> it(d->_scope.getSymbols());
+	std::vector<std::shared_ptr<AstSymbol>> Context::getVariables()
+	{
+		std::vector<std::shared_ptr<AstSymbol>> variables, tmp;
+		std::shared_ptr<Context> ctx = shared_from_this();
 		do
 		{
-			if (it.get()->getSymbolType() == AstSymbolType::kAstSymbolVariable)
-			{
-				syms.push_back(it.get()->getName());
-			}
-		} while (it.next());
+			tmp = ctx->_symbols.getVariables();
+			variables.insert(variables.end(), tmp.begin(), tmp.end());
+		} while (ctx = ctx->getParent());
 
-		return ErrorCode::kErrorOk;
+		return variables;
 	}
 
 	Error Context::setParent(std::shared_ptr<Context> ctx)
@@ -364,22 +190,9 @@ namespace mathpresso
 
 	Error Context::delSymbol(const std::string &name)
 	{
-		ContextInternalImpl* d;
-		MATHPRESSO_PROPAGATE(mpContextMutable(this, &d));
-
-		uint32_t hVal = HashUtils::hashString(name.c_str(), name.length());
-
-		AstSymbol* sym = d->_scope.getSymbol(name, hVal);
-		if (sym == nullptr)
-			_ops.remove(name);
-		else
-		{
-			d->_builder.deleteSymbol(d->_scope.removeSymbol(sym));
-		}
-
+		_symbols.remove(name);
 		return ErrorCode::kErrorOk;
 	}
-
 
 	// ============================================================================
 	// [mathpresso::Expression - Construction / Destruction]
@@ -419,35 +232,33 @@ namespace mathpresso
 		AstBuilder ast(&heap);
 		MATHPRESSO_PROPAGATE(ast.initProgramScope());
 
-		ContextImpl* d = ctx->_d;
-
-		// here we make the Scope within ctx._d the parent of ast._scope, so a lookup can find local and global variables.
-		if (d != &mpContextNull)
-			ast.getRootScope()->shadowContextScope(&static_cast<ContextInternalImpl*>(d)->_scope);
-
 		// Setup basic data structures used during parsing and compilation.
 		ErrorReporter errorReporter(body.c_str(), body.length(), options, log);
 
+		// create shadowContext and add ctx as parent. here all expression-local symbols will be stored.
+		std::shared_ptr<Context> shadowContext(std::make_shared<Context>());
+		shadowContext->setParent(ctx);
+
 		// Parse the expression into AST.
 		{
-			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body.c_str(), body.length(), &ctx->_ops).parseProgram(ast.getProgramNode()));
+			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body.c_str(), body.length(), shadowContext).parseProgram(ast.getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
 		{
-			ast.dump(sbTmp, &ctx->_ops);
+			ast.dump(sbTmp, &ctx->_symbols);
 			log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
 
 		// Perform basic optimizations at AST level.
 		{
-			MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, &ctx->_ops).onProgram(ast.getProgramNode()));
+			MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, shadowContext).onProgram(ast.getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
 		{
-			ast.dump(sbTmp, &ctx->_ops);
+			ast.dump(sbTmp, &ctx->_symbols);
 			log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
@@ -456,7 +267,7 @@ namespace mathpresso
 
 		// Compile the function to machine code.
 		reset();
-		CompiledFunc fn = mpCompileFunction(&ast, options, log, &ctx->_ops, _isComplex);
+		CompiledFunc fn = mpCompileFunction(&ast, options, log, ctx, _isComplex);
 
 		if (fn == nullptr)
 			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);
@@ -603,9 +414,9 @@ namespace mathpresso
 		return "<unknown>";
 	}
 
-	std::shared_ptr<MpOperation> Symbols::find(const std::string &name, size_t numArgs) const
+	std::shared_ptr<MpOperation> Symbols::findFunction(const std::string &name, size_t numArgs) const
 	{
-		auto ps = find(name);
+		auto ps = findFunction(name);
 		for (auto &p : ps)
 		{
 			if (p->nargs() == numArgs)
@@ -615,7 +426,7 @@ namespace mathpresso
 		return nullptr;
 	}
 
-	std::vector<Symbols::op_ptr_type> Symbols::find(const std::string &name) const
+	std::vector<Symbols::op_ptr_type> Symbols::findFunction(const std::string &name) const
 	{
 		auto it = _operations.find(name);
 		if (it == _operations.end())
@@ -624,7 +435,7 @@ namespace mathpresso
 			return it->second;
 	}
 
-	Symbols::op_ptr_type Symbols::find(const std::string & name, size_t nargs, bool paramsAreComplex) const
+	Symbols::op_ptr_type Symbols::findFunction(const std::string & name, size_t nargs, bool paramsAreComplex) const
 	{
 		auto it = _operations.find(name);
 
@@ -656,6 +467,11 @@ namespace mathpresso
 			}
 		}
 		return weakFit;
+	}
+
+	Symbols::var_ptr_type Symbols::findVariable(const std::string & name) const
+	{
+		return var_ptr_type();
 	}
 
 	void Symbols::add(const std::string &name, Symbols::op_ptr_type obj)
@@ -701,6 +517,78 @@ namespace mathpresso
 				names.push_back(pn.first + " (" + p->signature().to_string() + ")");
 		}
 		return names;
+	}
+
+	void Symbols::clear()
+	{
+		_operations.clear();
+		_variables.clear();
+	}
+
+	std::vector<std::shared_ptr<AstSymbol>> Symbols::getVariables()
+	{
+		std::vector<std::shared_ptr<AstSymbol>> out;
+		for (auto p : _variables)
+		{
+			out.push_back(p.second);
+		}
+		return out;
+	}
+
+	namespace resolver
+	{
+		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs, bool takesComplex)
+		{
+			std::shared_ptr<MpOperation> function;
+
+			do
+			{
+				function = ctx->_symbols.findFunction(name, numargs, takesComplex);
+			} while (!function && (ctx = ctx->getParent()) != nullptr);
+
+
+			return function;
+		}
+
+		std::vector<std::shared_ptr<MpOperation>> resolveFunction(ContextPtr ctx, const std::string & name)
+		{
+			std::vector<std::shared_ptr<MpOperation>> functions, tmp;
+
+			do
+			{
+				tmp = ctx->_symbols.findFunction(name);
+				functions.insert(functions.begin(), tmp.begin(), tmp.end());
+			} while (ctx = ctx->getParent());
+
+			return functions;
+		}
+
+		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs)
+		{
+			std::shared_ptr<MpOperation> function;
+
+			do
+			{
+				function = ctx->_symbols.findFunction(name, numargs);
+			} while (!function && (ctx = ctx->getParent()) != nullptr);
+
+			return function;
+		}
+
+		std::shared_ptr<AstSymbol> resolveVariable(ContextPtr ctx, const std::string & name, ContextPtr * contextOut)
+		{
+			std::shared_ptr<AstSymbol> symbol;
+
+			do
+			{
+				symbol = ctx->_symbols.findVariable(name);
+			} while (symbol == nullptr && (ctx = ctx->getParent()) != nullptr);
+
+			if (contextOut != nullptr)
+				*contextOut = ctx;
+
+			return symbol;
+		}
 	}
 
 } // mathpresso namespace

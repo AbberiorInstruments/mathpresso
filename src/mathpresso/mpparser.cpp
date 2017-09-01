@@ -30,39 +30,40 @@ namespace mathpresso
 	// [mathpresso::AstNestedScope]
 	// ============================================================================
 
-	//! \internal
-	//!
-	//! Nested scope used only by the parser and always allocated statically.
-	struct AstNestedScope : public AstScope
-	{
-		MATHPRESSO_NO_COPY(AstNestedScope);
+	// TODO remove
+	////! \internal
+	////!
+	////! Nested scope used only by the parser and always allocated statically.
+	//struct AstNestedScope : public AstScope
+	//{
+	//	MATHPRESSO_NO_COPY(AstNestedScope);
 
-		// --------------------------------------------------------------------------
-		// [Construction / Destruction]
-		// --------------------------------------------------------------------------
+	//	// --------------------------------------------------------------------------
+	//	// [Construction / Destruction]
+	//	// --------------------------------------------------------------------------
 
-		AstNestedScope(Parser* parser)
-			: AstScope(parser->_ast, parser->_currentScope, AstScopeType::kAstScopeNested),
-			_parser(parser)
-		{
-			_parser->_currentScope = this;
-		}
+	//	AstNestedScope(Parser* parser)
+	//		: AstScope(parser->_ast, parser->_currentScope, AstScopeType::kAstScopeNested),
+	//		_parser(parser)
+	//	{
+	//		_parser->_currentScope = this;
+	//	}
 
-		~AstNestedScope()
-		{
-			AstScope* parent = getParent();
-			MATHPRESSO_ASSERT(parent != nullptr);
+	//	~AstNestedScope()
+	//	{
+	//		AstScope* parent = getParent();
+	//		MATHPRESSO_ASSERT(parent != nullptr);
 
-			_parser->_currentScope = parent;
-			parent->_operations.mergeToInvisibleSlot(this->_operations);
-		}
+	//		_parser->_currentScope = parent;
+	//		parent->_operations.mergeToInvisibleSlot(this->_operations);
+	//	}
 
-		// --------------------------------------------------------------------------
-		// [Members]
-		// --------------------------------------------------------------------------
+	//	// --------------------------------------------------------------------------
+	//	// [Members]
+	//	// --------------------------------------------------------------------------
 
-		Parser* _parser;
-	};
+	//	Parser* _parser;
+	//};
 
 	// ============================================================================
 	// [mathpresso::Parser - Parse]
@@ -122,7 +123,7 @@ namespace mathpresso
 			MATHPRESSO_NULLCHECK(nested = _ast->newNode<AstBlock>());
 			block->appendNode(nested);
 
-			AstNestedScope tmpScope(this);
+			//AstNestedScope tmpScope(this);
 			return parseBlockOrStatement(nested);
 		}
 
@@ -201,7 +202,6 @@ namespace mathpresso
 		if (uToken != TokenType::kTokenVar)
 			MATHPRESSO_PARSER_ERROR(token, "Expected 'var' keyword.");
 
-		AstScope* scope = _currentScope;
 		for (;;)
 		{
 			// Parse the variable name.
@@ -216,13 +216,13 @@ namespace mathpresso
 				position = token.getPosAsUInt();
 
 			// Resolve the variable name.
-			AstSymbol* vSym;
-			AstScope* vScope;
+			std::shared_ptr<AstSymbol> vSym;
+			std::shared_ptr<Context> vContext;
 
 			str = std::string(_tokenizer._start + token.position, token.length);
-			if ((vSym = scope->resolveSymbol(str, token.hVal, &vScope)) != nullptr)
+			if ((vSym = resolver::resolveVariable(_shadowContext, str, &vContext)) != nullptr)
 			{
-				if (vSym->getSymbolType() != AstSymbolType::kAstSymbolVariable || scope == vScope)
+				if (vSym->getSymbolType() != AstSymbolType::kAstSymbolVariable || _shadowContext == vContext)
 					MATHPRESSO_PARSER_ERROR(token, "Attempt to redefine '%s'.", vSym->getName());
 
 				if (vSym->hasNode())
@@ -237,13 +237,13 @@ namespace mathpresso
 				}
 			}
 
-			vSym = _ast->newSymbol(str, token.hVal, AstSymbolType::kAstSymbolVariable, scope->getScopeType());
+			// TODO always global?
+			vSym = _ast->newSymbol(str, AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal);
 			MATHPRESSO_NULLCHECK(vSym);
-			scope->putSymbol(vSym);
 
 			std::shared_ptr<AstVarDecl> decl = _ast->newNode<AstVarDecl>();
 			MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
-			decl->_mpOp = _ops->find("=", 2);
+			decl->_mpOp = _rootContext->_symbols.findFunction("=", 2);
 			decl->_opName = "=";
 
 			decl->setPosition(position);
@@ -296,7 +296,6 @@ namespace mathpresso
 
 	Error Parser::parseExpression(std::shared_ptr<AstNode>* pNode, bool isNested)
 	{
-		AstScope* scope = _currentScope;
 
 		// It's important that the given expression is parsed in a way that it can be
 		// correctly evaluated. The `parseExpression()` function can handle expressions
@@ -365,10 +364,13 @@ namespace mathpresso
 				// Parse a symbol (variable or function name).
 				case TokenType::kTokenSymbol:
 				{
+					// TODO: rework this.
 					std::string symbolName(_tokenizer._start + token.position, token.length);
 
-					AstScope* symScope;
-					AstSymbol* sym = scope->resolveSymbol(symbolName, token.hVal, &symScope);
+					resolver::ContextPtr ctxfound;
+
+					//std::shared_ptr<AstSymbol> sym = scope->resolveSymbol(symbolName, token.hVal, &symScope);
+					std::shared_ptr<AstSymbol> sym = resolver::resolveVariable(_shadowContext, symbolName, &ctxfound);
 
 					std::shared_ptr<AstNode> newNode;
 
@@ -377,9 +379,10 @@ namespace mathpresso
 						if (!sym->isDeclared())
 							MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName());
 
+						// TODO remove
 						// Put symbol to shadow scope if it's global. This is done lazily and
 						// only once per symbol when it's referenced.
-						if (symScope->isGlobal())
+						/*if (symScope->isGlobal())
 						{
 							sym = _ast->shadowSymbol(sym);
 							MATHPRESSO_NULLCHECK(sym);
@@ -387,7 +390,7 @@ namespace mathpresso
 							sym->setVarSlotId(_ast->newSlotId());
 							symScope = _ast->getRootScope();
 							symScope->putSymbol(sym);
-						}
+						}*/
 
 						newNode = _ast->newNode<AstVar>();
 						MATHPRESSO_NULLCHECK(newNode);
@@ -399,7 +402,7 @@ namespace mathpresso
 						newNode->setPosition(token.getPosAsUInt());
 						sym->incUsedCount();
 					}
-					else if (_ops->find(symbolName).size() != 0)
+					else if (resolver::resolveFunction(_shadowContext, symbolName).size() != 0)
 					{
 						// Will be parsed by `parseCall()` again.
 						_tokenizer.set(&token);
@@ -473,13 +476,13 @@ namespace mathpresso
 				case TokenType::kTokenOperator:
 				{
 					std::string name(_tokenizer._start + token.position, token.length);
-					auto op = _ops->find(name, 1);
+					auto op = _rootContext->_symbols.findFunction(name, 1);
 					if (!op)
 					{
 						// for expressions like '----x'
 						for (size_t i = 0; i < name.size(); i++)
 						{
-							if (op = _ops->find(name.substr(i, 1), 1))
+							if (op = _rootContext->_symbols.findFunction(name.substr(i, 1), 1))
 							{
 								std::shared_ptr<AstUnaryOp> opNode = _ast->newNode<AstUnaryOp>();
 								MATHPRESSO_NULLCHECK(opNode);
@@ -563,7 +566,7 @@ namespace mathpresso
 				case TokenType::kTokenOperator:
 				{
 					std::string name(_tokenizer._start + token.position, token.length);
-					auto op = _ops->find(name, 2);
+					auto op = resolver::resolveFunction(_shadowContext, name, 2);
 					if (!op)
 						MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
 
@@ -574,7 +577,7 @@ namespace mathpresso
 						if (currentNode->getNodeType() != AstNodeType::kAstNodeVar)
 							MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
 
-						AstSymbol* sym = std::static_pointer_cast<AstVar>(currentNode)->getSymbol();
+						std::shared_ptr<AstSymbol> sym = std::static_pointer_cast<AstVar>(currentNode)->getSymbol();
 						if (sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly))
 							MATHPRESSO_PARSER_ERROR(token, "Can't assign to a read-only variable '%s'.", sym->getName());
 
@@ -746,9 +749,9 @@ namespace mathpresso
 
 		_tokenizer.consume();
 
-		if (_ops->find(fnName, callNode->getLength()))
+		if (resolver::resolveFunction(_shadowContext, fnName, callNode->getLength()))
 		{
-			//callNode->_mpOp = _ops->find(fnName, callNode->getLength());
+			// the correct function to use is determined by the optimizer.
 			callNode->_opName = fnName;
 		}
 		else
@@ -827,7 +830,7 @@ namespace mathpresso
 				ternaryNode->setCondition(branchCondition);
 				ternaryNode->setLeft(branchLeft);
 				ternaryNode->setRight(branchRight);
-				ternaryNode->_mpOp = _ops->find("_ternary_", 3);
+				ternaryNode->_mpOp = resolver::resolveFunction(_rootContext, "_ternary_", 3);
 				ternaryNode->_opName = "_ternary_";
 
 				// add the new node to the AST.

@@ -15,8 +15,8 @@
 namespace mathpresso
 {
 
-	MATHPRESSO_NOAPI CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const Symbols * ops, bool b_complex = false);
-	MATHPRESSO_NOAPI void mpFreeFunction(void* fn);
+	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, std::shared_ptr<Context> ctx, bool b_complex = false);
+	void mpFreeFunction(void* fn);
 
 	// ============================================================================
 	// [mathpresso::JitVar]
@@ -133,13 +133,12 @@ namespace mathpresso
 
 	struct MATHPRESSO_NOAPI JitCompiler
 	{
-		JitCompiler(asmjit::ZoneHeap* heap, asmjit::X86Compiler* cc, const Symbols * ops)
-			: heap(heap),
-			cc(cc),
+		JitCompiler(asmjit::X86Compiler* cc, std::shared_ptr<Context> ctx)
+			: cc(cc),
 			varSlots({}),
 			functionBody(nullptr),
 			constPool(&cc->_cbDataZone),
-			_ops(ops)
+			_shadowContext(ctx)
 		{
 			enableSSE4_1 = asmjit::CpuInfo::getHost().hasFeature(asmjit::CpuInfo::kX86FeatureSSE4_1);
 		}
@@ -161,7 +160,7 @@ namespace mathpresso
 		JitVar registerVarAsComplex(const JitVar & other);
 
 		// Compiler.
-		void compile(std::shared_ptr<AstBlock> node, AstScope* rootScope, uint32_t numSlots, bool b_complex);
+		void compile(std::shared_ptr<AstBlock> node, std::shared_ptr<Context> rootContext, uint32_t numSlots, bool b_complex);
 
 		JitVar onNode(std::shared_ptr<AstNode> node);
 		JitVar onBlock(std::shared_ptr<AstBlock> node);
@@ -188,7 +187,6 @@ namespace mathpresso
 
 		// Members.
 		asmjit::X86Compiler* cc;
-		asmjit::ZoneHeap* heap;
 
 		asmjit::X86Gp resultAddress;
 		asmjit::X86Gp variablesAddress;
@@ -202,7 +200,7 @@ namespace mathpresso
 
 		bool enableSSE4_1;
 
-		const Symbols * _ops;
+		std::shared_ptr<Context> _shadowContext;
 
 	};
 

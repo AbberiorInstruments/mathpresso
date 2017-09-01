@@ -42,9 +42,7 @@ namespace mathpresso
 	// ============================================================================
 
 	AstBuilder::AstBuilder(ZoneHeap* heap)
-		: _heap(heap),
-		_rootScope(nullptr),
-		_programNode(nullptr),
+		: _programNode(nullptr),
 		_numSlots(0)
 	{
 	}
@@ -60,39 +58,15 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Factory]
 	// ============================================================================
 
-	AstScope* AstBuilder::newScope(AstScope* parent, AstScopeType scopeType)
+	std::shared_ptr<AstSymbol> AstBuilder::newSymbol(const std::string& key, AstSymbolType symbolType, AstScopeType scopeType)
 	{
-		void* p = _heap->alloc(sizeof(AstScope));
-		if (p == nullptr)
-			return nullptr;
-		return new(p) AstScope(this, parent, scopeType);
+		return std::make_shared<AstSymbol>(key.c_str(), key.size(), symbolType, scopeType);
 	}
 
-	void AstBuilder::deleteScope(AstScope* scope)
-	{
-		scope->~AstScope();
-		_heap->release(scope, sizeof(AstScope));
-	}
-
-	AstSymbol* AstBuilder::newSymbol(const std::string& key, uint32_t hVal, AstSymbolType symbolType, uint32_t scopeType)
-	{
-		size_t kLen = key.length();
-		void* p = _heap->alloc(sizeof(AstSymbol) + kLen + 1);
-
-		if (p == nullptr)
-			return nullptr;
-
-		char* kStr = static_cast<char*>(p) + sizeof(AstSymbol);
-		::memcpy(kStr, key.c_str(), kLen);
-
-		kStr[kLen] = '\0';
-		return new(p) AstSymbol(kStr, static_cast<uint32_t>(kLen), hVal, symbolType, scopeType);
-	}
-
-	AstSymbol* AstBuilder::shadowSymbol(const AstSymbol* other)
+	std::shared_ptr<AstSymbol> AstBuilder::shadowSymbol(const std::shared_ptr<AstSymbol> other)
 	{
 		std::string name(other->getName(), other->getLength());
-		AstSymbol* sym = newSymbol(name, other->getHVal(), other->getSymbolType(), AstScopeType::kAstScopeShadow);
+		std::shared_ptr<AstSymbol> sym = newSymbol(name, other->getSymbolType(), AstScopeType::kAstScopeShadow);
 
 		if (sym == nullptr)
 			return nullptr;
@@ -109,11 +83,10 @@ namespace mathpresso
 		return sym;
 	}
 
-	void AstBuilder::deleteSymbol(AstSymbol* symbol)
+	void AstBuilder::deleteSymbol(std::shared_ptr<AstSymbol> symbol)
 	{
-		size_t kLen = symbol->getLength();
+		//should be doing nothing.
 		symbol->~AstSymbol();
-		_heap->release(symbol, sizeof(AstSymbol) + kLen + 1);
 	}
 
 	void AstBuilder::deleteNode(std::shared_ptr<AstNode> node)
@@ -156,12 +129,6 @@ namespace mathpresso
 
 	Error AstBuilder::initProgramScope()
 	{
-		if (_rootScope == nullptr)
-		{
-			_rootScope = newScope(nullptr, AstScopeType::kAstScopeGlobal);
-			MATHPRESSO_NULLCHECK(_rootScope);
-		}
-
 		if (_programNode == nullptr)
 		{
 			_programNode = newNode<AstProgram>();
@@ -180,11 +147,12 @@ namespace mathpresso
 		return AstDump(this, sb, ops).onProgram(getProgramNode());
 	}
 
+	// TODO: remove
 	// ============================================================================
 	// [mathpresso::AstScope - Construction / Destruction]
 	// ============================================================================
 
-	struct AstScopeReleaseHandler
+	/*struct AstScopeReleaseHandler
 	{
 		AstScopeReleaseHandler(AstBuilder* ast) : _ast(ast) {}
 		void release(AstSymbol* node) { _ast->deleteSymbol(node); }
@@ -210,10 +178,10 @@ namespace mathpresso
 	// [mathpresso::AstScope - Ops]
 	// ============================================================================
 
-	AstSymbol* AstScope::resolveSymbol(const std::string& name, uint32_t hVal, AstScope** scopeOut)
+	std::shared_ptr<AstSymbol> AstScope::resolveSymbol(const std::string& name, uint32_t hVal, AstScope** scopeOut)
 	{
 		AstScope* scope = this;
-		AstSymbol* symbol;
+		std::shared_ptr<AstSymbol> symbol;
 
 		do
 		{
@@ -224,7 +192,7 @@ namespace mathpresso
 			*scopeOut = scope;
 
 		return symbol;
-	}
+	}*/
 
 	// ============================================================================
 	// [mathpresso::AstNode - Ops]
@@ -486,7 +454,7 @@ namespace mathpresso
 
 	Error AstDump::onVarDecl(std::shared_ptr<AstVarDecl> node)
 	{
-		AstSymbol* sym = node->getSymbol();
+		std::shared_ptr<AstSymbol> sym = node->getSymbol();
 
 		nest("%s [VarDecl%s]", sym ? sym->getName() : static_cast<const char*>(nullptr), (node->takesComplex() ? ", complex" : ""));
 		if (node->hasChild())
@@ -564,7 +532,7 @@ namespace mathpresso
 
 	Error AstDump::onCall(std::shared_ptr<AstCall> node)
 	{
-		AstSymbol* sym = node->getSymbol();
+		std::shared_ptr<AstSymbol> sym = node->getSymbol();
 
 		nest("%s(), %s -> %s", node->_opName.c_str(), parm_type(node), node_type(node));
 		onBlock(node);

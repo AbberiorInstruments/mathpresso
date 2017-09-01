@@ -230,7 +230,6 @@ namespace mathpresso
 	// ============================================================================
 	// [mathpresso::addBuiltinObjects]
 	// ============================================================================
-	struct Context;
 	uint32_t addBuiltinMpObjects(Context * ctx);
 
 	// ============================================================================
@@ -276,6 +275,24 @@ namespace mathpresso
 		uint32_t _options;
 		OutputLog* _log;
 	};
+
+	namespace resolver
+	{
+		using ContextPtr = std::shared_ptr<Context>;
+		
+		//! find the correct function.
+		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs, bool takesComplex);
+
+		//! find one function with the given name and number of arguments.
+		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs);
+
+		//! find all functions with a known name.
+		//! TODO: should be unnecessary.
+		std::vector<std::shared_ptr<MpOperation>> resolveFunction(ContextPtr ctx, const std::string & nmae);
+
+		//! Get the Variable with the given name.
+		std::shared_ptr<AstSymbol> resolveVariable(ContextPtr ctx, const std::string & name, ContextPtr * ctxOut = nullptr);
+	} // resolver namespace
 
 } // mathpresso namespace
 

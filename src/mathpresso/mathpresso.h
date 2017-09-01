@@ -228,6 +228,7 @@ type& operator=(const type& other) = delete; \
 	// [mathpresso::ContextImpl]
 	// ============================================================================
 
+	// TODO: Do We need this?
 	struct ContextImpl
 	{
 		//! Reference count (atomic).
@@ -250,27 +251,34 @@ type& operator=(const type& other) = delete; \
 	public:
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
 
-		op_ptr_type find(const std::string & name, size_t nargs) const;
+		op_ptr_type findFunction(const std::string & name, size_t nargs) const;
 
 		//! looks for a MpOperation-Object, where the parameters are complex or real.
 		//! if no direct match is found (ie there is no Operation with real parameters),
 		//! a conversion from real to complex is return.
 		//! generally the first direct match is return, and after that the first match with conversions.
 		//! returns nullptr, if no match is found.
-		op_ptr_type find(const std::string & name, size_t nargs, bool paramsAreComplex) const;
+		op_ptr_type findFunction(const std::string & name, size_t nargs, bool paramsAreComplex) const;
 
-		std::vector<op_ptr_type> find(const std::string &name) const;
+		std::vector<op_ptr_type> findFunction(const std::string & name) const;
+
+		var_ptr_type findVariable(const std::string & name) const;
 
 		//! Makes sure that functions with the same name have to have the 
 		//! precedence and association.
-		void add(const std::string &name, op_ptr_type obj);
+		void add(const std::string & name, op_ptr_type obj);
 
 		//! add a variable.
-		void add(const std::string &name, var_ptr_type obj);
+		void add(const std::string & name, var_ptr_type obj);
 
-		void remove(const std::string &name);
+		void remove(const std::string & name);
 
 		std::vector<std::string> names() const;
+
+		void clear();
+
+		std::vector<std::shared_ptr<AstSymbol>> getVariables();
+		op_map_type getFunctions() { return _operations; }
 
 	private:
 		op_map_type _operations;
@@ -304,8 +312,6 @@ type& operator=(const type& other) = delete; \
 		Context();
 		//! Create a new `Context` based on `other`.
 		Context(const Context& other);
-		//! Destroy the `Context` instance.
-		~Context();
 
 		// --------------------------------------------------------------------------
 		// [Copy / Reset]
@@ -313,8 +319,6 @@ type& operator=(const type& other) = delete; \
 
 		//! Delete all symbols.
 		Error reset();
-		//! Assignment operator.
-		Context& operator=(const Context& other);
 
 		// --------------------------------------------------------------------------
 		// [Interface]
@@ -332,13 +336,13 @@ type& operator=(const type& other) = delete; \
 		//! Adding Symbols to the Context, which can contain function calls. See mpoeration.h for more information.
 		Error addObject(const std::string &name, std::shared_ptr<MpOperation> obj);
 
-		//! Internal implementation
-		Error addSymbol(AstSymbol* &sym, const std::string &name, AstSymbolType type);
 		//! Delete symbol from this context.
 		Error delSymbol(const std::string &name);
 
 		//! Retrieve a list of all available symbols (Functions, operators and constants)
 		Error listSymbols(std::vector<std::string> &syms);
+
+		std::vector<std::shared_ptr<AstSymbol>> getVariables();
 		
 		// getter/setter for the subcontexts and parents.
 		Error setParent(std::shared_ptr<Context> ctx);
@@ -357,10 +361,7 @@ type& operator=(const type& other) = delete; \
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		//! Private data not available to the MathPresso public API.
-		ContextImpl* _d;
-
-		Symbols _ops;
+		Symbols _symbols;
 
 	protected:
 		std::weak_ptr<Context> _parent;

@@ -44,21 +44,19 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const Symbols * ops)
+		Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const std::shared_ptr<Context> shadowContext)
 			: _ast(ast),
 			_errorReporter(errorReporter),
-			_currentScope(ast->getRootScope()),
 			_tokenizer(body, len),
-			_ops(ops)
+			_shadowContext(shadowContext),
+			_rootContext(shadowContext)
 		{
+			while (_rootContext->getParent())
+			{
+				_rootContext = _rootContext->getParent();
+			}
 		}
 		~Parser() {}
-
-		// --------------------------------------------------------------------------
-		// [Accessors]
-		// --------------------------------------------------------------------------
-
-		AstScope* getCurrentScope() const { return _currentScope; }
 
 		// --------------------------------------------------------------------------
 		// [Parse]
@@ -82,9 +80,10 @@ namespace mathpresso
 		AstBuilder* _ast;
 		ErrorReporter* _errorReporter;
 
-		AstScope* _currentScope;
 		Tokenizer _tokenizer;
-		const Symbols * _ops;
+
+		std::shared_ptr<Context> _shadowContext; // the current context.
+		std::shared_ptr<Context> _rootContext; // hold the root-context, where some default-operations are stored.
 	};
 
 } // mathpresso namespace

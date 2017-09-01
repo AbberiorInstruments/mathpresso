@@ -20,10 +20,10 @@ namespace mathpresso
 	// [mpsl::AstOptimizer - Construction / Destruction]
 	// ============================================================================
 
-	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, const Symbols* ops)
+	AstOptimizer::AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, std::shared_ptr<Context> ctx)
 		: AstVisitor(ast),
 		_errorReporter(errorReporter),
-		_ops(ops)
+		_shadowContext(ctx)
 	{
 	}
 	AstOptimizer::~AstOptimizer() {}
@@ -106,7 +106,7 @@ namespace mathpresso
 
 	Error AstOptimizer::onVar(std::shared_ptr<AstVar> node)
 	{
-		AstSymbol* sym = node->getSymbol();
+		std::shared_ptr<AstSymbol> sym = node->getSymbol();
 		bool b_complex = node->returnsComplex() || sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
 
 		if (sym->isAssigned() && !node->hasNodeFlag(AstNodeFlags::kAstNodeHasSideEffect))
@@ -148,7 +148,7 @@ namespace mathpresso
 		}
 
 		// Find optimal signature
-		node->_mpOp = _ops->find(node->_opName, node->getLength(), takesComplex);
+		node->_mpOp = resolver::resolveFunction(_shadowContext, node->_opName, node->getLength(), takesComplex);
 
 		if (node->_mpOp)
 		{

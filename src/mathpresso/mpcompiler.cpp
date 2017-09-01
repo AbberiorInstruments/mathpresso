@@ -121,7 +121,7 @@ namespace mathpresso
 
 	//! Compiles an AstBlock into assembler.
 	//! NOTE: use beginFunction() before and endFunction() after calling this.
-	void JitCompiler::compile(std::shared_ptr<AstBlock> node, AstScope* rootScope, uint32_t numSlots, bool b_complex)
+	void JitCompiler::compile(std::shared_ptr<AstBlock> node, std::shared_ptr<Context> ctx, uint32_t numSlots, bool b_complex)
 	{
 		// Create Definitions for the Variables and add them as JitVar
 		varSlots = std::vector<JitVar>(numSlots);
@@ -131,10 +131,9 @@ namespace mathpresso
 
 		// Write altered global variables.
 		{
-			AstSymbolHashIterator it(rootScope->getSymbols());
-			while (it.has())
+			auto it(ctx->getVariables().begin());
+			for(auto sym : ctx->getVariables())
 			{
-				AstSymbol* sym = it.get();
 				if (sym->isGlobal() && sym->isAltered())
 				{
 					JitVar v = varSlots[sym->getVarSlotId()];
@@ -149,8 +148,6 @@ namespace mathpresso
 								 x86::ptr(variablesAddress, sym->getVarOffset()), registerVarComplex(v).getXmm());
 					}
 				}
-
-				it.next();
 			}
 		}
 
@@ -211,7 +208,7 @@ namespace mathpresso
 
 	JitVar JitCompiler::onVar(std::shared_ptr<AstVar> node)
 	{
-		AstSymbol* sym = node->getSymbol();
+		std::shared_ptr<AstSymbol> sym = node->getSymbol();
 		uint32_t slotId = sym->getVarSlotId();
 		bool b_complex = node->returnsComplex();
 
@@ -474,7 +471,7 @@ namespace mathpresso
 		return getConstantU64AsPD(bits.u);
 	}
 
-	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, const Symbols * ops, bool b_complex)
+	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, std::shared_ptr<Context> ctx, bool b_complex)
 	{
 		StringLogger logger;
 
@@ -490,12 +487,12 @@ namespace mathpresso
 			code.setLogger(&logger);
 		}
 
-		JitCompiler jitCompiler(ast->getHeap(), &c, ops);
+		JitCompiler jitCompiler(&c, ctx);
 		if ((options & kOptionDisableSSE4_1) != 0)
 			jitCompiler.enableSSE4_1 = false;
 
 		jitCompiler.beginFunction();
-		jitCompiler.compile(ast->getProgramNode(), ast->getRootScope(), ast->_numSlots, b_complex);
+		jitCompiler.compile(ast->getProgramNode(), ctx, ast->_numSlots, b_complex);
 		jitCompiler.endFunction();
 
 		c.finalize();

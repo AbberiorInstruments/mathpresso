@@ -1954,7 +1954,7 @@ namespace mathpresso
 		if (varDecl->hasChild())
 			result = jc->onNode(varDecl->getChild());
 
-		AstSymbol* sym = varDecl->getSymbol();
+		std::shared_ptr<AstSymbol> sym = varDecl->getSymbol();
 		uint32_t slotId = sym->getVarSlotId();
 
 		result.setRO();
@@ -1976,7 +1976,7 @@ namespace mathpresso
 			return ErrorCode::kErrorInvalidState;
 		}
 
-		AstSymbol* sym = varDecl->getSymbol();
+		std::shared_ptr<AstSymbol> sym = varDecl->getSymbol();
 
 
 		if (varDecl->hasChild())

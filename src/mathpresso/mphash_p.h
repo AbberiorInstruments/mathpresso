@@ -114,10 +114,10 @@ namespace mathpresso
 		// std::unordered_map::emplace
 		HashNode* _put(HashNode* node);
 
-		// std::unordered_map::rease
+		// std::unordered_map::erase
 		HashNode* _del(HashNode* node);
 
-		// i would call these internal data -> priave or protected...
+		// i would call these internal data -> private or protected...
 		uint32_t _bucketsCount;
 		HashNode** _data;
 

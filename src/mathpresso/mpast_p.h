@@ -197,21 +197,15 @@ namespace mathpresso
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		ZoneHeap* getHeap() const { return _heap; }
-
-		AstScope* getRootScope() const { return _rootScope; }
 		std::shared_ptr<AstProgram> getProgramNode() const { return _programNode; }
 
 		// --------------------------------------------------------------------------
 		// [Factory]
 		// --------------------------------------------------------------------------
 
-		AstScope* newScope(AstScope* parent, AstScopeType scopeType);
-		void deleteScope(AstScope* scope);
-
-		AstSymbol* newSymbol(const std::string& key, uint32_t hVal, AstSymbolType symbolType, uint32_t scopeType);
-		AstSymbol* shadowSymbol(const AstSymbol* other);
-		void deleteSymbol(AstSymbol* symbol);
+		std::shared_ptr<AstSymbol> newSymbol(const std::string& key, AstSymbolType symbolType, AstScopeType scopeType);
+		std::shared_ptr<AstSymbol> shadowSymbol(const std::shared_ptr<AstSymbol> other);
+		void deleteSymbol(std::shared_ptr<AstSymbol> symbol);
 
 #define MATHPRESSO_ALLOC_AST_OBJECT(_Size_) \
   void* obj = _heap->alloc(_Size_); \
@@ -257,13 +251,9 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		//! Heap.
-		ZoneHeap* _heap;
 		//! String builder to build possible output messages.
 		StringBuilder _sb;
 
-		//! Root scope.
-		AstScope* _rootScope;
 		//! Root node.
 		std::shared_ptr<AstProgram> _programNode;
 
@@ -275,7 +265,7 @@ namespace mathpresso
 	// [mathpresso::AstSymbol]
 	// ============================================================================
 
-	struct AstSymbol : public HashNode, public std::enable_shared_from_this<AstSymbol>
+	struct AstSymbol : public std::enable_shared_from_this<AstSymbol>
 	{
 		MATHPRESSO_NO_COPY(AstSymbol);
 
@@ -283,9 +273,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstSymbol(const char* name, size_t length, uint32_t hVal, AstSymbolType symbolType, uint32_t scopeType)
-			: HashNode(hVal),
-			_length(length),
+		AstSymbol(const char* name, size_t length, AstSymbolType symbolType, uint32_t scopeType)
+			: _length(length),
 			_name(name),
 			_node(nullptr),
 			_symbolType(symbolType),
@@ -324,9 +313,6 @@ namespace mathpresso
 		std::shared_ptr<AstNode> getNode() const { return _node; }
 		//! Associate node with the symbol (basically the node that declares it).
 		void setNode(std::shared_ptr<AstNode> node) { _node = node; }
-
-		//! Get hash value of the symbol name.
-		uint32_t getHVal() const { return _hVal; }
 
 		//! Get symbol type, see \ref AstSymbolType.
 		AstSymbolType getSymbolType() const { return _symbolType; }
@@ -422,99 +408,6 @@ namespace mathpresso
 		//! The current value of the symbol (in case the symbol is an immediate).
 		//! if the symbol is real, _valueComp.imag() is set to 0.
 		std::complex<double> _valueComp;
-	};
-
-	typedef Hash<std::string, AstSymbol> AstSymbolHash;
-	typedef HashIterator<std::string, AstSymbol> AstSymbolHashIterator;
-
-	// ============================================================================
-	// [mathpresso::AstScope]
-	// ============================================================================
-
-	struct AstScope
-	{
-		MATHPRESSO_NO_COPY(AstScope);
-
-		// --------------------------------------------------------------------------
-		// [Construction / Destruction]
-		// --------------------------------------------------------------------------
-
-		AstScope(AstBuilder* ast, AstScope* parent, AstScopeType scopeType);
-		~AstScope();
-
-		// --------------------------------------------------------------------------
-		// [Accessors]
-		// --------------------------------------------------------------------------
-
-		//! Get the scope context.
-		AstBuilder* getAst() const { return _ast; }
-		//! Get the parent scope (or NULL).
-		AstScope* getParent() const { return _parent; }
-		//! Get symbols hash-table.
-		const AstSymbolHash& getSymbols() const { return _operations; }
-		//! Get scope type, see \ref AstScopeType.
-		AstScopeType getScopeType() const { return _scopeType; }
-
-		//! Get whether the scope type is `AstScopeType::kAstScopeGlobal`.
-		bool isGlobal() const { return _scopeType == AstScopeType::kAstScopeGlobal; }
-
-		//! Make this scope a shadow of `ctxScope`.
-		void shadowContextScope(AstScope* ctxScope)
-		{
-			_parent = ctxScope;
-			_scopeType = AstScopeType::kAstScopeShadow;
-		}
-
-		// --------------------------------------------------------------------------
-		// [Ops]
-		// --------------------------------------------------------------------------
-
-		//! Get the symbol defined only in this scope.
-		std::shared_ptr<AstSymbol> getSymbol(const std::string& name, uint32_t hVal)
-		{
-			return _operations.get(name, hVal);
-		}
-
-		//! Put a given symbol to this scope.
-		//!
-		//! NOTE: The function doesn't care about duplicates. The correct flow is
-		//! to call `resolveSymbol()` or `getSymbol()` and then `putSymbol()` based
-		//! on the result. You should never call `putSymbol()` without checking if
-		//! the symbol is already there.
-		void putSymbol(std::shared_ptr<AstSymbol> symbol)
-		{
-			_operations.put(symbol);
-		}
-
-		//! Resolve the symbol by traversing all parent scopes if not found in this
-		//! one. An optional `scopeOut` argument can be used to get scope where the
-		//! `name` has been found.
-		std::shared_ptr<AstSymbol> resolveSymbol(const std::string& name, uint32_t hVal, AstScope** scopeOut = nullptr);
-
-		std::shared_ptr<AstSymbol> resolveSymbol(const std::string& name)
-		{
-			return resolveSymbol(name, HashUtils::hashString(name.c_str(), name.length()));
-		}
-
-		std::shared_ptr<AstSymbol> removeSymbol(std::shared_ptr<AstSymbol> symbol)
-		{
-			return _operations.del(symbol);
-		}
-
-		// --------------------------------------------------------------------------
-		// [Members]
-		// --------------------------------------------------------------------------
-
-		//! Context.
-		AstBuilder* _ast;
-		//! Parent scope.
-		AstScope* _parent;
-
-		//! Symbols defined in this scope.
-		AstSymbolHash _operations;
-
-		//! Scope type, see \ref AstScopeType.
-		AstScopeType _scopeType;
 	};
 
 	// ============================================================================
@@ -776,9 +669,10 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstUnary(AstBuilder* ast, AstNodeType nodeType)
-			: AstNode(ast, nodeType, { _child }, 1),
+			: AstNode(ast, nodeType, {}, 1),
 			_child(nullptr)
 		{
+			_children = { _child };
 		}
 
 		
@@ -802,10 +696,11 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstBinary(AstBuilder* ast, AstNodeType nodeType)
-			: AstNode(ast, nodeType, { _left, _right }, 2),
+			: AstNode(ast, nodeType, {}, 2),
 			_left(nullptr),
 			_right(nullptr)
 		{
+			_children = { _left, _right };
 		}
 
 		// --------------------------------------------------------------------------
@@ -834,11 +729,12 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstTernary(AstBuilder* ast, AstNodeType nodeType)
-			: AstNode(ast, nodeType, { _condition, _left, _right }, 3),
+			: AstNode(ast, nodeType, {}, 3),
 			_condition(nullptr),
 			_left(nullptr),
 			_right(nullptr)
 		{
+			_children = { _condition, _left, _right };
 		}
 
 		// --------------------------------------------------------------------------
@@ -1127,7 +1023,7 @@ namespace mathpresso
 
 		virtual Error onNode(std::shared_ptr<AstNode> node);
 
-		virtual Error onProgram(std::shared_ptr<AstProgram> node);
+		virtual Error onProgram(std::shared_ptr<AstProgram> node) ;
 		virtual Error onBlock(std::shared_ptr<AstBlock> node) = 0;
 		virtual Error onVarDecl(std::shared_ptr<AstVarDecl> node) = 0;
 		virtual Error onVar(std::shared_ptr<AstVar> node) = 0;
