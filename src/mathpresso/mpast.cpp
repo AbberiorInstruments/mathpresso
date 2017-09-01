@@ -144,55 +144,8 @@ namespace mathpresso
 
 	Error AstBuilder::dump(StringBuilder& sb, const Symbols * ops)
 	{
-		return AstDump(this, sb, ops).onProgram(getProgramNode());
+		return AstDump(shared_from_this(), sb, ops).onProgram(getProgramNode());
 	}
-
-	// TODO: remove
-	// ============================================================================
-	// [mathpresso::AstScope - Construction / Destruction]
-	// ============================================================================
-
-	/*struct AstScopeReleaseHandler
-	{
-		AstScopeReleaseHandler(AstBuilder* ast) : _ast(ast) {}
-		void release(AstSymbol* node) { _ast->deleteSymbol(node); }
-
-		AstBuilder* _ast;
-	};
-
-	AstScope::AstScope(AstBuilder* ast, AstScope* parent, AstScopeType scopeType)
-		: _ast(ast),
-		_parent(parent),
-		_operations(ast->getHeap()),
-		_scopeType(scopeType)
-	{
-	}
-
-	AstScope::~AstScope()
-	{
-		AstScopeReleaseHandler handler(_ast);
-		_operations.reset(handler);
-	}
-
-	// ============================================================================
-	// [mathpresso::AstScope - Ops]
-	// ============================================================================
-
-	std::shared_ptr<AstSymbol> AstScope::resolveSymbol(const std::string& name, uint32_t hVal, AstScope** scopeOut)
-	{
-		AstScope* scope = this;
-		std::shared_ptr<AstSymbol> symbol;
-
-		do
-		{
-			symbol = scope->_operations.get(name, hVal);
-		} while (symbol == nullptr && (scope = scope->getParent()) != nullptr);
-
-		if (scopeOut != nullptr)
-			*scopeOut = scope;
-
-		return symbol;
-	}*/
 
 	// ============================================================================
 	// [mathpresso::AstNode - Ops]
@@ -204,7 +157,7 @@ namespace mathpresso
 		MATHPRESSO_ASSERT(refNode->getParent() == shared_from_this());
 		MATHPRESSO_ASSERT(node == nullptr || !node->hasParent());
 
-		size_t length = _length;
+		size_t length = getLength();
 		std::vector<std::shared_ptr<AstNode>> children = getChildren();
 
 		for (uint32_t i = 0; i < length; i++)
@@ -235,7 +188,7 @@ namespace mathpresso
 			child->_parent.reset();
 
 		if (node != nullptr)
-			node->_parent.reset();
+			node->_parent = shared_from_this();
 
 		return child;
 	}
@@ -245,7 +198,7 @@ namespace mathpresso
 		MATHPRESSO_ASSERT(refNode != nullptr && refNode->getParent() == shared_from_this());
 		MATHPRESSO_ASSERT(node != nullptr && node->getParent() == nullptr);
 
-		size_t length = _length;
+		size_t length = getLength();
 		std::vector<std::shared_ptr<AstNode>> children = getChildren();
 
 		for (uint32_t i = 0; i < length; i++)
@@ -323,11 +276,9 @@ namespace mathpresso
 		else
 			newCapacity += 256;
 
-		
-		self->_children.resize(newCapacity);
+		//self->_children.resize(newCapacity);
 		self->_capacity = static_cast<uint32_t>(newCapacity);
-
-
+		
 		return ErrorCode::kErrorOk;
 	}
 
@@ -335,7 +286,7 @@ namespace mathpresso
 	Error AstBlock::willAdd()
 	{
 		// Grow if needed.
-		if (_length == _capacity)
+		if (getLength() == _capacity)
 			MATHPRESSO_PROPAGATE(mpBlockNodeGrow(std::static_pointer_cast<AstBlock>(shared_from_this())));
 		return ErrorCode::kErrorOk;
 	}
@@ -361,8 +312,6 @@ namespace mathpresso
 		return nullptr;
 
 	_Found:
-		_length--;
-
 		_children.erase(p);
 
 		node->_parent.reset();
@@ -371,14 +320,13 @@ namespace mathpresso
 
 	std::shared_ptr<AstNode> AstBlock::removeAt(size_t index)
 	{
-		MATHPRESSO_ASSERT(index < _length);
+		MATHPRESSO_ASSERT(index < getLength());
 
-		if (index >= _length)
+		if (index >= getLength())
 			return nullptr;
 
 
 		auto oldNode = _children[index];
-		_length--;
 		_children.erase(_children.begin() + index);
 
 		oldNode->_parent.reset();
@@ -390,7 +338,7 @@ namespace mathpresso
 	// [mathpresso::AstVisitor - Construction / Destruction]
 	// ============================================================================
 
-	AstVisitor::AstVisitor(AstBuilder* ast)
+	AstVisitor::AstVisitor(std::shared_ptr<AstBuilder> ast)
 		: _ast(ast)
 	{
 	}
@@ -428,7 +376,7 @@ namespace mathpresso
 	// [mathpresso::AstDump - Construction / Destruction]
 	// ============================================================================
 
-	AstDump::AstDump(AstBuilder* ast, StringBuilder& sb, const Symbols * ops)
+	AstDump::AstDump(std::shared_ptr<AstBuilder> ast, StringBuilder& sb, const Symbols * ops)
 		: AstVisitor(ast),
 		_sb(sb),
 		_level(0),

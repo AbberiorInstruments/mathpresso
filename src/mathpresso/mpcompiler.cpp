@@ -471,7 +471,7 @@ namespace mathpresso
 		return getConstantU64AsPD(bits.u);
 	}
 
-	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, std::shared_ptr<Context> ctx, bool b_complex)
+	CompiledFunc mpCompileFunction(std::shared_ptr<AstBuilder> ast, uint32_t options, OutputLog* log, std::shared_ptr<Context> ctx, bool b_complex)
 	{
 		StringLogger logger;
 

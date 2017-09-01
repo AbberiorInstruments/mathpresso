@@ -27,45 +27,6 @@ namespace mathpresso
     static_cast<uint32_t>((size_t)(_Token_.position)), __VA_ARGS__)
 
 	// ============================================================================
-	// [mathpresso::AstNestedScope]
-	// ============================================================================
-
-	// TODO remove
-	////! \internal
-	////!
-	////! Nested scope used only by the parser and always allocated statically.
-	//struct AstNestedScope : public AstScope
-	//{
-	//	MATHPRESSO_NO_COPY(AstNestedScope);
-
-	//	// --------------------------------------------------------------------------
-	//	// [Construction / Destruction]
-	//	// --------------------------------------------------------------------------
-
-	//	AstNestedScope(Parser* parser)
-	//		: AstScope(parser->_ast, parser->_currentScope, AstScopeType::kAstScopeNested),
-	//		_parser(parser)
-	//	{
-	//		_parser->_currentScope = this;
-	//	}
-
-	//	~AstNestedScope()
-	//	{
-	//		AstScope* parent = getParent();
-	//		MATHPRESSO_ASSERT(parent != nullptr);
-
-	//		_parser->_currentScope = parent;
-	//		parent->_operations.mergeToInvisibleSlot(this->_operations);
-	//	}
-
-	//	// --------------------------------------------------------------------------
-	//	// [Members]
-	//	// --------------------------------------------------------------------------
-
-	//	Parser* _parser;
-	//};
-
-	// ============================================================================
 	// [mathpresso::Parser - Parse]
 	// ============================================================================
 
@@ -79,7 +40,6 @@ namespace mathpresso
 			// Parse the end of the input.
 			if (uToken == TokenType::kTokenEnd)
 				break;
-			//MATHPRESSO_PROPAGATE(parseStatement(block, ParserFlags::kEnableVarDecls | ParserFlags::kEnableNestedBlock));
 			auto ret = parseStatement(block, ParserFlags::kEnableVarDecls | ParserFlags::kEnableNestedBlock);
 			if (ret == ErrorCode::kErrorOk)
 			{
@@ -123,8 +83,18 @@ namespace mathpresso
 			MATHPRESSO_NULLCHECK(nested = _ast->newNode<AstBlock>());
 			block->appendNode(nested);
 
-			//AstNestedScope tmpScope(this);
-			return parseBlockOrStatement(nested);
+			auto nestedContext(std::make_shared<Context>());
+
+			nestedContext->markShadow();
+			
+			nestedContext->setParent(_shadowContext);
+			_shadowContext = nestedContext;
+
+			auto ret = parseBlockOrStatement(nested);
+
+			_shadowContext = nestedContext->getParent();
+
+			return ret;
 		}
 
 		// Parse a variable declaration.
@@ -193,7 +163,7 @@ namespace mathpresso
 	{
 		Token token;
 		uint32_t uToken = _tokenizer.next(&token);
-		std::string str;
+		std::string symbolName;
 
 		bool isFirst = true;
 		uint32_t position = token.getPosAsUInt();
@@ -219,8 +189,8 @@ namespace mathpresso
 			std::shared_ptr<AstSymbol> vSym;
 			std::shared_ptr<Context> vContext;
 
-			str = std::string(_tokenizer._start + token.position, token.length);
-			if ((vSym = resolver::resolveVariable(_shadowContext, str, &vContext)) != nullptr)
+			symbolName = std::string(_tokenizer._start + token.position, token.length);
+			if ((vSym = resolver::resolveVariable(_shadowContext, symbolName, &vContext)))
 			{
 				if (vSym->getSymbolType() != AstSymbolType::kAstSymbolVariable || _shadowContext == vContext)
 					MATHPRESSO_PARSER_ERROR(token, "Attempt to redefine '%s'.", vSym->getName());
@@ -238,7 +208,8 @@ namespace mathpresso
 			}
 
 			// TODO always global?
-			vSym = _ast->newSymbol(str, AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal);
+			vSym = _ast->newSymbol(symbolName, AstSymbolType::kAstSymbolVariable, _shadowContext->isGlobal() ? AstScopeType::kAstScopeGlobal: AstScopeType::kAstScopeShadow);
+			_shadowContext->_symbols.add(symbolName, vSym);
 			MATHPRESSO_NULLCHECK(vSym);
 
 			std::shared_ptr<AstVarDecl> decl = _ast->newNode<AstVarDecl>();
@@ -382,15 +353,13 @@ namespace mathpresso
 						// TODO remove
 						// Put symbol to shadow scope if it's global. This is done lazily and
 						// only once per symbol when it's referenced.
-						/*if (symScope->isGlobal())
+						if (ctxfound->isGlobal())
 						{
 							sym = _ast->shadowSymbol(sym);
 							MATHPRESSO_NULLCHECK(sym);
 
 							sym->setVarSlotId(_ast->newSlotId());
-							symScope = _ast->getRootScope();
-							symScope->putSymbol(sym);
-						}*/
+						}
 
 						newNode = _ast->newNode<AstVar>();
 						MATHPRESSO_NULLCHECK(newNode);

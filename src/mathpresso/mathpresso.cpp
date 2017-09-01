@@ -81,14 +81,16 @@ namespace mathpresso
 	Context::Context()
 		: _symbols(),
 		_parent(),
-		_children({})
+		_children({}),
+		_isGlobal(true)
 	{
 	}
 
 	Context::Context(const Context& other)
 		:_symbols(other._symbols),
 		_parent(other._parent),
-		_children(other._children)
+		_children(other._children),
+		_isGlobal(other._isGlobal)
 	{
 	}
 
@@ -229,45 +231,46 @@ namespace mathpresso
 
 		// this AstBuilder will hold the AST and the symbols defined by assignment within the expression.
 		// Every other (global) Variable will be hold within ctx._d!
-		AstBuilder ast(&heap);
-		MATHPRESSO_PROPAGATE(ast.initProgramScope());
+		std::shared_ptr<AstBuilder> ast(std::make_shared<AstBuilder>(&heap));
+		MATHPRESSO_PROPAGATE(ast->initProgramScope());
 
 		// Setup basic data structures used during parsing and compilation.
 		ErrorReporter errorReporter(body.c_str(), body.length(), options, log);
 
 		// create shadowContext and add ctx as parent. here all expression-local symbols will be stored.
 		std::shared_ptr<Context> shadowContext(std::make_shared<Context>());
+		shadowContext->markShadow();
 		shadowContext->setParent(ctx);
 
 		// Parse the expression into AST.
 		{
-			MATHPRESSO_PROPAGATE(Parser(&ast, &errorReporter, body.c_str(), body.length(), shadowContext).parseProgram(ast.getProgramNode()));
+			MATHPRESSO_PROPAGATE(Parser(ast, &errorReporter, body.c_str(), body.length(), shadowContext).parseProgram(ast->getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
 		{
-			ast.dump(sbTmp, &ctx->_symbols);
+			ast->dump(sbTmp, &ctx->_symbols);
 			log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
 
 		// Perform basic optimizations at AST level.
 		{
-			MATHPRESSO_PROPAGATE(AstOptimizer(&ast, &errorReporter, shadowContext).onProgram(ast.getProgramNode()));
+			MATHPRESSO_PROPAGATE(AstOptimizer(ast, &errorReporter, shadowContext).onProgram(ast->getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
 		{
-			ast.dump(sbTmp, &ctx->_symbols);
+			ast->dump(sbTmp, &ctx->_symbols);
 			log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
 
-		_isComplex = ast._programNode->returnsComplex();
+		_isComplex = ast->_programNode->returnsComplex();
 
 		// Compile the function to machine code.
 		reset();
-		CompiledFunc fn = mpCompileFunction(&ast, options, log, ctx, _isComplex);
+		CompiledFunc fn = mpCompileFunction(ast, options, log, ctx, _isComplex);
 
 		if (fn == nullptr)
 			return MATHPRESSO_TRACE_ERROR(ErrorCode::kErrorNoMemory);

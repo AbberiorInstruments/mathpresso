@@ -15,7 +15,7 @@
 namespace mathpresso
 {
 
-	CompiledFunc mpCompileFunction(AstBuilder* ast, uint32_t options, OutputLog* log, std::shared_ptr<Context> ctx, bool b_complex = false);
+	CompiledFunc mpCompileFunction(std::shared_ptr<AstBuilder> ast, uint32_t options, OutputLog* log, std::shared_ptr<Context> ctx, bool b_complex = false);
 	void mpFreeFunction(void* fn);
 
 	// ============================================================================

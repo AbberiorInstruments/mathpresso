@@ -24,7 +24,7 @@ struct AstOptimizer : public AstVisitor {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  AstOptimizer(AstBuilder* ast, ErrorReporter* errorReporter, std::shared_ptr<Context> ctx);
+  AstOptimizer(std::shared_ptr<AstBuilder> ast, ErrorReporter* errorReporter, std::shared_ptr<Context> ctx);
   virtual ~AstOptimizer();
 
   // --------------------------------------------------------------------------

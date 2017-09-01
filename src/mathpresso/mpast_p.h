@@ -182,7 +182,7 @@ namespace mathpresso
 	// ============================================================================
 
 	//! \internal
-	struct AstBuilder
+	struct AstBuilder : public std::enable_shared_from_this<AstBuilder>
 	{
 		MATHPRESSO_NO_COPY(AstBuilder);
 
@@ -440,7 +440,7 @@ namespace mathpresso
   public:
 
 
-	struct AstNode : std::enable_shared_from_this<AstNode>
+	struct AstNode : public std::enable_shared_from_this<AstNode>
 	{
 		MATHPRESSO_NO_COPY(AstNode);
 
@@ -456,8 +456,7 @@ namespace mathpresso
 			_opName(),
 			_nodeType(nodeType),
 			_nodeFlags(AstNodeFlags::kAstNone),
-			_position(~static_cast<uint32_t>(0)),
-			_length(length)
+			_position(~static_cast<uint32_t>(0))
 		{
 		}
 
@@ -486,11 +485,11 @@ namespace mathpresso
 		//! NOTE: Nodes that always have children (even if they are implicitly set
 		//! to NULL) always return `true`. This function if useful mostly if the
 		//! node is of `AstBlock` type.
-		bool hasChildren() const { return _length != 0; }
+		bool hasChildren() const { return getLength() != 0; }
 		//! Get children array.
 		std::vector<std::shared_ptr<AstNode>> getChildren() const { return _children; }
 		//! Get length of the children array.
-		size_t getLength() const { return _length; }
+		size_t getLength() const { return _children.size(); }
 
 		//! Get node type.
 		AstNodeType getNodeType() const { return _nodeType; }
@@ -528,7 +527,7 @@ namespace mathpresso
 
 		std::shared_ptr<AstNode> getAt(size_t index) const
 		{
-			MATHPRESSO_ASSERT(index < _length);
+			MATHPRESSO_ASSERT(index < _children.size());
 			return _children[index];
 		}
 
@@ -564,10 +563,6 @@ namespace mathpresso
 		uint8_t _nodeFlags;
 		//! Position (in characters) to the beginning of the program (default -1).
 		uint32_t _position;
-
-	protected:
-		//! Count of child-nodes.
-		size_t _length;
 	};
 
 	// ============================================================================
@@ -610,12 +605,11 @@ namespace mathpresso
 			MATHPRESSO_ASSERT(node->getParent() == nullptr);
 
 			// We expect `willAdd()` to be called before `appendNode()`.
-			MATHPRESSO_ASSERT(_length < _capacity);
+			//MATHPRESSO_ASSERT(getLength() < _capacity);
 
 			node->_parent = std::static_pointer_cast<AstBlock>(shared_from_this());
 
-			_children[_length] = node;
-			_length++;
+			_children.push_back(node);
 		}
 
 		//! Insert the given `node` to the block at index `i`.
@@ -628,12 +622,12 @@ namespace mathpresso
 			MATHPRESSO_ASSERT(node->getParent() == nullptr);
 
 			// We expect `willAdd()` to be called before `insertAt()`.
-			MATHPRESSO_ASSERT(_length < _capacity);
+			//MATHPRESSO_ASSERT(getLength() < _capacity);
 
 			std::vector<std::shared_ptr<AstNode>> p = getChildren();
 			node->_parent = std::static_pointer_cast<AstBlock>(shared_from_this());
 
-			size_t j = _length;
+			size_t j = getLength();
 			while (i < j)
 			{
 				p[j] = p[j - 1];
@@ -641,7 +635,6 @@ namespace mathpresso
 			}
 
 			p[j] = node;
-			_length++;
 		}
 
 		//! Remove the given `node`.
@@ -1008,14 +1001,14 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstVisitor(AstBuilder* ast);
+		AstVisitor(std::shared_ptr<AstBuilder> ast);
 		virtual ~AstVisitor();
 
 		// --------------------------------------------------------------------------
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		AstBuilder* getAst() const { return _ast; }
+		std::shared_ptr<AstBuilder> getAst() const { return _ast; }
 
 		// --------------------------------------------------------------------------
 		// [OnNode]
@@ -1037,7 +1030,7 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		AstBuilder* _ast;
+		std::shared_ptr<AstBuilder> _ast;
 	};
 
 	// ============================================================================
@@ -1052,7 +1045,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstDump(AstBuilder* ast, StringBuilder& sb, const Symbols * ctx);
+		AstDump(std::shared_ptr<AstBuilder> ast, StringBuilder& sb, const Symbols * ctx);
 		virtual ~AstDump();
 
 		// --------------------------------------------------------------------------

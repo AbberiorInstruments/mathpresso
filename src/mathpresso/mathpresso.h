@@ -357,6 +357,15 @@ type& operator=(const type& other) = delete; \
 			return _children.at(name);
 		}
 		
+		bool isGlobal()
+		{
+			return _isGlobal;
+		}
+		
+		void markShadow()
+		{
+			_isGlobal = false;
+		}
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
@@ -366,6 +375,8 @@ type& operator=(const type& other) = delete; \
 	protected:
 		std::weak_ptr<Context> _parent;
 		std::map<std::string, std::shared_ptr<Context>> _children;
+
+		bool _isGlobal;
 
 	};
 

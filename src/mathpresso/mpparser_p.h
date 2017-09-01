@@ -44,7 +44,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		Parser(AstBuilder* ast, ErrorReporter* errorReporter, const char* body, size_t len, const std::shared_ptr<Context> shadowContext)
+		Parser(std::shared_ptr<AstBuilder> ast, ErrorReporter* errorReporter, const char* body, size_t len, const std::shared_ptr<Context> shadowContext)
 			: _ast(ast),
 			_errorReporter(errorReporter),
 			_tokenizer(body, len),
@@ -77,7 +77,7 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		AstBuilder* _ast;
+		std::shared_ptr<AstBuilder> _ast;
 		ErrorReporter* _errorReporter;
 
 		Tokenizer _tokenizer;
