@@ -275,7 +275,7 @@ namespace mathpresso
 
 		AstSymbol(const std::string & name, AstSymbolType symbolType, uint32_t scopeType)
 			: _name(name),
-			_node(nullptr),
+			_node(),
 			_symbolType(symbolType),
 			_symbolFlags(scopeType == AstScopeType::kAstScopeGlobal ? (int)AstSymbolFlags::kAstSymbolIsGlobal : 0),
 			_valueComp(),
@@ -301,9 +301,9 @@ namespace mathpresso
 		std::string getName() const { return _name; }
 
 		//! Check if the symbol has associated node with it.
-		bool hasNode() const { return _node != nullptr; }
+		bool hasNode() const { return _node.lock() != nullptr; }
 		//! Get node associated with the symbol (can be `NULL` for built-ins).
-		std::shared_ptr<AstNode> getNode() const { return _node; }
+		std::shared_ptr<AstNode> getNode() const { return _node.lock(); }
 		//! Associate node with the symbol (basically the node that declares it).
 		void setNode(std::shared_ptr<AstNode> node) { _node = node; }
 
@@ -381,7 +381,7 @@ namespace mathpresso
 		std::string _name;
 
 		//! Node where the symbol is defined.
-		std::shared_ptr<AstNode> _node;
+		std::weak_ptr<AstNode> _node;
 
 		//! Type of the symbol, see \ref AstSymbolType.
 		AstSymbolType _symbolType;
@@ -458,7 +458,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		//! Get the `AstBuilder` instance that created this node.
-		std::shared_ptr<AstBuilder> getAst() const { return _ast; }
+		std::shared_ptr<AstBuilder> getAst() const { return _ast.lock(); }
 
 		//! Check if the node has a parent.
 		bool hasParent() const { return _parent.lock() != nullptr; }
@@ -531,7 +531,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		//! AST builder.
-		std::shared_ptr<AstBuilder> _ast; 
+		std::weak_ptr<AstBuilder> _ast; 
 		//! Parent node.
 		std::weak_ptr<AstNode> _parent;
 		//! Child nodes.
