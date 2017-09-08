@@ -231,7 +231,7 @@ namespace mathpresso
 			if (isAssigned)
 			{
 				std::shared_ptr<AstNode> expression;
-				MATHPRESSO_PROPAGATE_(parseExpression(&expression, false), { _ast->deleteNode(decl); });
+				MATHPRESSO_PROPAGATE(parseExpression(&expression, false));
 
 				decl->setChild(expression);
 				vSym->incWriteCount();
@@ -310,6 +310,9 @@ namespace mathpresso
 		// just started and there is no binary operator yet. Once the first binary
 		// operator has been parsed `currentBinaryNode` will be set accordingly.
 		std::shared_ptr<AstBinaryOp> currentBinaryNode = nullptr;
+		
+		// necessary to not loose 
+		std::shared_ptr<AstBinaryOp> rootBinaryNode = nullptr;
 
 		// Currently parsed node.
 		std::shared_ptr<AstNode> currentNode = nullptr;
@@ -519,10 +522,7 @@ namespace mathpresso
 					if (currentBinaryNode != nullptr)
 					{
 						currentBinaryNode->setRight(currentNode);
-						// Iterate to the top-most node.
-						while (currentBinaryNode->hasParent())
-							currentBinaryNode = std::static_pointer_cast<AstBinaryOp>(currentBinaryNode->getParent());
-						currentNode = currentBinaryNode;
+						currentNode = rootBinaryNode;
 					}
 
 					*pNodeOut = currentNode;
@@ -573,6 +573,7 @@ namespace mathpresso
 						// +-------------------------+
 						newNode->setLeft(currentNode);
 						currentBinaryNode = newNode;
+						rootBinaryNode = newNode;
 						break;
 					}
 
@@ -627,6 +628,7 @@ namespace mathpresso
 							!(currentBinaryPrec > newBinaryPrec || (currentBinaryPrec == newBinaryPrec && currentBinaryNode->_mpOp->isRightToLeft())))
 						{
 							newNode->setLeft(currentBinaryNode);
+							rootBinaryNode = newNode;
 						}
 						// currentBinaryNode <-+
 						//                     |
@@ -693,7 +695,6 @@ namespace mathpresso
 
 				if ((err = callNode->willAdd()) != ErrorCode::kErrorOk || (err = parseExpression(&expression, true)) != ErrorCode::kErrorOk)
 				{
-					_ast->deleteNode(callNode);
 					return err;
 				}
 
@@ -706,7 +707,6 @@ namespace mathpresso
 
 				if (uToken != TokenType::kTokenComma)
 				{
-					_ast->deleteNode(callNode);
 					MATHPRESSO_PARSER_ERROR(token, "Expected either ',' or ')' token.");
 				}
 
@@ -782,7 +782,6 @@ namespace mathpresso
 					std::shared_ptr<AstBinaryOp> preLastColon = std::static_pointer_cast<AstBinaryOp>(lastColon->getParent());
 					preLastColon->replaceAt(1, lastColon->getLeft());
 					lastColon->setLeft(nullptr);
-					_ast->deleteNode(lastColon);
 				}
 				// i.e.: cond1 ? a : b
 				else
@@ -802,8 +801,6 @@ namespace mathpresso
 
 				// add the new node to the AST.
 				node->getParent()->replaceNode(node, ternaryNode);
-
-				_ast->deleteNode(node);
 
 				return reparseTernary(ternaryNode);
 			}

@@ -79,7 +79,6 @@ namespace mathpresso
 
 			if (alterable && (node->getAt(i)->isImm()))
 			{
-				_ast->deleteNode(node->removeAt(i));
 				curCount--;
 				continue;
 			}

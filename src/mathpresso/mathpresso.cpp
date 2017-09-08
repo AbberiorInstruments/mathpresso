@@ -121,7 +121,7 @@ namespace mathpresso
 		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
 
 		shared_sym->setValue(value);
-		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
+		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned | AstSymbolFlags::kAstSymbolIsComplex);
 
 		_symbols.add(name, shared_sym);
 
@@ -223,15 +223,13 @@ namespace mathpresso
 		else
 			options &= ~(kOptionVerbose | kOptionDebugAst | kOptionDebugAsm);
 
-		Zone zone(32768 - Zone::kZoneOverhead);
-		ZoneHeap heap(&zone);
 		StringBuilderTmp<512> sbTmp;
 
 		// Initialize AST.
 
 		// this AstBuilder will hold the AST and the symbols defined by assignment within the expression.
 		// Every other (global) Variable will be hold within ctx._d!
-		std::shared_ptr<AstBuilder> ast(std::make_shared<AstBuilder>(&heap));
+		std::shared_ptr<AstBuilder> ast(std::make_shared<AstBuilder>());
 		MATHPRESSO_PROPAGATE(ast->initProgramScope());
 
 		// Setup basic data structures used during parsing and compilation.

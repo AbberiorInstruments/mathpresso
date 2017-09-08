@@ -407,7 +407,6 @@ namespace mathpresso
 			ret->setValue(evaluate(args.data()));
 
 			node->getParent()->replaceNode(node, ret);
-			opt->getAst()->deleteNode(node);
 			node = ret;
 		}
 		return ErrorCode::kErrorOk;
@@ -700,7 +699,6 @@ namespace mathpresso
 		{
 			std::shared_ptr<AstNode> childOfChild = std::static_pointer_cast<AstUnaryOp>(node->getAt(0))->unlinkChild();
 			parent->replaceNode(node, childOfChild);
-			opt->getAst()->deleteNode(node);
 		}
 		return ErrorCode::kErrorOk;
 	}
@@ -783,7 +781,6 @@ namespace mathpresso
 		{
 			std::shared_ptr<AstNode> childOfChild = std::static_pointer_cast<AstUnaryOp>(node->getAt(0))->unlinkChild();
 			parent->replaceNode(node, childOfChild);
-			opt->getAst()->deleteNode(node);
 		}
 		return ErrorCode::kErrorOk;
 	}
@@ -1281,7 +1278,6 @@ namespace mathpresso
 			node->_children[0]->_parent.reset();
 			node->_children[0] = nullptr;
 			node->getParent()->replaceNode(node, lNode);
-			opt->getAst()->deleteNode(node);
 		}
 		else if (lIsImm && !hasFlag(MpOperation::FlagHasState))
 		{
@@ -1293,7 +1289,6 @@ namespace mathpresso
 				node->_children[1]->_parent.reset();
 				node->_children[1] = nullptr;
 				node->getParent()->replaceNode(node, right);
-				opt->getAst()->deleteNode(node);
 			}
 		}
 		else if (rIsImm && !hasFlag(MpOperation::FlagHasState))
@@ -1306,7 +1301,6 @@ namespace mathpresso
 				node->_children[0]->_parent.reset();
 				node->_children[0] = nullptr;
 				node->getParent()->replaceNode(node, left);
-				opt->getAst()->deleteNode(node);
 			}
 
 		}
@@ -1927,8 +1921,6 @@ namespace mathpresso
 
 			nodeOptimized->_parent.reset();
 			ternaryNode->getParent()->replaceNode(ternaryNode, nodeOptimized);
-
-			opt->_ast->deleteNode(ternaryNode);
 		}
 
 		return ErrorCode::kErrorOk;

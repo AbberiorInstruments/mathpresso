@@ -190,7 +190,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstBuilder(ZoneHeap* heap);
+		AstBuilder();
 		~AstBuilder();
 
 		// --------------------------------------------------------------------------
@@ -231,7 +231,7 @@ namespace mathpresso
 
 #undef MATHPRESSO_ALLOC_AST_OBJECT
 
-		void deleteNode(std::shared_ptr<AstNode> node);
+		//void deleteNode(std::shared_ptr<AstNode> node);
 
 		uint32_t newSlotId() { return _numSlots++; }
 
@@ -450,10 +450,6 @@ namespace mathpresso
 		}
 
 		virtual ~AstNode()
-		{
-		}
-
-		void destroy(std::shared_ptr<AstBuilder> ast)
 		{
 		}
 
@@ -757,14 +753,13 @@ namespace mathpresso
 		{
 		}
 
-		void destroy(std::shared_ptr<AstBuilder> ast)
+		virtual ~AstVarDecl()
 		{
 			std::shared_ptr<AstSymbol> sym = getSymbol();
 			if (sym != nullptr)
 			{
 				sym->decUsedCount();
 			}
-
 		}
 
 		// --------------------------------------------------------------------------
@@ -899,7 +894,7 @@ namespace mathpresso
 		{
 		}
 
-		void destroy(std::shared_ptr<AstBuilder> ast)
+		virtual ~AstBinaryOp()
 		{
 			if (_mpOp && (_mpOp->flags() & MpOperation::IsAssignment) && hasLeft())
 			{

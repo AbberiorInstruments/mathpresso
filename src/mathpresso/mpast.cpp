@@ -41,17 +41,13 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Construction / Destruction]
 	// ============================================================================
 
-	AstBuilder::AstBuilder(ZoneHeap* heap)
+	AstBuilder::AstBuilder()
 		: _programNode(nullptr),
 		_numSlots(0)
 	{
 	}
 	AstBuilder::~AstBuilder()
 	{
-		if (_programNode)
-		{
-			deleteNode(_programNode);
-		}
 	}
 
 	// ============================================================================
@@ -87,40 +83,6 @@ namespace mathpresso
 	{
 		//should be doing nothing.
 		symbol->~AstSymbol();
-	}
-
-	void AstBuilder::deleteNode(std::shared_ptr<AstNode> node)
-	{
-		size_t length = node->getLength();
-		std::vector<std::shared_ptr<AstNode>> children = node->getChildren();
-
-		AstNodeType nodeType = node->getNodeType();
-
-		switch (nodeType)
-		{
-			case AstNodeType::kAstNodeProgram: std::static_pointer_cast<AstProgram>(node)->destroy(shared_from_this()); break;
-			case AstNodeType::kAstNodeBlock:  std::static_pointer_cast<AstBlock>(node)->destroy(shared_from_this()); break;
-			case AstNodeType::kAstNodeVarDecl: std::static_pointer_cast<AstVarDecl>(node)->destroy(shared_from_this()); break;
-			case AstNodeType::kAstNodeVar:  std::static_pointer_cast<AstVar>(node)->destroy(shared_from_this()); break;
-			case AstNodeType::kAstNodeImm:  std::static_pointer_cast<AstImm>(node)->destroy(shared_from_this()); break;
-			case AstNodeType::kAstNodeUnaryOp:  std::static_pointer_cast<AstUnaryOp>(node)->destroy(shared_from_this()); break;
-			case AstNodeType::kAstNodeBinaryOp:  std::static_pointer_cast<AstBinaryOp>(node)->destroy(shared_from_this()); break;
-			case AstNodeType::kAstNodeTernaryOp:  std::static_pointer_cast<AstTernaryOp>(node)->destroy(shared_from_this()); break;
-			case AstNodeType::kAstNodeCall:  std::static_pointer_cast<AstCall>(node)->destroy(shared_from_this()); break;
-		}
-
-		for (uint32_t i = 0; i < length; i++)
-		{
-			std::shared_ptr<AstNode> child = children[i];
-			if (child != nullptr)
-			{
-				deleteNode(child);
-			}
-		}
-
-		node ->~AstNode();
-		// TODO: not good.
-		//_heap->release(node.get(), getNodeSize(nodeType));
 	}
 
 	// ============================================================================
@@ -167,13 +129,7 @@ namespace mathpresso
 			if (child != refNode)
 				continue;
 
-			children[i] = node;
-			refNode->_parent.reset();
-
-			if (node != nullptr)
-				node->_parent = shared_from_this();
-
-			return refNode;
+			return replaceAt(i, node);
 		}
 
 		return nullptr;
@@ -404,7 +360,7 @@ namespace mathpresso
 	{
 		std::shared_ptr<AstSymbol> sym = node->getSymbol();
 
-		nest("%s [VarDecl%s]", sym ? sym->getName() : static_cast<const char*>(nullptr), (node->takesComplex() ? ", complex" : ""));
+		nest("%s [VarDecl%s]", sym ? sym->getName() : "", node->takesComplex() ? ", complex" : ", real");
 		if (node->hasChild())
 			MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 		return denest();
