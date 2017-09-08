@@ -60,12 +60,12 @@ namespace mathpresso
 
 	std::shared_ptr<AstSymbol> AstBuilder::newSymbol(const std::string& key, AstSymbolType symbolType, AstScopeType scopeType)
 	{
-		return std::make_shared<AstSymbol>(key.c_str(), key.size(), symbolType, scopeType);
+		return std::make_shared<AstSymbol>(key, symbolType, scopeType);
 	}
 
 	std::shared_ptr<AstSymbol> AstBuilder::shadowSymbol(const std::shared_ptr<AstSymbol> other)
 	{
-		std::string name(other->getName(), other->getLength());
+		std::string name(other->getName());
 		std::shared_ptr<AstSymbol> sym = newSymbol(name, other->getSymbolType(), AstScopeType::kAstScopeShadow);
 
 		if (sym == nullptr)
@@ -98,15 +98,15 @@ namespace mathpresso
 
 		switch (nodeType)
 		{
-			case AstNodeType::kAstNodeProgram: std::static_pointer_cast<AstProgram>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeBlock:  std::static_pointer_cast<AstBlock>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeVarDecl: std::static_pointer_cast<AstVarDecl>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeVar:  std::static_pointer_cast<AstVar>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeImm:  std::static_pointer_cast<AstImm>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeUnaryOp:  std::static_pointer_cast<AstUnaryOp>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeBinaryOp:  std::static_pointer_cast<AstBinaryOp>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeTernaryOp:  std::static_pointer_cast<AstTernaryOp>(node)->destroy(this); break;
-			case AstNodeType::kAstNodeCall:  std::static_pointer_cast<AstCall>(node)->destroy(this); break;
+			case AstNodeType::kAstNodeProgram: std::static_pointer_cast<AstProgram>(node)->destroy(shared_from_this()); break;
+			case AstNodeType::kAstNodeBlock:  std::static_pointer_cast<AstBlock>(node)->destroy(shared_from_this()); break;
+			case AstNodeType::kAstNodeVarDecl: std::static_pointer_cast<AstVarDecl>(node)->destroy(shared_from_this()); break;
+			case AstNodeType::kAstNodeVar:  std::static_pointer_cast<AstVar>(node)->destroy(shared_from_this()); break;
+			case AstNodeType::kAstNodeImm:  std::static_pointer_cast<AstImm>(node)->destroy(shared_from_this()); break;
+			case AstNodeType::kAstNodeUnaryOp:  std::static_pointer_cast<AstUnaryOp>(node)->destroy(shared_from_this()); break;
+			case AstNodeType::kAstNodeBinaryOp:  std::static_pointer_cast<AstBinaryOp>(node)->destroy(shared_from_this()); break;
+			case AstNodeType::kAstNodeTernaryOp:  std::static_pointer_cast<AstTernaryOp>(node)->destroy(shared_from_this()); break;
+			case AstNodeType::kAstNodeCall:  std::static_pointer_cast<AstCall>(node)->destroy(shared_from_this()); break;
 		}
 
 		for (uint32_t i = 0; i < length; i++)
@@ -277,7 +277,7 @@ namespace mathpresso
 			newCapacity += 256;
 
 		//self->_children.resize(newCapacity);
-		self->_capacity = static_cast<uint32_t>(newCapacity);
+		//self->_capacity = static_cast<uint32_t>(newCapacity);
 		
 		return ErrorCode::kErrorOk;
 	}

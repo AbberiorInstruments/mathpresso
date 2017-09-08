@@ -106,7 +106,7 @@ namespace mathpresso
 
 	Error Context::addConstant(const std::string &name, double value)
 	{
-		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(), AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
 
 		shared_sym->setValue(value);
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
@@ -118,7 +118,7 @@ namespace mathpresso
 
 	Error Context::addConstant(const std::string &name, std::complex<double> value)
 	{
-		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(),  AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
 
 		shared_sym->setValue(value);
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
@@ -130,7 +130,7 @@ namespace mathpresso
 
 	Error Context::addVariable(const std::string &name, int offset, unsigned int flags)
 	{
-		auto shared_sym(std::make_shared<AstSymbol>(name.c_str(), name.size(),  AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
 
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared);
 		if (flags & VariableFlags::kVariableCplx)

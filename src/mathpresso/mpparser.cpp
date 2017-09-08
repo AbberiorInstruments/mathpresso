@@ -207,7 +207,6 @@ namespace mathpresso
 				}
 			}
 
-			// TODO always global?
 			vSym = _ast->newSymbol(symbolName, AstSymbolType::kAstSymbolVariable, _shadowContext->isGlobal() ? AstScopeType::kAstScopeGlobal: AstScopeType::kAstScopeShadow);
 			_shadowContext->_symbols.add(symbolName, vSym);
 			MATHPRESSO_NULLCHECK(vSym);
@@ -265,7 +264,7 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Parser::parseExpression(std::shared_ptr<AstNode>* pNode, bool isNested)
+	Error Parser::parseExpression(std::shared_ptr<AstNode>* pNodeOut, bool isNested)
 	{
 
 		// It's important that the given expression is parsed in a way that it can be
@@ -340,7 +339,6 @@ namespace mathpresso
 
 					resolver::ContextPtr ctxfound;
 
-					//std::shared_ptr<AstSymbol> sym = scope->resolveSymbol(symbolName, token.hVal, &symScope);
 					std::shared_ptr<AstSymbol> sym = resolver::resolveVariable(_shadowContext, symbolName, &ctxfound);
 
 					std::shared_ptr<AstNode> newNode;
@@ -527,7 +525,7 @@ namespace mathpresso
 						currentNode = currentBinaryNode;
 					}
 
-					*pNode = currentNode;
+					*pNodeOut = currentNode;
 					return ErrorCode::kErrorOk;
 				}
 
