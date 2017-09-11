@@ -101,8 +101,8 @@ type& operator=(const type& other) = delete; \
 
 	struct OutputLog;
 	struct Expression;
-	class MpOperation;
 	struct AstSymbol;
+	class MpOperation;
 
 	// ============================================================================
 	// [mathpresso::TypeDefs]

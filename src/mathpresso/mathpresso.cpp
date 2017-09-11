@@ -186,8 +186,8 @@ namespace mathpresso
 		auto ret = _children.emplace(name, ctx);
 		if (!ret.second)
 			return ErrorCode::kErrorInvalidArgument;
-		else
-			return ctx->setParent(shared_from_this());
+			
+		return ctx->setParent(shared_from_this());
 	}
 
 	Error Context::delSymbol(const std::string &name)
@@ -524,6 +524,12 @@ namespace mathpresso
 			for (auto &p : pn.second)
 				names.push_back(pn.first + " (" + p->signature().to_string() + ")");
 		}
+
+		for (auto p : _variables)
+		{
+			names.push_back(p.first + (p.second->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex) ? " (complex)" : " (real)"));
+		}
+
 		return names;
 	}
 
