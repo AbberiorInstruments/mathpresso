@@ -208,45 +208,6 @@ namespace mathpresso
 	// [mathpresso::AstBlock - Ops]
 	// ============================================================================
 
-	//TODO: is this method necessary?
-	static Error mpBlockNodeGrow(std::shared_ptr<AstBlock> self)
-	{
-		size_t oldCapacity = self->_capacity;
-		size_t newCapacity = oldCapacity;
-
-		size_t length = self->getLength();
-		MATHPRESSO_ASSERT(oldCapacity == length);
-
-		// Grow, we prefer growing quickly until we reach 128 and then 1024 nodes. We
-		// don't expect to reach these limits in the most used expressions; only test
-		// cases can exploit this assumption.
-		//
-		// Growing schema:
-		//   0..4..8..16..32..64..128..256..384..512..640..768..896..1024..[+256]
-		if (newCapacity == 0)
-			newCapacity = 4;
-		else if (newCapacity < 128)
-			newCapacity *= 2;
-		else if (newCapacity < 1024)
-			newCapacity += 128;
-		else
-			newCapacity += 256;
-
-		//self->_children.resize(newCapacity);
-		//self->_capacity = static_cast<uint32_t>(newCapacity);
-		
-		return ErrorCode::kErrorOk;
-	}
-
-	// Tell the AST, we want to add a node, so it can allocate memory if necessary
-	Error AstBlock::willAdd()
-	{
-		// Grow if needed.
-		if (getLength() == _capacity)
-			MATHPRESSO_PROPAGATE(mpBlockNodeGrow(std::static_pointer_cast<AstBlock>(shared_from_this())));
-		return ErrorCode::kErrorOk;
-	}
-
 	std::shared_ptr<AstNode> AstBlock::removeNode(std::shared_ptr<AstNode> node)
 	{
 		MATHPRESSO_ASSERT(node != nullptr);

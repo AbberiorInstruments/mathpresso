@@ -79,7 +79,6 @@ namespace mathpresso
 			if (!(flags & ParserFlags::kEnableNestedBlock))
 				MATHPRESSO_PARSER_ERROR(token, "Cannot declare a new block-scope here.");
 
-			MATHPRESSO_PROPAGATE(block->willAdd());
 			MATHPRESSO_NULLCHECK(nested = _ast->newNode<AstBlock>());
 			block->appendNode(nested);
 
@@ -108,7 +107,6 @@ namespace mathpresso
 		// Parse an expression.
 		std::shared_ptr<AstNode> expression;
 
-		MATHPRESSO_PROPAGATE(block->willAdd());
 		MATHPRESSO_PROPAGATE(parseExpression(&expression, false));
 		block->appendNode(expression);
 
@@ -180,8 +178,6 @@ namespace mathpresso
 										? "Expected a variable name after 'var' keyword."
 										: "Expected a variable name after colon ','.");
 
-			MATHPRESSO_PROPAGATE(block->willAdd());
-
 			if (!isFirst)
 				position = token.getPosAsUInt();
 
@@ -245,7 +241,6 @@ namespace mathpresso
 			// Parse the ',' or ';' tokens.
 			if (uToken == TokenType::kTokenComma || uToken == TokenType::kTokenSemicolon || uToken == TokenType::kTokenEnd)
 			{
-				block->willAdd();
 				block->appendNode(decl);
 
 				// Token ';' terminates the declaration.
@@ -693,7 +688,7 @@ namespace mathpresso
 				std::shared_ptr<AstNode> expression;
 				Error err;
 
-				if ((err = callNode->willAdd()) != ErrorCode::kErrorOk || (err = parseExpression(&expression, true)) != ErrorCode::kErrorOk)
+				if (err = parseExpression(&expression, true) != ErrorCode::kErrorOk)
 				{
 					return err;
 				}

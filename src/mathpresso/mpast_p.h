@@ -563,8 +563,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstBlock(std::shared_ptr<AstBuilder> ast, AstNodeType nodeType = AstNodeType::kAstNodeBlock)
-			: AstNode(ast, nodeType),
-			_capacity(0)
+			: AstNode(ast, nodeType)
 		{
 		}
 
@@ -572,25 +571,11 @@ namespace mathpresso
 		// [Ops]
 		// --------------------------------------------------------------------------
 
-		//! Reserve the capacity of the AstBlock so one more node can be added into it.
-		//!
-		//! NOTE: This has to be called before you use `appendNode()` or `insertAt()`.
-		//! The reason is that it's easier to deal with possible allocation failure
-		//! here (before the node to be added is created) than after the node is
-		//! created, but failed to add into the block.
-		Error willAdd();
-
 		//! Append the given `node` to the block.
-		//!
-		//! NOTE: You have to call `willAdd()` before you use `appendNode()` for every
-		//! node you want to add to the block.
 		void appendNode(std::shared_ptr<AstNode> node)
 		{
 			MATHPRESSO_ASSERT(node != nullptr);
 			MATHPRESSO_ASSERT(node->getParent() == nullptr);
-
-			// We expect `willAdd()` to be called before `appendNode()`.
-			//MATHPRESSO_ASSERT(getLength() < _capacity);
 
 			node->_parent = shared_from_this();
 
@@ -598,16 +583,10 @@ namespace mathpresso
 		}
 
 		//! Insert the given `node` to the block at index `i`.
-		//!
-		//! NOTE: You have to call `willAdd()` before you use `insertAt()` for every
-		//! node you want to add to the block.
 		void insertAt(size_t i, std::shared_ptr<AstNode> node)
 		{
 			MATHPRESSO_ASSERT(node != nullptr);
 			MATHPRESSO_ASSERT(node->getParent() == nullptr);
-
-			// We expect `willAdd()` to be called before `insertAt()`.
-			//MATHPRESSO_ASSERT(getLength() < _capacity);
 
 			std::vector<std::shared_ptr<AstNode>> p = getChildren();
 			node->_parent = std::static_pointer_cast<AstBlock>(shared_from_this());
@@ -626,12 +605,6 @@ namespace mathpresso
 		std::shared_ptr<AstNode> removeNode(std::shared_ptr<AstNode> node);
 		//! Remove the node at index `index`.
 		std::shared_ptr<AstNode> removeAt(size_t index);
-
-		// --------------------------------------------------------------------------
-		// [Members]
-		// --------------------------------------------------------------------------
-
-		uint32_t _capacity;
 	};
 
 	// ============================================================================
