@@ -162,11 +162,10 @@ namespace mathpresso
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		uint32_t setData(size_t position, size_t length, uint32_t hVal, uint32_t token)
+		uint32_t setData(size_t position, size_t length, uint32_t token)
 		{
 			this->position = position;
 			this->length = length;
-			this->hVal = hVal;
 			this->token = token;
 			return token;
 		}
@@ -186,8 +185,6 @@ namespace mathpresso
 		//! Token string length.
 		size_t length;
 
-		//! Token hash (only if the token is symbol or keyword).
-		uint32_t hVal;
 		//! Token type.
 		uint32_t token;
 

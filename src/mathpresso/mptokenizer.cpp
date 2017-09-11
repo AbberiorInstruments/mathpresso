@@ -9,7 +9,7 @@
 
 // [Dependencies]
 #include <mathpresso/mpeval_p.h>
-#include <mathpresso/mphash_p.h>
+#include <mathpresso/mathpresso_p.h>
 #include <mathpresso/mptokenizer_p.h>
 #include <iostream>
 
@@ -223,7 +223,7 @@ namespace mathpresso {
 				if (size_t(p - pToken) == 1)
 				{
 					_p = reinterpret_cast<const char*>(p);
-					return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, TokenType::kTokenDot);
+					return token->setData(size_t(pToken - pStart), size_t(p - pToken), TokenType::kTokenDot);
 				}
 			}
 
@@ -316,7 +316,7 @@ namespace mathpresso {
 			}
 
 			token->value = val;
-			token->setData((size_t)(pToken - pStart), len, 0, tokenType);
+			token->setData((size_t)(pToken - pStart), len, tokenType);
 
 			_p = reinterpret_cast<const char*>(p);
 			return tokenType;
@@ -334,12 +334,11 @@ namespace mathpresso {
 				uint32_t ord = p[0];
 				if (!isSymbol(p[0]))
 					break;
-				hVal = HashUtils::hashChar(hVal, ord);
 			}
 
 			size_t len = (size_t)(p - pToken);
 			_p = reinterpret_cast<const char*>(p);
-			return token->setData((size_t)(pToken - pStart), len, hVal, mpGetKeyword(pToken, len));
+			return token->setData((size_t)(pToken - pStart), len, mpGetKeyword(pToken, len));
 		}
 
 		// --------------------------------------------------------------------------
@@ -349,7 +348,7 @@ namespace mathpresso {
 		else if (isSeparator(p[0]))
 		{
 			_p = reinterpret_cast<const char*>(++p);
-			return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, c);
+			return token->setData(size_t(pToken - pStart), size_t(p - pToken), c);
 		}
 
 		// --------------------------------------------------------------------------
@@ -381,7 +380,7 @@ namespace mathpresso {
 			}
 
 			_p = reinterpret_cast<const char*>(p);
-			return token->setData(size_t(pToken - pStart), length, 0, TokenType::kTokenOperator);
+			return token->setData(size_t(pToken - pStart), length, TokenType::kTokenOperator);
 
 		}
 
@@ -391,7 +390,7 @@ namespace mathpresso {
 
 	_Invalid:
 		_p = reinterpret_cast<const char*>(pToken);
-		return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, TokenType::kTokenInvalid);
+		return token->setData(size_t(pToken - pStart), size_t(p - pToken), TokenType::kTokenInvalid);
 
 		// --------------------------------------------------------------------------
 		// [EOI]
@@ -399,7 +398,7 @@ namespace mathpresso {
 
 	_EndOfInput:
 		_p = _end;
-		return token->setData(size_t(pToken - pStart), size_t(p - pToken), 0, TokenType::kTokenEnd);
+		return token->setData(size_t(pToken - pStart), size_t(p - pToken), TokenType::kTokenEnd);
 	}
 
 } // mathpresso namespace

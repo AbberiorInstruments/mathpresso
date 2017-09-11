@@ -9,7 +9,7 @@
 #define _MATHPRESSO_MPAST_P_H
 
 // [Dependencies]
-#include <mathpresso/mphash_p.h>
+#include <mathpresso/mathpresso_p.h>
 #include <mathpresso/mpoperation.h>
 
 #include <iostream>
