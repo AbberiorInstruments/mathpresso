@@ -344,24 +344,32 @@ type& operator=(const type& other) = delete; \
 
 		std::vector<std::shared_ptr<AstSymbol>> getVariables();
 		
-		// getter/setter for the subcontexts and parents.
-		Error setParent(std::shared_ptr<Context> ctx);
-		Error addChild(const std::string & name, std::shared_ptr<Context> ctx);
-
 		std::shared_ptr<Context> getParent()
 		{
 			return _parent.lock();
 		}
+
 		std::shared_ptr<Context> getChild(const std::string & name)
 		{
-			return _children.at(name);
+			try
+			{
+				return _children.at(name);
+			}
+			catch (std::out_of_range)
+			{
+				return nullptr;
+			}
 		}
 		
 		bool isGlobal()
 		{
 			return _isGlobal;
 		}
-		
+
+		// getter/setter for the subcontexts and parents.
+		Error setParent(std::shared_ptr<Context> ctx);
+		Error addChild(const std::string & name, std::shared_ptr<Context> ctx);
+
 		void markShadow()
 		{
 			_isGlobal = false;
@@ -373,6 +381,7 @@ type& operator=(const type& other) = delete; \
 		Symbols _symbols;
 
 	protected:
+
 		std::weak_ptr<Context> _parent;
 		std::map<std::string, std::shared_ptr<Context>> _children;
 
@@ -495,6 +504,12 @@ type& operator=(const type& other) = delete; \
 		// --------------------------------------------------------------------------
 
 		virtual void log(unsigned int type, unsigned int line, unsigned int column, const char* message, size_t len) = 0;
+
+		void log(unsigned int type, unsigned int line, unsigned int column, const std::string & message)
+		{
+			log(type, line, column, message.c_str(), message.length());
+		}
+
 	};
 
 } // mathpresso namespace

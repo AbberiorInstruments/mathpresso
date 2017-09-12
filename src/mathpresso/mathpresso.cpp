@@ -18,6 +18,7 @@
 #include <mathpresso/mptokenizer_p.h>
 #include <mathpresso/mpoperation.h>
 
+#include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <map>
@@ -186,7 +187,7 @@ namespace mathpresso
 		auto ret = _children.emplace(name, ctx);
 		if (!ret.second)
 			return ErrorCode::kErrorInvalidArgument;
-			
+
 		return ctx->setParent(shared_from_this());
 	}
 
@@ -233,7 +234,12 @@ namespace mathpresso
 		MATHPRESSO_PROPAGATE(ast->initProgramScope());
 
 		// Setup basic data structures used during parsing and compilation.
-		ErrorReporter errorReporter(body.c_str(), body.length(), options, log);
+		ErrorReporter errorReporter(body, options, log);
+
+		if (options & Options::kOptionVerbose)
+		{
+			log->log(OutputLog::kMessageWarning, 0, 0, body);
+		}
 
 		// create shadowContext and add ctx as parent. here all expression-local symbols will be stored.
 		std::shared_ptr<Context> shadowContext(std::make_shared<Context>());
@@ -242,7 +248,7 @@ namespace mathpresso
 
 		// Parse the expression into AST.
 		{
-			MATHPRESSO_PROPAGATE(Parser(ast, &errorReporter, body.c_str(), body.length(), shadowContext).parseProgram(ast->getProgramNode()));
+			MATHPRESSO_PROPAGATE(Parser(ast, &errorReporter, body, shadowContext).parseProgram(ast->getProgramNode()));
 		}
 
 		if (options & kOptionDebugAst)
@@ -554,10 +560,19 @@ namespace mathpresso
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs, bool takesComplex)
 		{
 			std::shared_ptr<MpOperation> function;
-
+			auto splitName(separateName(name));
 			do
 			{
-				function = ctx->_symbols.findFunction(name, numargs, takesComplex);
+				ContextPtr tmpCtx(ctx);
+				for (size_t i = 0; tmpCtx && i < splitName.size() - 1; i++)
+				{
+					tmpCtx = tmpCtx->getChild(splitName[i]);
+				}
+
+				if (tmpCtx)
+				{
+					function = tmpCtx->_symbols.findFunction(splitName.back(), numargs, takesComplex);
+				}
 			} while (!function && (ctx = ctx->getParent()) != nullptr);
 
 
@@ -567,11 +582,20 @@ namespace mathpresso
 		std::vector<std::shared_ptr<MpOperation>> resolveFunction(ContextPtr ctx, const std::string & name)
 		{
 			std::vector<std::shared_ptr<MpOperation>> functions, tmp;
-
+			auto splitName(separateName(name));
 			do
 			{
-				tmp = ctx->_symbols.findFunction(name);
-				functions.insert(functions.begin(), tmp.begin(), tmp.end());
+				ContextPtr tmpCtx(ctx);
+				for (size_t i = 0; tmpCtx && i < splitName.size() - 1; i++)
+				{
+					tmpCtx = tmpCtx->getChild(splitName[i]);
+				}
+
+				if (tmpCtx)
+				{
+					tmp = tmpCtx->_symbols.findFunction(splitName.back());
+					functions.insert(functions.begin(), tmp.begin(), tmp.end());
+				}
 			} while (ctx = ctx->getParent());
 
 			return functions;
@@ -580,10 +604,19 @@ namespace mathpresso
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs)
 		{
 			std::shared_ptr<MpOperation> function;
-
+			auto splitName(separateName(name));
 			do
 			{
-				function = ctx->_symbols.findFunction(name, numargs);
+				ContextPtr tmpCtx(ctx);
+				for (size_t i = 0; tmpCtx && i < splitName.size() - 1; i++)
+				{
+					tmpCtx = tmpCtx->getChild(splitName[i]);
+				}
+
+				if (tmpCtx)
+				{
+					function = tmpCtx->_symbols.findFunction(splitName.back(), numargs);
+				}
 			} while (!function && (ctx = ctx->getParent()) != nullptr);
 
 			return function;
@@ -593,15 +626,42 @@ namespace mathpresso
 		{
 			std::shared_ptr<AstSymbol> symbol;
 
+			auto splitName(separateName(name));
+
 			do
 			{
-				symbol = ctx->_symbols.findVariable(name);
+				ContextPtr tmpCtx(ctx);
+				for (size_t i = 0; tmpCtx && i < splitName.size() - 1; i++)
+				{
+					tmpCtx = tmpCtx->getChild(splitName[i]);
+				}
+
+				if (tmpCtx)
+				{
+					symbol = tmpCtx->_symbols.findVariable(splitName.back());
+				}
+
 			} while (symbol == nullptr && (ctx = ctx->getParent()) != nullptr);
 
 			if (contextOut != nullptr)
 				*contextOut = ctx;
 
 			return symbol;
+		}
+
+		std::vector<std::string> separateName(std::string name)
+		{
+			std::vector<std::string> ret;
+
+			std::istringstream iss(name);
+			std::string token;
+			while (std::getline(iss, token, '.'))
+			{
+				ret.push_back(token);
+			}
+
+
+			return ret;
 		}
 	}
 

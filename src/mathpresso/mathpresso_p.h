@@ -239,9 +239,9 @@ namespace mathpresso
 	//! Error reporter.
 	struct ErrorReporter
 	{
-		ErrorReporter(const char* body, size_t len, uint32_t options, OutputLog* log)
-			: _body(body),
-			_len(len),
+		ErrorReporter(const std::string & body, uint32_t options, OutputLog* log)
+			: _body(body.c_str()),
+			_len(body.length()),
 			_options(options),
 			_log(log)
 		{
@@ -292,6 +292,8 @@ namespace mathpresso
 
 		//! Get the Variable with the given name.
 		std::shared_ptr<AstSymbol> resolveVariable(ContextPtr ctx, const std::string & name, ContextPtr * ctxOut = nullptr);
+
+		std::vector<std::string> separateName(std::string name);
 	} // resolver namespace
 
 } // mathpresso namespace

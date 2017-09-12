@@ -85,8 +85,8 @@ namespace mathpresso
 			auto nestedContext(std::make_shared<Context>());
 
 			nestedContext->markShadow();
-			
 			nestedContext->setParent(_shadowContext);
+
 			_shadowContext = nestedContext;
 
 			auto ret = parseBlockOrStatement(nested);
