@@ -209,7 +209,7 @@ namespace mathpresso
 
 			std::shared_ptr<AstVarDecl> decl = _ast->newNode<AstVarDecl>();
 			MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
-			decl->_mpOp = _rootContext->_symbols.findFunction("=", 2);
+			decl->_mpOp = resolver::resolveFunction(_shadowContext, "=", 2);
 			decl->_opName = "=";
 
 			decl->setPosition(position);
@@ -441,13 +441,13 @@ namespace mathpresso
 				case TokenType::kTokenOperator:
 				{
 					std::string name(_tokenizer._start + token.position, token.length);
-					auto op = _rootContext->_symbols.findFunction(name, 1);
+					auto op = resolver::resolveFunction(_shadowContext, name, 1);
 					if (!op)
 					{
 						// for expressions like '----x'
 						for (size_t i = 0; i < name.size(); i++)
 						{
-							if (op = _rootContext->_symbols.findFunction(name.substr(i, 1), 1))
+							if (op = resolver::resolveFunction(_shadowContext, name.substr(i, 1), 1))
 							{
 								std::shared_ptr<AstUnaryOp> opNode = _ast->newNode<AstUnaryOp>();
 								MATHPRESSO_NULLCHECK(opNode);
@@ -791,7 +791,7 @@ namespace mathpresso
 				ternaryNode->setCondition(branchCondition);
 				ternaryNode->setLeft(branchLeft);
 				ternaryNode->setRight(branchRight);
-				ternaryNode->_mpOp = resolver::resolveFunction(_rootContext, "_ternary_", 3);
+				ternaryNode->_mpOp = resolver::resolveFunction(_shadowContext, "_ternary_", 3);
 				ternaryNode->_opName = "_ternary_";
 
 				// add the new node to the AST.

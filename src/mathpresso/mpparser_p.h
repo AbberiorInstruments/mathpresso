@@ -48,13 +48,8 @@ namespace mathpresso
 			: _ast(ast),
 			_errorReporter(errorReporter),
 			_tokenizer(body.c_str(), body.length()),
-			_shadowContext(shadowContext),
-			_rootContext(shadowContext)
+			_shadowContext(shadowContext)
 		{
-			while (_rootContext->getParent())
-			{
-				_rootContext = _rootContext->getParent();
-			}
 		}
 		~Parser() {}
 
@@ -83,7 +78,6 @@ namespace mathpresso
 		Tokenizer _tokenizer;
 
 		std::shared_ptr<Context> _shadowContext; // the current context.
-		std::shared_ptr<Context> _rootContext; // hold the root-context, where some default-operations are stored.
 	};
 
 } // mathpresso namespace
