@@ -179,6 +179,58 @@ namespace mathpresso
 {
 
 	// ============================================================================
+	// [mathpresso::Symbols]
+	// ============================================================================
+
+	//! Holds MpOperation-objects and variables, and gives an easy way to finding them.
+	class Symbols
+	{
+		using op_ptr_type = std::shared_ptr<MpOperation>;
+		using op_map_type = std::map<std::string, std::vector<op_ptr_type>>;
+
+		using var_ptr_type = std::shared_ptr<AstSymbol>;
+		using var_map_type = std::map<std::string, var_ptr_type>;
+
+	public:
+		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
+
+		op_ptr_type findFunction(const std::string & name, size_t nargs) const;
+
+		//! looks for a MpOperation-Object, where the parameters are complex or real.
+		//! if no direct match is found (ie there is no Operation with real parameters),
+		//! a conversion from real to complex is return.
+		//! generally the first direct match is return, and after that the first match with conversions.
+		//! returns nullptr, if no match is found.
+		op_ptr_type findFunction(const std::string & name, size_t nargs, bool paramsAreComplex) const;
+
+		std::vector<op_ptr_type> findFunction(const std::string & name) const;
+
+		var_ptr_type findVariable(const std::string & name) const;
+
+		//! Makes sure that functions with the same name have to have the 
+		//! precedence and association.
+		void add(const std::string & name, op_ptr_type obj);
+
+		//! add a variable.
+		void add(const std::string & name, var_ptr_type obj);
+
+		void remove(const std::string & name);
+
+		std::vector<std::string> names() const;
+
+		void clear();
+
+		std::vector<std::shared_ptr<AstSymbol>> getVariables();
+		op_map_type getFunctions() { return _operations; }
+
+	private:
+		op_map_type _operations;
+		var_map_type _variables;
+
+	};
+
+
+	// ============================================================================
 	// [Reuse]
 	// ============================================================================
 
@@ -261,9 +313,11 @@ namespace mathpresso
 
 		void onWarning(uint32_t position, const char* fmt, ...);
 		void onWarning(uint32_t position, const StringBuilder& msg);
+		void onWarning(uint32_t position, const std::string& msg);
 
 		Error onError(Error error, uint32_t position, const char* fmt, ...);
 		Error onError(Error error, uint32_t position, const StringBuilder& msg);
+		Error onError(Error error, uint32_t position, const std::string& msg);
 
 		// --------------------------------------------------------------------------
 		// [Members]

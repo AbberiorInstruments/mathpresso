@@ -204,7 +204,7 @@ namespace mathpresso
 			}
 
 			vSym = _ast->newSymbol(symbolName, AstSymbolType::kAstSymbolVariable, _shadowContext->isGlobal() ? AstScopeType::kAstScopeGlobal: AstScopeType::kAstScopeShadow);
-			_shadowContext->_symbols.add(symbolName, vSym);
+			_shadowContext->_symbols->add(symbolName, vSym);
 			MATHPRESSO_NULLCHECK(vSym);
 
 			std::shared_ptr<AstVarDecl> decl = _ast->newNode<AstVarDecl>();

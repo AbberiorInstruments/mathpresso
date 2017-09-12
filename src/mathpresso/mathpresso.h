@@ -66,24 +66,6 @@ namespace mathpresso
 # endif
 #endif
 
-//! \def MATHPRESSO_NOAPI
-//!
-//! Mathpresso hidden API decorator.
-#define MATHPRESSO_NOAPI
-
-//! \def MATHPRESSO_INLINE
-//!
-//! Mathpresso inline decorator.
-#if defined(__clang__)
-# define MATHPRESSO_INLINE inline __attribute__((__always_inline__, __visibility__("hidden")))
-#elif defined(__GNUC__)
-# define MATHPRESSO_INLINE inline __attribute__((__always_inline__))
-#elif defined(_MSC_VER)
-# define MATHPRESSO_INLINE __forceinline
-#else
-# define MATHPRESSO_INLINE inline
-#endif
-
 #define MATHPRESSO_NO_COPY(type) \
 type(const type& other) = delete; \
 type& operator=(const type& other) = delete; \
@@ -102,7 +84,9 @@ type& operator=(const type& other) = delete; \
 	struct OutputLog;
 	struct Expression;
 	struct AstSymbol;
+
 	class MpOperation;
+	class Symbols;
 
 	// ============================================================================
 	// [mathpresso::TypeDefs]
@@ -225,73 +209,8 @@ type& operator=(const type& other) = delete; \
 	};
 
 	// ============================================================================
-	// [mathpresso::ContextImpl]
-	// ============================================================================
-
-	// TODO: Do We need this?
-	struct ContextImpl
-	{
-		//! Reference count (atomic).
-		uintptr_t _refCount;
-	};
-
-	// ============================================================================
-	// [mathpresso::Symbols]
-	// ============================================================================
-
-	//! Holds MpOperation-objects and variables, and gives an easy way to finding them.
-	class Symbols
-	{
-		using op_ptr_type = std::shared_ptr<MpOperation>;
-		using op_map_type = std::map<std::string, std::vector<op_ptr_type>>;
-		
-		using var_ptr_type = std::shared_ptr<AstSymbol>;
-		using var_map_type = std::map<std::string, var_ptr_type>;
-	
-	public:
-		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
-
-		op_ptr_type findFunction(const std::string & name, size_t nargs) const;
-
-		//! looks for a MpOperation-Object, where the parameters are complex or real.
-		//! if no direct match is found (ie there is no Operation with real parameters),
-		//! a conversion from real to complex is return.
-		//! generally the first direct match is return, and after that the first match with conversions.
-		//! returns nullptr, if no match is found.
-		op_ptr_type findFunction(const std::string & name, size_t nargs, bool paramsAreComplex) const;
-
-		std::vector<op_ptr_type> findFunction(const std::string & name) const;
-
-		var_ptr_type findVariable(const std::string & name) const;
-
-		//! Makes sure that functions with the same name have to have the 
-		//! precedence and association.
-		void add(const std::string & name, op_ptr_type obj);
-
-		//! add a variable.
-		void add(const std::string & name, var_ptr_type obj);
-
-		void remove(const std::string & name);
-
-		std::vector<std::string> names() const;
-
-		void clear();
-
-		std::vector<std::shared_ptr<AstSymbol>> getVariables();
-		op_map_type getFunctions() { return _operations; }
-
-	private:
-		op_map_type _operations;
-		var_map_type _variables;
-
-	};
-
-	// ============================================================================
 	// [mathpresso::Context]
 	// ============================================================================
-
-	struct AstSymbol;
-	enum class AstSymbolType;
 
 	//! MathPresso context.
 	//!
@@ -335,7 +254,7 @@ type& operator=(const type& other) = delete; \
 
 		//! Adding Symbols to the Context, which can contain function calls. See mpoeration.h for more information.
 		Error addObject(const std::string &name, std::shared_ptr<MpOperation> obj);
-		
+
 		//! Delete symbol from this context.
 		Error delSymbol(const std::string &name);
 
@@ -343,30 +262,21 @@ type& operator=(const type& other) = delete; \
 		Error listSymbols(std::vector<std::string> &syms);
 
 		std::vector<std::shared_ptr<AstSymbol>> getVariables();
-		
+
 		std::shared_ptr<Context> getParent()
 		{
 			return _parent.lock();
 		}
 
-		std::shared_ptr<Context> getChild(const std::string & name)
-		{
-			try
-			{
-				return _children.at(name);
-			}
-			catch (std::out_of_range)
-			{
-				return nullptr;
-			}
-		}
-		
+		//! returns the subcontext with the given name, nullptr if it does not exist
+		std::shared_ptr<Context> getChild(const std::string & name);
+
 		bool isGlobal()
 		{
 			return _isGlobal;
 		}
 
-		// getter/setter for the subcontexts and parents.
+		//! setter for the subcontexts and parents.
 		Error setParent(std::shared_ptr<Context> ctx);
 		Error addChild(const std::string & name, std::shared_ptr<Context> ctx);
 
@@ -378,7 +288,7 @@ type& operator=(const type& other) = delete; \
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		Symbols _symbols;
+		std::shared_ptr<Symbols> _symbols;
 
 	protected:
 

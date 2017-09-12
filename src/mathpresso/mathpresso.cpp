@@ -43,7 +43,7 @@ namespace mathpresso
 	// [mathpresso::mpTraceError]
 	// ============================================================================
 
-	MATHPRESSO_NOAPI Error mpTraceError(Error error)
+	Error mpTraceError(Error error)
 	{
 		return error;
 	}
@@ -71,7 +71,7 @@ namespace mathpresso
 	{
 		_parent.reset();
 		_children.clear();
-		_symbols.clear();
+		_symbols->clear();
 		return ErrorCode::kErrorOk;
 	}
 
@@ -80,7 +80,7 @@ namespace mathpresso
 	// ============================================================================
 
 	Context::Context()
-		: _symbols(),
+		: _symbols(std::make_shared<Symbols>()),
 		_parent(),
 		_children({}),
 		_isGlobal(true)
@@ -112,7 +112,7 @@ namespace mathpresso
 		shared_sym->setValue(value);
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
 
-		_symbols.add(name, shared_sym);
+		_symbols->add(name, shared_sym);
 
 		return ErrorCode::kErrorOk;
 	}
@@ -124,7 +124,7 @@ namespace mathpresso
 		shared_sym->setValue(value);
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned | AstSymbolFlags::kAstSymbolIsComplex);
 
-		_symbols.add(name, shared_sym);
+		_symbols->add(name, shared_sym);
 
 		return ErrorCode::kErrorOk;
 	}
@@ -147,19 +147,19 @@ namespace mathpresso
 			shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly);
 		}
 
-		_symbols.add(name, shared_sym);
+		_symbols->add(name, shared_sym);
 		return ErrorCode::kErrorOk;
 	}
 
 	Error Context::addObject(const std::string &name, std::shared_ptr<MpOperation> obj)
 	{
-		_symbols.add(name, obj);
+		_symbols->add(name, obj);
 		return ErrorCode::kErrorOk;
 	}
 
 	Error Context::listSymbols(std::vector<std::string> &syms)
 	{
-		syms = _symbols.names();
+		syms = _symbols->names();
 		return ErrorCode::kErrorOk;
 	}
 
@@ -169,11 +169,23 @@ namespace mathpresso
 		std::shared_ptr<Context> ctx = shared_from_this();
 		do
 		{
-			tmp = ctx->_symbols.getVariables();
+			tmp = ctx->_symbols->getVariables();
 			variables.insert(variables.end(), tmp.begin(), tmp.end());
 		} while (ctx = ctx->getParent());
 
 		return variables;
+	}
+
+	inline std::shared_ptr<Context> Context::getChild(const std::string & name)
+	{
+		try
+		{
+			return _children.at(name);
+		}
+		catch (std::out_of_range)
+		{
+			return nullptr;
+		}
 	}
 
 	Error Context::setParent(std::shared_ptr<Context> ctx)
@@ -193,7 +205,7 @@ namespace mathpresso
 
 	Error Context::delSymbol(const std::string &name)
 	{
-		_symbols.remove(name);
+		_symbols->remove(name);
 		return ErrorCode::kErrorOk;
 	}
 
@@ -253,7 +265,7 @@ namespace mathpresso
 
 		if (options & kOptionDebugAst)
 		{
-			ast->dump(sbTmp, &ctx->_symbols);
+			ast->dump(sbTmp, ctx->_symbols);
 			log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
@@ -265,7 +277,7 @@ namespace mathpresso
 
 		if (options & kOptionDebugAst)
 		{
-			ast->dump(sbTmp, &ctx->_symbols);
+			ast->dump(sbTmp, ctx->_symbols);
 			log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
@@ -375,6 +387,16 @@ namespace mathpresso
 		}
 	}
 
+	void ErrorReporter::onWarning(uint32_t position, const std::string & msg)
+	{
+		if (reportsWarnings())
+		{
+			uint32_t line, column;
+			getLineAndColumn(position, line, column);
+			_log->log(OutputLog::kMessageWarning, line, column, msg.c_str(), msg.length());
+		}
+	}
+
 	Error ErrorReporter::onError(Error error, uint32_t position, const char* fmt, ...)
 	{
 		if (reportsErrors())
@@ -402,6 +424,18 @@ namespace mathpresso
 			uint32_t line, column;
 			getLineAndColumn(position, line, column);
 			_log->log(OutputLog::kMessageError, line, column, msg.getData(), msg.getLength());
+		}
+
+		return MATHPRESSO_TRACE_ERROR(error);
+	}
+
+	Error ErrorReporter::onError(Error error, uint32_t position, const std::string & msg)
+	{
+		if (reportsErrors())
+		{
+			uint32_t line, column;
+			getLineAndColumn(position, line, column);
+			_log->log(OutputLog::kMessageError, line, column, msg.c_str(), msg.length());
 		}
 
 		return MATHPRESSO_TRACE_ERROR(error);
@@ -571,7 +605,7 @@ namespace mathpresso
 
 				if (tmpCtx)
 				{
-					function = tmpCtx->_symbols.findFunction(splitName.back(), numargs, takesComplex);
+					function = tmpCtx->_symbols->findFunction(splitName.back(), numargs, takesComplex);
 				}
 			} while (!function && (ctx = ctx->getParent()) != nullptr);
 
@@ -593,7 +627,7 @@ namespace mathpresso
 
 				if (tmpCtx)
 				{
-					tmp = tmpCtx->_symbols.findFunction(splitName.back());
+					tmp = tmpCtx->_symbols->findFunction(splitName.back());
 					functions.insert(functions.begin(), tmp.begin(), tmp.end());
 				}
 			} while (ctx = ctx->getParent());
@@ -615,7 +649,7 @@ namespace mathpresso
 
 				if (tmpCtx)
 				{
-					function = tmpCtx->_symbols.findFunction(splitName.back(), numargs);
+					function = tmpCtx->_symbols->findFunction(splitName.back(), numargs);
 				}
 			} while (!function && (ctx = ctx->getParent()) != nullptr);
 
@@ -638,7 +672,7 @@ namespace mathpresso
 
 				if (tmpCtx)
 				{
-					symbol = tmpCtx->_symbols.findVariable(splitName.back());
+					symbol = tmpCtx->_symbols->findVariable(splitName.back());
 				}
 
 			} while (symbol == nullptr && (ctx = ctx->getParent()) != nullptr);

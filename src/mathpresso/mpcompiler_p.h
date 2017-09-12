@@ -131,7 +131,7 @@ namespace mathpresso
 	// [mathpresso::JitCompiler]
 	// ============================================================================
 
-	struct MATHPRESSO_NOAPI JitCompiler
+	struct JitCompiler
 	{
 		JitCompiler(asmjit::X86Compiler* cc, std::shared_ptr<Context> ctx)
 			: cc(cc),
