@@ -107,7 +107,7 @@ namespace mathpresso
 
 	Error Context::addConstant(const std::string &name, double value)
 	{
-		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, true));
 
 		shared_sym->setValue(value);
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned);
@@ -119,7 +119,7 @@ namespace mathpresso
 
 	Error Context::addConstant(const std::string &name, std::complex<double> value)
 	{
-		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, true));
 
 		shared_sym->setValue(value);
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared | AstSymbolFlags::kAstSymbolIsReadOnly | AstSymbolFlags::kAstSymbolIsAssigned | AstSymbolFlags::kAstSymbolIsComplex);
@@ -131,7 +131,7 @@ namespace mathpresso
 
 	Error Context::addVariable(const std::string &name, int offset, unsigned int flags)
 	{
-		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, AstScopeType::kAstScopeGlobal));
+		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, true));
 
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared);
 		if (flags & VariableFlags::kVariableCplx)
@@ -250,7 +250,7 @@ namespace mathpresso
 
 		if (options & Options::kOptionVerbose)
 		{
-			log->log(OutputLog::kMessageWarning, 0, 0, body);
+			log->log(OutputLog::kMessageInfo, 0, 0, "Expression: " + body);
 		}
 
 		// create shadowContext and add ctx as parent. here all expression-local symbols will be stored.
@@ -260,7 +260,7 @@ namespace mathpresso
 
 		// Parse the expression into AST.
 		{
-			MATHPRESSO_PROPAGATE(Parser(ast, &errorReporter, body, shadowContext).parseProgram(ast->getProgramNode()));
+			MATHPRESSO_PROPAGATE(Parser(ast, &errorReporter, body, shadowContext).parseProgram(ast->programNode()));
 		}
 
 		if (options & kOptionDebugAst)
@@ -272,7 +272,7 @@ namespace mathpresso
 
 		// Perform basic optimizations at AST level.
 		{
-			MATHPRESSO_PROPAGATE(AstOptimizer(ast, &errorReporter, shadowContext).onProgram(ast->getProgramNode()));
+			MATHPRESSO_PROPAGATE(AstOptimizer(ast, &errorReporter, shadowContext).onProgram(ast->programNode()));
 		}
 
 		if (options & kOptionDebugAst)
@@ -282,7 +282,7 @@ namespace mathpresso
 			sbTmp.clear();
 		}
 
-		_isComplex = ast->_programNode->returnsComplex();
+		_isComplex = ast->programNode()->returnsComplex();
 
 		// Compile the function to machine code.
 		reset();

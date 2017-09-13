@@ -492,7 +492,7 @@ namespace mathpresso
 			jitCompiler.enableSSE4_1 = false;
 
 		jitCompiler.beginFunction();
-		jitCompiler.compile(ast->getProgramNode(), ctx, ast->_numSlots, b_complex);
+		jitCompiler.compile(ast->programNode(), ctx, ast->numSlots(), b_complex);
 		jitCompiler.endFunction();
 
 		c.finalize();

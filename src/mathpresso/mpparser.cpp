@@ -203,7 +203,7 @@ namespace mathpresso
 				}
 			}
 
-			vSym = _ast->newSymbol(symbolName, AstSymbolType::kAstSymbolVariable, _shadowContext->isGlobal() ? AstScopeType::kAstScopeGlobal: AstScopeType::kAstScopeShadow);
+			vSym = _ast->newSymbol(symbolName, AstSymbolType::kAstSymbolVariable, _shadowContext->isGlobal());
 			_shadowContext->_symbols->add(symbolName, vSym);
 			MATHPRESSO_NULLCHECK(vSym);
 

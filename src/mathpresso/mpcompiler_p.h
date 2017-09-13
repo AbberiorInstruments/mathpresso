@@ -187,18 +187,18 @@ namespace mathpresso
 
 		// Members.
 		asmjit::X86Compiler* cc;
+		bool enableSSE4_1;
+		std::vector<JitVar> varSlots;
 
+	private:
 		asmjit::X86Gp resultAddress;
 		asmjit::X86Gp variablesAddress;
 
-		std::vector<JitVar> varSlots;
 		asmjit::CBNode* functionBody;
 
 		asmjit::Label constLabel;
 		asmjit::X86Gp constPtr;
 		asmjit::ConstPool constPool;
-
-		bool enableSSE4_1;
 
 		std::shared_ptr<Context> _shadowContext;
 

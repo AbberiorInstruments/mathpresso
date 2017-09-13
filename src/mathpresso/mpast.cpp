@@ -54,15 +54,15 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Factory]
 	// ============================================================================
 
-	std::shared_ptr<AstSymbol> AstBuilder::newSymbol(const std::string& key, AstSymbolType symbolType, AstScopeType scopeType)
+	std::shared_ptr<AstSymbol> AstBuilder::newSymbol(const std::string& key, AstSymbolType symbolType, bool isGlobal)
 	{
-		return std::make_shared<AstSymbol>(key, symbolType, scopeType);
+		return std::make_shared<AstSymbol>(key, symbolType, isGlobal);
 	}
 
 	std::shared_ptr<AstSymbol> AstBuilder::shadowSymbol(const std::shared_ptr<AstSymbol> other)
 	{
 		std::string name(other->getName());
-		std::shared_ptr<AstSymbol> sym = newSymbol(name, other->getSymbolType(), AstScopeType::kAstScopeShadow);
+		std::shared_ptr<AstSymbol> sym = newSymbol(name, other->getSymbolType(), false);
 
 		if (sym == nullptr)
 			return nullptr;
@@ -106,7 +106,7 @@ namespace mathpresso
 
 	Error AstBuilder::dump(StringBuilder& sb, const std::shared_ptr<Symbols> syms)
 	{
-		return AstDump(shared_from_this(), sb, syms).onProgram(getProgramNode());
+		return AstDump(shared_from_this(), sb, syms).onProgram(programNode());
 	}
 
 	// ============================================================================
@@ -293,7 +293,7 @@ namespace mathpresso
 	// [mathpresso::AstDump - Construction / Destruction]
 	// ============================================================================
 
-	AstDump::AstDump(std::shared_ptr<AstBuilder> ast, StringBuilder& sb, const std::shared_ptr<Symbols> syms)
+	AstDump::AstDump(std::shared_ptr<AstBuilder> ast, StringBuilder& sb, const std::shared_ptr<const Symbols> syms)
 		: AstVisitor(ast),
 		_sb(sb),
 		_level(0),
@@ -321,7 +321,7 @@ namespace mathpresso
 	{
 		std::shared_ptr<AstSymbol> sym = node->getSymbol();
 
-		nest("%s [VarDecl%s]", sym ? sym->getName() : "", node->takesComplex() ? ", complex" : ", real");
+		nest("%s [VarDecl%s]", sym ? sym->getName().c_str() : "", node->takesComplex() ? ", complex" : ", real");
 		if (node->hasChild())
 			MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 		return denest();
@@ -334,7 +334,7 @@ namespace mathpresso
 		return sym ? sym->getName() : "(null)";
 	}
 
-	std::string op_name(std::shared_ptr<AstNode> node, const std::shared_ptr<Symbols> ops)
+	std::string op_name(std::shared_ptr<AstNode> node, const std::shared_ptr<const Symbols> ops)
 	{
 		return ops->name(node->_mpOp);
 	}

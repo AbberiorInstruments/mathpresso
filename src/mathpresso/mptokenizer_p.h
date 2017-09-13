@@ -264,9 +264,10 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
-
-		const char* _p;
 		const char* _start;
+	
+	private:
+		const char* _p;
 		const char* _end;
 
 		StrToD _strtod;

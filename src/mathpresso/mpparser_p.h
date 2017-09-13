@@ -72,11 +72,10 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
+	private:
 		std::shared_ptr<AstBuilder> _ast;
 		ErrorReporter* _errorReporter;
-
 		Tokenizer _tokenizer;
-
 		std::shared_ptr<Context> _shadowContext; // the current context.
 	};
 

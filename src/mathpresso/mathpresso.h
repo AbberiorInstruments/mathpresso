@@ -399,7 +399,9 @@ type& operator=(const type& other) = delete; \
 			//! AST final.
 			kMessageAstFinal,
 			//! Machine code.
-			kMessageAsm
+			kMessageAsm,
+			//! For verbose output
+			kMessageInfo
 		};
 
 		// --------------------------------------------------------------------------

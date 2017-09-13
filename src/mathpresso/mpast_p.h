@@ -31,30 +31,6 @@ namespace mathpresso
 	struct AstProgram;
 	struct AstUnary;
 
-
-	// ============================================================================
-	// [mathpresso::AstScopeType]
-	// ============================================================================
-
-	enum AstScopeType
-	{
-		//! Global scope.
-		kAstScopeGlobal = 0,
-
-		//! Shadow scope acts like a global scope, however, it's mutable and can be
-		//! modified by the optimizer. Shadow scope is never used to store locals.
-		kAstScopeShadow = 1,
-
-		//! Local scope.
-		kAstScopeLocal = 2, // unused
-
-		//! Nested scope.
-		//!
-		//! Always statically allocated and merged with the local scope before the
-		//! scope is destroyed.
-		kAstScopeNested = 3
-	};
-
 	// ============================================================================
 	// [mathpresso::AstSymbolType]
 	// ============================================================================
@@ -197,13 +173,15 @@ namespace mathpresso
 		// [Accessors]
 		// --------------------------------------------------------------------------
 
-		std::shared_ptr<AstProgram> getProgramNode() const { return _programNode; }
+		std::shared_ptr<AstProgram> programNode() const { return _programNode; }
+
+		uint32_t numSlots() const { return _numSlots; }
 
 		// --------------------------------------------------------------------------
 		// [Factory]
 		// --------------------------------------------------------------------------
 
-		std::shared_ptr<AstSymbol> newSymbol(const std::string& key, AstSymbolType symbolType, AstScopeType scopeType);
+		std::shared_ptr<AstSymbol> newSymbol(const std::string& key, AstSymbolType symbolType, bool isGlobal);
 		std::shared_ptr<AstSymbol> shadowSymbol(const std::shared_ptr<AstSymbol> other);
 		void deleteSymbol(std::shared_ptr<AstSymbol> symbol);
 
@@ -250,7 +228,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
-
+	private:
 		//! String builder to build possible output messages.
 		StringBuilder _sb;
 
@@ -273,11 +251,11 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstSymbol(const std::string & name, AstSymbolType symbolType, uint32_t scopeType)
+		AstSymbol(const std::string & name, AstSymbolType symbolType, bool isGlobal)
 			: _name(name),
 			_node(),
 			_symbolType(symbolType),
-			_symbolFlags(scopeType == AstScopeType::kAstScopeGlobal ? (int)AstSymbolFlags::kAstSymbolIsGlobal : 0),
+			_symbolFlags(isGlobal ? AstSymbolFlags::kAstSymbolIsGlobal : 0),
 			_valueComp(),
 			_usedCount(0),
 			_writeCount(0)
@@ -375,8 +353,6 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 	private:
-		//! Symbol name length.
-		size_t _length;
 		//! Symbol name (key).
 		std::string _name;
 
@@ -531,15 +507,16 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		//! AST builder.
-		std::weak_ptr<AstBuilder> _ast; 
-		//! Parent node.
-		std::weak_ptr<AstNode> _parent;
-		//! Child nodes.
-		std::vector<std::shared_ptr<AstNode>> _children;
+		std::weak_ptr<AstBuilder> _ast;
 
 		std::shared_ptr<MpOperation> _mpOp;
 
 		std::string _opName;
+
+		//! Parent node.
+		std::weak_ptr<AstNode> _parent;
+		//! Child nodes.
+		std::vector<std::shared_ptr<AstNode>> _children;
 
 	private:
 		//! Node type, see `AstNodeType`.
@@ -927,7 +904,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
-
+	private:
 		std::shared_ptr<AstSymbol> _symbol;
 	};
 
@@ -958,7 +935,7 @@ namespace mathpresso
 
 		virtual Error onNode(std::shared_ptr<AstNode> node);
 
-		virtual Error onProgram(std::shared_ptr<AstProgram> node) ;
+		virtual Error onProgram(std::shared_ptr<AstProgram> node);
 		virtual Error onBlock(std::shared_ptr<AstBlock> node) = 0;
 		virtual Error onVarDecl(std::shared_ptr<AstVarDecl> node) = 0;
 		virtual Error onVar(std::shared_ptr<AstVar> node) = 0;
@@ -971,7 +948,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
-
+	protected:
 		std::shared_ptr<AstBuilder> _ast;
 	};
 
@@ -987,7 +964,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstDump(std::shared_ptr<AstBuilder> ast, StringBuilder& sb, const std::shared_ptr<Symbols> syms);
+		AstDump(std::shared_ptr<AstBuilder> ast, StringBuilder& sb, const std::shared_ptr<const Symbols> syms);
 		virtual ~AstDump();
 
 		// --------------------------------------------------------------------------
@@ -1015,9 +992,10 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
+	private:
 		StringBuilder& _sb;
 		uint32_t _level;
-		const std::shared_ptr<Symbols> _symbols;
+		const std::shared_ptr<const Symbols> _symbols;
 	};
 
 } // mathpresso namespace
