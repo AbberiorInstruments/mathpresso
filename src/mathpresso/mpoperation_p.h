@@ -361,6 +361,16 @@ namespace mathpresso
 		bool isColon_;
 	};
 
+	// Variable declaration
+	template<typename T>
+	class MpOperationVarDeclaration : public MpOperation
+	{
+	public:
+		MpOperationVarDeclaration();
+		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
+		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
+	};
+
 	// Assignment
 	template<typename T>
 	class MpOperationAssignment : public MpOperation

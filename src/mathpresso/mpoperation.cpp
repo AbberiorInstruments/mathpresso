@@ -135,6 +135,8 @@ namespace mathpresso
 		ctx->addObject("<", std::make_shared<MpOperationLt>());
 		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary<double>>());
 		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary<std::complex<double>>>());
+		ctx->addObject("=", std::make_shared<MpOperationVarDeclaration<double>>());
+		ctx->addObject("=", std::make_shared<MpOperationVarDeclaration<std::complex<double>>>());
 		ctx->addObject("=", std::make_shared<MpOperationAssignment<double>>());
 		ctx->addObject("=", std::make_shared<MpOperationAssignment<std::complex<double>>>());
 		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite<double>>());
@@ -261,10 +263,10 @@ namespace mathpresso
 	{
 		switch (_type)
 		{
-		case type::real: return "real";
-		case type::complex: return "complex";
-		default:
-			throw std::runtime_error("unknown type.");
+			case type::real: return "real";
+			case type::complex: return "complex";
+			default:
+				throw std::runtime_error("unknown type.");
 		}
 	}
 
@@ -1579,12 +1581,12 @@ namespace mathpresso
 	// Equality
 	template<>
 	MpOperationEq<double>::MpOperationEq() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ,9)
+		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 	template<>
 	MpOperationEq<std::complex<double>>::MpOperationEq() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ,9)
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 
@@ -1629,12 +1631,12 @@ namespace mathpresso
 	// Inequality
 	template<>
 	MpOperationNe<double>::MpOperationNe() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ,9)
+		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 	template<>
 	MpOperationNe<std::complex<double>>::MpOperationNe() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ,9)
+		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 
@@ -1827,11 +1829,11 @@ namespace mathpresso
 	// Ternary operation
 
 	template<>
-	MpOperationTernary<double>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::real), MpOperation::RighttoLeft,15)
+	MpOperationTernary<double>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::real), MpOperation::RighttoLeft, 15)
 	{
 	}
 	template<>
-	MpOperationTernary<std::complex<double>>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::complex), MpOperation::RighttoLeft,15)
+	MpOperationTernary<std::complex<double>>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::complex), MpOperation::RighttoLeft, 15)
 	{
 	}
 
@@ -1927,18 +1929,18 @@ namespace mathpresso
 
 	}
 
-	// Assignment
+	// Variable declaration
 	template<>
-	MpOperationAssignment<double>::MpOperationAssignment() : MpOperation(Signature(1, Signature::type::real), MpOperation::RighttoLeft | MpOperation::IsAssignment,15)
+	MpOperationVarDeclaration<double>::MpOperationVarDeclaration() : MpOperation(Signature(1, Signature::type::real), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
 	{
 	}
 	template<>
-	MpOperationAssignment<std::complex<double>>::MpOperationAssignment() : MpOperation(Signature(1, Signature::type::complex), MpOperation::RighttoLeft | MpOperation::IsAssignment,15)
+	MpOperationVarDeclaration<std::complex<double>>::MpOperationVarDeclaration() : MpOperation(Signature(1, Signature::type::complex), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
 	{
 	}
 
 	template<typename T>
-	JitVar MpOperationAssignment<T>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationVarDeclaration<T>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar result;
 		std::shared_ptr<AstVarDecl> varDecl = std::static_pointer_cast<AstVarDecl>(node);
@@ -1956,7 +1958,7 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	uint32_t MpOperationAssignment<T>::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
+	uint32_t MpOperationVarDeclaration<T>::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
 	{
 		std::shared_ptr<AstVarDecl> varDecl;
 		if (node->getNodeType() == AstNodeType::kAstNodeVarDecl)
@@ -1986,6 +1988,49 @@ namespace mathpresso
 			}
 		}
 
+		return ErrorCode::kErrorOk;
+	}
+
+	// Assignment
+	template<>
+	MpOperationAssignment<double>::MpOperationAssignment() : MpOperation(Signature(2, Signature::type::real), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
+	{
+	}
+	template<>
+	MpOperationAssignment<std::complex<double>>::MpOperationAssignment() : MpOperation(Signature(2, Signature::type::complex), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
+	{
+	}
+
+	template<typename T>
+	JitVar MpOperationAssignment<T>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	{
+		std::shared_ptr<AstVar> varNode = std::static_pointer_cast<AstVar>(node->getAt(0));
+		MATHPRESSO_ASSERT(varNode->getNodeType() == AstNodeType::kAstNodeVar);
+
+		std::shared_ptr<AstSymbol> sym = varNode->getSymbol();
+		uint32_t slotId = sym->getVarSlotId();
+
+		JitVar result = jc->onNode(node->getAt(1));
+		result.setRO();
+
+		sym->setAltered();
+		jc->varSlots[slotId] = result;
+
+		return result;
+	}
+
+	template<typename T>
+	uint32_t MpOperationAssignment<T>::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
+	{
+		std::shared_ptr<AstSymbol> sym = std::static_pointer_cast<AstVar>(node->getAt(0))->getSymbol();
+		if (node->getAt(1)->isImm())
+		{
+			if (sym->isAssigned())
+			{
+				sym->setValue(std::static_pointer_cast<AstImm>(node->getAt(1))->getValue<T>());
+			}
+		}
+		sym->setAltered();
 		return ErrorCode::kErrorOk;
 	}
 

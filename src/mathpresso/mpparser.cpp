@@ -346,7 +346,6 @@ namespace mathpresso
 						if (!sym->isDeclared())
 							MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName());
 
-						// TODO remove
 						// Put symbol to shadow scope if it's global. This is done lazily and
 						// only once per symbol when it's referenced.
 						if (ctxfound->isGlobal())
@@ -529,12 +528,10 @@ namespace mathpresso
 				{
 					std::string name(_tokenizer._start + token.position, token.length);
 					auto op = resolver::resolveFunction(_shadowContext, name, 2);
-					if (!op)
-						MATHPRESSO_PARSER_ERROR(token, "Invalid Operator.");
-
 
 					if (name == "=")
 					{
+						op = resolver::resolveFunction(_shadowContext, "=", 1);
 						// Check whether the assignment is valid.
 						if (currentNode->getNodeType() != AstNodeType::kAstNodeVar)
 							MATHPRESSO_PARSER_ERROR(token, "Can't assign to a non-variable.");
@@ -548,6 +545,9 @@ namespace mathpresso
 
 						sym->incWriteCount();
 					}
+
+					if (!op)
+						MATHPRESSO_PARSER_ERROR(token, "Invalid Operator: " + name);
 
 					std::shared_ptr<AstBinaryOp> newNode = _ast->newNode<AstBinaryOp>();
 					MATHPRESSO_NULLCHECK(newNode);

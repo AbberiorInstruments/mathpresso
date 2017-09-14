@@ -341,10 +341,6 @@ namespace mathpresso
 		void decUsedCount(uint32_t n = 1)
 		{
 			_usedCount -= n;
-			if (_usedCount == 0)
-			{
-				this->~AstSymbol();
-			}
 		}
 		void decWriteCount(uint32_t n = 1) { _writeCount -= n; decUsedCount(n); }
 
@@ -450,7 +446,7 @@ namespace mathpresso
 		//! Get children array.
 		std::vector<std::shared_ptr<AstNode>> getChildren() const { return _children; }
 		//! Get length of the children array.
-		size_t getLength() const { return _children.size(); }
+		virtual size_t getLength() const { return _children.size(); }
 
 		//! Get node type.
 		AstNodeType getNodeType() const { return _nodeType; }
@@ -851,8 +847,10 @@ namespace mathpresso
 				std::shared_ptr<AstVar> var = std::static_pointer_cast<AstVar>(getLeft());
 				std::shared_ptr<AstSymbol> sym = var->getSymbol();
 
-				if (sym != nullptr)
+				if (sym)
+				{
 					sym->decWriteCount();
+				}
 			}
 		}
 	};

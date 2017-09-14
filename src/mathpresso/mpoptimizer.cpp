@@ -108,7 +108,7 @@ namespace mathpresso
 		std::shared_ptr<AstSymbol> sym = node->getSymbol();
 		bool b_complex = node->returnsComplex() || sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
 
-		if (sym->isAssigned() && !node->hasNodeFlag(AstNodeFlags::kAstNodeHasSideEffect))
+		if (sym->isAssigned() && !node->hasNodeFlag(AstNodeFlags::kAstNodeHasSideEffect) && !sym->isAltered())
 		{
 			std::shared_ptr<AstImm> imm;
 
@@ -132,6 +132,11 @@ namespace mathpresso
 
 	Error AstOptimizer::optimize(std::shared_ptr<AstNode> node)
 	{
+		// the lhs variable-name of an assignment should not be optimized away.
+		if (node->getLength() == 2 && node->_opName == "=")
+		{
+			node->getAt(0)->addNodeFlags(AstNodeFlags::kAstNodeHasSideEffect);
+		}
 
 		bool takesComplex = false;
 
@@ -164,7 +169,7 @@ namespace mathpresso
 			return node->_mpOp->optimize(this, node);
 		}
 		return _errorReporter->onError(ErrorCode::kErrorInvalidState, node->getPosition(),
-									   "No MpOperation.");
+									   "No MpOperation: " + node->_opName);
 	}
 
 	Error AstOptimizer::onUnaryOp(std::shared_ptr<AstUnaryOp> node)
