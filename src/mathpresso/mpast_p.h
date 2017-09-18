@@ -158,7 +158,7 @@ namespace mathpresso
 	// ============================================================================
 
 	//! \internal
-	struct AstBuilder : public std::enable_shared_from_this<AstBuilder>
+	struct AstBuilder
 	{
 		MATHPRESSO_NO_COPY(AstBuilder);
 
@@ -181,35 +181,7 @@ namespace mathpresso
 		// [Factory]
 		// --------------------------------------------------------------------------
 
-		std::shared_ptr<AstSymbol> newSymbol(const std::string& key, AstSymbolType symbolType, bool isGlobal);
 		std::shared_ptr<AstSymbol> shadowSymbol(const std::shared_ptr<AstSymbol> other);
-		void deleteSymbol(std::shared_ptr<AstSymbol> symbol);
-
-#define MATHPRESSO_ALLOC_AST_OBJECT(_Size_) \
-  void* obj = _heap->alloc(_Size_); \
-  if (MATHPRESSO_UNLIKELY(obj == nullptr)) return nullptr
-
-		template<typename T>
-		std::shared_ptr<T> newNode()
-		{
-			return std::make_shared<T>(shared_from_this());
-		}
-
-		template<typename T, typename P0>
-		std::shared_ptr<T> newNode(P0 p0)
-		{
-			return std::make_shared<T>(shared_from_this(), p0);
-		}
-
-		template<typename T, typename P0, typename P1>
-		std::shared_ptr<T> newNode(P0 p0, P1 p1)
-		{
-			return std::make_shared<T>(shared_from_this(), p0, p1);
-		}
-
-#undef MATHPRESSO_ALLOC_AST_OBJECT
-
-		//void deleteNode(std::shared_ptr<AstNode> node);
 
 		uint32_t newSlotId() { return _numSlots++; }
 
@@ -409,8 +381,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstNode(std::shared_ptr<AstBuilder> ast, AstNodeType nodeType, std::vector<std::shared_ptr<AstNode>> children = {}, uint32_t length = 0) : 
-			_ast(ast),
+		AstNode(AstNodeType nodeType, std::vector<std::shared_ptr<AstNode>> children = {}, uint32_t length = 0)	: 
 			_parent(),
 			_children(children),
 			_mpOp(nullptr),
@@ -428,9 +399,6 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 		// [Accessors]
 		// --------------------------------------------------------------------------
-
-		//! Get the `AstBuilder` instance that created this node.
-		std::shared_ptr<AstBuilder> getAst() const { return _ast.lock(); }
 
 		//! Check if the node has a parent.
 		bool hasParent() const { return _parent.lock() != nullptr; }
@@ -502,9 +470,6 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		//! AST builder.
-		std::weak_ptr<AstBuilder> _ast;
-
 		std::shared_ptr<MpOperation> _mpOp;
 
 		std::string _opName;
@@ -535,8 +500,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstBlock(std::shared_ptr<AstBuilder> ast, AstNodeType nodeType = AstNodeType::kAstNodeBlock)
-			: AstNode(ast, nodeType)
+		AstBlock(AstNodeType nodeType = AstNodeType::kAstNodeBlock)
+			: AstNode(nodeType)
 		{
 		}
 
@@ -592,8 +557,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstUnary(std::shared_ptr<AstBuilder> ast, AstNodeType nodeType)
-			: AstNode(ast, nodeType, { nullptr }, 1)
+		AstUnary(AstNodeType nodeType)
+			: AstNode(nodeType, { nullptr }, 1)
 		{
 		}
 
@@ -617,8 +582,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstBinary(std::shared_ptr<AstBuilder> ast, AstNodeType nodeType)
-			: AstNode(ast, nodeType, { nullptr, nullptr }, 2)
+		AstBinary(AstNodeType nodeType)
+			: AstNode(nodeType, { nullptr, nullptr }, 2)
 		{
 		}
 
@@ -647,8 +612,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstTernary(std::shared_ptr<AstBuilder> ast, AstNodeType nodeType)
-			: AstNode(ast, nodeType, { nullptr, nullptr, nullptr }, 3)
+		AstTernary(AstNodeType nodeType)
+			: AstNode(nodeType, { nullptr, nullptr, nullptr }, 3)
 		{
 		}
 
@@ -673,8 +638,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstProgram(std::shared_ptr<AstBuilder> ast)
-			: AstBlock(ast, AstNodeType::kAstNodeProgram)
+		AstProgram()
+			: AstBlock(AstNodeType::kAstNodeProgram)
 		{
 		}
 
@@ -693,8 +658,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstVarDecl(std::shared_ptr<AstBuilder> ast)
-			: AstUnary(ast, AstNodeType::kAstNodeVarDecl),
+		AstVarDecl()
+			: AstUnary(AstNodeType::kAstNodeVarDecl),
 			_symbol(nullptr)
 		{
 		}
@@ -735,8 +700,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstVar(std::shared_ptr<AstBuilder> ast)
-			: AstNode(ast, AstNodeType::kAstNodeVar),
+		AstVar()
+			: AstNode(AstNodeType::kAstNodeVar),
 			_symbol(nullptr)
 		{
 		}
@@ -768,14 +733,14 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstImm(std::shared_ptr<AstBuilder> ast, double value = 0.0)
-			: AstNode(ast, AstNodeType::kAstNodeImm),
+		AstImm(double value = 0.0)
+			: AstNode(AstNodeType::kAstNodeImm),
 			_value({ value, 0 })
 		{
 		}
 
-		AstImm(std::shared_ptr<AstBuilder> ast, std::complex<double> value)
-			: AstNode(ast, AstNodeType::kAstNodeImm),
+		AstImm(std::complex<double> value)
+			: AstNode(AstNodeType::kAstNodeImm),
 			_value(value)
 		{
 			addNodeFlags(AstNodeFlags::kAstReturnsComplex);
@@ -821,8 +786,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstUnaryOp(std::shared_ptr<AstBuilder> ast)
-			: AstUnary(ast, AstNodeType::kAstNodeUnaryOp)
+		AstUnaryOp()
+			: AstUnary(AstNodeType::kAstNodeUnaryOp)
 		{
 		}
 
@@ -836,7 +801,8 @@ namespace mathpresso
 	{
 		MATHPRESSO_NO_COPY(AstBinaryOp);
 
-		AstBinaryOp(std::shared_ptr<AstBuilder> ast) : AstBinary(ast, AstNodeType::kAstNodeBinaryOp)
+		AstBinaryOp() 
+			: AstBinary(AstNodeType::kAstNodeBinaryOp)
 		{
 		}
 
@@ -867,8 +833,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstTernaryOp(std::shared_ptr<AstBuilder> ast) :
-			AstTernary(ast, AstNodeType::kAstNodeTernaryOp)
+		AstTernaryOp() :
+			AstTernary(AstNodeType::kAstNodeTernaryOp)
 		{
 		}
 
@@ -886,8 +852,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstCall(std::shared_ptr<AstBuilder> ast)
-			: AstBlock(ast, AstNodeType::kAstNodeCall),
+		AstCall()
+			: AstBlock(AstNodeType::kAstNodeCall),
 			_symbol(nullptr)
 		{
 		}
@@ -918,14 +884,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstVisitor(std::shared_ptr<AstBuilder> ast);
+		AstVisitor();
 		virtual ~AstVisitor();
-
-		// --------------------------------------------------------------------------
-		// [Accessors]
-		// --------------------------------------------------------------------------
-
-		std::shared_ptr<AstBuilder> getAst() const { return _ast; }
 
 		// --------------------------------------------------------------------------
 		// [OnNode]
@@ -946,8 +906,6 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
-	protected:
-		std::shared_ptr<AstBuilder> _ast;
 	};
 
 	// ============================================================================
@@ -962,7 +920,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstDump(std::shared_ptr<AstBuilder> ast, StringBuilder& sb, const std::shared_ptr<const Symbols> syms);
+		AstDump(StringBuilder& sb, const std::shared_ptr<const Symbols> syms);
 		virtual ~AstDump();
 
 		// --------------------------------------------------------------------------

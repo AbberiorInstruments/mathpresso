@@ -20,8 +20,8 @@ namespace mathpresso
 	// [mpsl::AstOptimizer - Construction / Destruction]
 	// ============================================================================
 
-	AstOptimizer::AstOptimizer(std::shared_ptr<AstBuilder> ast, ErrorReporter* errorReporter, std::shared_ptr<Context> ctx)
-		: AstVisitor(ast),
+	AstOptimizer::AstOptimizer(ErrorReporter* errorReporter, std::shared_ptr<Context> ctx)
+		: AstVisitor(),
 		_errorReporter(errorReporter),
 		_shadowContext(ctx)
 	{
@@ -114,11 +114,11 @@ namespace mathpresso
 
 			if (!b_complex)
 			{
-				imm = _ast->newNode<AstImm>(sym->getValue());
+				imm = std::make_shared<AstImm>(sym->getValue());
 			}
 			else
 			{
-				imm = _ast->newNode<AstImm>(sym->getValueComp());
+				imm = std::make_shared<AstImm>(sym->getValueComp());
 			}
 			node->getParent()->replaceNode(node, imm);
 		}
