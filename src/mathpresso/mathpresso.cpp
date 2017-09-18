@@ -178,14 +178,8 @@ namespace mathpresso
 
 	inline std::shared_ptr<Context> Context::getChild(const std::string & name)
 	{
-		try
-		{
-			return _children.at(name);
-		}
-		catch (std::out_of_range)
-		{
-			return nullptr;
-		}
+		auto it = _children.find(name);
+		return it == _children.end() ? nullptr : it->second;
 	}
 
 	Error Context::setParent(std::shared_ptr<Context> ctx)
@@ -512,14 +506,8 @@ namespace mathpresso
 
 	Symbols::var_ptr_type Symbols::findVariable(const std::string & name) const
 	{
-		try
-		{
-			return _variables.at(name);
-		}
-		catch (std::out_of_range)
-		{
-			return nullptr;
-		}
+		auto it = _variables.find(name);
+		return it == _variables.end() ? nullptr : it->second;
 	}
 
 	void Symbols::add(const std::string &name, Symbols::op_ptr_type obj)

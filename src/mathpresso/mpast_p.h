@@ -409,15 +409,15 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstNode(std::shared_ptr<AstBuilder> ast, AstNodeType nodeType, std::vector<std::shared_ptr<AstNode>> children = {}, uint32_t length = 0)
-			: _ast(ast),
+		AstNode(std::shared_ptr<AstBuilder> ast, AstNodeType nodeType, std::vector<std::shared_ptr<AstNode>> children = {}, uint32_t length = 0) : 
+			_ast(ast),
 			_parent(),
 			_children(children),
 			_mpOp(nullptr),
 			_opName(),
 			_nodeType(nodeType),
 			_nodeFlags(AstNodeFlags::kAstNone),
-			_position(~static_cast<uint32_t>(0))
+			_position(~uint32_t(0))
 		{
 		}
 
