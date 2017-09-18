@@ -114,11 +114,11 @@ namespace mathpresso
 
 			if (!b_complex)
 			{
-				imm = _ast->newNode<AstImm>(sym->getValue());
+				imm = std::make_shared<AstImm>(_ast, sym->getValue());
 			}
 			else
 			{
-				imm = _ast->newNode<AstImm>(sym->getValueComp());
+				imm = std::make_shared<AstImm>(_ast, sym->getValueComp());
 			}
 			node->getParent()->replaceNode(node, imm);
 		}

@@ -185,32 +185,6 @@ namespace mathpresso
 		std::shared_ptr<AstSymbol> shadowSymbol(const std::shared_ptr<AstSymbol> other);
 		void deleteSymbol(std::shared_ptr<AstSymbol> symbol);
 
-#define MATHPRESSO_ALLOC_AST_OBJECT(_Size_) \
-  void* obj = _heap->alloc(_Size_); \
-  if (MATHPRESSO_UNLIKELY(obj == nullptr)) return nullptr
-
-		template<typename T>
-		std::shared_ptr<T> newNode()
-		{
-			return std::make_shared<T>(shared_from_this());
-		}
-
-		template<typename T, typename P0>
-		std::shared_ptr<T> newNode(P0 p0)
-		{
-			return std::make_shared<T>(shared_from_this(), p0);
-		}
-
-		template<typename T, typename P0, typename P1>
-		std::shared_ptr<T> newNode(P0 p0, P1 p1)
-		{
-			return std::make_shared<T>(shared_from_this(), p0, p1);
-		}
-
-#undef MATHPRESSO_ALLOC_AST_OBJECT
-
-		//void deleteNode(std::shared_ptr<AstNode> node);
-
 		uint32_t newSlotId() { return _numSlots++; }
 
 		// --------------------------------------------------------------------------

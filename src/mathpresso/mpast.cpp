@@ -93,7 +93,8 @@ namespace mathpresso
 	{
 		if (_programNode == nullptr)
 		{
-			_programNode = newNode<AstProgram>();
+			// TODO rework?
+			_programNode = std::make_shared<AstProgram>(shared_from_this());
 			MATHPRESSO_NULLCHECK(_programNode);
 		}
 

@@ -79,7 +79,7 @@ namespace mathpresso
 			if (!(flags & ParserFlags::kEnableNestedBlock))
 				MATHPRESSO_PARSER_ERROR(token, "Cannot declare a new block-scope here.");
 
-			MATHPRESSO_NULLCHECK(nested = _ast->newNode<AstBlock>());
+			MATHPRESSO_NULLCHECK(nested = std::make_shared<AstBlock>(_ast));
 			block->appendNode(nested);
 
 			auto nestedContext(std::make_shared<Context>());
@@ -207,7 +207,7 @@ namespace mathpresso
 			_shadowContext->_symbols->add(symbolName, vSym);
 			MATHPRESSO_NULLCHECK(vSym);
 
-			std::shared_ptr<AstVarDecl> decl = _ast->newNode<AstVarDecl>();
+			std::shared_ptr<AstVarDecl> decl = std::make_shared<AstVarDecl>(_ast);
 			MATHPRESSO_NULLCHECK_(decl, { _ast->deleteSymbol(vSym); });
 			decl->_mpOp = resolver::resolveFunction(_shadowContext, "=", 2);
 			decl->_opName = "=";
@@ -356,7 +356,7 @@ namespace mathpresso
 							sym->setVarSlotId(_ast->newSlotId());
 						}
 
-						newNode = _ast->newNode<AstVar>();
+						newNode = std::make_shared<AstVar>(_ast);
 						MATHPRESSO_NULLCHECK(newNode);
 						std::static_pointer_cast<AstVar>(newNode)->setSymbol(sym);
 
@@ -389,7 +389,7 @@ namespace mathpresso
 					b_complex = true;
 				case TokenType::kTokenNumber:
 				{
-					std::shared_ptr<AstImm> newNode = _ast->newNode<AstImm>();
+					std::shared_ptr<AstImm> newNode = std::make_shared<AstImm>(_ast);
 					MATHPRESSO_NULLCHECK(newNode);
 
 					newNode->setPosition(token.getPosAsUInt());
@@ -448,7 +448,7 @@ namespace mathpresso
 						{
 							if (op = resolver::resolveFunction(_shadowContext, name.substr(i, 1), 1))
 							{
-								std::shared_ptr<AstUnaryOp> opNode = _ast->newNode<AstUnaryOp>();
+								std::shared_ptr<AstUnaryOp> opNode = std::make_shared<AstUnaryOp>(_ast);
 								MATHPRESSO_NULLCHECK(opNode);
 								opNode->setPosition(token.getPosAsUInt() + uint32_t(i));
 
@@ -473,7 +473,7 @@ namespace mathpresso
 					else
 					{
 						// Parse the unary operator.
-						std::shared_ptr<AstUnaryOp> opNode = _ast->newNode<AstUnaryOp>();
+						std::shared_ptr<AstUnaryOp> opNode = std::make_shared<AstUnaryOp>(_ast);
 						MATHPRESSO_NULLCHECK(opNode);
 						opNode->setPosition(token.getPosAsUInt());
 
@@ -549,7 +549,7 @@ namespace mathpresso
 					if (!op)
 						MATHPRESSO_PARSER_ERROR(token, "Invalid Operator: " + name);
 
-					std::shared_ptr<AstBinaryOp> newNode = _ast->newNode<AstBinaryOp>();
+					std::shared_ptr<AstBinaryOp> newNode = std::make_shared<AstBinaryOp>(_ast);
 					MATHPRESSO_NULLCHECK(newNode);
 
 					newNode->_mpOp = op;
@@ -674,7 +674,7 @@ namespace mathpresso
 		if (uToken != TokenType::kTokenLParen)
 			MATHPRESSO_PARSER_ERROR(token, "Expected a '(' token after a function name.");
 
-		std::shared_ptr<AstCall> callNode = _ast->newNode<AstCall>();
+		std::shared_ptr<AstCall> callNode = std::make_shared<AstCall>(_ast);
 		MATHPRESSO_NULLCHECK(callNode);
 
 		callNode->setPosition(position);
@@ -787,7 +787,7 @@ namespace mathpresso
 				}
 
 				// create the new Ternary Node.
-				std::shared_ptr<AstTernaryOp> ternaryNode = _ast->newNode<AstTernaryOp>();
+				std::shared_ptr<AstTernaryOp> ternaryNode = std::make_shared<AstTernaryOp>(_ast);
 				ternaryNode->setCondition(branchCondition);
 				ternaryNode->setLeft(branchLeft);
 				ternaryNode->setRight(branchRight);
