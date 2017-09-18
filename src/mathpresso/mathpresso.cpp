@@ -272,7 +272,7 @@ namespace mathpresso
 
 		// Perform basic optimizations at AST level.
 		{
-			MATHPRESSO_PROPAGATE(AstOptimizer(ast, &errorReporter, shadowContext).onProgram(ast->programNode()));
+			MATHPRESSO_PROPAGATE(AstOptimizer(&errorReporter, shadowContext).onProgram(ast->programNode()));
 		}
 
 		if (options & kOptionDebugAst)

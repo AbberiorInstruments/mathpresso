@@ -54,15 +54,10 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Factory]
 	// ============================================================================
 
-	std::shared_ptr<AstSymbol> AstBuilder::newSymbol(const std::string& key, AstSymbolType symbolType, bool isGlobal)
-	{
-		return std::make_shared<AstSymbol>(key, symbolType, isGlobal);
-	}
-
 	std::shared_ptr<AstSymbol> AstBuilder::shadowSymbol(const std::shared_ptr<AstSymbol> other)
 	{
 		std::string name(other->getName());
-		std::shared_ptr<AstSymbol> sym = newSymbol(name, other->getSymbolType(), false);
+		std::shared_ptr<AstSymbol> sym = std::make_shared<AstSymbol>(name, other->getSymbolType(), false);
 
 		if (sym == nullptr)
 			return nullptr;
@@ -79,12 +74,6 @@ namespace mathpresso
 		return sym;
 	}
 
-	void AstBuilder::deleteSymbol(std::shared_ptr<AstSymbol> symbol)
-	{
-		//should be doing nothing.
-		symbol->~AstSymbol();
-	}
-
 	// ============================================================================
 	// [mathpresso::AstBuilder - Initialization]
 	// ============================================================================
@@ -93,8 +82,7 @@ namespace mathpresso
 	{
 		if (_programNode == nullptr)
 		{
-			// TODO rework?
-			_programNode = std::make_shared<AstProgram>(shared_from_this());
+			_programNode = std::make_shared<AstProgram>();
 			MATHPRESSO_NULLCHECK(_programNode);
 		}
 
@@ -107,7 +95,7 @@ namespace mathpresso
 
 	Error AstBuilder::dump(StringBuilder& sb, const std::shared_ptr<Symbols> syms)
 	{
-		return AstDump(shared_from_this(), sb, syms).onProgram(programNode());
+		return AstDump(sb, syms).onProgram(programNode());
 	}
 
 	// ============================================================================
@@ -256,8 +244,7 @@ namespace mathpresso
 	// [mathpresso::AstVisitor - Construction / Destruction]
 	// ============================================================================
 
-	AstVisitor::AstVisitor(std::shared_ptr<AstBuilder> ast)
-		: _ast(ast)
+	AstVisitor::AstVisitor()
 	{
 	}
 	AstVisitor::~AstVisitor() {}
@@ -294,8 +281,8 @@ namespace mathpresso
 	// [mathpresso::AstDump - Construction / Destruction]
 	// ============================================================================
 
-	AstDump::AstDump(std::shared_ptr<AstBuilder> ast, StringBuilder& sb, const std::shared_ptr<const Symbols> syms)
-		: AstVisitor(ast),
+	AstDump::AstDump(StringBuilder& sb, const std::shared_ptr<const Symbols> syms)
+		: AstVisitor(),
 		_sb(sb),
 		_level(0),
 		_symbols(syms)

@@ -398,7 +398,7 @@ namespace mathpresso
 		// optimize all-immediate calls:
 		if (b_all_imm && !hasFlag(MpOperation::FlagHasState))
 		{
-			std::shared_ptr<AstImm> ret = std::make_shared<AstImm>(opt->getAst(), 0);
+			std::shared_ptr<AstImm> ret = std::make_shared<AstImm>( 0);
 
 			std::vector<PARAM> args;
 			for (size_t i = 0; i < nargs(); i++)
