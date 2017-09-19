@@ -348,6 +348,7 @@ namespace mathpresso
 		std::shared_ptr<AstSymbol> resolveVariable(ContextPtr ctx, const std::string & name, ContextPtr * ctxOut = nullptr);
 
 		std::vector<std::string> separateName(std::string name);
+
 	} // resolver namespace
 
 } // mathpresso namespace

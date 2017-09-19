@@ -579,24 +579,49 @@ namespace mathpresso
 
 	namespace resolver
 	{
+		//! We assume, that we get a Qualified a Context-qualifiers without any Symbol or FunctionName.
+		ContextPtr resolveContext(ContextPtr ctx, std::vector<std::string> name)
+		{
+			ContextPtr tmpCtx(ctx);
+
+			// THis lookup is similar to the lookup of names in C++-namespaces, where the first 'root'-namespace found is used.
+			while (tmpCtx->getParent() != nullptr && tmpCtx->getChild(name[0]) == nullptr)
+			{
+				tmpCtx = tmpCtx->getParent();
+			}
+
+
+			// traverse down to the correct context for names like "ctx1.ctx2." 
+			for (size_t i = 0; tmpCtx && i < name.size(); i++)
+			{
+				tmpCtx = tmpCtx->getChild(name[i]);
+			}
+
+			return tmpCtx;
+		}
+
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs, bool takesComplex)
 		{
-			std::shared_ptr<MpOperation> function;
+			std::shared_ptr<MpOperation> function(nullptr);
 			auto splitName(separateName(name));
-			do
+			ContextPtr tmpCtx(ctx);
+			if (splitName.size() > 1)
 			{
-				ContextPtr tmpCtx(ctx);
-				for (size_t i = 0; tmpCtx && i < splitName.size() - 1; i++)
-				{
-					tmpCtx = tmpCtx->getChild(splitName[i]);
-				}
-
+				std::string varName(splitName.back());
+				splitName.pop_back();
+				tmpCtx = resolveContext(ctx, splitName);
 				if (tmpCtx)
 				{
-					function = tmpCtx->_symbols->findFunction(splitName.back(), numargs, takesComplex);
+					function = tmpCtx->_symbols->findFunction(varName, numargs, takesComplex);
 				}
-			} while (!function && (ctx = ctx->getParent()) != nullptr);
-
+			}
+			else
+			{
+				do
+				{
+					function = tmpCtx->_symbols->findFunction(name, numargs, takesComplex);
+				} while (!function && (tmpCtx = tmpCtx->getParent()));
+			}
 
 			return function;
 		}
@@ -605,68 +630,89 @@ namespace mathpresso
 		{
 			std::vector<std::shared_ptr<MpOperation>> functions, tmp;
 			auto splitName(separateName(name));
-			do
+			ContextPtr tmpCtx(ctx);
+			if (splitName.size() > 1)
 			{
-				ContextPtr tmpCtx(ctx);
-				for (size_t i = 0; tmpCtx && i < splitName.size() - 1; i++)
-				{
-					tmpCtx = tmpCtx->getChild(splitName[i]);
-				}
-
+				std::string varName(splitName.back());
+				splitName.pop_back();
+				tmpCtx = resolveContext(ctx, splitName);
 				if (tmpCtx)
 				{
-					tmp = tmpCtx->_symbols->findFunction(splitName.back());
+					tmp = tmpCtx->_symbols->findFunction(varName);
 					functions.insert(functions.begin(), tmp.begin(), tmp.end());
 				}
-			} while (ctx = ctx->getParent());
+			}
+			else
+			{
+				do
+				{
+					tmp = tmpCtx->_symbols->findFunction(name);
+					functions.insert(functions.begin(), tmp.begin(), tmp.end());
+				} while ((tmpCtx = tmpCtx->getParent()));
+			}
 
 			return functions;
 		}
 
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs)
 		{
-			std::shared_ptr<MpOperation> function;
+			std::shared_ptr<MpOperation> function(nullptr);
 			auto splitName(separateName(name));
-			do
+			ContextPtr tmpCtx(ctx);
+			if (splitName.size() > 1)
 			{
-				ContextPtr tmpCtx(ctx);
-				for (size_t i = 0; tmpCtx && i < splitName.size() - 1; i++)
-				{
-					tmpCtx = tmpCtx->getChild(splitName[i]);
-				}
-
+				std::string varName(splitName.back());
+				splitName.pop_back();
+				tmpCtx = resolveContext(ctx, splitName);
 				if (tmpCtx)
 				{
-					function = tmpCtx->_symbols->findFunction(splitName.back(), numargs);
+					function = tmpCtx->_symbols->findFunction(varName, numargs);
 				}
-			} while (!function && (ctx = ctx->getParent()) != nullptr);
+			}
+			else
+			{
+				do
+				{
+					function = tmpCtx->_symbols->findFunction(name, numargs);
+				} while (!function && (tmpCtx = tmpCtx->getParent()));
+			}
 
 			return function;
 		}
 
 		std::shared_ptr<AstSymbol> resolveVariable(ContextPtr ctx, const std::string & name, ContextPtr * contextOut)
 		{
-			std::shared_ptr<AstSymbol> symbol;
-
+			std::shared_ptr<AstSymbol> symbol(nullptr);
 			auto splitName(separateName(name));
 
-			do
-			{
-				ContextPtr tmpCtx(ctx);
-				for (size_t i = 0; tmpCtx && i < splitName.size() - 1; i++)
-				{
-					tmpCtx = tmpCtx->getChild(splitName[i]);
-				}
+			ContextPtr tmpCtx(ctx);
 
+			if (splitName.size() > 1)
+			{  // Lookup for Qualified names.
+
+				std::string varName(splitName.back());
+				splitName.pop_back();
+
+				// find the Context, where the symbol should be found.
+				tmpCtx = resolveContext(tmpCtx, splitName);
+
+				// resolve the symbol, if there is a Context with the qualified name.
 				if (tmpCtx)
 				{
-					symbol = tmpCtx->_symbols->findVariable(splitName.back());
+					symbol = tmpCtx->_symbols->findVariable(varName);
 				}
+			}
+			else
+			{  // lookup for unqualified names.
+				do
+				{
+					symbol = tmpCtx->_symbols->findVariable(name);
+				} while (!symbol && (tmpCtx = tmpCtx->getParent()));
+			}
 
-			} while (symbol == nullptr && (ctx = ctx->getParent()) != nullptr);
-
-			if (contextOut != nullptr)
-				*contextOut = ctx;
+			// if we found a symbol, and contextOut is not a nullptr, we return the Context of Symbol in *contextOut.
+			if (symbol && contextOut)
+				*contextOut = tmpCtx;
 
 			return symbol;
 		}
