@@ -256,9 +256,9 @@ namespace mathpresso
 			return next(token);
 		}
 
-		std::string getTokenName() const
+		std::string getTokenName(Token token) const
 		{
-			return std::string(_start + _token.position, _token.length);
+			return std::string(_start + token.position, token.length);
 		}
 
 		// --------------------------------------------------------------------------

@@ -208,7 +208,11 @@ namespace mathpresso
 		while (p != pEnd)
 		{
 			if (p[0] == node)
-				goto _Found;
+			{
+				_children.erase(p);
+				node->_parent.reset();
+				return node;
+			}
 			p++;
 		}
 
@@ -216,12 +220,6 @@ namespace mathpresso
 		// there is a bug somewhere.
 		MATHPRESSO_ASSERT(!"Reached");
 		return nullptr;
-
-	_Found:
-		_children.erase(p);
-
-		node->_parent.reset();
-		return node;
 	}
 
 	std::shared_ptr<AstNode> AstBlock::removeAt(size_t index)

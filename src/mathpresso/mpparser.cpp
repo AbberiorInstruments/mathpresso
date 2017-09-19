@@ -185,7 +185,7 @@ namespace mathpresso
 			std::shared_ptr<AstSymbol> vSym;
 			std::shared_ptr<Context> vContext;
 
-			symbolName = std::string(_tokenizer._start + token.position, token.length);
+			symbolName = _tokenizer.getTokenName(token);
 			if ((vSym = resolver::resolveVariable(_shadowContext, symbolName, &vContext)))
 			{
 				if (vSym->getSymbolType() != AstSymbolType::kAstSymbolVariable || _shadowContext == vContext)
@@ -222,7 +222,7 @@ namespace mathpresso
 
 			// Parse possible assignment '='.
 			uToken = _tokenizer.next(&token);
-			bool isAssigned = (uToken == TokenType::kTokenOperator && std::string(_tokenizer._start + token.position, token.length) == "=");
+			bool isAssigned = (uToken == TokenType::kTokenOperator && _tokenizer.getTokenName(token) == "=");
 
 			if (isAssigned)
 			{
@@ -332,7 +332,7 @@ namespace mathpresso
 				case TokenType::kTokenSymbol:
 				{
 					// TODO: rework this.
-					std::string symbolName(_tokenizer._start + token.position, token.length);
+					std::string symbolName(_tokenizer.getTokenName(token));
 
 					resolver::ContextPtr ctxfound;
 
@@ -366,6 +366,7 @@ namespace mathpresso
 						sym->incUsedCount();
 					}
 					else if (resolver::resolveFunction(_shadowContext, symbolName).size() != 0)
+					//else if (token.token == TokenType::kTokenRParen)
 					{
 						// Will be parsed by `parseCall()` again.
 						_tokenizer.set(&token);
@@ -438,7 +439,7 @@ namespace mathpresso
 				// Parse a right-to-left associative unary operator ('+', '-', "!").
 				case TokenType::kTokenOperator:
 				{
-					std::string name(_tokenizer._start + token.position, token.length);
+					std::string name(_tokenizer.getTokenName(token));
 					auto op = resolver::resolveFunction(_shadowContext, name, 1);
 					if (!op)
 					{
@@ -525,7 +526,7 @@ namespace mathpresso
 				// Parse Binary Operators
 				case TokenType::kTokenOperator:
 				{
-					std::string name(_tokenizer._start + token.position, token.length);
+					std::string name(_tokenizer.getTokenName(token));
 					auto op = resolver::resolveFunction(_shadowContext, name, 2);
 
 					if (name == "=")
@@ -667,7 +668,7 @@ namespace mathpresso
 		MATHPRESSO_ASSERT(uToken == TokenType::kTokenSymbol);
 		uint32_t position = token.getPosAsUInt();
 
-		std::string fnName(_tokenizer.getTokenName());
+		std::string fnName(_tokenizer.getTokenName(token));
 
 		uToken = _tokenizer.next(&token);
 		if (uToken != TokenType::kTokenLParen)
