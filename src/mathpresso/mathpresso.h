@@ -232,6 +232,9 @@ type& operator=(const type& other) = delete; \
 		//! Create a new `Context` based on `other`.
 		Context(const Context& other);
 
+		virtual ~Context()
+		{
+		}
 		// --------------------------------------------------------------------------
 		// [Copy / Reset]
 		// --------------------------------------------------------------------------
@@ -247,8 +250,8 @@ type& operator=(const type& other) = delete; \
 		Error addBuiltIns(void);
 
 		//! Add constant to this context.
-		Error addConstant(const std::string &name, double value);
-		Error addConstant(const std::string &name, std::complex<double> value);
+		Error addConstant(const std::string & name, double value);
+		Error addConstant(const std::string & name, std::complex<double> value);
 		//! Add variable to this context.
 		Error addVariable(const std::string &name, int offset, unsigned int flags = VariableFlags::kVariableRW);
 
@@ -259,19 +262,19 @@ type& operator=(const type& other) = delete; \
 		Error delSymbol(const std::string &name);
 
 		//! Retrieve a list of all available symbols (Functions, operators and constants)
-		Error listSymbols(std::vector<std::string> &syms);
+		Error listSymbols(std::vector<std::string> &syms) const;
 
-		std::vector<std::shared_ptr<AstSymbol>> getVariables();
+		std::vector<std::shared_ptr<AstSymbol>> getVariables() const;
 
-		std::shared_ptr<Context> getParent()
+		std::shared_ptr<Context> getParent() const
 		{
 			return _parent.lock();
 		}
 
 		//! returns the subcontext with the given name, nullptr if it does not exist
-		std::shared_ptr<Context> getChild(const std::string & name);
+		std::shared_ptr<Context> getChild(const std::string & name) const;
 
-		bool isGlobal()
+		bool isGlobal() const
 		{
 			return _isGlobal;
 		}

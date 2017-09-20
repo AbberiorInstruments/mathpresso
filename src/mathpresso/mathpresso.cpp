@@ -157,16 +157,16 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	Error Context::listSymbols(std::vector<std::string> &syms)
+	Error Context::listSymbols(std::vector<std::string> &syms) const
 	{
 		syms = _symbols->names();
 		return ErrorCode::kErrorOk;
 	}
 
-	std::vector<std::shared_ptr<AstSymbol>> Context::getVariables()
+	std::vector<std::shared_ptr<AstSymbol>> Context::getVariables() const
 	{
 		std::vector<std::shared_ptr<AstSymbol>> variables, tmp;
-		std::shared_ptr<Context> ctx = shared_from_this();
+		std::shared_ptr<const Context> ctx = shared_from_this();
 		do
 		{
 			tmp = ctx->_symbols->getVariables();
@@ -176,7 +176,7 @@ namespace mathpresso
 		return variables;
 	}
 
-	inline std::shared_ptr<Context> Context::getChild(const std::string & name)
+	std::shared_ptr<Context> Context::getChild(const std::string & name) const
 	{
 		auto it = _children.find(name);
 		return it == _children.end() ? nullptr : it->second;
@@ -600,6 +600,7 @@ namespace mathpresso
 			return tmpCtx;
 		}
 
+		// TODO: Should the resolve*-functions be simplified with template-magic, or a functor as parameter? They are the same, except for two lines...
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs, bool takesComplex)
 		{
 			std::shared_ptr<MpOperation> function(nullptr);
@@ -727,7 +728,6 @@ namespace mathpresso
 			{
 				ret.push_back(token);
 			}
-
 
 			return ret;
 		}

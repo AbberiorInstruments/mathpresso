@@ -341,7 +341,7 @@ namespace mathpresso
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs);
 
 		//! find all functions with a known name.
-		//! TODO: should be unnecessary.
+		//! TODO: should be unnecessary, used once, to check whether there is any Function with name
 		std::vector<std::shared_ptr<MpOperation>> resolveFunction(ContextPtr ctx, const std::string & nmae);
 
 		//! Get the Variable with the given name.
