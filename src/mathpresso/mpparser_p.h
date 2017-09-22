@@ -59,6 +59,7 @@ namespace mathpresso
 
 		Error parseProgram(std::shared_ptr<AstProgram> block);
 
+	private:
 		Error parseStatement(std::shared_ptr<AstBlock> block, uint32_t flags);
 		Error parseBlockOrStatement(std::shared_ptr<AstBlock> block);
 
@@ -71,8 +72,6 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
-
-	private:
 		std::shared_ptr<AstBuilder> _ast;
 		ErrorReporter* _errorReporter;
 		Tokenizer _tokenizer;

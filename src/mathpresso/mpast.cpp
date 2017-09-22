@@ -242,10 +242,10 @@ namespace mathpresso
 	// [mathpresso::AstVisitor - Construction / Destruction]
 	// ============================================================================
 
-	AstVisitor::AstVisitor()
+	AstVisitor::AstVisitor() noexcept
 	{
 	}
-	AstVisitor::~AstVisitor() {}
+	AstVisitor::~AstVisitor() noexcept {}
 
 	// ============================================================================
 	// [mathpresso::AstVisitor - OnNode]
@@ -279,14 +279,14 @@ namespace mathpresso
 	// [mathpresso::AstDump - Construction / Destruction]
 	// ============================================================================
 
-	AstDump::AstDump(StringBuilder& sb, const std::shared_ptr<const Symbols> syms)
+	AstDump::AstDump(StringBuilder& sb, const std::shared_ptr<const Symbols> syms) noexcept
 		: AstVisitor(),
 		_sb(sb),
 		_level(0),
 		_symbols(syms)
 	{
 	}
-	AstDump::~AstDump() {}
+	AstDump::~AstDump() noexcept {}
 
 	// ============================================================================
 	// [mathpresso::AstDump - OnNode]

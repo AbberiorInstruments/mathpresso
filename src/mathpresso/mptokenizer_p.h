@@ -150,7 +150,7 @@ namespace mathpresso
 		// [Reset]
 		// --------------------------------------------------------------------------
 
-		void reset()
+		void reset() noexcept
 		{
 			position = 0;
 			length = 0;
@@ -207,7 +207,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		Tokenizer(const char* s, size_t sLen)
+		Tokenizer(const char* s, size_t sLen) noexcept
 			: _p(s),
 			_start(s),
 			_end(s + sLen),
@@ -239,6 +239,7 @@ namespace mathpresso
 			_token.token = TokenType::kTokenInvalid;
 		}
 
+		// TODO: check whether those 2 are necessary:
 		//! Consume a token got by using peek() and call `peek()`.
 		//!
 		//! NOTE: Can be called only immediately after peek().

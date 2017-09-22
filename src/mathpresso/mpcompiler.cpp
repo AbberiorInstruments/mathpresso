@@ -123,6 +123,8 @@ namespace mathpresso
 	//! NOTE: use beginFunction() before and endFunction() after calling this.
 	void JitCompiler::compile(std::shared_ptr<AstBlock> node, std::shared_ptr<Context> ctx, uint32_t numSlots, bool b_complex)
 	{
+		beginFunction();
+
 		// Create Definitions for the Variables and add them as JitVar
 		varSlots = std::vector<JitVar>(numSlots);
 
@@ -172,6 +174,8 @@ namespace mathpresso
 
 		// Release the Space allocated for the variables
 		varSlots.clear();
+
+		endFunction();
 	}
 
 	JitVar JitCompiler::onNode(std::shared_ptr<AstNode> node)
@@ -245,8 +249,6 @@ namespace mathpresso
 			return getConstantD64(node->getValue<double>());
 	}
 
-
-
 	template<>
 	void JitCompiler::inlineCall<double, double>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
 	{
@@ -289,11 +291,6 @@ namespace mathpresso
 #endif // _REALREWORK
 	}
 
-	void JitCompiler::inlineCallDRetD(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
-	{
-		inlineCall<double, double>(dst, args, count, fn);
-	}
-
 	template<>
 	void JitCompiler::inlineCall<std::complex<double>, double>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
 	{
@@ -330,11 +327,6 @@ namespace mathpresso
 		cc->movapd(dst, ret);
 	}
 
-	void JitCompiler::inlineCallDRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
-	{
-		inlineCall<std::complex<double>, double>(dst, args, count, fn);
-	}
-
 	//! Calls a function with complex arguments and non-complex returns.
 	template<>
 	void JitCompiler::inlineCall<double, std::complex<double>>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
@@ -360,11 +352,6 @@ namespace mathpresso
 
 		ctx->setRet(0, dst);
 		ctx->setArg(0, dataPointerReg);
-	}
-
-	void JitCompiler::inlineCallCRetD(const X86Xmm& dst, const X86Xmm* args, const size_t count, void* fn)
-	{
-		inlineCall<double, std::complex<double>>(dst, args, count, fn);
 	}
 
 	template<>
@@ -395,11 +382,6 @@ namespace mathpresso
 		ctx->setArg(1, dataPointerReg);
 
 		cc->movapd(dst, stack);
-	}
-
-	void JitCompiler::inlineCallCRetC(const X86Xmm& dst, const X86Xmm* args, size_t count, void* fn)
-	{
-		inlineCall<std::complex<double>, std::complex<double>>(dst, args, count, fn);
 	}
 
 	void JitCompiler::prepareConstPool()
@@ -491,9 +473,7 @@ namespace mathpresso
 		if ((options & kOptionDisableSSE4_1) != 0)
 			jitCompiler.enableSSE4_1 = false;
 
-		jitCompiler.beginFunction();
 		jitCompiler.compile(ast->programNode(), ctx, ast->numSlots(), b_complex);
-		jitCompiler.endFunction();
 
 		c.finalize();
 

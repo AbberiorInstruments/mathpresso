@@ -245,8 +245,6 @@ namespace mathpresso
 			return s == _name;
 		}
 
-		//! Get symbol name length.
-		size_t getLength() const { return _name.length(); }
 		//! Get symbol name.
 		std::string getName() const { return _name; }
 
@@ -381,8 +379,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstNode(AstNodeType nodeType, uint32_t length = 0)	: 
-			_parent(),
+		AstNode(AstNodeType nodeType, uint32_t length = 0) noexcept
+			:_parent(),
 			_children(length, nullptr),
 			_mpOp(nullptr),
 			_opName(),
@@ -392,7 +390,7 @@ namespace mathpresso
 		{
 		}
 
-		virtual ~AstNode()
+		virtual ~AstNode() noexcept
 		{
 		}
 
@@ -414,7 +412,7 @@ namespace mathpresso
 		//! Get children array.
 		std::vector<std::shared_ptr<AstNode>> getChildren() const { return _children; }
 		//! Get length of the children array.
-		virtual size_t getLength() const { return _children.size(); }
+		size_t getLength() const { return _children.size(); }
 
 		//! Get node type.
 		AstNodeType getNodeType() const { return _nodeType; }
@@ -500,7 +498,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstBlock(AstNodeType nodeType = AstNodeType::kAstNodeBlock)
+		AstBlock(AstNodeType nodeType = AstNodeType::kAstNodeBlock) noexcept
 			: AstNode(nodeType)
 		{
 		}
@@ -557,7 +555,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstUnary(AstNodeType nodeType)
+		AstUnary(AstNodeType nodeType) noexcept
 			: AstNode(nodeType, 1)
 		{
 		}
@@ -582,7 +580,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstBinary(AstNodeType nodeType)
+		AstBinary(AstNodeType nodeType) noexcept
 			: AstNode(nodeType, 2)
 		{
 		}
@@ -612,7 +610,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstTernary(AstNodeType nodeType)
+		AstTernary(AstNodeType nodeType) noexcept
 			: AstNode(nodeType, 3)
 		{
 		}
@@ -638,7 +636,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstProgram()
+		AstProgram() noexcept
 			: AstBlock(AstNodeType::kAstNodeProgram)
 		{
 		}
@@ -658,13 +656,13 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstVarDecl()
+		AstVarDecl() noexcept
 			: AstUnary(AstNodeType::kAstNodeVarDecl),
 			_symbol(nullptr)
 		{
 		}
 
-		virtual ~AstVarDecl()
+		virtual ~AstVarDecl() noexcept
 		{
 			std::shared_ptr<AstSymbol> sym = getSymbol();
 			if (sym != nullptr)
@@ -700,7 +698,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstVar()
+		AstVar() noexcept
 			: AstNode(AstNodeType::kAstNodeVar),
 			_symbol(nullptr)
 		{
@@ -733,13 +731,13 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstImm(double value = 0.0)
+		AstImm(double value = 0.0) noexcept
 			: AstNode(AstNodeType::kAstNodeImm),
 			_value({ value, 0 })
 		{
 		}
 
-		AstImm(std::complex<double> value)
+		AstImm(std::complex<double> value) noexcept
 			: AstNode(AstNodeType::kAstNodeImm),
 			_value(value)
 		{
@@ -786,7 +784,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstUnaryOp()
+		AstUnaryOp() noexcept
 			: AstUnary(AstNodeType::kAstNodeUnaryOp)
 		{
 		}
@@ -801,12 +799,12 @@ namespace mathpresso
 	{
 		MATHPRESSO_NO_COPY(AstBinaryOp);
 
-		AstBinaryOp() 
+		AstBinaryOp() noexcept
 			: AstBinary(AstNodeType::kAstNodeBinaryOp)
 		{
 		}
 
-		virtual ~AstBinaryOp()
+		virtual ~AstBinaryOp() noexcept
 		{
 			if (_mpOp && (_mpOp->flags() & MpOperation::IsAssignment) && hasLeft())
 			{
@@ -833,8 +831,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstTernaryOp() :
-			AstTernary(AstNodeType::kAstNodeTernaryOp)
+		AstTernaryOp() noexcept
+			: AstTernary(AstNodeType::kAstNodeTernaryOp)
 		{
 		}
 
@@ -852,7 +850,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstCall()
+		AstCall() noexcept
 			: AstBlock(AstNodeType::kAstNodeCall),
 			_symbol(nullptr)
 		{
@@ -884,8 +882,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstVisitor();
-		virtual ~AstVisitor();
+		AstVisitor() noexcept;
+		virtual ~AstVisitor() noexcept;
 
 		// --------------------------------------------------------------------------
 		// [OnNode]
@@ -920,8 +918,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstDump(StringBuilder& sb, const std::shared_ptr<const Symbols> syms);
-		virtual ~AstDump();
+		AstDump(StringBuilder& sb, const std::shared_ptr<const Symbols> syms) noexcept;
+		virtual ~AstDump() noexcept;
 
 		// --------------------------------------------------------------------------
 		// [OnNode]

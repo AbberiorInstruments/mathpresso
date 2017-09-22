@@ -25,19 +25,25 @@ namespace mathpresso
 	struct JitVar
 	{
 
-		JitVar() : op(), isReadOnly(false)
+		JitVar() noexcept: 
+			op(), 
+			isReadOnly(false)
 		{
 		}
 
-		JitVar(asmjit::Operand op, bool isROnly) : op(op), isReadOnly(isROnly)
+		JitVar(asmjit::Operand op, bool isROnly) noexcept:
+			op(op),
+			isReadOnly(isROnly)
 		{
 		}
 
-		JitVar(const JitVar& other) : op(other.op), isReadOnly(other.isRO())
+		JitVar(const JitVar& other) noexcept:
+			op(other.op),
+			isReadOnly(other.isRO())
 		{
 		}
 
-		~JitVar()
+		~JitVar() noexcept
 		{
 		}
 
@@ -133,22 +139,19 @@ namespace mathpresso
 
 	struct JitCompiler
 	{
-		JitCompiler(asmjit::X86Compiler* cc, std::shared_ptr<Context> ctx)
-			: cc(cc),
+		JitCompiler(asmjit::X86Compiler* cc, std::shared_ptr<Context> ctx) noexcept:
+			cc(cc),
+			enableSSE4_1(asmjit::CpuInfo::getHost().hasFeature(asmjit::CpuInfo::kX86FeatureSSE4_1)),
 			varSlots({}),
 			functionBody(nullptr),
 			constPool(&cc->_cbDataZone),
 			_shadowContext(ctx)
 		{
-			enableSSE4_1 = asmjit::CpuInfo::getHost().hasFeature(asmjit::CpuInfo::kX86FeatureSSE4_1);
 		}
 
-		~JitCompiler() {}
+		~JitCompiler() noexcept {}
 
-		// Function Generator.
-		void beginFunction();
-		void endFunction();
-
+		//TODO: check the following functions, whether they are all necessary
 		// Variable Management.
 		JitVar copyVar(const JitVar& other, bool isRO);
 		JitVar writableVar(const JitVar& other);
@@ -163,21 +166,11 @@ namespace mathpresso
 		void compile(std::shared_ptr<AstBlock> node, std::shared_ptr<Context> rootContext, uint32_t numSlots, bool b_complex);
 
 		JitVar onNode(std::shared_ptr<AstNode> node);
-		JitVar onBlock(std::shared_ptr<AstBlock> node);
-		JitVar onVar(std::shared_ptr<AstVar> node);
-		JitVar onImm(std::shared_ptr<AstImm> node);
-
-		// Helpers.
-		void inlineCallDRetD(const asmjit::X86Xmm& dst, const asmjit::X86Xmm* args, size_t count, void* fn);
-		void inlineCallDRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
-		void inlineCallCRetD(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
-		void inlineCallCRetC(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
 
 		template<typename RET, typename PARAMS>
 		void inlineCall(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
 
 		// Constants.
-		void prepareConstPool();
 		JitVar getConstantU64(uint64_t value);
 		JitVar getConstantU64(uint64_t real, uint64_t imag);
 		JitVar getConstantU64AsPD(uint64_t value);
@@ -191,6 +184,17 @@ namespace mathpresso
 		std::vector<JitVar> varSlots;
 
 	private:
+
+		// Function Generator.
+		void beginFunction();
+		void endFunction();
+
+		JitVar onBlock(std::shared_ptr<AstBlock> node);
+		JitVar onVar(std::shared_ptr<AstVar> node);
+		JitVar onImm(std::shared_ptr<AstImm> node);
+
+		void prepareConstPool();
+
 		asmjit::X86Gp resultAddress;
 		asmjit::X86Gp variablesAddress;
 
