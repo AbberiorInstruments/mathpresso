@@ -204,8 +204,10 @@ namespace mathpresso
 		op_ptr_type findFunction(const std::string & name, size_t nargs, bool paramsAreComplex) const;
 
 		std::vector<op_ptr_type> findFunction(const std::string & name) const;
+		bool existsFunction(const std::string & name) const;
 
 		var_ptr_type findVariable(const std::string & name) const;
+
 
 		//! Makes sure that functions with the same name have to have the 
 		//! precedence and association.
@@ -340,9 +342,7 @@ namespace mathpresso
 		//! find one function with the given name and number of arguments.
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs);
 
-		//! find all functions with a known name.
-		//! TODO: should be unnecessary, used once, to check whether there is any Function with name
-		std::vector<std::shared_ptr<MpOperation>> resolveFunction(ContextPtr ctx, const std::string & nmae);
+		bool existsFunction(ContextPtr ctx, const std::string & nmae);
 
 		//! Get the Variable with the given name.
 		std::shared_ptr<AstSymbol> resolveVariable(ContextPtr ctx, const std::string & name, ContextPtr * ctxOut = nullptr);

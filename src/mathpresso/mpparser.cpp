@@ -365,8 +365,7 @@ namespace mathpresso
 						newNode->setPosition(token.getPosAsUInt());
 						sym->incUsedCount();
 					}
-					else if (resolver::resolveFunction(_shadowContext, symbolName).size() != 0)
-					//else if (token.token == TokenType::kTokenRParen)
+					else if (resolver::existsFunction(_shadowContext, symbolName))
 					{
 						// Will be parsed by `parseCall()` again.
 						_tokenizer.set(&token);

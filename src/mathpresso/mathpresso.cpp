@@ -470,6 +470,11 @@ namespace mathpresso
 			return it->second;
 	}
 
+	bool Symbols::existsFunction(const std::string & name) const
+	{
+		return _operations.find(name) != _operations.end();
+	}
+
 	Symbols::op_ptr_type Symbols::findFunction(const std::string & name, size_t nargs, bool paramsAreComplex) const
 	{
 		auto it = _operations.find(name);
@@ -579,6 +584,7 @@ namespace mathpresso
 
 	namespace resolver
 	{
+		//! Return the context or nullptr, if there is no such context.
 		//! We assume, that we get a Qualified a Context-qualifiers without any Symbol or FunctionName.
 		ContextPtr resolveContext(ContextPtr ctx, std::vector<std::string> name)
 		{
@@ -600,7 +606,7 @@ namespace mathpresso
 			return tmpCtx;
 		}
 
-		// TODO: Should the resolve*-functions be simplified with template-magic, or a functor as parameter? They are the same, except for two lines...
+		// TODO: Should the following functions be simplified with template-magic, or a functor as parameter? They are the same, except for two lines...
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs, bool takesComplex)
 		{
 			std::shared_ptr<MpOperation> function(nullptr);
@@ -627,34 +633,6 @@ namespace mathpresso
 			return function;
 		}
 
-		std::vector<std::shared_ptr<MpOperation>> resolveFunction(ContextPtr ctx, const std::string & name)
-		{
-			std::vector<std::shared_ptr<MpOperation>> functions, tmp;
-			auto splitName(separateName(name));
-			ContextPtr tmpCtx(ctx);
-			if (splitName.size() > 1)
-			{
-				std::string varName(splitName.back());
-				splitName.pop_back();
-				tmpCtx = resolveContext(ctx, splitName);
-				if (tmpCtx)
-				{
-					tmp = tmpCtx->_symbols->findFunction(varName);
-					functions.insert(functions.begin(), tmp.begin(), tmp.end());
-				}
-			}
-			else
-			{
-				do
-				{
-					tmp = tmpCtx->_symbols->findFunction(name);
-					functions.insert(functions.begin(), tmp.begin(), tmp.end());
-				} while ((tmpCtx = tmpCtx->getParent()));
-			}
-
-			return functions;
-		}
-
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs)
 		{
 			std::shared_ptr<MpOperation> function(nullptr);
@@ -679,6 +657,33 @@ namespace mathpresso
 			}
 
 			return function;
+		}
+
+		bool existsFunction(ContextPtr ctx, const std::string & name)
+		{
+
+			bool functionExists(false);
+			auto splitName(separateName(name));
+			ContextPtr tmpCtx(ctx);
+			if (splitName.size() > 1)
+			{
+				std::string varName(splitName.back());
+				splitName.pop_back();
+				tmpCtx = resolveContext(ctx, splitName);
+				if (tmpCtx)
+				{
+					functionExists = tmpCtx->_symbols->existsFunction(varName);
+				}
+			}
+			else
+			{
+				do
+				{
+					functionExists = tmpCtx->_symbols->existsFunction(name);
+				} while (!functionExists && (tmpCtx = tmpCtx->getParent()));
+			}
+
+			return functionExists;
 		}
 
 		std::shared_ptr<AstSymbol> resolveVariable(ContextPtr ctx, const std::string & name, ContextPtr * contextOut)
