@@ -381,9 +381,9 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstNode(AstNodeType nodeType, std::vector<std::shared_ptr<AstNode>> children = {}, uint32_t length = 0)	: 
+		AstNode(AstNodeType nodeType, uint32_t length = 0)	: 
 			_parent(),
-			_children(children),
+			_children(length, nullptr),
 			_mpOp(nullptr),
 			_opName(),
 			_nodeType(nodeType),
@@ -558,7 +558,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstUnary(AstNodeType nodeType)
-			: AstNode(nodeType, { nullptr }, 1)
+			: AstNode(nodeType, 1)
 		{
 		}
 
@@ -583,7 +583,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstBinary(AstNodeType nodeType)
-			: AstNode(nodeType, { nullptr, nullptr }, 2)
+			: AstNode(nodeType, 2)
 		{
 		}
 
@@ -613,7 +613,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstTernary(AstNodeType nodeType)
-			: AstNode(nodeType, { nullptr, nullptr, nullptr }, 3)
+			: AstNode(nodeType, 3)
 		{
 		}
 
