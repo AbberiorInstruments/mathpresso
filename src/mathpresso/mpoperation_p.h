@@ -8,7 +8,7 @@ namespace mathpresso
 	class MpOperationIsFinite : public MpOperationFunc<T, T>
 	{
 	public:
-		MpOperationIsFinite();
+		MpOperationIsFinite() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -17,7 +17,7 @@ namespace mathpresso
 	class MpOperationIsInfinite : public MpOperationFunc<T, T>
 	{
 	public:
-		MpOperationIsInfinite();
+		MpOperationIsInfinite() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -26,7 +26,7 @@ namespace mathpresso
 	class MpOperationIsNan : public MpOperationFunc<T, T>
 	{
 	public:
-		MpOperationIsNan();
+		MpOperationIsNan() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -34,7 +34,7 @@ namespace mathpresso
 	class MpOperationGetReal : public MpOperationFunc<double, std::complex<double>>
 	{
 	public:
-		MpOperationGetReal();
+		MpOperationGetReal() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -42,7 +42,7 @@ namespace mathpresso
 	class MpOperationGetImag : public MpOperationFunc<double, std::complex<double>>
 	{
 	public:
-		MpOperationGetImag();
+		MpOperationGetImag() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -50,7 +50,7 @@ namespace mathpresso
 	class MpOperationSqrt : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationSqrt();
+		MpOperationSqrt() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -59,7 +59,7 @@ namespace mathpresso
 	class MpOperationNeg : public MpOperationFunc<T, T>
 	{
 	public:
-		MpOperationNeg();
+		MpOperationNeg() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	protected:
 		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
@@ -70,7 +70,7 @@ namespace mathpresso
 	class MpOperationNot : public MpOperationFunc<T, T>
 	{
 	public:
-		MpOperationNot();
+		MpOperationNot() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -78,7 +78,7 @@ namespace mathpresso
 	class MpOperationConjug :public MpOperationFunc<std::complex<double>, std::complex<double>>
 	{
 	public:
-		MpOperationConjug();
+		MpOperationConjug() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	private:
 		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
@@ -89,7 +89,7 @@ namespace mathpresso
 	class MpOperationRecip :public MpOperationFunc<T,T>
 	{
 	public:
-		MpOperationRecip();
+		MpOperationRecip() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -97,7 +97,7 @@ namespace mathpresso
 	class MpOperationSignBit : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationSignBit();
+		MpOperationSignBit() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -105,7 +105,7 @@ namespace mathpresso
 	class MpOperationCopySign : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationCopySign();
+		MpOperationCopySign() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -114,7 +114,7 @@ namespace mathpresso
 	class MpOperationAvg : public MpOperationFunc<T,T>
 	{
 	public:
-		MpOperationAvg();
+		MpOperationAvg() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -122,7 +122,7 @@ namespace mathpresso
 	class MpOperationAbs : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationAbs();
+		MpOperationAbs() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -130,7 +130,7 @@ namespace mathpresso
 	class MpOperationRound : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationRound();
+		MpOperationRound() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	protected:
 		std::string description_ = "Rounds *.5 towards infinity.";
@@ -140,7 +140,7 @@ namespace mathpresso
 	class MpOperationRoundEven : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationRoundEven();
+		MpOperationRoundEven() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	protected:
 		std::string description_ = "Rounds *.5 towards nearest even integer.";
@@ -150,7 +150,7 @@ namespace mathpresso
 	class MpOperationTrunc : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationTrunc();
+		MpOperationTrunc() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -158,7 +158,7 @@ namespace mathpresso
 	class MpOperationFrac : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationFrac();
+		MpOperationFrac() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -166,7 +166,7 @@ namespace mathpresso
 	class MpOperationFloor : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationFloor();
+		MpOperationFloor() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -174,7 +174,7 @@ namespace mathpresso
 	class MpOperationcCeil : public MpOperationFunc<double, double>
 	{
 	public:
-		MpOperationcCeil();
+		MpOperationcCeil() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -183,7 +183,7 @@ namespace mathpresso
 	class MpOperationAdd : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationAdd();
+		MpOperationAdd() noexcept;
 
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
@@ -195,7 +195,7 @@ namespace mathpresso
 	class MpOperationSub : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationSub();
+		MpOperationSub() noexcept;
 
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
@@ -207,7 +207,7 @@ namespace mathpresso
 	class MpOperationMul : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationMul();
+		MpOperationMul() noexcept;
 
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
@@ -219,7 +219,7 @@ namespace mathpresso
 	class MpOperationDiv : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationDiv();
+		MpOperationDiv() noexcept;
 
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
@@ -230,8 +230,8 @@ namespace mathpresso
 	class MpOperationMin : public MpOperationBinary<double>
 	{
 	public:
-		MpOperationMin() :
-			MpOperationBinary<double>(Signature(2), MpOperation::None, 0)
+		MpOperationMin() noexcept
+			: MpOperationBinary<double>(Signature(2), MpOperation::None, 0)
 		{
 		}
 
@@ -244,8 +244,8 @@ namespace mathpresso
 	class MpOperationMax : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationMax() :
-			MpOperationBinary<double>(Signature(2), MpOperation::None, 0)
+		MpOperationMax() noexcept
+			: MpOperationBinary<double>(Signature(2), MpOperation::None, 0)
 		{
 		}
 
@@ -259,7 +259,7 @@ namespace mathpresso
 	class MpOperationEq : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationEq();
+		MpOperationEq() noexcept;
 
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
@@ -271,7 +271,7 @@ namespace mathpresso
 	class MpOperationNe : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationNe();
+		MpOperationNe() noexcept;
 
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
@@ -282,8 +282,8 @@ namespace mathpresso
 	class MpOperationLt : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationLt() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
+		MpOperationLt() noexcept
+			: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
 		{
 		}
 
@@ -296,8 +296,8 @@ namespace mathpresso
 	class MpOperationLe : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationLe() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
+		MpOperationLe() noexcept
+			: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
 		{
 		}
 
@@ -310,8 +310,8 @@ namespace mathpresso
 	class MpOperationGt : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationGt() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
+		MpOperationGt() noexcept
+			: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
 		{
 		}
 
@@ -324,8 +324,8 @@ namespace mathpresso
 	class MpOperationGe : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationGe() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
+		MpOperationGe()  noexcept
+			: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
 		{
 		}
 
@@ -338,8 +338,8 @@ namespace mathpresso
 	class MpOperationModulo : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationModulo() :
-			MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 5)
+		MpOperationModulo() noexcept
+			: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 5)
 		{
 		}
 
@@ -353,7 +353,7 @@ namespace mathpresso
 	class MpOperationTernary : public MpOperation
 	{
 	public:
-		MpOperationTernary();
+		MpOperationTernary() noexcept;
 
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
@@ -366,7 +366,7 @@ namespace mathpresso
 	class MpOperationVarDeclaration : public MpOperation
 	{
 	public:
-		MpOperationVarDeclaration();
+		MpOperationVarDeclaration() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
 	};
@@ -376,7 +376,7 @@ namespace mathpresso
 	class MpOperationAssignment : public MpOperation
 	{
 	public:
-		MpOperationAssignment();
+		MpOperationAssignment() noexcept;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
 	};

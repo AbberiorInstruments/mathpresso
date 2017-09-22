@@ -222,12 +222,12 @@ namespace mathpresso
 		return 0;
 	}
 
-	Signature::Signature(size_t nargs, type paramType /*= type::real*/)
+	Signature::Signature(size_t nargs, type paramType) noexcept
 	{
 		init(paramType, { nargs, { paramType, "" } });
 	}
 
-	Signature::Signature(type retType, std::vector<param> params)
+	Signature::Signature(type retType, std::vector<param> params) noexcept
 	{
 		init(retType, params);
 	}
@@ -277,29 +277,29 @@ namespace mathpresso
 	}
 
 	template<>
-	MpOperationFunc<double, double>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
-		MpOperation(Signature(numargs, Signature::type::real), flags, priority),
+	MpOperationFunc<double, double>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority)  noexcept
+		: MpOperation(Signature(numargs, Signature::type::real), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}
 
 	template<>
-	MpOperationFunc<std::complex<double>, double>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
-		MpOperation(Signature(Signature::type::complex, { numargs,{ Signature::type::real } }), flags, priority),
+	MpOperationFunc<std::complex<double>, double>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) noexcept
+		: MpOperation(Signature(Signature::type::complex, { numargs,{ Signature::type::real } }), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}
 
 	template<>
-	MpOperationFunc<double, std::complex<double>>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
-		MpOperation(Signature(Signature::type::real, { numargs, {Signature::type::complex} }), flags, priority),
+	MpOperationFunc<double, std::complex<double>>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) noexcept
+		: MpOperation(Signature(Signature::type::real, { numargs, {Signature::type::complex} }), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}
 
 	template<>
-	MpOperationFunc<std::complex<double>, std::complex<double>>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) :
-		MpOperation(Signature(numargs, Signature::type::complex), flags, priority),
+	MpOperationFunc<std::complex<double>, std::complex<double>>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) noexcept
+		: MpOperation(Signature(numargs, Signature::type::complex), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}
@@ -474,13 +474,13 @@ namespace mathpresso
 		return std::complex<double>(std::isfinite(args[0].real()) ? 1.0 : 0.0, std::isfinite(args[0].imag()) ? 1.0 : 0.0);
 	}
 	template<>
-	MpOperationIsFinite<double>::MpOperationIsFinite() :
-		MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(isfiniteRR))
+	MpOperationIsFinite<double>::MpOperationIsFinite() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(isfiniteRR))
 	{
 	}
 	template<>
-	MpOperationIsFinite<std::complex<double>>::MpOperationIsFinite() :
-		MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(isfiniteCC))
+	MpOperationIsFinite<std::complex<double>>::MpOperationIsFinite() noexcept
+		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(isfiniteCC))
 	{
 	}
 
@@ -513,13 +513,13 @@ namespace mathpresso
 		return std::complex<double>(std::isinf(args[0].real()) ? 1.0 : 0.0, std::isinf(args[0].imag()) ? 1.0 : 0.0);
 	}
 	template<>
-	MpOperationIsInfinite<double>::MpOperationIsInfinite() :
-		MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(isinfRR))
+	MpOperationIsInfinite<double>::MpOperationIsInfinite() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(isinfRR))
 	{
 	}
 	template<>
-	MpOperationIsInfinite<std::complex<double>>::MpOperationIsInfinite() :
-		MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(isinfCC))
+	MpOperationIsInfinite<std::complex<double>>::MpOperationIsInfinite() noexcept
+		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(isinfCC))
 	{
 	}
 
@@ -552,13 +552,13 @@ namespace mathpresso
 		return std::complex<double>(std::isnan(args[0].real()) ? 1.0 : 0.0, std::isnan(args[0].imag()) ? 1.0 : 0.0);
 	}
 	template<>
-	MpOperationIsNan<double>::MpOperationIsNan() :
-		MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(isnanRR))
+	MpOperationIsNan<double>::MpOperationIsNan() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(isnanRR))
 	{
 	}
 	template<>
-	MpOperationIsNan<std::complex<double>>::MpOperationIsNan() :
-		MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(isnanCC))
+	MpOperationIsNan<std::complex<double>>::MpOperationIsNan() noexcept
+		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(isnanCC))
 	{
 	}
 
@@ -588,8 +588,8 @@ namespace mathpresso
 		return args->real();
 	}
 
-	MpOperationGetReal::MpOperationGetReal() :
-		MpOperationFunc<double, std::complex<double>>(MpOperation::None, 1, VPTR(realCR))
+	MpOperationGetReal::MpOperationGetReal() noexcept
+		: MpOperationFunc<double, std::complex<double>>(MpOperation::None, 1, VPTR(realCR))
 	{
 	}
 
@@ -616,8 +616,8 @@ namespace mathpresso
 		return args->imag();
 	}
 
-	MpOperationGetImag::MpOperationGetImag() :
-		MpOperationFunc<double, std::complex<double>>(MpOperation::None, 1, VPTR(imagCR))
+	MpOperationGetImag::MpOperationGetImag() noexcept
+		: MpOperationFunc<double, std::complex<double>>(MpOperation::None, 1, VPTR(imagCR))
 	{
 	}
 
@@ -632,8 +632,8 @@ namespace mathpresso
 	}
 
 	// Square root
-	MpOperationSqrt::MpOperationSqrt() :
-		MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(sqrtRR))
+	MpOperationSqrt::MpOperationSqrt() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(sqrtRR))
 	{
 	}
 
@@ -655,13 +655,13 @@ namespace mathpresso
 	}
 
 	template<>
-	MpOperationNeg<double>::MpOperationNeg() :
-		MpOperationFunc<double, double>(MpOperation::RighttoLeft, 1, VPTR(negRR), 3)
+	MpOperationNeg<double>::MpOperationNeg() noexcept
+		: MpOperationFunc<double, double>(MpOperation::RighttoLeft, 1, VPTR(negRR), 3)
 	{
 	}
 	template<>
-	MpOperationNeg<std::complex<double>>::MpOperationNeg() :
-		MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::RighttoLeft, 1, VPTR(negCC), 3)
+	MpOperationNeg<std::complex<double>>::MpOperationNeg() noexcept
+		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::RighttoLeft, 1, VPTR(negCC), 3)
 	{
 	}
 
@@ -712,13 +712,13 @@ namespace mathpresso
 	}
 
 	template<>
-	MpOperationNot<double>::MpOperationNot() :
-		MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(notRR), 3)
+	MpOperationNot<double>::MpOperationNot() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(notRR), 3)
 	{
 	}
 	template<>
-	MpOperationNot<std::complex<double>>::MpOperationNot() :
-		MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(notCC), 3)
+	MpOperationNot<std::complex<double>>::MpOperationNot() noexcept
+		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(notCC), 3)
 	{
 	}
 
@@ -743,9 +743,13 @@ namespace mathpresso
 	}
 
 	// Conjugate
-	std::complex<double> conjugCC(std::complex<double>* args) { return std::complex<double>(args->real(), -args->imag()); }
+	std::complex<double> conjugCC(std::complex<double>* args) 
+	{
+		return std::complex<double>(args->real(), -args->imag()); 
+	}
 
-	MpOperationConjug::MpOperationConjug() : MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(conjugCC))
+	MpOperationConjug::MpOperationConjug() noexcept
+		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(conjugCC))
 	{
 	}
 
@@ -794,11 +798,13 @@ namespace mathpresso
 	}
 
 	template<>
-	MpOperationRecip<double>::MpOperationRecip() : MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(recipRR))
+	MpOperationRecip<double>::MpOperationRecip() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(recipRR))
 	{
 	}
 	template<>
-	MpOperationRecip<std::complex<double>>::MpOperationRecip() : MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(recipCC))
+	MpOperationRecip<std::complex<double>>::MpOperationRecip() noexcept
+		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(recipCC))
 	{
 	}
 
@@ -832,7 +838,8 @@ namespace mathpresso
 	}
 
 	// sign bit
-	MpOperationSignBit::MpOperationSignBit() : MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(signbitRR))
+	MpOperationSignBit::MpOperationSignBit() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(signbitRR))
 	{
 	}
 
@@ -847,7 +854,8 @@ namespace mathpresso
 	}
 
 	// Copy sign
-	MpOperationCopySign::MpOperationCopySign() : MpOperationFunc<double, double>(MpOperation::None, 2, VPTR(copysignRR))
+	MpOperationCopySign::MpOperationCopySign() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 2, VPTR(copysignRR))
 	{
 	}
 
@@ -870,11 +878,13 @@ namespace mathpresso
 	}
 
 	template<>
-	MpOperationAvg<double>::MpOperationAvg() : MpOperationFunc<double, double>(MpOperation::None, 2, VPTR(avgRR))
+	MpOperationAvg<double>::MpOperationAvg() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 2, VPTR(avgRR))
 	{
 	}
 	template<>
-	MpOperationAvg<std::complex<double>>::MpOperationAvg() : MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 2, VPTR(avgCC))
+	MpOperationAvg<std::complex<double>>::MpOperationAvg() noexcept
+		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 2, VPTR(avgCC))
 	{
 	}
 
@@ -931,7 +941,8 @@ namespace mathpresso
 
 
 	// Absolute
-	MpOperationAbs::MpOperationAbs() : MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(absRR))
+	MpOperationAbs::MpOperationAbs() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(absRR))
 	{
 	}
 
@@ -949,7 +960,8 @@ namespace mathpresso
 
 
 	// round
-	MpOperationRound::MpOperationRound() : MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(roundRR))
+	MpOperationRound::MpOperationRound() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(roundRR))
 	{
 	}
 
@@ -999,7 +1011,8 @@ namespace mathpresso
 	}
 
 	// roundeven
-	MpOperationRoundEven::MpOperationRoundEven() :MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(roundevenRR))
+	MpOperationRoundEven::MpOperationRoundEven() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(roundevenRR))
 	{
 	}
 
@@ -1035,7 +1048,8 @@ namespace mathpresso
 	}
 
 	// trunc
-	MpOperationTrunc::MpOperationTrunc() :MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(truncRR))
+	MpOperationTrunc::MpOperationTrunc() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(truncRR))
 	{
 	}
 
@@ -1078,7 +1092,8 @@ namespace mathpresso
 	}
 
 	// frac
-	MpOperationFrac::MpOperationFrac() :MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(fracRR))
+	MpOperationFrac::MpOperationFrac() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(fracRR))
 	{
 	}
 
@@ -1123,7 +1138,8 @@ namespace mathpresso
 	}
 
 	// floor
-	MpOperationFloor::MpOperationFloor() :MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(floorRR))
+	MpOperationFloor::MpOperationFloor() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(floorRR))
 	{
 	}
 
@@ -1166,7 +1182,8 @@ namespace mathpresso
 
 
 	// ceil
-	MpOperationcCeil::MpOperationcCeil() : MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(ceilRR))
+	MpOperationcCeil::MpOperationcCeil() noexcept
+		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(ceilRR))
 	{
 	}
 
@@ -1328,13 +1345,14 @@ namespace mathpresso
 	}
 
 	template<>
-	MpOperationAdd<double>::MpOperationAdd() :
-		MpOperationBinary<double>(Signature(2), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 6)
+	MpOperationAdd<double>::MpOperationAdd() noexcept
+		: MpOperationBinary<double>(Signature(2), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 6)
 	{
 	}
+
 	template<>
-	MpOperationAdd<std::complex<double>>::MpOperationAdd() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 6)
+	MpOperationAdd<std::complex<double>>::MpOperationAdd() noexcept
+		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 6)
 	{
 	}
 
@@ -1377,13 +1395,13 @@ namespace mathpresso
 
 	// Subtraction
 	template<>
-	MpOperationSub<double>::MpOperationSub() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::NopIfRZero, 6)
+	MpOperationSub<double>::MpOperationSub() noexcept
+		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::NopIfRZero, 6)
 	{
 	}
 	template<>
-	MpOperationSub<std::complex<double>>::MpOperationSub() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfRZero, 6)
+	MpOperationSub<std::complex<double>>::MpOperationSub() noexcept
+		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfRZero, 6)
 	{
 	}
 
@@ -1425,13 +1443,13 @@ namespace mathpresso
 
 	// Multiplication
 	template<>
-	MpOperationMul<double>::MpOperationMul() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 5)
+	MpOperationMul<double>::MpOperationMul() noexcept
+		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 5)
 	{
 	}
 	template<>
-	MpOperationMul<std::complex<double>>::MpOperationMul() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 5)
+	MpOperationMul<std::complex<double>>::MpOperationMul() noexcept
+		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 5)
 	{
 	}
 
@@ -1482,13 +1500,13 @@ namespace mathpresso
 
 	// Division
 	template<>
-	MpOperationDiv<double>::MpOperationDiv() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::NopIfLOne, 5)
+	MpOperationDiv<double>::MpOperationDiv() noexcept
+		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::NopIfLOne, 5)
 	{
 	}
 	template<>
-	MpOperationDiv<std::complex<double>>::MpOperationDiv() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfLOne, 5)
+	MpOperationDiv<std::complex<double>>::MpOperationDiv() noexcept
+		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfLOne, 5)
 	{
 	}
 	template<>
@@ -1580,13 +1598,13 @@ namespace mathpresso
 
 	// Equality
 	template<>
-	MpOperationEq<double>::MpOperationEq() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ, 9)
+	MpOperationEq<double>::MpOperationEq() noexcept
+		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 	template<>
-	MpOperationEq<std::complex<double>>::MpOperationEq() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
+	MpOperationEq<std::complex<double>>::MpOperationEq() noexcept
+		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 
@@ -1630,13 +1648,13 @@ namespace mathpresso
 
 	// Inequality
 	template<>
-	MpOperationNe<double>::MpOperationNe() :
-		MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ, 9)
+	MpOperationNe<double>::MpOperationNe() noexcept
+		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 	template<>
-	MpOperationNe<std::complex<double>>::MpOperationNe() :
-		MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
+	MpOperationNe<std::complex<double>>::MpOperationNe() noexcept
+		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 
@@ -1829,11 +1847,13 @@ namespace mathpresso
 	// Ternary operation
 
 	template<>
-	MpOperationTernary<double>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::real), MpOperation::RighttoLeft, 15)
+	MpOperationTernary<double>::MpOperationTernary() noexcept
+		: MpOperation(Signature(3, Signature::type::real), MpOperation::RighttoLeft, 15)
 	{
 	}
 	template<>
-	MpOperationTernary<std::complex<double>>::MpOperationTernary() : MpOperation(Signature(3, Signature::type::complex), MpOperation::RighttoLeft, 15)
+	MpOperationTernary<std::complex<double>>::MpOperationTernary() noexcept
+		: MpOperation(Signature(3, Signature::type::complex), MpOperation::RighttoLeft, 15)
 	{
 	}
 
@@ -1931,11 +1951,13 @@ namespace mathpresso
 
 	// Variable declaration
 	template<>
-	MpOperationVarDeclaration<double>::MpOperationVarDeclaration() : MpOperation(Signature(1, Signature::type::real), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
+	MpOperationVarDeclaration<double>::MpOperationVarDeclaration() noexcept
+		: MpOperation(Signature(1, Signature::type::real), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
 	{
 	}
 	template<>
-	MpOperationVarDeclaration<std::complex<double>>::MpOperationVarDeclaration() : MpOperation(Signature(1, Signature::type::complex), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
+	MpOperationVarDeclaration<std::complex<double>>::MpOperationVarDeclaration() noexcept
+		: MpOperation(Signature(1, Signature::type::complex), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
 	{
 	}
 
@@ -1993,11 +2015,13 @@ namespace mathpresso
 
 	// Assignment
 	template<>
-	MpOperationAssignment<double>::MpOperationAssignment() : MpOperation(Signature(2, Signature::type::real), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
+	MpOperationAssignment<double>::MpOperationAssignment() noexcept
+		: MpOperation(Signature(2, Signature::type::real), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
 	{
 	}
 	template<>
-	MpOperationAssignment<std::complex<double>>::MpOperationAssignment() : MpOperation(Signature(2, Signature::type::complex), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
+	MpOperationAssignment<std::complex<double>>::MpOperationAssignment()  noexcept
+		: MpOperation(Signature(2, Signature::type::complex), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
 	{
 	}
 

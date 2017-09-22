@@ -41,12 +41,12 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Construction / Destruction]
 	// ============================================================================
 
-	AstBuilder::AstBuilder()
+	AstBuilder::AstBuilder() noexcept
 		: _programNode(nullptr),
 		_numSlots(0)
 	{
 	}
-	AstBuilder::~AstBuilder()
+	AstBuilder::~AstBuilder() noexcept
 	{
 	}
 

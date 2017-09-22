@@ -79,7 +79,7 @@ namespace mathpresso
 	// [mathpresso::Context - Construction / Destruction]
 	// ============================================================================
 
-	Context::Context()
+	Context::Context() noexcept
 		: _symbols(std::make_shared<Symbols>()),
 		_parent(),
 		_children({}),
@@ -87,7 +87,7 @@ namespace mathpresso
 	{
 	}
 
-	Context::Context(const Context& other)
+	Context::Context(const Context& other) noexcept
 		:_symbols(other._symbols),
 		_parent(other._parent),
 		_children(other._children),
@@ -207,11 +207,12 @@ namespace mathpresso
 	// [mathpresso::Expression - Construction / Destruction]
 	// ============================================================================
 
-	Expression::Expression() : _func(mpDummyFunc)
+	Expression::Expression()  noexcept
+		: _func(mpDummyFunc)
 	{
 	}
 
-	Expression::~Expression()
+	Expression::~Expression() noexcept
 	{
 		reset();
 	}

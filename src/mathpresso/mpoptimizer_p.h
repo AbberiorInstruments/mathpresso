@@ -24,8 +24,8 @@ struct AstOptimizer : public AstVisitor {
   // [Construction / Destruction]
   // --------------------------------------------------------------------------
 
-  AstOptimizer(ErrorReporter* errorReporter, std::shared_ptr<Context> ctx);
-  virtual ~AstOptimizer();
+  AstOptimizer(ErrorReporter* errorReporter, std::shared_ptr<Context> ctx) noexcept;
+  virtual ~AstOptimizer() noexcept;
 
   // --------------------------------------------------------------------------
   // [OnNode]

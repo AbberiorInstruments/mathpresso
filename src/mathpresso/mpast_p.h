@@ -166,8 +166,8 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstBuilder();
-		~AstBuilder();
+		AstBuilder() noexcept;
+		~AstBuilder() noexcept;
 
 		// --------------------------------------------------------------------------
 		// [Accessors]
@@ -223,7 +223,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstSymbol(const std::string & name, AstSymbolType symbolType, bool isGlobal)
+		AstSymbol(const std::string & name, AstSymbolType symbolType, bool isGlobal) noexcept
 			: _name(name),
 			_node(),
 			_symbolType(symbolType),
@@ -234,7 +234,7 @@ namespace mathpresso
 		{
 		}
 
-		~AstSymbol() {}
+		~AstSymbol() noexcept {}
 
 		// --------------------------------------------------------------------------
 		// [Accessors]

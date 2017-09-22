@@ -228,11 +228,11 @@ type& operator=(const type& other) = delete; \
 		// --------------------------------------------------------------------------
 
 		//! Create a new `Context` instance.
-		Context();
+		Context() noexcept;
 		//! Create a new `Context` based on `other`.
-		Context(const Context& other);
+		Context(const Context& other) noexcept;
 
-		virtual ~Context()
+		virtual ~Context() noexcept
 		{
 		}
 		// --------------------------------------------------------------------------
@@ -316,9 +316,9 @@ type& operator=(const type& other) = delete; \
 		// --------------------------------------------------------------------------
 
 		//! Create a new `Expression` instance.
-		Expression();
+		Expression() noexcept;
 		//! Destroy the `Expression` instance.
-		~Expression();
+		~Expression() noexcept;
 
 		// --------------------------------------------------------------------------
 		// [Interface]

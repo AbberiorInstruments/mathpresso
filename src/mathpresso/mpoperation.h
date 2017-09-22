@@ -39,8 +39,8 @@ namespace mathpresso
 			std::string name_;
 		};
 
-		Signature(type retType, std::vector<param> params);
-		Signature(size_t nargs, type paramType = type::real);
+		Signature(type retType, std::vector<param> params) noexcept;
+		Signature(size_t nargs, type paramType = type::real) noexcept;
 
 		bool areParams(type _type) const;
 		std::string to_string();
@@ -63,14 +63,14 @@ namespace mathpresso
 			IsAssignment = 0x0001000,
 		};
 
-		MpOperation(const Signature &s, uint32_t flags, uint32_t precedence = 0) :
-			signature_(s),
+		MpOperation(const Signature &s, uint32_t flags, uint32_t precedence = 0)  noexcept
+			: signature_(s),
 			flags_(flags),
 			precedence_(precedence)
 		{
 		}
 
-		virtual ~MpOperation()
+		virtual ~MpOperation() noexcept
 		{
 		}
 
@@ -110,15 +110,15 @@ namespace mathpresso
 	{
 	public:
 		// Con-/Destructor
-		MpOperationFunc(const Signature & signature, void * fnPtr, uint32_t priority = 0) : MpOperation(signature, priority),
+		MpOperationFunc(const Signature & signature, void * fnPtr, uint32_t priority = 0)  noexcept
+			: MpOperation(signature, priority),
 			fnPtr_(fnPtr)
 		{
 		}
 
-		// Con-/Destructor
-		MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority = 0);
+		MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority = 0) noexcept;
 
-		virtual ~MpOperationFunc()
+		virtual ~MpOperationFunc() noexcept
 		{
 		}
 
@@ -152,12 +152,12 @@ namespace mathpresso
 			IsCommutativ = 0x00000010
 		};
 
-		MpOperationBinary(const Signature &signature, uint32_t flags, uint32_t priority) :
-			MpOperation(signature, flags, priority)
+		MpOperationBinary(const Signature &signature, uint32_t flags, uint32_t priority) noexcept
+			: MpOperation(signature, flags, priority)
 		{
 		}
 
-		virtual ~MpOperationBinary()
+		virtual ~MpOperationBinary() noexcept
 		{
 		}
 

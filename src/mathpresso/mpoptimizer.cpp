@@ -20,13 +20,13 @@ namespace mathpresso
 	// [mpsl::AstOptimizer - Construction / Destruction]
 	// ============================================================================
 
-	AstOptimizer::AstOptimizer(ErrorReporter* errorReporter, std::shared_ptr<Context> ctx)
+	AstOptimizer::AstOptimizer(ErrorReporter* errorReporter, std::shared_ptr<Context> ctx) noexcept
 		: AstVisitor(),
 		_errorReporter(errorReporter),
 		_shadowContext(ctx)
 	{
 	}
-	AstOptimizer::~AstOptimizer() {}
+	AstOptimizer::~AstOptimizer() noexcept {}
 
 	// ============================================================================
 	// [mpsl::AstOptimizer - OnNode]

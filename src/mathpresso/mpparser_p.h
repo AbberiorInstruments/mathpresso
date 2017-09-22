@@ -44,14 +44,14 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		Parser(std::shared_ptr<AstBuilder> ast, ErrorReporter* errorReporter, const std::string & body, const std::shared_ptr<Context> shadowContext)
+		Parser(std::shared_ptr<AstBuilder> ast, ErrorReporter* errorReporter, const std::string & body, const std::shared_ptr<Context> shadowContext) noexcept
 			: _ast(ast),
 			_errorReporter(errorReporter),
 			_tokenizer(body.c_str(), body.length()),
 			_shadowContext(shadowContext)
 		{
 		}
-		~Parser() {}
+		~Parser() noexcept {}
 
 		// --------------------------------------------------------------------------
 		// [Parse]
