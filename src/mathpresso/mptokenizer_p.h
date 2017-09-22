@@ -172,7 +172,8 @@ namespace mathpresso
 
 		uint32_t getPosAsUInt() const
 		{
-			MATHPRESSO_ASSERT(position < ~static_cast<uint32_t>(0));
+			// check, that position is in a safe range.
+			MATHPRESSO_ASSERT(position < ~0u);
 			return static_cast<uint32_t>(position);
 		}
 

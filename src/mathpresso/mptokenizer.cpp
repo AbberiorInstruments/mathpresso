@@ -13,7 +13,8 @@
 #include <mathpresso/mptokenizer_p.h>
 #include <iostream>
 
-namespace mathpresso {
+namespace mathpresso
+{
 
 	// ============================================================================
 	// [mathpresso::Tokenizer]
@@ -61,32 +62,21 @@ namespace mathpresso {
 		return  (c == ' ' || c == '\t');
 	}
 
-
-
 	//! \internal
 	//!
 	//! RAW lowercase conversion.
 	//!
 	//! This method exploits how ASCII table has been designed. It expects ASCII
 	//! character on the input that will be lowercased by setting the 0x20 bit on.
-	static uint32_t mpGetLower(uint32_t c) 
+	static uint32_t mpGetLower(uint32_t c)
 	{
 		return c | 0x20;
 	}
 
-	//! \internal
-	static constexpr double mpPow10Table[] =
+	namespace InternalConsts
 	{
-	  1e+0 , 1e+1 , 1e+2 , 1e+3 , 1e+4 , 1e+5 , 1e+6 , 1e+7 ,
-	  1e+8 , 1e+9 , 1e+10, 1e+11, 1e+12, 1e+13, 1e+14, 1e+15
-	};
-
-	//! \internal
-	enum
-	{
-		kSafeDigits = 15,
-		kPow10TableSize = static_cast<int>(MATHPRESSO_ARRAY_SIZE(mpPow10Table))
-	};
+		constexpr int kSafeDigits = 15;
+	}
 
 #define CHAR4X(C0, C1, C2, C3) \
   ( (static_cast<uint32_t>(C0)      ) + \
@@ -181,15 +171,15 @@ namespace mathpresso {
 			size_t scale = 0;
 			while (p != pEnd)
 			{
-				c = static_cast<uint32_t>(p[0]) - static_cast<uint32_t>('0');
+				c = static_cast<uint32_t>(p[0] - '0');
 				if (c > 9)
 					break;
 				scale++;
 
 				if (c != 0)
 				{
-					if (scale < kPow10TableSize)
-						val = val * mpPow10Table[scale] + static_cast<double>(static_cast<int>(c));
+					if (scale < InternalConsts::kSafeDigits)
+						val = val * std::pow(10, scale) + static_cast<double>(c);
 					digits += scale;
 					scale = 0;
 				}
@@ -205,15 +195,15 @@ namespace mathpresso {
 
 				while (++p != pEnd)
 				{
-					c = static_cast<uint32_t>(p[0]) - static_cast<uint32_t>('0');
+					c = static_cast<uint32_t>(p[0] - '0');
 					if (c > 9)
 						break;
 					scale++;
 
 					if (c != 0)
 					{
-						if (scale < kPow10TableSize)
-							val = val * mpPow10Table[scale] + static_cast<double>(static_cast<int>(c));
+						if (scale < InternalConsts::kSafeDigits)
+							val = val * std::pow(10, scale) + static_cast<double>(c);
 						digits += scale;
 						scale = 0;
 					}
@@ -227,7 +217,7 @@ namespace mathpresso {
 				}
 			}
 
-			bool safe = digits <= kSafeDigits && significantDigits < 999999;
+			bool safe = digits <= InternalConsts::kSafeDigits && significantDigits < 999999;
 			int exponent = safe ? static_cast<int>(significantDigits) - static_cast<int>(digits) : 0;
 
 			// Parse an optional exponent.
@@ -246,7 +236,7 @@ namespace mathpresso {
 
 				do
 				{
-					c = static_cast<uint32_t>(p[0]) - static_cast<uint32_t>('0');
+					c = static_cast<uint32_t>(p[0] - '0');
 					if (c > 9)
 						break;
 
@@ -275,7 +265,7 @@ namespace mathpresso {
 
 
 			// Limit a range of safe values from Xe-15 to Xe15.
-			safe = safe && exponent >= -kPow10TableSize && exponent <= kPow10TableSize;
+			safe = safe && exponent >= -InternalConsts::kSafeDigits && exponent <= InternalConsts::kSafeDigits;
 			size_t len = (size_t)(p - pToken);
 
 			// check whether there is a complex number or not and set the output accordingly.
@@ -295,7 +285,7 @@ namespace mathpresso {
 			if (safe)
 			{
 				if (exponent != 0)
-					val = exponent < 0 ? val / mpPow10Table[-exponent] : val * mpPow10Table[exponent];
+					val = exponent < 0 ? val / std::pow(10, -exponent) : val * std::pow(10, exponent);
 			}
 			else
 			{
@@ -316,7 +306,7 @@ namespace mathpresso {
 			}
 
 			token->value = val;
-			token->setData((size_t)(pToken - pStart), len, tokenType);
+			token->setData(pToken - pStart, len, tokenType);
 
 			_p = reinterpret_cast<const char*>(p);
 			return tokenType;
@@ -336,9 +326,9 @@ namespace mathpresso {
 					break;
 			}
 
-			size_t len = (size_t)(p - pToken);
+			size_t len = p - pToken;
 			_p = reinterpret_cast<const char*>(p);
-			return token->setData((size_t)(pToken - pStart), len, mpGetKeyword(pToken, len));
+			return token->setData(pToken - pStart, len, mpGetKeyword(pToken, len));
 		}
 
 		// --------------------------------------------------------------------------
@@ -348,7 +338,7 @@ namespace mathpresso {
 		else if (isSeparator(p[0]))
 		{
 			_p = reinterpret_cast<const char*>(++p);
-			return token->setData(size_t(pToken - pStart), size_t(p - pToken), c);
+			return token->setData(pToken - pStart, p - pToken, c);
 		}
 
 		// --------------------------------------------------------------------------
@@ -380,7 +370,7 @@ namespace mathpresso {
 			}
 
 			_p = reinterpret_cast<const char*>(p);
-			return token->setData(size_t(pToken - pStart), length, TokenType::kTokenOperator);
+			return token->setData(pToken - pStart, length, TokenType::kTokenOperator);
 
 		}
 
@@ -390,7 +380,7 @@ namespace mathpresso {
 
 	_Invalid:
 		_p = reinterpret_cast<const char*>(pToken);
-		return token->setData(size_t(pToken - pStart), size_t(p - pToken), TokenType::kTokenInvalid);
+		return token->setData(pToken - pStart, p - pToken, TokenType::kTokenInvalid);
 
 		// --------------------------------------------------------------------------
 		// [EOI]
@@ -398,7 +388,7 @@ namespace mathpresso {
 
 	_EndOfInput:
 		_p = _end;
-		return token->setData(size_t(pToken - pStart), size_t(p - pToken), TokenType::kTokenEnd);
+		return token->setData(pToken - pStart, p - pToken, TokenType::kTokenEnd);
 	}
 
 } // mathpresso namespace
