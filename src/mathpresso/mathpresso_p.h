@@ -193,7 +193,6 @@ namespace mathpresso
 
 	public:
 		std::string name(const std::shared_ptr<MpOperation>  ptr) const;
-
 		op_ptr_type findFunction(const std::string & name, size_t nargs) const;
 
 		//! looks for a MpOperation-Object, where the parameters are complex or real.
@@ -205,9 +204,7 @@ namespace mathpresso
 
 		std::vector<op_ptr_type> findFunction(const std::string & name) const;
 		bool existsFunction(const std::string & name) const;
-
 		var_ptr_type findVariable(const std::string & name) const;
-
 
 		//! Makes sure that functions with the same name have to have the 
 		//! precedence and association.
@@ -215,16 +212,13 @@ namespace mathpresso
 
 		//! add a variable.
 		void add(const std::string & name, var_ptr_type obj);
-
 		void remove(const std::string & name);
-
 		std::vector<std::string> names() const;
 
 		void clear();
 
 		std::vector<std::shared_ptr<AstSymbol>> getVariables();
 		op_map_type getFunctions() { return _operations; }
-
 	private:
 		op_map_type _operations;
 		var_map_type _variables;

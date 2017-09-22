@@ -208,6 +208,14 @@ type& operator=(const type& other) = delete; \
 		kVariableCplx = 0x0000002,
 	};
 
+	class MATHPRESSO_API MpObject
+	{
+	public:
+		virtual ~MpObject()
+		{
+		}
+	};
+
 	// ============================================================================
 	// [mathpresso::Context]
 	// ============================================================================
@@ -221,7 +229,7 @@ type& operator=(const type& other) = delete; \
 	//! and use it from different threads to compile many expressions.
 	//!
 	//! reading: thread-safe; writing: not thread-safe!
-	struct MATHPRESSO_API Context : public std::enable_shared_from_this<Context>
+	struct MATHPRESSO_API Context : public MpObject, public std::enable_shared_from_this<Context>
 	{
 		// --------------------------------------------------------------------------
 		// [Construction / Destruction]
@@ -271,18 +279,19 @@ type& operator=(const type& other) = delete; \
 			return _parent.lock();
 		}
 
-		//! returns the subcontext with the given name, nullptr if it does not exist
+		//! returns the sub-context with the given name, nullptr if it does not exist
 		std::shared_ptr<Context> getChild(const std::string & name) const;
-
+		
 		bool isGlobal() const
 		{
 			return _isGlobal;
 		}
 
-		//! setter for the subcontexts and parents.
+		//! setter for the sub-contexts and parents.
 		Error setParent(std::shared_ptr<Context> ctx);
 		Error addChild(const std::string & name, std::shared_ptr<Context> ctx);
-
+		Error delChild(const std::string & name);
+		
 		void markShadow()
 		{
 			_isGlobal = false;

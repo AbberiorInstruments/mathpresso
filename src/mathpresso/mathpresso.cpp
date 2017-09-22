@@ -193,8 +193,13 @@ namespace mathpresso
 		auto ret = _children.emplace(name, ctx);
 		if (!ret.second)
 			return ErrorCode::kErrorInvalidArgument;
-
 		return ctx->setParent(shared_from_this());
+	}
+
+	Error Context::delChild(const std::string & name)
+	{
+		_children.erase(name);
+		return ErrorCode::kErrorOk;
 	}
 
 	Error Context::delSymbol(const std::string &name)

@@ -52,7 +52,7 @@ namespace mathpresso
 		void init(type retType, std::vector<param> params);
 	};
 
-	class MATHPRESSO_API MpOperation
+	class MATHPRESSO_API MpOperation : public MpObject
 	{
 	public:
 		enum Flags
