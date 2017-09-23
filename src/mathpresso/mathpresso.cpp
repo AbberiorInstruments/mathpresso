@@ -160,6 +160,10 @@ namespace mathpresso
 	Error Context::listSymbols(std::vector<std::string> &syms) const
 	{
 		syms = _symbols->names();
+		for (auto &c : _children)
+		{
+			syms.push_back(c.first);
+		}
 		return ErrorCode::kErrorOk;
 	}
 
@@ -563,12 +567,11 @@ namespace mathpresso
 			for (auto &p : pn.second)
 				names.push_back(pn.first + " (" + p->signature().to_string() + ")");
 		}
-
-		for (auto p : _variables)
+		for (auto &p : _variables)
 		{
 			names.push_back(p.first + (p.second->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex) ? " (complex)" : " (real)"));
 		}
-
+		
 		return names;
 	}
 

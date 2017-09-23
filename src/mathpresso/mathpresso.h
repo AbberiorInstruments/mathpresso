@@ -21,7 +21,7 @@
 #endif
 
 // uncomment, if you want to use the same syntax for function-calls.
-//#define _REALREWORK
+// #define _REALREWORK
 
 namespace mathpresso
 {
@@ -112,26 +112,6 @@ type& operator=(const type& other) = delete; \
 	typedef double(*Arg7Func)(double, double, double, double, double, double, double);
 	typedef double(*Arg8Func)(double, double, double, double, double, double, double, double);
 #endif // _REALREWORK
-
-	template <std::complex<double>(*T)(const std::complex<double> &)>
-	std::complex<double> mpFuncCtoC1(std::complex<double> *x)
-	{
-		return T(*x);
-	}
-
-	template <std::complex<double>(*T)(const std::complex<double> &, const std::complex<double> &)>
-	std::complex<double> mpFuncCtoC2(std::complex<double> *x)
-	{
-		return T(x[0], x[1]);
-	}
-
-	template <std::complex<double>(*T)(const std::complex<double> &, const std::complex<double> &, const std::complex<double> &)>
-	std::complex<double> mpFuncCtoC3(std::complex<double> *x)
-	{
-		return T(x[0], x[1], x[2]);
-	}
-
-
 	typedef std::complex<double>(*mpFuncpCtoC)(std::complex<double>*);
 	typedef double(*mpFuncpCtoD)(std::complex<double>*);
 	typedef std::complex<double>(*mpFuncpDtoC)(double*);
@@ -265,12 +245,8 @@ type& operator=(const type& other) = delete; \
 
 		//! Adding Symbols to the Context, which can contain function calls. See mpoeration.h for more information.
 		Error addObject(const std::string &name, std::shared_ptr<MpOperation> obj);
-
 		//! Delete symbol from this context.
 		Error delSymbol(const std::string &name);
-
-		//! Retrieve a list of all available symbols (Functions, operators and constants)
-		Error listSymbols(std::vector<std::string> &syms) const;
 
 		std::vector<std::shared_ptr<AstSymbol>> getVariables() const;
 
@@ -301,8 +277,8 @@ type& operator=(const type& other) = delete; \
 		// --------------------------------------------------------------------------
 
 		std::shared_ptr<Symbols> _symbols;
-
 	protected:
+		Error listSymbols(std::vector<std::string> &syms) const;
 
 		std::weak_ptr<Context> _parent;
 		std::map<std::string, std::shared_ptr<Context>> _children;
