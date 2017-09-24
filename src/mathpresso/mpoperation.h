@@ -27,21 +27,43 @@ namespace mathpresso
 
 	struct MATHPRESSO_API Signature
 	{
+		// Types allowed
 		enum class type
 		{
 			real = 0,
 			complex = 1
 		};
 
+		// Currently all params need to be the same type but we already cater for the next step...
 		struct param
 		{
 			type type_;
 			std::string name_;
 		};
 
-		Signature(type retType, std::vector<param> params) noexcept;
-		Signature(size_t nargs, type paramType = type::real) noexcept;
+		template<typename T>
+		struct TypeId;
 
+		template<>
+		struct TypeId<std::complex<double>>
+		{
+			static const type id_ = type::complex;
+		};
+
+		template<>
+		struct TypeId<double>
+		{
+			static const type id_ = type::real;
+		};
+
+		Signature() noexcept
+		{
+		}
+
+		Signature(size_t nargs) noexcept;
+		Signature(size_t nargs, type cmnType) noexcept;
+		Signature(size_t nargs, type argType, type retType) noexcept;
+		
 		bool areParams(type _type) const;
 		std::string to_string();
 
@@ -50,6 +72,17 @@ namespace mathpresso
 	private :
 		std::string typeToString(type _type);
 		void init(type retType, std::vector<param> params);
+	};
+
+	template<typename S>
+	class TypedSignature;
+
+	template<typename RET, typename ...ARGS>
+	class TypedSignature<RET(ARGS...)>
+	{
+		TypedSignature() : Signature(sizeof(ARGS), std::common_type_t<ARGS...>)
+		{
+		}
 	};
 
 	class MATHPRESSO_API MpOperation : public MpObject
@@ -105,17 +138,10 @@ namespace mathpresso
 		uint32_t precedence_;
 	};
 
-	template<typename RET, typename PARAM>
+	template<typename RET, typename ARGS>
 	class MATHPRESSO_API MpOperationFunc : public MpOperation
 	{
 	public:
-		// Con-/Destructor
-		MpOperationFunc(const Signature & signature, void * fnPtr, uint32_t priority = 0)  noexcept
-			: MpOperation(signature, priority),
-			fnPtr_(fnPtr)
-		{
-		}
-
 		MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority = 0) noexcept;
 
 		virtual ~MpOperationFunc() noexcept
@@ -129,10 +155,9 @@ namespace mathpresso
 
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
-
 	protected:
-		virtual RET evaluate(PARAM * args) const;
-
+		// Used by optimizer to calculate the function of all arguments are constants
+		virtual RET evaluate(ARGS * args) const;
 		// Function-pointer:
 		void * fnPtr_;
 	};

@@ -19,7 +19,6 @@
 
 namespace mathpresso
 {
-
 #define VPTR(function) reinterpret_cast<void*>(function)
 
 #ifdef _REALREWORK
@@ -222,14 +221,19 @@ namespace mathpresso
 		return 0;
 	}
 
-	Signature::Signature(size_t nargs, type paramType) noexcept
+	Signature::Signature(size_t nargs, type cmnType) noexcept
 	{
-		init(paramType, { nargs, { paramType, "" } });
+		init(cmnType, { nargs, { cmnType, "" } });
 	}
 
-	Signature::Signature(type retType, std::vector<param> params) noexcept
+	Signature::Signature(size_t nargs, type argType, type retType) noexcept
 	{
-		init(retType, params);
+		init(retType, { nargs,{ argType, "" } });
+	}
+
+	Signature::Signature(size_t nargs) noexcept
+	{
+		init(type::real, { nargs, { type::real, "" } });
 	}
 
 	bool Signature::areParams(type _type) const
@@ -285,14 +289,14 @@ namespace mathpresso
 
 	template<>
 	MpOperationFunc<std::complex<double>, double>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) noexcept
-		: MpOperation(Signature(Signature::type::complex, { numargs,{ Signature::type::real } }), flags, priority),
+		: MpOperation(Signature(numargs, Signature::type::real, Signature::type::complex), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}
 
 	template<>
 	MpOperationFunc<double, std::complex<double>>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) noexcept
-		: MpOperation(Signature(Signature::type::real, { numargs, {Signature::type::complex} }), flags, priority),
+		: MpOperation(Signature(numargs, Signature::type::complex, Signature::type::real), flags, priority),
 		fnPtr_(fnPtr)
 	{
 	}

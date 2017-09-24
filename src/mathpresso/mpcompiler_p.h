@@ -167,7 +167,7 @@ namespace mathpresso
 
 		JitVar onNode(std::shared_ptr<AstNode> node);
 
-		template<typename RET, typename PARAMS>
+		template<typename RET, typename ARGS>
 		void inlineCall(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn);
 
 		// Constants.
