@@ -176,7 +176,7 @@ namespace mathpresso
 	};
 
 	template<typename T>
-	class MATHPRESSO_API MpOperationBinary : public MpOperation
+	class MATHPRESSO_API MpOperationBinary : public MpOperationEval<T, T>
 	{
 	public:
 		enum Flags
@@ -190,34 +190,26 @@ namespace mathpresso
 			IsCommutativ = 0x00000010
 		};
 
-		MpOperationBinary(const Signature &signature, uint32_t flags, uint32_t priority) noexcept
-			: MpOperation(signature, flags, priority)
-		{
-		}
-
-		virtual ~MpOperationBinary() noexcept
+		MpOperationBinary(uint32_t flags = MpOperation::None, uint32_t priority = 0) noexcept
+			: MpOperationEval(2, flags, priority)
 		{
 		}
 
 		// calls generatAsm() after setting up.
 		virtual JitVar compile(JitCompiler* jc, std::shared_ptr<AstNode> node) const override;
-
 		// uses calculate() to calculate immediate values.
 		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
+		virtual T evaluate(T vL, T vR) const = 0;
 
-		bool hasFlag(uint32_t flag) const
+		virtual T evaluate(const T * v) const override
 		{
-			return flag & flags_;
+			throw std::exception("Coding error!");
 		}
 	protected:
 		// These are called by compile() and should only contain the asm-statements. vl will always
 		// be in a register, vr can be in Register or in Memory.
-		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const;
-
-		// Used to calculate optimization of immediates.
-		virtual T calculate(T vl, T vr)  const;
+		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const = 0;
 	};
-
 }
 
 #include <complex>

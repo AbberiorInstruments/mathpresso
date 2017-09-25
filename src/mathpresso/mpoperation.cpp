@@ -150,6 +150,7 @@ namespace mathpresso
 		ctx->addObject("+", std::make_shared<MpOperationAdd<cplx_t>>());
 		ctx->addObject("-", std::make_shared<MpOperationSub<double>>());
 		ctx->addObject("-", std::make_shared<MpOperationSub<cplx_t>>());
+#if 0
 		ctx->addObject("*", std::make_shared<MpOperationMul<double>>());
 		ctx->addObject("*", std::make_shared<MpOperationMul<cplx_t>>());
 		ctx->addObject("/", std::make_shared<MpOperationDiv<double>>());
@@ -162,6 +163,10 @@ namespace mathpresso
 		ctx->addObject(">", std::make_shared<MpOperationGt>());
 		ctx->addObject("<=", std::make_shared<MpOperationLe>());
 		ctx->addObject("<", std::make_shared<MpOperationLt>());
+		ctx->addObject("min", std::make_shared<MpOperationMin>());
+		ctx->addObject("max", std::make_shared<MpOperationMax>());
+		ctx->addObject("%", std::make_shared<MpOperationModulo>());
+#endif
 		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary<double>>());
 		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary<cplx_t>>());
 		ctx->addObject("=", std::make_shared<MpOperationVarDeclaration<double>>());
@@ -189,9 +194,6 @@ namespace mathpresso
 
 		ctx->addObject("real", std::make_shared<MpOperationGetReal>());
 		ctx->addObject("imag", std::make_shared<MpOperationGetImag>());
-		ctx->addObject("min", std::make_shared<MpOperationMin>());
-		ctx->addObject("max", std::make_shared<MpOperationMax>());
-		ctx->addObject("%", std::make_shared<MpOperationModulo>());
 		ctx->addObject("sqrt", std::make_shared<MpOperationSqrt>());
 		ctx->addObject("conjug", std::make_shared<MpOperationConjug>());
 		ctx->addObject("signbit", std::make_shared<MpOperationSignBit>());
@@ -1336,7 +1338,7 @@ namespace mathpresso
 			std::shared_ptr<AstImm> lNode = std::static_pointer_cast<AstImm>(left);
 			std::shared_ptr<AstImm> rNode = std::static_pointer_cast<AstImm>(right);
 
-			lNode->setValue(calculate(lNode->getValue<T>(), rNode->getValue<T>()));
+			lNode->setValue(evaluate(lNode->getValue<T>(), rNode->getValue<T>()));
 
 			// setValue sets the correct flags automatically.
 			node->_children[0]->_parent.reset();
@@ -1371,36 +1373,6 @@ namespace mathpresso
 		return ErrorCode::kErrorOk;
 	}
 
-	template<typename T>
-	JitVar MpOperationBinary<T>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
-	{
-		throw std::runtime_error("No Override available!");
-	}
-
-	template<typename T>
-	T MpOperationBinary<T>::calculate(T vl, T vr) const
-	{
-		return std::numeric_limits<T>::quiet_NaN();
-	}
-
-	template<>
-	cplx_t MpOperationBinary<cplx_t>::calculate(cplx_t vl, cplx_t vr)  const
-	{
-		return cplx_t(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
-	}
-
-	template<>
-	MpOperationAdd<double>::MpOperationAdd() noexcept
-		: MpOperationBinary<double>(Signature(2), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 6)
-	{
-	}
-
-	template<>
-	MpOperationAdd<cplx_t>::MpOperationAdd() noexcept
-		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 6)
-	{
-	}
-
 	// Addition
 	template<>
 	JitVar MpOperationAdd<double>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
@@ -1431,25 +1403,7 @@ namespace mathpresso
 		return vl;
 	}
 
-	template<typename T>
-	T MpOperationAdd<T>::calculate(T vl, T vr) const
-	{
-		return vl + vr;
-	}
-
-
-	// Subtraction
-	template<>
-	MpOperationSub<double>::MpOperationSub() noexcept
-		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::NopIfRZero, 6)
-	{
-	}
-	template<>
-	MpOperationSub<cplx_t>::MpOperationSub() noexcept
-		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfRZero, 6)
-	{
-	}
-
+	
 	template<>
 	JitVar MpOperationSub<double>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1479,13 +1433,7 @@ namespace mathpresso
 		return vl;
 	}
 
-	template<typename T>
-	T MpOperationSub<T>::calculate(T vl, T vr) const
-	{
-		return vl - vr;
-	}
-
-
+#if 0
 	// Multiplication
 	template<>
 	MpOperationMul<double>::MpOperationMul() noexcept
@@ -1538,7 +1486,7 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	T MpOperationMul<T>::calculate(T vl, T vr) const
+	T MpOperationMul<T>::evaluate(T vl, T vr) const
 	{
 		return vl * vr;
 	}
@@ -1598,7 +1546,7 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	T MpOperationDiv<T>::calculate(T vl, T vr) const
+	T MpOperationDiv<T>::evaluate(T vl, T vr) const
 	{
 		return vl / vr;
 	}
@@ -1617,7 +1565,7 @@ namespace mathpresso
 		return vl;
 	}
 
-	double MpOperationMin::calculate(double vl, double vr)  const
+	double MpOperationMin::evaluate(double vl, double vr)  const
 	{
 		return std::min(vl, vr);
 	}
@@ -1636,7 +1584,7 @@ namespace mathpresso
 		return vl;
 	}
 
-	double MpOperationMax::calculate(double vl, double vr)  const
+	double MpOperationMax::evaluate(double vl, double vr)  const
 	{
 		return std::max(vl, vr);
 	}
@@ -1686,7 +1634,7 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	T MpOperationEq<T>::calculate(T vl, T vr)  const
+	T MpOperationEq<T>::evaluate(T vl, T vr)  const
 	{
 		return vl == vr ? 1.0 : 0.0;
 	}
@@ -1735,7 +1683,7 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	T MpOperationNe<T>::calculate(T vl, T vr)  const
+	T MpOperationNe<T>::evaluate(T vl, T vr)  const
 	{
 		return vl != vr ? 1.0 : 0.0;
 	}
@@ -1756,7 +1704,7 @@ namespace mathpresso
 
 	}
 
-	double MpOperationLt::calculate(double vl, double vr)  const
+	double MpOperationLt::evaluate(double vl, double vr)  const
 	{
 		return vl < vr ? 1.0 : 0.0;
 	}
@@ -1777,7 +1725,7 @@ namespace mathpresso
 
 	}
 
-	double MpOperationLe::calculate(double vl, double vr)  const
+	double MpOperationLe::evaluate(double vl, double vr)  const
 	{
 		return vl <= vr ? 1.0 : 0.0;
 	}
@@ -1798,7 +1746,7 @@ namespace mathpresso
 
 	}
 
-	double MpOperationGt::calculate(double vl, double vr)  const
+	double MpOperationGt::evaluate(double vl, double vr)  const
 	{
 		return vl > vr ? 1.0 : 0.0;
 	}
@@ -1819,7 +1767,7 @@ namespace mathpresso
 
 	}
 
-	double MpOperationGe::calculate(double vl, double vr)  const
+	double MpOperationGe::evaluate(double vl, double vr)  const
 	{
 		return vl >= vr ? 1.0 : 0.0;
 	}
@@ -1884,11 +1832,12 @@ namespace mathpresso
 		return result;
 	}
 
-	double MpOperationModulo::calculate(double vl, double vr) const
+	double MpOperationModulo::evaluate(double vl, double vr) const
 	{
 		return fmod(vl, vr);
 	}
 
+#endif
 	// Ternary operation
 
 	template<>
