@@ -717,7 +717,8 @@ namespace mathpresso
 		}
 		else
 		{
-			MATHPRESSO_PARSER_ERROR(token, "Function '%s' requires a MpOperation-Object with %d arguments.", fnName, callNode->getLength());
+			// TODO: object translation and error reporting possible signatures.
+			MATHPRESSO_PARSER_ERROR(token, "Object '%s': wrong number of arguments. (Received %d).", fnName.c_str(), callNode->getLength());
 		}
 
 		*pNodeOut = callNode;

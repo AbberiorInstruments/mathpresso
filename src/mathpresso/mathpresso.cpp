@@ -662,7 +662,8 @@ namespace mathpresso
 				do
 				{
 					function = tmpCtx->_symbols->findFunction(name, numargs);
-				} while (!function && (tmpCtx = tmpCtx->getParent()));
+				} 
+				while (!function && (tmpCtx = tmpCtx->getParent()));
 			}
 
 			return function;
