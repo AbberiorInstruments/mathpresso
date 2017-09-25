@@ -150,7 +150,6 @@ namespace mathpresso
 		ctx->addObject("+", std::make_shared<MpOperationAdd<cplx_t>>());
 		ctx->addObject("-", std::make_shared<MpOperationSub<double>>());
 		ctx->addObject("-", std::make_shared<MpOperationSub<cplx_t>>());
-#if 0
 		ctx->addObject("*", std::make_shared<MpOperationMul<double>>());
 		ctx->addObject("*", std::make_shared<MpOperationMul<cplx_t>>());
 		ctx->addObject("/", std::make_shared<MpOperationDiv<double>>());
@@ -166,7 +165,6 @@ namespace mathpresso
 		ctx->addObject("min", std::make_shared<MpOperationMin>());
 		ctx->addObject("max", std::make_shared<MpOperationMax>());
 		ctx->addObject("%", std::make_shared<MpOperationModulo>());
-#endif
 		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary<double>>());
 		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary<cplx_t>>());
 		ctx->addObject("=", std::make_shared<MpOperationVarDeclaration<double>>());
@@ -1433,19 +1431,6 @@ namespace mathpresso
 		return vl;
 	}
 
-#if 0
-	// Multiplication
-	template<>
-	MpOperationMul<double>::MpOperationMul() noexcept
-		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 5)
-	{
-	}
-	template<>
-	MpOperationMul<cplx_t>::MpOperationMul() noexcept
-		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 5)
-	{
-	}
-
 	template<>
 	JitVar MpOperationMul<double>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1460,6 +1445,7 @@ namespace mathpresso
 		return vl;
 
 	}
+
 	template<>
 	JitVar MpOperationMul<cplx_t>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1485,23 +1471,6 @@ namespace mathpresso
 		return ret;
 	}
 
-	template<typename T>
-	T MpOperationMul<T>::evaluate(T vl, T vr) const
-	{
-		return vl * vr;
-	}
-
-	// Division
-	template<>
-	MpOperationDiv<double>::MpOperationDiv() noexcept
-		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::NopIfLOne, 5)
-	{
-	}
-	template<>
-	MpOperationDiv<cplx_t>::MpOperationDiv() noexcept
-		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfLOne, 5)
-	{
-	}
 	template<>
 	JitVar MpOperationDiv<double>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1516,6 +1485,7 @@ namespace mathpresso
 		return vl;
 
 	}
+
 	template<>
 	JitVar MpOperationDiv<cplx_t>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1545,12 +1515,6 @@ namespace mathpresso
 		return ret;
 	}
 
-	template<typename T>
-	T MpOperationDiv<T>::evaluate(T vl, T vr) const
-	{
-		return vl / vr;
-	}
-
 	// Minimum
 	JitVar MpOperationMin::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1565,11 +1529,6 @@ namespace mathpresso
 		return vl;
 	}
 
-	double MpOperationMin::evaluate(double vl, double vr)  const
-	{
-		return std::min(vl, vr);
-	}
-
 	// Maximum
 	JitVar MpOperationMax::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1582,23 +1541,6 @@ namespace mathpresso
 			jc->cc->maxsd(vl.getXmm(), vr.getXmm());
 		}
 		return vl;
-	}
-
-	double MpOperationMax::evaluate(double vl, double vr)  const
-	{
-		return std::max(vl, vr);
-	}
-
-	// Equality
-	template<>
-	MpOperationEq<double>::MpOperationEq() noexcept
-		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ, 9)
-	{
-	}
-	template<>
-	MpOperationEq<cplx_t>::MpOperationEq() noexcept
-		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
-	{
 	}
 
 	template<>
@@ -1633,24 +1575,6 @@ namespace mathpresso
 		return vl;
 	}
 
-	template<typename T>
-	T MpOperationEq<T>::evaluate(T vl, T vr)  const
-	{
-		return vl == vr ? 1.0 : 0.0;
-	}
-
-	// Inequality
-	template<>
-	MpOperationNe<double>::MpOperationNe() noexcept
-		: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperationBinary::IsCommutativ, 9)
-	{
-	}
-	template<>
-	MpOperationNe<cplx_t>::MpOperationNe() noexcept
-		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
-	{
-	}
-
 	template<>
 	JitVar MpOperationNe<double>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1682,12 +1606,6 @@ namespace mathpresso
 		return vl;
 	}
 
-	template<typename T>
-	T MpOperationNe<T>::evaluate(T vl, T vr)  const
-	{
-		return vl != vr ? 1.0 : 0.0;
-	}
-
 	// Lesser than
 	JitVar MpOperationLt::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1702,11 +1620,6 @@ namespace mathpresso
 		jc->cc->andpd(vl.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
 		return vl;
 
-	}
-
-	double MpOperationLt::evaluate(double vl, double vr)  const
-	{
-		return vl < vr ? 1.0 : 0.0;
 	}
 
 	// Lesser equal
@@ -1725,11 +1638,6 @@ namespace mathpresso
 
 	}
 
-	double MpOperationLe::evaluate(double vl, double vr)  const
-	{
-		return vl <= vr ? 1.0 : 0.0;
-	}
-
 	// Greater than
 	JitVar MpOperationGt::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
@@ -1746,10 +1654,6 @@ namespace mathpresso
 
 	}
 
-	double MpOperationGt::evaluate(double vl, double vr)  const
-	{
-		return vl > vr ? 1.0 : 0.0;
-	}
 
 	// Greater equal
 	JitVar MpOperationGe::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
@@ -1765,11 +1669,6 @@ namespace mathpresso
 		jc->cc->andpd(vl.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
 		return vl;
 
-	}
-
-	double MpOperationGe::evaluate(double vl, double vr)  const
-	{
-		return vl >= vr ? 1.0 : 0.0;
 	}
 
 	// Modulo
@@ -1832,12 +1731,6 @@ namespace mathpresso
 		return result;
 	}
 
-	double MpOperationModulo::evaluate(double vl, double vr) const
-	{
-		return fmod(vl, vr);
-	}
-
-#endif
 	// Ternary operation
 
 	template<>

@@ -186,6 +186,10 @@ namespace mathpresso
 	template<typename T>
 	class MpOperationAdd : public MpOperationBinary<T>
 	{
+	public:
+		MpOperationAdd() : MpOperationBinary(MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 6)
+		{
+		}
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual T evaluate(T vL, T vR) const override
@@ -198,6 +202,10 @@ namespace mathpresso
 	template<typename T>
 	class MpOperationSub : public MpOperationBinary<T>
 	{
+	public:
+		MpOperationSub() : MpOperationBinary(MpOperationBinary::NopIfZero, 6)
+		{
+		}
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
 		virtual T evaluate(T vL, T vR) const override
@@ -206,17 +214,20 @@ namespace mathpresso
 		}
 	};
 
-#if 0
 	// Multiplication
 	template<typename T>
 	class MpOperationMul : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationMul() noexcept;
-
+		MpOperationMul() : MpOperationBinary(MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 5)
+		{
+		}
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual T evaluate(T vl, T vr) const override;
+		virtual T evaluate(T vl, T vr) const override
+		{
+			return vl*vr;
+		}
 	};
 
 	// Division
@@ -224,39 +235,37 @@ namespace mathpresso
 	class MpOperationDiv : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationDiv() noexcept;
-
+		MpOperationDiv() : MpOperationBinary(MpOperationBinary::NopIfLOne, 5)
+		{
+		}
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual T evaluate(T vl, T vr) const override;
+		virtual T evaluate(T vl, T vr) const override
+		{
+			return vl / vr;
+		}
 	};
 
 	// Minimum
 	class MpOperationMin : public MpOperationBinary<double>
 	{
-	public:
-		MpOperationMin() noexcept
-			: MpOperationBinary<double>(Signature(2), MpOperation::None, 0)
-		{
-		}
-
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double evaluate(double vl, double vr) const override;
+		virtual double evaluate(double vl, double vr) const override
+		{
+			return std::min(vl, vr);
+		}
 	};
 
 	// Maximum
 	class MpOperationMax : public  MpOperationBinary<double>
 	{
-	public:
-		MpOperationMax() noexcept
-			: MpOperationBinary<double>(Signature(2), MpOperation::None, 0)
-		{
-		}
-
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double evaluate(double vl, double vr) const override;
+		virtual double evaluate(double vl, double vr) const override
+		{
+			return std::max(vl, vr);
+		}
 	};
 
 	// Equality
@@ -264,11 +273,15 @@ namespace mathpresso
 	class MpOperationEq : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationEq() noexcept;
-
+		MpOperationEq() : MpOperationBinary(MpOperationBinary::IsCommutativ, 9)
+		{
+		}
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual T evaluate(T vl, T vr) const override;
+		virtual T evaluate(T vl, T vr) const override
+		{
+			return vl == vr ? 1.0 : 0.0;
+		}
 	};
 
 	// Inequality
@@ -276,21 +289,29 @@ namespace mathpresso
 	class MpOperationNe : public MpOperationBinary<T>
 	{
 	public:
-		MpOperationNe() noexcept;
-
+		MpOperationNe() : MpOperationBinary(MpOperationBinary::IsCommutativ, 9)
+		{
+		}
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual T evaluate(T vl, T vr) const override;
+		virtual T evaluate(T vl, T vr) const override
+		{
+			return vl != vr ? 1.0 : 0.0;
+		}
 	};
 
 	// Lesser than
 	class MpOperationLt : public  MpOperationBinary<double>
 	{
+	public:
+		MpOperationLt()	: MpOperationBinary(MpOperation::None, 8)
+		{
+		}
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double evaluate(const double * v) const override
+		virtual double evaluate(double vl, double vr) const override
 		{
-			return v[0] < v[1] ? 1. : 0.;
+			return vl < vr ? 1. : 0.;
 		}
 	};
 
@@ -298,59 +319,61 @@ namespace mathpresso
 	class MpOperationLe : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationLe() noexcept
-			: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
+		MpOperationLe() : MpOperationBinary(MpOperation::None, 8)
 		{
 		}
-
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double evaluate(double vl, double vr) const override;
+		virtual double evaluate(double vl, double vr) const override
+		{
+			return vl <= vr ? 1. : 0.;
+		}
 	};
 
 	// Greater than
 	class MpOperationGt : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationGt() noexcept
-			: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
+		MpOperationGt() : MpOperationBinary(MpOperation::None, 8)
 		{
 		}
-
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double evaluate(double vl, double vr) const override;
+		virtual double evaluate(double vl, double vr) const override
+		{
+			return vl > vr ? 1. : 0.;
+		}
 	};
 
 	// Greater equal
 	class MpOperationGe : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationGe()  noexcept
-			: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 8)
+		MpOperationGe() : MpOperationBinary(MpOperation::None, 8)
 		{
 		}
-
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double evaluate(double vl, double vr) const override;
+		virtual double evaluate(double vl, double vr) const override
+		{
+			return vl >= vr ? 1. : 0.;
+		}
 	};
 
 	// Modulo
 	class MpOperationModulo : public  MpOperationBinary<double>
 	{
 	public:
-		MpOperationModulo() noexcept
-			: MpOperationBinary<double>(Signature(2, Signature::type::real), MpOperation::None, 5)
+		MpOperationModulo() : MpOperationBinary<double>(MpOperation::None, 5)
 		{
 		}
-
 	protected:
 		virtual JitVar generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const override;
-		virtual double evaluate(double vl, double vr) const override;
+		virtual double evaluate(double vl, double vr) const override
+		{
+			return std::fmod(vl, vr);
+		}
 	};
-
-#endif
 
 	// Ternary Operation
 	template<typename T>
