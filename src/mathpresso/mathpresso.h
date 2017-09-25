@@ -21,7 +21,7 @@
 #endif
 
 // uncomment, if you want to use the same syntax for function-calls.
-// #define _REALREWORK
+// #define MATHPRESSO_ORIGINAL_DOUBLE_FUNCTION_CALLS
 
 namespace mathpresso
 {
@@ -99,9 +99,7 @@ type& operator=(const type& other) = delete; \
 	typedef void(*CompiledFunc)(double* result, void* data);
 
 
-#ifdef _REALREWORK
-	typedef double(*mpFuncDtoD)(double*);
-#else
+#ifdef MATHPRESSO_ORIGINAL_DOUBLE_FUNCTION_CALLS
 	typedef double(*Arg0Func)();
 	typedef double(*Arg1Func)(double);
 	typedef double(*Arg2Func)(double, double);
@@ -111,7 +109,9 @@ type& operator=(const type& other) = delete; \
 	typedef double(*Arg6Func)(double, double, double, double, double, double);
 	typedef double(*Arg7Func)(double, double, double, double, double, double, double);
 	typedef double(*Arg8Func)(double, double, double, double, double, double, double, double);
-#endif // _REALREWORK
+#endif 
+
+	typedef double(*mpFuncDtoD)(double*);
 	typedef std::complex<double>(*mpFuncpCtoC)(std::complex<double>*);
 	typedef double(*mpFuncpCtoD)(std::complex<double>*);
 	typedef std::complex<double>(*mpFuncpDtoC)(double*);

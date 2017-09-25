@@ -252,7 +252,7 @@ namespace mathpresso
 	template<>
 	void JitCompiler::inlineCall<double, double>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
 	{
-#ifdef _REALREWORK
+#ifndef MATHPRESSO_ORIGINAL_DOUBLE_FUNCTION_CALLS
 		// Use function builder to build a function prototype.
 		X86Mem stack(cc->newStack(count * sizeof(double), sizeof(double)));
 		X86Gp dataPointerReg(cc->newUIntPtr());
@@ -288,7 +288,7 @@ namespace mathpresso
 		for (size_t i = 0; i < count; i++)
 			ctx->setArg(static_cast<uint32_t>(i), args[i]);
 
-#endif // _REALREWORK
+#endif
 	}
 
 	template<>

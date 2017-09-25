@@ -17,11 +17,120 @@
 
 #include <complex>
 
+// MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority = 0) noexcept;
+
+template<typename R, typename A, void * FPTR, size_t N>
+struct Caller;
+
+
+template<typename R, typename A, void * FPTR>
+struct Caller<R, A, FPTR, 1>
+{
+	using FT = R(*)(A);
+
+	static R call(A * args)
+	{
+		return FT(FPTR)(args[0]);
+	}
+};
+
+template<typename R, typename A, void * FPTR>
+struct Caller<R, A, FPTR, 2>
+{
+	using FT = R(*)(A, A);
+
+	static R call(A * args)
+	{
+		return FT(FPTR)(args[0], args[1]);
+	}
+};
+
+
+template<typename FPTR_T, void * FPTR>
+struct Caller_;
+
+template<void * FPTR, typename R, typename ...ARGS>
+struct Caller_<R(*)(ARGS...), FPTR> : Caller<R, std::common_type_t<ARGS...>, (void *)FPTR, sizeof...(ARGS)>
+{
+};
+
+
+template<typename Signature, typename R, typename A, size_t N>
+struct OperationFactory_
+{
+	static std::shared_ptr<mathpresso::MpOperation> create_from(Signature * f, uint32_t flags, uint32_t priority)
+	{
+		return std::make_shared<mathpresso::MpOperationFunc<R, A>>(flags, N, (void *)0, priority);
+	}
+};
+
+template<typename Signature>
+struct OperationFactory;
+
+template<typename R, typename ...ARGS>
+struct OperationFactory<R(ARGS...)> : OperationFactory_<R(ARGS...), R, std::common_type_t<ARGS...>, sizeof...(ARGS)>
+{
+};
+
+template<typename Signature>
+std::shared_ptr<mathpresso::MpOperation> _mpObject(Signature * function, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 1)
+{
+	return OperationFactory<Signature>::create_from(function, flags, priority);
+}
+
+
+double test_func(double a, double b)
+{
+	return a + b;
+}
+
+double testf(double a)
+{
+	return a;
+}
+
+#define _CALLER(expr) Caller_<decltype(expr), expr>::call
+//auto p = Caller_<double(*)(double), static_cast<double(*)(double)>(std::sin)>::call;
+
+auto p1 = _CALLER(static_cast<double(*)(double)>(std::sin));
+auto p2 = _CALLER(&testf);
+auto p3 = _CALLER(&test_func);
+
+auto p_obj = _mpObject(_CALLER(&testf));
+
+
+//auto test_obj = _mpObject(&test_func);
+
 namespace mathpresso
 {
 #define VPTR(function) reinterpret_cast<void*>(function)
 
-#ifdef _REALREWORK
+	// Mixed functions
+	std::complex<double> sqrtRC(double  * x) { return std::sqrt(std::complex<double>(x[0], 0)); }
+	double absCR(std::complex<double>* args) { return std::abs(args[0]); }
+
+	// Complex functions
+	std::complex<double> sinCC(std::complex<double>* arg) { return std::sin(arg[0]); }
+	std::complex<double> cosCC(std::complex<double>* arg) { return std::cos(arg[0]); }
+	std::complex<double> tanCC(std::complex<double>* arg) { return std::tan(arg[0]); }
+	std::complex<double> asinCC(std::complex<double>* arg) { return std::asin(arg[0]); }
+	std::complex<double> acosCC(std::complex<double>* arg) { return std::acos(arg[0]); }
+	std::complex<double> atanCC(std::complex<double>* arg) { return std::atan(arg[0]); }
+	std::complex<double> sinhCC(std::complex<double>* arg) { return std::sinh(arg[0]); }
+	std::complex<double> coshCC(std::complex<double>* arg) { return std::cosh(arg[0]); }
+	std::complex<double> tanhCC(std::complex<double>* arg) { return std::tanh(arg[0]); }
+
+	std::complex<double> logCC(std::complex<double> *  x) { return std::log(x[0]); }
+	std::complex<double> log2CC(std::complex<double> *  x) { return std::log(x[0]) / log(2); }
+	std::complex<double> log10CC(std::complex<double> *  x) { return std::log10(x[0]); }
+	std::complex<double> powCC(std::complex<double> *  x) { return std::pow(x[0], x[1]); }
+	std::complex<double> expCC(std::complex<double> *  x) { return std::exp(x[0]); }
+	std::complex<double> recipCC(std::complex<double>* args) { return 1.0 / args[0]; }
+
+	std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
+
+	// Real functions
+#ifndef MATHPRESSO_ORIGINAL_DOUBLE_FUNCTION_CALLS
 	double sinRR(double * arg) { return std::sin(arg[0]); }
 	double cosRR(double * arg) { return std::cos(arg[0]); }
 	double tanRR(double * arg) { return std::tan(arg[0]); }
@@ -93,26 +202,6 @@ namespace mathpresso
 	double floorRR(double args) { return std::floor(args); }
 	double ceilRR(double args) { return std::ceil(args); }
 #endif
-
-	// helpers, no derived object
-	std::complex<double> sinCC(std::complex<double>* arg) { return std::sin(arg[0]); }
-	std::complex<double> cosCC(std::complex<double>* arg) { return std::cos(arg[0]); }
-	std::complex<double> tanCC(std::complex<double>* arg) { return std::tan(arg[0]); }
-	std::complex<double> asinCC(std::complex<double>* arg) { return std::asin(arg[0]); }
-	std::complex<double> acosCC(std::complex<double>* arg) { return std::acos(arg[0]); }
-	std::complex<double> atanCC(std::complex<double>* arg) { return std::atan(arg[0]); }
-	std::complex<double> sinhCC(std::complex<double>* arg) { return std::sinh(arg[0]); }
-	std::complex<double> coshCC(std::complex<double>* arg) { return std::cosh(arg[0]); }
-	std::complex<double> tanhCC(std::complex<double>* arg) { return std::tanh(arg[0]); }
-	std::complex<double> logCC(std::complex<double> *  x) { return std::log(x[0]); }
-	std::complex<double> log2CC(std::complex<double> *  x) { return std::log(x[0]) / log(2); }
-	std::complex<double> log10CC(std::complex<double> *  x) { return std::log10(x[0]); }
-	std::complex<double> expCC(std::complex<double> *  x) { return std::exp(x[0]); }
-	std::complex<double> powCC(std::complex<double> *  x) { return std::pow(x[0], x[1]); }
-	std::complex<double> sqrtRC(double  * x) { return std::sqrt(std::complex<double>(x[0], 0)); }
-	std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
-	double absCR(std::complex<double>* args) { return std::abs(args[0]); }
-
 
 	uint32_t addBuiltinMpObjects(Context * ctx)
 	{
@@ -425,7 +514,7 @@ namespace mathpresso
 		{
 			throw std::runtime_error("Function does not exist.");
 		}
-#ifdef _REALREWORK
+#ifndef MATHPRESSO_ORIGINAL_DOUBLE_FUNCTION_CALLS
 		return ((mpFuncDtoD)fnPtr_)(args);
 #else
 		switch (nargs())
@@ -793,12 +882,6 @@ namespace mathpresso
 			parent->replaceNode(node, childOfChild);
 		}
 		return ErrorCode::kErrorOk;
-	}
-
-	// Reciprocal
-	std::complex<double> recipCC(std::complex<double>* args)
-	{
-		return 1.0 / args[0];
 	}
 
 	template<>
