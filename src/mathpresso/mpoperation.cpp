@@ -15,68 +15,7 @@
 #include <asmjit/x86/x86operand.h>
 #include <asmjit/x86/x86inst.h>
 
-#include <complex>
-
-namespace fobj
-{
-	using obj_ptr = std::shared_ptr<mathpresso::MpOperation>;
-
-	template<typename Signature, typename R, typename A, size_t N>
-	struct CallerBase
-	{
-		static const size_t NUM_ARGS = N;
-		using ARG_TYPE = A;
-		using RET_TYPE = R;
-		using SIGNATURE = Signature;
-	};
-
-	// Create a function with argument array pointer that calls a multi-parameter function
-	template<typename Signature, typename R, typename A, void * FPTR, size_t N>
-	struct Caller;
-
-	template<typename Signature, typename R, typename A, void * FPTR>
-	struct Caller<Signature, R, A, FPTR, 1> : CallerBase<Signature, R, A, 1>
-	{
-		static R call(A * args)
-		{
-			return SIGNATURE(FPTR)(args[0]);
-		}
-	};
-
-	template<typename Signature, typename R, typename A, void * FPTR>
-	struct Caller<Signature, R, A, FPTR, 2> : CallerBase<Signature, R, A, 2>
-	{
-		static R call(A * args)
-		{
-			return SIGNATURE(FPTR)(args[0], args[1]);
-		}
-	};
-
-	template<typename Signature, typename R, typename A, void * FPTR>
-	struct Caller<Signature, R, A, FPTR, 3> : CallerBase<Signature, R, A, 3>
-	{
-		static R call(A * args)
-		{
-			return SIGNATURE(FPTR)(args[0], args[1], args[2]);
-		}
-	};
-
-	template<typename FPTR_T, void * FPTR>
-	struct Caller_;
-
-	template<void * FPTR, typename R, typename ...ARGS>
-	struct Caller_<R(*)(ARGS...), FPTR> : Caller<R(*)(ARGS...), R, std::common_type_t<ARGS...>, (void *)FPTR, sizeof...(ARGS)>
-	{
-	};
-
-	template<typename CALLER>
-	obj_ptr _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
-	{
-		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::RET_TYPE, typename CALLER::ARG_TYPE>>((void *)CALLER::call, CALLER::NUM_ARGS, flags, priority);
-	}
-}
-
-#define VPTR(function) reinterpret_cast<void*>(function)
+#ifdef _COMPILE_TEST
 
 double test_func0()
 {
@@ -99,20 +38,15 @@ double test_func3(double a, double b, double c)
 }
 
 //MAP(MAKE_CPLX, sin, cos)
-
-#define _OBJ(expr) fobj::_mpObject(fobj::Caller_<decltype(expr), expr>())
 	
 //auto p = Caller_<double(*)(double), static_cast<double(*)(double)>(std::sin)>::call;
-
 //auto p0 = _OBJ(&test_func0);
-//auto p1 = _OBJ(&test_func1);
-//auto p2 = _OBJ(&test_func2);
-//auto p3 = _OBJ(&test_func3);
 
+auto p1 = _OBJ(&test_func1);
+auto p2 = _OBJ(&test_func2);
+auto p3 = _OBJ(&test_func3);
+#endif
 
-//auto test_obj = _mpObject(&test_func);
-
-using cplx_t = std::complex<double>;
 
 // Missing in std
 namespace std
