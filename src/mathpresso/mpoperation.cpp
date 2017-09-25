@@ -17,90 +17,112 @@
 
 #include <complex>
 
-// MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority = 0) noexcept;
-
-template<typename R, typename A, void * FPTR, size_t N>
-struct Caller;
-
-
-template<typename R, typename A, void * FPTR>
-struct Caller<R, A, FPTR, 1>
+namespace fobj
 {
-	using FT = R(*)(A);
+	using obj_ptr = std::shared_ptr<mathpresso::MpOperation>;
 
-	static R call(A * args)
+	template<typename R, typename A, size_t N>
+	struct CallerBase
 	{
-		return FT(FPTR)(args[0]);
-	}
-};
+		static const size_t NUM_ARGS = N;
+		using ARG_TYPE = A;
+		using RET_TYPE = R;
+	};
 
-template<typename R, typename A, void * FPTR>
-struct Caller<R, A, FPTR, 2>
-{
-	using FT = R(*)(A, A);
+	// Create a function with argument array pointer that calls a multi-parameter function
+	template<typename R, typename A, void * FPTR, size_t N>
+	struct Caller;
 
-	static R call(A * args)
+	template<typename R, typename A, void * FPTR> 
+	struct Caller<R, A, FPTR, 1> : CallerBase<R, A, 1>
 	{
-		return FT(FPTR)(args[0], args[1]);
-	}
-};
+		using FT = R(*)(A);
+		
+		static R call(A * args)
+		{
+			return FT(FPTR)(args[0]);
+		}
+	};
 
-
-template<typename FPTR_T, void * FPTR>
-struct Caller_;
-
-template<void * FPTR, typename R, typename ...ARGS>
-struct Caller_<R(*)(ARGS...), FPTR> : Caller<R, std::common_type_t<ARGS...>, (void *)FPTR, sizeof...(ARGS)>
-{
-};
-
-
-template<typename Signature, typename R, typename A, size_t N>
-struct OperationFactory_
-{
-	static std::shared_ptr<mathpresso::MpOperation> create_from(Signature * f, uint32_t flags, uint32_t priority)
+	template<typename R, typename A, void * FPTR>
+	struct Caller<R, A, FPTR, 2> : CallerBase<R, A, 2>
 	{
-		return std::make_shared<mathpresso::MpOperationFunc<R, A>>(flags, N, (void *)0, priority);
+		using FT = R(*)(A, A);
+		
+		static R call(A * args)
+		{
+			return FT(FPTR)(args[0], args[1]);
+		}
+	};
+
+	template<typename R, typename A, void * FPTR>
+	struct Caller<R, A, FPTR, 3> : CallerBase<R, A, 3>
+	{
+		using FT = R(*)(A, A, A);
+		
+		static R call(A * args)
+		{
+			return FT(FPTR)(args[0], args[1], args[2]);
+		}
+	};
+
+	template<typename FPTR_T, void * FPTR>
+	struct Caller_;
+
+	template<void * FPTR, typename R, typename ...ARGS>
+	struct Caller_<R(*)(ARGS...), FPTR> : Caller<R, std::common_type_t<ARGS...>, (void *)FPTR, sizeof...(ARGS)>
+	{
+	};
+
+	template<void * FPTR, typename R>
+	struct Caller_<R(*)(), FPTR> : Caller<R, double, (void *)FPTR, 0>
+	{
+	};
+
+	template<typename CALLER>
+	obj_ptr _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 1)
+	{
+		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::RET_TYPE, typename CALLER::ARG_TYPE>>(flags, CALLER::NUM_ARGS, (void *)CALLER::call, priority);
 	}
-};
-
-template<typename Signature>
-struct OperationFactory;
-
-template<typename R, typename ...ARGS>
-struct OperationFactory<R(ARGS...)> : OperationFactory_<R(ARGS...), R, std::common_type_t<ARGS...>, sizeof...(ARGS)>
-{
-};
-
-template<typename Signature>
-std::shared_ptr<mathpresso::MpOperation> _mpObject(Signature * function, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 1)
-{
-	return OperationFactory<Signature>::create_from(function, flags, priority);
 }
 
-
-double test_func(double a, double b)
+double test_func0()
 {
-	return a + b;
+	return 1.0;
 }
 
-double testf(double a)
+double test_func1(double a)
 {
 	return a;
 }
 
-#define _CALLER(expr) Caller_<decltype(expr), expr>::call
+double test_func2(double a, double b)
+{
+	return a + b;
+}
+
+double test_func3(double a, double b, double c)
+{
+	return a + b + c;
+}
+
+#define _OBJ(expr) fobj::_mpObject(fobj::Caller_<decltype(expr), expr>())
+	
 //auto p = Caller_<double(*)(double), static_cast<double(*)(double)>(std::sin)>::call;
 
-auto p1 = _CALLER(static_cast<double(*)(double)>(std::sin));
-auto p2 = _CALLER(&testf);
-auto p3 = _CALLER(&test_func);
+//auto p0 = _OBJ(&test_func0);
+auto p1 = _OBJ(&test_func1);
+auto p2 = _OBJ(&test_func2);
+auto p3 = _OBJ(&test_func3);
 
-auto p_obj = _mpObject(_CALLER(&testf));
-
+//auto p_obj = _mpObject(_CALLER(&testf));
+std::complex<double> sin_c(std::complex<double> a)
+{
+	return std::sin(a);
+}
 
 //auto test_obj = _mpObject(&test_func);
-
+ 
 namespace mathpresso
 {
 #define VPTR(function) reinterpret_cast<void*>(function)
@@ -203,6 +225,10 @@ namespace mathpresso
 	double ceilRR(double args) { return std::ceil(args); }
 #endif
 
+#define _ADD_STDFUNC(fname) \
+	ctx ->addObject(#fname, _OBJ(static_cast<double(*)(double)>(std::fname))); \
+	ctx ->addObject(#fname, _OBJ(static_cast<std::complex<double> (*)(const std::complex<double>&)>(std::fname))); 
+
 	uint32_t addBuiltinMpObjects(Context * ctx)
 	{
 		ctx->addObject("+", std::make_shared<MpOperationAdd<double>>());
@@ -261,34 +287,51 @@ namespace mathpresso
 		ctx->addObject("frac", std::make_shared<MpOperationFrac>());
 		ctx->addObject("trunc", std::make_shared<MpOperationTrunc>());
 
-		ctx->addObject("sin", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(sinRR)));
-		ctx->addObject("sin", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(sinCC)));
-		ctx->addObject("cos", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(cosRR)));
-		ctx->addObject("cos", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(cosCC)));
-		ctx->addObject("tan", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(tanRR)));
-		ctx->addObject("tan", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(tanCC)));
-		ctx->addObject("sinh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(sinhRR)));
-		ctx->addObject("sinh", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(sinhCC)));
-		ctx->addObject("cosh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(coshRR)));
-		ctx->addObject("cosh", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(coshCC)));
-		ctx->addObject("tanh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(tanhRR)));
-		ctx->addObject("tanh", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(tanhCC)));
-		ctx->addObject("asin", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(asinRR)));
-		ctx->addObject("asin", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(asinCC)));
-		ctx->addObject("acos", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(acosRR)));
-		ctx->addObject("acos", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(acosCC)));
-		ctx->addObject("atan", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(atanRR)));
-		ctx->addObject("atan", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(atanCC)));
+		ctx->addObject("sin", _OBJ(&sin_c));
+		//_ADD_STDFUNC(sin);
+		_ADD_STDFUNC(cos);
+		_ADD_STDFUNC(tan);
+		_ADD_STDFUNC(sinh);
+		_ADD_STDFUNC(cosh);
+		_ADD_STDFUNC(tanh);
+		_ADD_STDFUNC(acos);
+		_ADD_STDFUNC(asin);
+		_ADD_STDFUNC(atan);
+		_ADD_STDFUNC(log);
+		_ADD_STDFUNC(log10);
+		_ADD_STDFUNC(exp);
+		//_ADD_STDFUNC(log2);
+
+		//ctx->addObject("sin", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(sinRR)));
+		//ctx->addObject("sin", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(sinCC)));
+		//ctx->addObject("cos", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(cosRR)));
+		//ctx->addObject("cos", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(cosCC)));
+		//ctx->addObject("tan", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(tanRR)));
+		//ctx->addObject("tan", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(tanCC)));
+		//ctx->addObject("sinh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(sinhRR)));
+		//ctx->addObject("sinh", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(sinhCC)));
+		//ctx->addObject("cosh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(coshRR)));
+		//ctx->addObject("cosh", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(coshCC)));
+		//ctx->addObject("tanh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(tanhRR)));
+		//ctx->addObject("tanh", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(tanhCC)));
+		//ctx->addObject("asin", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(asinRR)));
+		//ctx->addObject("asin", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(asinCC)));
+		//ctx->addObject("acos", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(acosRR)));
+		//ctx->addObject("acos", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(acosCC)));
+		//ctx->addObject("atan", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(atanRR)));
+		//ctx->addObject("atan", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(atanCC)));
+		//ctx->addObject("log", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(logRR)));
+		//ctx->addObject("log", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(logCC)));
+		//ctx->addObject("log10", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(log10RR)));
+		//ctx->addObject("log10", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(log10CC)));
+		//ctx->addObject("exp", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(expRR)));
+		//ctx->addObject("exp", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(expCC)));
+
 		ctx->addObject("sqrtc", std::make_shared<MpOperationFunc<std::complex<double>, double>>(MpOperation::None, 1, VPTR(sqrtRC)));
 		ctx->addObject("sqrtc", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(sqrtCC)));
-		ctx->addObject("log", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(logRR)));
-		ctx->addObject("log", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(logCC)));
 		ctx->addObject("log2", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(log2RR)));
 		ctx->addObject("log2", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(log2CC)));
-		ctx->addObject("log10", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(log10RR)));
-		ctx->addObject("log10", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(log10CC)));
-		ctx->addObject("exp", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(expRR)));
-		ctx->addObject("exp", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(expCC)));
+
 		ctx->addObject("pow", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 2, VPTR(powRR)));
 		ctx->addObject("pow", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 2, VPTR(powCC)));
 		ctx->addObject("atan2", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 2, VPTR(atan2RR)));
