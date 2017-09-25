@@ -15,39 +15,6 @@
 #include <asmjit/x86/x86operand.h>
 #include <asmjit/x86/x86inst.h>
 
-#ifdef _COMPILE_TEST
-
-double test_func0()
-{
-	return 1.0;
-}
-
-double test_func1(double a)
-{
-	return a;
-}
-
-double test_func2(double a, double b)
-{
-	return a + b;
-}
-
-double test_func3(double a, double b, double c)
-{
-	return a + b + c;
-}
-
-//MAP(MAKE_CPLX, sin, cos)
-	
-//auto p = Caller_<double(*)(double), static_cast<double(*)(double)>(std::sin)>::call;
-//auto p0 = _OBJ(&test_func0);
-
-auto p1 = _OBJ(&test_func1);
-auto p2 = _OBJ(&test_func2);
-auto p3 = _OBJ(&test_func3);
-#endif
-
-
 // Missing in std
 namespace std
 {
