@@ -5,11 +5,14 @@ namespace mathpresso
 {
 	// isfinite
 	template<typename T>
-	class MpOperationIsFinite : public MpOperationFunc<T, T>
+	class MpOperationIsFinite : public MpOperationEval<T, T>
 	{
 	public:
-		MpOperationIsFinite() noexcept;
+		MpOperationIsFinite() : MpOperationEval<T, T>(1)
+		{
+		}
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
+		virtual T evaluate(const T *) const override;
 	};
 
 	// isinf

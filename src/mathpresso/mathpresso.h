@@ -111,10 +111,10 @@ type& operator=(const type& other) = delete; \
 	typedef double(*Arg8Func)(double, double, double, double, double, double, double, double);
 #endif 
 
-	typedef double(*mpFuncDtoD)(double*);
-	typedef std::complex<double>(*mpFuncpCtoC)(std::complex<double>*);
-	typedef double(*mpFuncpCtoD)(std::complex<double>*);
-	typedef std::complex<double>(*mpFuncpDtoC)(double*);
+	typedef double(*mpFuncDtoD)(const double*);
+	typedef std::complex<double>(*mpFuncpCtoC)(const std::complex<double>*);
+	typedef double(*mpFuncpCtoD)(const std::complex<double>*);
+	typedef std::complex<double>(*mpFuncpDtoC)(const double*);
 
 
 	// ============================================================================

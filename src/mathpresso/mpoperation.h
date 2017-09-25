@@ -132,6 +132,10 @@ namespace mathpresso
 		{
 			return signature_;
 		}
+		bool hasFlag(uint32_t flag) const
+		{
+			return flag & flags_;
+		}
 	protected:
 		Signature signature_;
 		uint32_t flags_;
@@ -139,25 +143,34 @@ namespace mathpresso
 	};
 
 	template<typename RET, typename ARGS>
-	class MATHPRESSO_API MpOperationFunc : public MpOperation
+	class MATHPRESSO_API MpOperationEval : public MpOperation
 	{
 	public:
-		MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority = 0) noexcept;
+		MpOperationEval(size_t numargs, uint32_t flags = MpOperation::None, uint32_t priority = 0) noexcept;
+		virtual ~MpOperationEval() noexcept
+		{
+		}
+		virtual RET evaluate(const ARGS * args) const = 0;
+		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
+	};
+
+	template<typename RET, typename ARGS>
+	class MATHPRESSO_API MpOperationFunc : public MpOperationEval<RET, ARGS>
+	{
+	public:
+		MpOperationFunc(void * fnPtr, size_t numargs, uint32_t flags = MpOperation::None, uint32_t priority = 0) noexcept :
+			MpOperationEval(numargs, flags, priority),
+			fnPtr_(fnPtr)
+		{
+		}
 
 		virtual ~MpOperationFunc() noexcept
 		{
 		}
 
-		bool hasFlag(uint32_t flag) const
-		{
-			return flag & flags_;
-		}
-
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
-		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
+		virtual RET evaluate(const ARGS * args) const;
 	protected:
-		// Used by optimizer to calculate the function of all arguments are constants
-		virtual RET evaluate(ARGS * args) const;
 		// Function-pointer:
 		void * fnPtr_;
 	};

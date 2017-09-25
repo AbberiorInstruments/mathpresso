@@ -21,48 +21,43 @@ namespace fobj
 {
 	using obj_ptr = std::shared_ptr<mathpresso::MpOperation>;
 
-	template<typename R, typename A, size_t N>
+	template<typename Signature, typename R, typename A, size_t N>
 	struct CallerBase
 	{
 		static const size_t NUM_ARGS = N;
 		using ARG_TYPE = A;
 		using RET_TYPE = R;
+		using SIGNATURE = Signature;
 	};
 
 	// Create a function with argument array pointer that calls a multi-parameter function
-	template<typename R, typename A, void * FPTR, size_t N>
+	template<typename Signature, typename R, typename A, void * FPTR, size_t N>
 	struct Caller;
 
-	template<typename R, typename A, void * FPTR> 
-	struct Caller<R, A, FPTR, 1> : CallerBase<R, A, 1>
+	template<typename Signature, typename R, typename A, void * FPTR>
+	struct Caller<Signature, R, A, FPTR, 1> : CallerBase<Signature, R, A, 1>
 	{
-		using FT = R(*)(A);
-		
 		static R call(A * args)
 		{
-			return FT(FPTR)(args[0]);
+			return SIGNATURE(FPTR)(args[0]);
 		}
 	};
 
-	template<typename R, typename A, void * FPTR>
-	struct Caller<R, A, FPTR, 2> : CallerBase<R, A, 2>
+	template<typename Signature, typename R, typename A, void * FPTR>
+	struct Caller<Signature, R, A, FPTR, 2> : CallerBase<Signature, R, A, 2>
 	{
-		using FT = R(*)(A, A);
-		
 		static R call(A * args)
 		{
-			return FT(FPTR)(args[0], args[1]);
+			return SIGNATURE(FPTR)(args[0], args[1]);
 		}
 	};
 
-	template<typename R, typename A, void * FPTR>
-	struct Caller<R, A, FPTR, 3> : CallerBase<R, A, 3>
+	template<typename Signature, typename R, typename A, void * FPTR>
+	struct Caller<Signature, R, A, FPTR, 3> : CallerBase<Signature, R, A, 3>
 	{
-		using FT = R(*)(A, A, A);
-		
 		static R call(A * args)
 		{
-			return FT(FPTR)(args[0], args[1], args[2]);
+			return SIGNATURE(FPTR)(args[0], args[1], args[2]);
 		}
 	};
 
@@ -70,21 +65,18 @@ namespace fobj
 	struct Caller_;
 
 	template<void * FPTR, typename R, typename ...ARGS>
-	struct Caller_<R(*)(ARGS...), FPTR> : Caller<R, std::common_type_t<ARGS...>, (void *)FPTR, sizeof...(ARGS)>
-	{
-	};
-
-	template<void * FPTR, typename R>
-	struct Caller_<R(*)(), FPTR> : Caller<R, double, (void *)FPTR, 0>
+	struct Caller_<R(*)(ARGS...), FPTR> : Caller<R(*)(ARGS...), R, std::common_type_t<ARGS...>, (void *)FPTR, sizeof...(ARGS)>
 	{
 	};
 
 	template<typename CALLER>
-	obj_ptr _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 1)
+	obj_ptr _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
 	{
-		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::RET_TYPE, typename CALLER::ARG_TYPE>>(flags, CALLER::NUM_ARGS, (void *)CALLER::call, priority);
+		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::RET_TYPE, typename CALLER::ARG_TYPE>>((void *)CALLER::call, CALLER::NUM_ARGS, flags, priority);
 	}
 }
+
+#define VPTR(function) reinterpret_cast<void*>(function)
 
 double test_func0()
 {
@@ -106,82 +98,108 @@ double test_func3(double a, double b, double c)
 	return a + b + c;
 }
 
+//MAP(MAKE_CPLX, sin, cos)
+
 #define _OBJ(expr) fobj::_mpObject(fobj::Caller_<decltype(expr), expr>())
 	
 //auto p = Caller_<double(*)(double), static_cast<double(*)(double)>(std::sin)>::call;
 
 //auto p0 = _OBJ(&test_func0);
-auto p1 = _OBJ(&test_func1);
-auto p2 = _OBJ(&test_func2);
-auto p3 = _OBJ(&test_func3);
+//auto p1 = _OBJ(&test_func1);
+//auto p2 = _OBJ(&test_func2);
+//auto p3 = _OBJ(&test_func3);
 
-//auto p_obj = _mpObject(_CALLER(&testf));
-std::complex<double> sin_c(std::complex<double> a)
-{
-	return std::sin(a);
-}
 
 //auto test_obj = _mpObject(&test_func);
- 
+
+using cplx_t = std::complex<double>;
+
+// Missing in std
+namespace std
+{
+	cplx_t log2(const cplx_t &x) { return std::log(x) / std::log(2.); }
+}
+
+#define _ADD_FUNRC(name, fptr) {\
+	static auto p = static_cast<double(*)(const cplx_t&)>(fptr); \
+	ctx ->addObject(name, _OBJ(static_cast<double(*)(const cplx_t&)>(fptr))); }
+
+#define _ADD_CPLX1(name, fptr) {\
+	static auto p = static_cast<cplx_t(*)(const cplx_t&)>(fptr); \
+	ctx ->addObject(name, _OBJ(static_cast<cplx_t(*)(const cplx_t&)>(fptr))); }
+
+#define _ADD_CPLX2(name, fptr) {\
+	static auto p = static_cast<cplx_t(*)(const cplx_t&, const cplx_t&)>(fptr); \
+	ctx ->addObject(name, _OBJ(static_cast<cplx_t(*)(const cplx_t&, const cplx_t&)>(fptr))); }
+
+// First line is to ensure the instantiation of the function
+#define _ADD_FUNC1(name, fptr) _ADD_CPLX1(name, fptr) \
+	ctx ->addObject(name, _OBJ(static_cast<double(*)(double)>(fptr))); 
+	
+#define _ADD_FUNC2(name, fptr) _ADD_CPLX2(name, fptr) \
+	ctx ->addObject(name, _OBJ(static_cast<double(*)(double, double)>(fptr)));
+	
 namespace mathpresso
 {
-#define VPTR(function) reinterpret_cast<void*>(function)
+	std::complex<double> sqrtc(double x) 
+	{ 
+		return std::sqrt(std::complex<double>(x, 0)); 
+	}
 
 	// Mixed functions
-	std::complex<double> sqrtRC(double  * x) { return std::sqrt(std::complex<double>(x[0], 0)); }
-	double absCR(std::complex<double>* args) { return std::abs(args[0]); }
-
+	// std::complex<double> sqrtRC(double  * x) { return std::sqrt(std::complex<double>(x[0], 0)); }
+	// double absCR(std::complex<double>* args) { return std::abs(args[0]); }
+	
 	// Complex functions
-	std::complex<double> sinCC(std::complex<double>* arg) { return std::sin(arg[0]); }
-	std::complex<double> cosCC(std::complex<double>* arg) { return std::cos(arg[0]); }
-	std::complex<double> tanCC(std::complex<double>* arg) { return std::tan(arg[0]); }
-	std::complex<double> asinCC(std::complex<double>* arg) { return std::asin(arg[0]); }
-	std::complex<double> acosCC(std::complex<double>* arg) { return std::acos(arg[0]); }
-	std::complex<double> atanCC(std::complex<double>* arg) { return std::atan(arg[0]); }
-	std::complex<double> sinhCC(std::complex<double>* arg) { return std::sinh(arg[0]); }
-	std::complex<double> coshCC(std::complex<double>* arg) { return std::cosh(arg[0]); }
-	std::complex<double> tanhCC(std::complex<double>* arg) { return std::tanh(arg[0]); }
+	//std::complex<double> sinCC(std::complex<double>* arg) { return std::sin(arg[0]); }
+	//std::complex<double> cosCC(std::complex<double>* arg) { return std::cos(arg[0]); }
+	//std::complex<double> tanCC(std::complex<double>* arg) { return std::tan(arg[0]); }
+	//std::complex<double> asinCC(std::complex<double>* arg) { return std::asin(arg[0]); }
+	//std::complex<double> acosCC(std::complex<double>* arg) { return std::acos(arg[0]); }
+	//std::complex<double> atanCC(std::complex<double>* arg) { return std::atan(arg[0]); }
+	//std::complex<double> sinhCC(std::complex<double>* arg) { return std::sinh(arg[0]); }
+	//std::complex<double> coshCC(std::complex<double>* arg) { return std::cosh(arg[0]); }
+	//std::complex<double> tanhCC(std::complex<double>* arg) { return std::tanh(arg[0]); }
+	//std::complex<double> logCC(std::complex<double> *  x) { return std::log(x[0]); }
+	//std::complex<double> log2CC(std::complex<double> *  x) { return std::log(x[0]) / log(2); }
+	//std::complex<double> log10CC(std::complex<double> *  x) { return std::log10(x[0]); }
 
-	std::complex<double> logCC(std::complex<double> *  x) { return std::log(x[0]); }
-	std::complex<double> log2CC(std::complex<double> *  x) { return std::log(x[0]) / log(2); }
-	std::complex<double> log10CC(std::complex<double> *  x) { return std::log10(x[0]); }
-	std::complex<double> powCC(std::complex<double> *  x) { return std::pow(x[0], x[1]); }
-	std::complex<double> expCC(std::complex<double> *  x) { return std::exp(x[0]); }
+	// std::complex<double> powCC(std::complex<double> *  x) { return std::pow(x[0], x[1]); }
+	//std::complex<double> expCC(std::complex<double> *  x) { return std::exp(x[0]); }
+	//std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
+
 	std::complex<double> recipCC(std::complex<double>* args) { return 1.0 / args[0]; }
-
-	std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
 
 	// Real functions
 #ifndef MATHPRESSO_ORIGINAL_DOUBLE_FUNCTION_CALLS
-	double sinRR(double * arg) { return std::sin(arg[0]); }
-	double cosRR(double * arg) { return std::cos(arg[0]); }
-	double tanRR(double * arg) { return std::tan(arg[0]); }
-	double asinRR(double * arg) { return std::asin(arg[0]); }
-	double acosRR(double * arg) { return std::acos(arg[0]); }
-	double atanRR(double * arg) { return std::atan(arg[0]); }
-	double sinhRR(double * arg) { return std::sinh(arg[0]); }
-	double coshRR(double * arg) { return std::cosh(arg[0]); }
-	double tanhRR(double * arg) { return std::tanh(arg[0]); }
+	//double sinRR(double * arg) { return std::sin(arg[0]); }
+	//double cosRR(double * arg) { return std::cos(arg[0]); }
+	//double tanRR(double * arg) { return std::tan(arg[0]); }
+	//double asinRR(double * arg) { return std::asin(arg[0]); }
+	//double acosRR(double * arg) { return std::acos(arg[0]); }
+	//double atanRR(double * arg) { return std::atan(arg[0]); }
+	//double sinhRR(double * arg) { return std::sinh(arg[0]); }
+	//double coshRR(double * arg) { return std::cosh(arg[0]); }
+	//double tanhRR(double * arg) { return std::tanh(arg[0]); }
 
-	double logRR(double* x) { return std::log(x[0]); }
-	double log2RR(double * x) { return std::log2(x[0]); }
-	double log10RR(double * x) { return std::log10(x[0]); }
-	double powRR(double * x) { return std::pow(x[0], x[1]); }
-	double expRR(double * x) { return std::exp(x[0]); }
-	double atan2RR(double * x) { return std::atan2(x[0], x[1]); }
-	double hypotRR(double * x) { return std::hypot(x[0], x[1]); }
+	//double logRR(double* x) { return std::log(x[0]); }
+	//double log2RR(double * x) { return std::log2(x[0]); }
+	//double log10RR(double * x) { return std::log10(x[0]); }
+	//double expRR(double * x) { return std::exp(x[0]); }
 
-	double isfiniteRR(double * args) { return std::isfinite(args[0]) ? 1.0 : 0.0; }
+	// double atan2RR(double * x) { return std::atan2(x[0], x[1]); }
+	// double powRR(double * x) { return std::pow(x[0], x[1]); }
+	// double hypotRR(double * x) { return std::hypot(x[0], x[1]); }
+
+	double recipRR(double * args) { return 1.0 / args[0]; }
 	double isinfRR(double * args) { return std::isinf(args[0]) ? 1.0 : 0.0; }
 	double isnanRR(double *  args) { return std::isnan(args[0]) ? 1.0 : 0.0; }
 	double sqrtRR(double * args) { return std::sqrt(args[0]); }
 	double negRR(double * args) { return -args[0]; }
 	double notRR(double * args) { return args[0] == 0 ? 1.0 : 0.0; }
-	double recipRR(double * args) { return 1.0 / args[0]; }
 	double signbitRR(double * args) { return std::signbit(args[0]) ? 1.0 : 0.0; }
 	double copysignRR(double * args) { return std::copysign(args[0], args[1]); }
 	double avgRR(double * args) { return (args[0] + args[1]) * 0.5; }
-	double absRR(double * args) { return std::abs(args[0]); }
 	double roundRR(double * args) { return std::floor(args[0] + .5); }
 	double roundevenRR(double * args) { return std::rint(args[0]); }
 	double truncRR(double * args) { return std::trunc(args[0]); }
@@ -224,52 +242,49 @@ namespace mathpresso
 	double floorRR(double args) { return std::floor(args); }
 	double ceilRR(double args) { return std::ceil(args); }
 #endif
-
-#define _ADD_STDFUNC(fname) \
-	ctx ->addObject(#fname, _OBJ(static_cast<double(*)(double)>(std::fname))); \
-	ctx ->addObject(#fname, _OBJ(static_cast<std::complex<double> (*)(const std::complex<double>&)>(std::fname))); 
-
+	
 	uint32_t addBuiltinMpObjects(Context * ctx)
 	{
 		ctx->addObject("+", std::make_shared<MpOperationAdd<double>>());
-		ctx->addObject("+", std::make_shared<MpOperationAdd<std::complex<double>>>());
+		ctx->addObject("+", std::make_shared<MpOperationAdd<cplx_t>>());
 		ctx->addObject("-", std::make_shared<MpOperationSub<double>>());
-		ctx->addObject("-", std::make_shared<MpOperationSub<std::complex<double>>>());
+		ctx->addObject("-", std::make_shared<MpOperationSub<cplx_t>>());
 		ctx->addObject("*", std::make_shared<MpOperationMul<double>>());
-		ctx->addObject("*", std::make_shared<MpOperationMul<std::complex<double>>>());
+		ctx->addObject("*", std::make_shared<MpOperationMul<cplx_t>>());
 		ctx->addObject("/", std::make_shared<MpOperationDiv<double>>());
-		ctx->addObject("/", std::make_shared<MpOperationDiv<std::complex<double>>>());
+		ctx->addObject("/", std::make_shared<MpOperationDiv<cplx_t>>());
 		ctx->addObject("==", std::make_shared<MpOperationEq<double>>());
-		ctx->addObject("==", std::make_shared<MpOperationEq<std::complex<double>>>());
+		ctx->addObject("==", std::make_shared<MpOperationEq<cplx_t>>());
 		ctx->addObject("!=", std::make_shared<MpOperationNe<double>>());
-		ctx->addObject("!=", std::make_shared<MpOperationNe<std::complex<double>>>());
+		ctx->addObject("!=", std::make_shared<MpOperationNe<cplx_t>>());
 		ctx->addObject(">=", std::make_shared<MpOperationGe>());
 		ctx->addObject(">", std::make_shared<MpOperationGt>());
 		ctx->addObject("<=", std::make_shared<MpOperationLe>());
 		ctx->addObject("<", std::make_shared<MpOperationLt>());
 		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary<double>>());
-		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary<std::complex<double>>>());
+		ctx->addObject("_ternary_", std::make_shared<MpOperationTernary<cplx_t>>());
 		ctx->addObject("=", std::make_shared<MpOperationVarDeclaration<double>>());
-		ctx->addObject("=", std::make_shared<MpOperationVarDeclaration<std::complex<double>>>());
+		ctx->addObject("=", std::make_shared<MpOperationVarDeclaration<cplx_t>>());
 		ctx->addObject("=", std::make_shared<MpOperationAssignment<double>>());
-		ctx->addObject("=", std::make_shared<MpOperationAssignment<std::complex<double>>>());
+		ctx->addObject("=", std::make_shared<MpOperationAssignment<cplx_t>>());
 		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite<double>>());
-		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite<std::complex<double>>>());
+		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite<cplx_t>>());
 		ctx->addObject("isinf", std::make_shared<MpOperationIsInfinite<double>>());
-		ctx->addObject("isinf", std::make_shared<MpOperationIsInfinite<std::complex<double>>>());
+		ctx->addObject("isinf", std::make_shared<MpOperationIsInfinite<cplx_t>>());
 		ctx->addObject("isnan", std::make_shared<MpOperationIsNan<double>>());
-		ctx->addObject("isnan", std::make_shared<MpOperationIsNan<std::complex<double>>>());
+		ctx->addObject("isnan", std::make_shared<MpOperationIsNan<cplx_t>>());
 
 		ctx->addObject("-", std::make_shared<MpOperationNeg<double>>());
-		ctx->addObject("-", std::make_shared<MpOperationNeg<std::complex<double>>>());
+		ctx->addObject("-", std::make_shared<MpOperationNeg<cplx_t>>());
 		ctx->addObject("abs", std::make_shared<MpOperationAbs>());
-		ctx->addObject("abs", std::make_shared<MpOperationFunc<double, std::complex<double>>>(MpOperation::None, 1, VPTR(absCR)));
+		_ADD_FUNRC("abs", std::abs);
+
 		ctx->addObject("avg", std::make_shared<MpOperationAvg<double>>());
-		ctx->addObject("avg", std::make_shared<MpOperationAvg<std::complex<double>>>());
+		ctx->addObject("avg", std::make_shared<MpOperationAvg<cplx_t>>());
 		ctx->addObject("recip", std::make_shared<MpOperationRecip<double>>());
-		ctx->addObject("recip", std::make_shared<MpOperationRecip<std::complex<double>>>());
+		ctx->addObject("recip", std::make_shared<MpOperationRecip<cplx_t>>());
 		ctx->addObject("!", std::make_shared<MpOperationNot<double>>());
-		ctx->addObject("!", std::make_shared<MpOperationNot<std::complex<double>>>());
+		ctx->addObject("!", std::make_shared<MpOperationNot<cplx_t>>());
 
 		ctx->addObject("real", std::make_shared<MpOperationGetReal>());
 		ctx->addObject("imag", std::make_shared<MpOperationGetImag>());
@@ -287,69 +302,73 @@ namespace mathpresso
 		ctx->addObject("frac", std::make_shared<MpOperationFrac>());
 		ctx->addObject("trunc", std::make_shared<MpOperationTrunc>());
 
-		ctx->addObject("sin", _OBJ(&sin_c));
-		//_ADD_STDFUNC(sin);
-		_ADD_STDFUNC(cos);
-		_ADD_STDFUNC(tan);
-		_ADD_STDFUNC(sinh);
-		_ADD_STDFUNC(cosh);
-		_ADD_STDFUNC(tanh);
-		_ADD_STDFUNC(acos);
-		_ADD_STDFUNC(asin);
-		_ADD_STDFUNC(atan);
-		_ADD_STDFUNC(log);
-		_ADD_STDFUNC(log10);
-		_ADD_STDFUNC(exp);
-		//_ADD_STDFUNC(log2);
+		_ADD_FUNC1("sin", std::sin);
+		_ADD_FUNC1("cos", std::cos);
+		_ADD_FUNC1("tan", std::tan);
+		_ADD_FUNC1("sinh", std::sinh);
+		_ADD_FUNC1("cosh", std::cosh);
+		_ADD_FUNC1("tanh", std::tanh);
+		_ADD_FUNC1("acos", std::acos);
+		_ADD_FUNC1("asin", std::asin);
+		_ADD_FUNC1("atan", std::atan);
+		_ADD_FUNC1("log", std::log);
+		_ADD_FUNC1("log10", std::log10);
+		_ADD_FUNC1("exp", std::exp);
+		_ADD_FUNC1("log2", std::log2);
+		_ADD_FUNC2("pow", std::pow);
+		ctx->addObject("atan2", _OBJ(static_cast<double(*)(double, double)>(std::atan2)));
+		ctx->addObject("hypot", _OBJ(static_cast<double(*)(double, double)>(std::hypot)));
+		ctx->addObject("sqrtc", _OBJ(&sqrtc));
+		ctx->addObject("sqrtc", _OBJ(static_cast<cplx_t(*)(const cplx_t&)>(std::sqrt)));
+		
+		ctx->addObject("_none_", std::make_shared<MpOperationFunc<double, double>>(nullptr, 0));
+		ctx->addObject("_none_", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(nullptr, 0));
 
-		//ctx->addObject("sin", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(sinRR)));
-		//ctx->addObject("sin", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(sinCC)));
-		//ctx->addObject("cos", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(cosRR)));
-		//ctx->addObject("cos", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(cosCC)));
-		//ctx->addObject("tan", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(tanRR)));
-		//ctx->addObject("tan", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(tanCC)));
-		//ctx->addObject("sinh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(sinhRR)));
-		//ctx->addObject("sinh", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(sinhCC)));
-		//ctx->addObject("cosh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(coshRR)));
-		//ctx->addObject("cosh", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(coshCC)));
-		//ctx->addObject("tanh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(tanhRR)));
-		//ctx->addObject("tanh", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(tanhCC)));
-		//ctx->addObject("asin", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(asinRR)));
-		//ctx->addObject("asin", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(asinCC)));
-		//ctx->addObject("acos", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(acosRR)));
-		//ctx->addObject("acos", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(acosCC)));
-		//ctx->addObject("atan", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(atanRR)));
-		//ctx->addObject("atan", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(atanCC)));
-		//ctx->addObject("log", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(logRR)));
-		//ctx->addObject("log", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(logCC)));
-		//ctx->addObject("log10", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(log10RR)));
-		//ctx->addObject("log10", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(log10CC)));
-		//ctx->addObject("exp", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(expRR)));
-		//ctx->addObject("exp", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(expCC)));
-
-		ctx->addObject("sqrtc", std::make_shared<MpOperationFunc<std::complex<double>, double>>(MpOperation::None, 1, VPTR(sqrtRC)));
-		ctx->addObject("sqrtc", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(sqrtCC)));
-		ctx->addObject("log2", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(log2RR)));
-		ctx->addObject("log2", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 1, VPTR(log2CC)));
-
-		ctx->addObject("pow", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 2, VPTR(powRR)));
-		ctx->addObject("pow", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 2, VPTR(powCC)));
-		ctx->addObject("atan2", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 2, VPTR(atan2RR)));
-		ctx->addObject("hypot", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 2, VPTR(hypotRR)));
-
-		ctx->addObject("_none_", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 0, nullptr));
-		ctx->addObject("_none_", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::None, 0, nullptr));
-
-		ctx->addObject("?", std::make_shared<MpOperationFunc<double, double>>(MpOperation::RighttoLeft, 2, nullptr, 15));
-		ctx->addObject("?", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::RighttoLeft, 2, nullptr, 15));
-		ctx->addObject(":", std::make_shared<MpOperationFunc<double, double>>(MpOperation::RighttoLeft, 2, nullptr, 15));
-		ctx->addObject(":", std::make_shared<MpOperationFunc<std::complex<double>, std::complex<double>>>(MpOperation::RighttoLeft, 2, nullptr, 15));
+		ctx->addObject("?", std::make_shared<MpOperationFunc<double, double>>(nullptr, 2, MpOperation::RighttoLeft, 15));
+		ctx->addObject("?", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(nullptr, 2, MpOperation::RighttoLeft, 15));
+		ctx->addObject(":", std::make_shared<MpOperationFunc<double, double>>(nullptr, 2, MpOperation::RighttoLeft, 15));
+		ctx->addObject(":", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(nullptr, 2, MpOperation::RighttoLeft, 15));
 
 		ctx->addConstant("NaN", mpGetNan());
 		ctx->addConstant("INF", mpGetInf());
 		ctx->addConstant("PI", 3.14159265358979323846);
 		ctx->addConstant("E", 2.7182818284590452354);
 		ctx->addConstant("i", { 0, 1 });
+
+
+		//ctx->addObject("sin", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(sinRR)));
+		//ctx->addObject("sin", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(sinCC)));
+		//ctx->addObject("cos", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(cosRR)));
+		//ctx->addObject("cos", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(cosCC)));
+		//ctx->addObject("tan", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(tanRR)));
+		//ctx->addObject("tan", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(tanCC)));
+		//ctx->addObject("sinh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(sinhRR)));
+		//ctx->addObject("sinh", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(sinhCC)));
+		//ctx->addObject("cosh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(coshRR)));
+		//ctx->addObject("cosh", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(coshCC)));
+		//ctx->addObject("tanh", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(tanhRR)));
+		//ctx->addObject("tanh", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(tanhCC)));
+		//ctx->addObject("asin", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(asinRR)));
+		//ctx->addObject("asin", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(asinCC)));
+		//ctx->addObject("acos", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(acosRR)));
+		//ctx->addObject("acos", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(acosCC)));
+		//ctx->addObject("atan", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(atanRR)));
+		//ctx->addObject("atan", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(atanCC)));
+		//ctx->addObject("log", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(logRR)));
+		//ctx->addObject("log", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(logCC)));
+		//ctx->addObject("log10", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(log10RR)));
+		//ctx->addObject("log10", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(log10CC)));
+		//ctx->addObject("exp", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(expRR)));
+		//ctx->addObject("exp", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(expCC)));
+		//ctx->addObject("log2", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 1, VPTR(log2RR)));
+		//ctx->addObject("log2", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(log2CC)));
+		//ctx->addObject("pow", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 2, VPTR(powRR)));
+		//ctx->addObject("pow", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 2, VPTR(powCC)));
+		//ctx->addObject("atan2", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 2, VPTR(atan2RR)));
+		//ctx->addObject("hypot", std::make_shared<MpOperationFunc<double, double>>(MpOperation::None, 2, VPTR(hypotRR)));
+		//ctx->addObject("sqrtc", std::make_shared<MpOperationFunc<cplx_t, double>>(MpOperation::None, 1, VPTR(sqrtRC)));
+		//ctx->addObject("sqrtc", std::make_shared<MpOperationFunc<cplx_t, cplx_t>>(MpOperation::None, 1, VPTR(sqrtCC)));
+
 		return 0;
 	}
 
@@ -412,31 +431,28 @@ namespace mathpresso
 		parameters_ = params;
 	}
 
+
 	template<>
-	MpOperationFunc<double, double>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority)  noexcept
-		: MpOperation(Signature(numargs, Signature::type::real), flags, priority),
-		fnPtr_(fnPtr)
+	MpOperationEval<double, double>::MpOperationEval(size_t numargs, uint32_t flags, uint32_t priority)  noexcept
+		: MpOperation(Signature(numargs, Signature::type::real), flags, priority)
 	{
 	}
 
 	template<>
-	MpOperationFunc<std::complex<double>, double>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) noexcept
-		: MpOperation(Signature(numargs, Signature::type::real, Signature::type::complex), flags, priority),
-		fnPtr_(fnPtr)
+	MpOperationEval<cplx_t, double>::MpOperationEval(size_t numargs, uint32_t flags, uint32_t priority) noexcept
+		: MpOperation(Signature(numargs, Signature::type::real, Signature::type::complex), flags, priority)
 	{
 	}
 
 	template<>
-	MpOperationFunc<double, std::complex<double>>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) noexcept
-		: MpOperation(Signature(numargs, Signature::type::complex, Signature::type::real), flags, priority),
-		fnPtr_(fnPtr)
+	MpOperationEval<double, cplx_t>::MpOperationEval(size_t numargs, uint32_t flags, uint32_t priority) noexcept
+		: MpOperation(Signature(numargs, Signature::type::complex, Signature::type::real), flags, priority)
 	{
 	}
 
 	template<>
-	MpOperationFunc<std::complex<double>, std::complex<double>>::MpOperationFunc(uint32_t flags, size_t numargs, void * fnPtr, uint32_t priority) noexcept
-		: MpOperation(Signature(numargs, Signature::type::complex), flags, priority),
-		fnPtr_(fnPtr)
+	MpOperationEval<cplx_t, cplx_t>::MpOperationEval(size_t numargs, uint32_t flags, uint32_t priority) noexcept
+		: MpOperation(Signature(numargs, Signature::type::complex), flags, priority)
 	{
 	}
 
@@ -461,7 +477,7 @@ namespace mathpresso
 		return JitVar(result, false);
 	}
 	template<>
-	inline JitVar MpOperationFunc<double, std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	inline JitVar MpOperationFunc<double, cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmSd();
 		asmjit::X86Xmm args[8];
@@ -476,12 +492,12 @@ namespace mathpresso
 			args[i] = jc->registerVarComplex(jc->onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
 		}
 
-		jc->inlineCall<double, std::complex<double>>(result, args, nargs(), fnPtr_);
+		jc->inlineCall<double, cplx_t>(result, args, nargs(), fnPtr_);
 
 		return JitVar(result, false);
 	}
 	template<>
-	inline JitVar MpOperationFunc<std::complex<double>, double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	inline JitVar MpOperationFunc<cplx_t, double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmPd();
 		asmjit::X86Xmm args[8];
@@ -495,12 +511,12 @@ namespace mathpresso
 		{
 			args[i] = jc->registerVar(jc->onNode(node->getAt(i))).getXmm();
 		}
-		jc->inlineCall<std::complex<double>, double>(result, args, nargs(), fnPtr_);
+		jc->inlineCall<cplx_t, double>(result, args, nargs(), fnPtr_);
 
 		return JitVar(result, false);
 	}
 	template<>
-	inline JitVar MpOperationFunc<std::complex<double>, std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	inline JitVar MpOperationFunc<cplx_t, cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmPd();
 		asmjit::X86Xmm args[8];
@@ -515,13 +531,13 @@ namespace mathpresso
 			args[i] = jc->registerVarComplex(jc->onNode(node->getAt(i)), !node->getAt(i)->returnsComplex()).getXmm();
 		}
 
-		jc->inlineCall<std::complex<double>, std::complex<double>>(result, args, nargs(), fnPtr_);
+		jc->inlineCall<cplx_t, cplx_t>(result, args, nargs(), fnPtr_);
 
 		return JitVar(result, false);
 	}
 
 	template<typename RET, typename PARAM>
-	uint32_t MpOperationFunc<RET, PARAM>::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
+	uint32_t MpOperationEval<RET, PARAM>::optimize(AstOptimizer * opt, std::shared_ptr<AstNode> node) const
 	{
 		bool b_all_imm = true;
 
@@ -551,7 +567,7 @@ namespace mathpresso
 	}
 
 	template<>
-	double MpOperationFunc<double, double>::evaluate(double * args) const
+	double MpOperationFunc<double, double>::evaluate(const double * args) const
 	{
 		if (!fnPtr_)
 		{
@@ -577,7 +593,7 @@ namespace mathpresso
 #endif // _REALREWORK
 	}
 	template<>
-	std::complex<double> MpOperationFunc<std::complex<double>, double>::evaluate(double * args) const
+	cplx_t MpOperationFunc<cplx_t, double>::evaluate(const double * args) const
 	{
 		if (!fnPtr_)
 		{
@@ -586,7 +602,7 @@ namespace mathpresso
 		return ((mpFuncpDtoC)fnPtr_)(args);
 	}
 	template<>
-	double MpOperationFunc<double, std::complex<double>>::evaluate(std::complex<double>* args) const
+	double MpOperationFunc<double, cplx_t>::evaluate(const cplx_t* args) const
 	{
 		if (!fnPtr_)
 		{
@@ -595,7 +611,7 @@ namespace mathpresso
 		return ((mpFuncpCtoD)fnPtr_)(args);
 	}
 	template<>
-	std::complex<double> MpOperationFunc<std::complex<double>, std::complex<double>>::evaluate(std::complex<double>* args) const
+	cplx_t MpOperationFunc<cplx_t, cplx_t>::evaluate(const cplx_t* args) const
 	{
 		if (!fnPtr_)
 		{
@@ -604,20 +620,16 @@ namespace mathpresso
 		return ((mpFuncpCtoC)fnPtr_)(args);
 	}
 
-	// MpOperationIsFinite
-	std::complex<double> isfiniteCC(std::complex<double>* args)
-	{
-		return std::complex<double>(std::isfinite(args[0].real()) ? 1.0 : 0.0, std::isfinite(args[0].imag()) ? 1.0 : 0.0);
-	}
 	template<>
-	MpOperationIsFinite<double>::MpOperationIsFinite() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(isfiniteRR))
+	cplx_t mathpresso::MpOperationIsFinite<cplx_t>::evaluate(const cplx_t * args) const
 	{
+		return cplx_t(std::isfinite(args[0].real()) ? 1.0 : 0.0, std::isfinite(args[0].imag()) ? 1.0 : 0.0);
 	}
+
 	template<>
-	MpOperationIsFinite<std::complex<double>>::MpOperationIsFinite() noexcept
-		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(isfiniteCC))
+	double mathpresso::MpOperationIsFinite<double>::evaluate(const double * args) const
 	{
+		return std::isfinite(args[0]) ? 1.0 : 0.0;
 	}
 
 	template<>
@@ -632,30 +644,30 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationIsFinite<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationIsFinite<cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
 		jc->cc->orpd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0x8000000000000000), MATHPRESSO_UINT64_C(0x8000000000000000)).getMem());
-		jc->cc->cmppd(var.getXmm(), jc->getConstantD64(std::complex<double>(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpLE));
-		jc->cc->andpd(var.getXmm(), jc->getConstantD64(std::complex<double>(1.0, 1.0)).getMem());
+		jc->cc->cmppd(var.getXmm(), jc->getConstantD64(cplx_t(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpLE));
+		jc->cc->andpd(var.getXmm(), jc->getConstantD64(cplx_t(1.0, 1.0)).getMem());
 		return var;
 	}
 
 
 	// MpOperationIsInFinite
-	std::complex<double> isinfCC(std::complex<double>* args)
+	cplx_t isinfCC(cplx_t* args)
 	{
-		return std::complex<double>(std::isinf(args[0].real()) ? 1.0 : 0.0, std::isinf(args[0].imag()) ? 1.0 : 0.0);
+		return cplx_t(std::isinf(args[0].real()) ? 1.0 : 0.0, std::isinf(args[0].imag()) ? 1.0 : 0.0);
 	}
 	template<>
 	MpOperationIsInfinite<double>::MpOperationIsInfinite() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(isinfRR))
+		: MpOperationFunc<double, double>(VPTR(isinfRR), 1)
 	{
 	}
 	template<>
-	MpOperationIsInfinite<std::complex<double>>::MpOperationIsInfinite() noexcept
-		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(isinfCC))
+	MpOperationIsInfinite<cplx_t>::MpOperationIsInfinite() noexcept
+		: MpOperationFunc<cplx_t, cplx_t>(VPTR(isinfCC), 1)
 	{
 	}
 
@@ -671,30 +683,30 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationIsInfinite<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationIsInfinite<cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
 		jc->cc->orpd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0x8000000000000000), MATHPRESSO_UINT64_C(0x8000000000000000)).getMem());
 		jc->cc->cmppd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0xFFF0000000000000), MATHPRESSO_UINT64_C(0xFFF0000000000000)).getMem(), int(asmjit::x86::kCmpEQ));
-		jc->cc->andpd(var.getXmm(), jc->getConstantD64(std::complex<double>(1.0, 1.0)).getMem());
+		jc->cc->andpd(var.getXmm(), jc->getConstantD64(cplx_t(1.0, 1.0)).getMem());
 		return var;
 	}
 
 
 	// MpOperationIsNan	
-	std::complex<double> isnanCC(std::complex<double>* args)
+	cplx_t isnanCC(cplx_t* args)
 	{
-		return std::complex<double>(std::isnan(args[0].real()) ? 1.0 : 0.0, std::isnan(args[0].imag()) ? 1.0 : 0.0);
+		return cplx_t(std::isnan(args[0].real()) ? 1.0 : 0.0, std::isnan(args[0].imag()) ? 1.0 : 0.0);
 	}
 	template<>
 	MpOperationIsNan<double>::MpOperationIsNan() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(isnanRR))
+		: MpOperationFunc<double, double>(VPTR(isnanRR), 1)
 	{
 	}
 	template<>
-	MpOperationIsNan<std::complex<double>>::MpOperationIsNan() noexcept
-		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(isnanCC))
+	MpOperationIsNan<cplx_t>::MpOperationIsNan() noexcept
+		: MpOperationFunc<cplx_t, cplx_t>(VPTR(isnanCC), 1)
 	{
 	}
 
@@ -709,23 +721,23 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationIsNan<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationIsNan<cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
 		jc->cc->cmppd(var.getXmm(), var.getXmm(), int(asmjit::x86::kCmpEQ));
-		jc->cc->andnpd(var.getXmm(), jc->getConstantD64(std::complex<double>(1.0, 1.0)).getMem());
+		jc->cc->andnpd(var.getXmm(), jc->getConstantD64(cplx_t(1.0, 1.0)).getMem());
 		return var;
 	}
 
 	// MpOperationGetReal
-	double realCR(std::complex<double>* args)
+	double realCR(cplx_t* args)
 	{
 		return args->real();
 	}
 
 	MpOperationGetReal::MpOperationGetReal() noexcept
-		: MpOperationFunc<double, std::complex<double>>(MpOperation::None, 1, VPTR(realCR))
+		: MpOperationFunc<double, cplx_t>(VPTR(realCR), 1)
 	{
 	}
 
@@ -747,13 +759,13 @@ namespace mathpresso
 
 
 	// MpOperationGetImag
-	double imagCR(std::complex<double>* args)
+	double imagCR(cplx_t* args)
 	{
 		return args->imag();
 	}
 
 	MpOperationGetImag::MpOperationGetImag() noexcept
-		: MpOperationFunc<double, std::complex<double>>(MpOperation::None, 1, VPTR(imagCR))
+		: MpOperationFunc<double, cplx_t>(VPTR(imagCR), 1)
 	{
 	}
 
@@ -769,7 +781,7 @@ namespace mathpresso
 
 	// Square root
 	MpOperationSqrt::MpOperationSqrt() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(sqrtRR))
+		: MpOperationFunc<double, double>(VPTR(sqrtRR), 1)
 	{
 	}
 
@@ -785,19 +797,19 @@ namespace mathpresso
 	}
 
 	// Negation
-	std::complex<double> negCC(std::complex<double>* args)
+	cplx_t negCC(cplx_t* args)
 	{
 		return -args[0];
 	}
 
 	template<>
 	MpOperationNeg<double>::MpOperationNeg() noexcept
-		: MpOperationFunc<double, double>(MpOperation::RighttoLeft, 1, VPTR(negRR), 3)
+		: MpOperationFunc<double, double>(VPTR(negRR), 1, MpOperation::RighttoLeft, 3)
 	{
 	}
 	template<>
-	MpOperationNeg<std::complex<double>>::MpOperationNeg() noexcept
-		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::RighttoLeft, 1, VPTR(negCC), 3)
+	MpOperationNeg<cplx_t>::MpOperationNeg() noexcept
+		: MpOperationFunc<cplx_t, cplx_t>(VPTR(negCC), 1, MpOperation::RighttoLeft, 3)
 	{
 	}
 
@@ -842,19 +854,19 @@ namespace mathpresso
 	}
 
 	// Not
-	std::complex<double> notCC(std::complex<double>* args)
+	cplx_t notCC(cplx_t* args)
 	{
-		return std::complex<double>(args[0] == std::complex<double>(0, 0) ? 1.0 : 0.0, 0.0);
+		return cplx_t(args[0] == cplx_t(0, 0) ? 1.0 : 0.0, 0.0);
 	}
 
 	template<>
 	MpOperationNot<double>::MpOperationNot() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(notRR), 3)
+		: MpOperationFunc<double, double>(VPTR(notRR), 1, MpOperation::None, 3)
 	{
 	}
 	template<>
-	MpOperationNot<std::complex<double>>::MpOperationNot() noexcept
-		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(notCC), 3)
+	MpOperationNot<cplx_t>::MpOperationNot() noexcept
+		: MpOperationFunc<cplx_t, cplx_t>(VPTR(notCC), 1, MpOperation::None, 3)
 	{
 	}
 
@@ -869,23 +881,23 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationNot<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationNot<cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
-		jc->cc->cmppd(var.getXmm(), jc->getConstantD64(std::complex<double>(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpEQ));
-		jc->cc->andpd(var.getXmm(), jc->getConstantD64(std::complex<double>(1.0, 0.0)).getMem());
+		jc->cc->cmppd(var.getXmm(), jc->getConstantD64(cplx_t(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpEQ));
+		jc->cc->andpd(var.getXmm(), jc->getConstantD64(cplx_t(1.0, 0.0)).getMem());
 		return var;
 	}
 
 	// Conjugate
-	std::complex<double> conjugCC(std::complex<double>* args) 
+	cplx_t conjugCC(cplx_t* args) 
 	{
-		return std::complex<double>(args->real(), -args->imag()); 
+		return cplx_t(args->real(), -args->imag()); 
 	}
 
 	MpOperationConjug::MpOperationConjug() noexcept
-		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(conjugCC))
+		: MpOperationFunc<cplx_t, cplx_t>(VPTR(conjugCC), 1)
 	{
 	}
 
@@ -909,7 +921,7 @@ namespace mathpresso
 				break;
 		}
 
-		auto ret = MpOperationFunc<std::complex<double>, std::complex<double>>::optimize(opt, node);
+		auto ret = MpOperationFunc<cplx_t, cplx_t>::optimize(opt, node);
 		if (ret != ErrorCode::kErrorOk)
 			return ret;
 
@@ -929,12 +941,12 @@ namespace mathpresso
 
 	template<>
 	MpOperationRecip<double>::MpOperationRecip() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(recipRR))
+		: MpOperationFunc<double, double>(VPTR(recipRR), 1)
 	{
 	}
 	template<>
-	MpOperationRecip<std::complex<double>>::MpOperationRecip() noexcept
-		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 1, VPTR(recipCC))
+	MpOperationRecip<cplx_t>::MpOperationRecip() noexcept
+		: MpOperationFunc<cplx_t, cplx_t>(VPTR(recipCC), 1)
 	{
 	}
 
@@ -952,7 +964,7 @@ namespace mathpresso
 		return result;
 	}
 	template<>
-	JitVar MpOperationRecip<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationRecip<cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		JitVar result;
@@ -969,7 +981,7 @@ namespace mathpresso
 
 	// sign bit
 	MpOperationSignBit::MpOperationSignBit() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(signbitRR))
+		: MpOperationFunc<double, double>(VPTR(signbitRR), 1)
 	{
 	}
 
@@ -985,7 +997,7 @@ namespace mathpresso
 
 	// Copy sign
 	MpOperationCopySign::MpOperationCopySign() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 2, VPTR(copysignRR))
+		: MpOperationFunc<double, double>(VPTR(copysignRR), 2)
 	{
 	}
 
@@ -1002,19 +1014,19 @@ namespace mathpresso
 
 
 	// Average
-	std::complex<double> avgCC(std::complex<double>* args)
+	cplx_t avgCC(cplx_t* args)
 	{
 		return (args[0] + args[1]) * 0.5;
 	}
 
 	template<>
 	MpOperationAvg<double>::MpOperationAvg() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 2, VPTR(avgRR))
+		: MpOperationFunc<double, double>(VPTR(avgRR), 2)
 	{
 	}
 	template<>
-	MpOperationAvg<std::complex<double>>::MpOperationAvg() noexcept
-		: MpOperationFunc<std::complex<double>, std::complex<double>>(MpOperation::None, 2, VPTR(avgCC))
+	MpOperationAvg<cplx_t>::MpOperationAvg() noexcept
+		: MpOperationFunc<cplx_t, cplx_t>(VPTR(avgCC), 2)
 	{
 	}
 
@@ -1038,7 +1050,7 @@ namespace mathpresso
 		return vl;
 	}
 	template<>
-	JitVar MpOperationAvg<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationAvg<cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar vl = jc->onNode(node->getAt(0));;
 		JitVar vr = jc->onNode(node->getAt(1));
@@ -1065,14 +1077,16 @@ namespace mathpresso
 		{
 			jc->cc->addpd(vl.getXmm(), vr.getXmm());
 		}
-		jc->cc->mulpd(vl.getXmm(), jc->getConstantD64(std::complex<double>(0.5, 0.5)).getXmm());
+		jc->cc->mulpd(vl.getXmm(), jc->getConstantD64(cplx_t(0.5, 0.5)).getXmm());
 		return vl;
 	}
 
 
+	double absRR(double * args) { return std::abs(args[0]); }
+
 	// Absolute
 	MpOperationAbs::MpOperationAbs() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(absRR))
+		: MpOperationFunc<double, double>(VPTR(absRR), 1)
 	{
 	}
 
@@ -1091,7 +1105,7 @@ namespace mathpresso
 
 	// round
 	MpOperationRound::MpOperationRound() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(roundRR))
+		: MpOperationFunc<double, double>(VPTR(roundRR), 1)
 	{
 	}
 
@@ -1142,7 +1156,7 @@ namespace mathpresso
 
 	// roundeven
 	MpOperationRoundEven::MpOperationRoundEven() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(roundevenRR))
+		: MpOperationFunc<double, double>(VPTR(roundevenRR), 1)
 	{
 	}
 
@@ -1179,7 +1193,7 @@ namespace mathpresso
 
 	// trunc
 	MpOperationTrunc::MpOperationTrunc() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(truncRR))
+		: MpOperationFunc<double, double>(VPTR(truncRR), 1)
 	{
 	}
 
@@ -1223,7 +1237,7 @@ namespace mathpresso
 
 	// frac
 	MpOperationFrac::MpOperationFrac() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(fracRR))
+		: MpOperationFunc<double, double>(VPTR(fracRR), 1)
 	{
 	}
 
@@ -1269,7 +1283,7 @@ namespace mathpresso
 
 	// floor
 	MpOperationFloor::MpOperationFloor() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(floorRR))
+		: MpOperationFunc<double, double>(VPTR(floorRR), 1)
 	{
 	}
 
@@ -1313,7 +1327,7 @@ namespace mathpresso
 
 	// ceil
 	MpOperationcCeil::MpOperationcCeil() noexcept
-		: MpOperationFunc<double, double>(MpOperation::None, 1, VPTR(ceilRR))
+		: MpOperationFunc<double, double>(VPTR(ceilRR), 1)
 	{
 	}
 
@@ -1377,7 +1391,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationBinary<std::complex<double>>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationBinary<cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		JitVar vl, vr;
 		std::shared_ptr<AstNode> left = node->getAt(0);
@@ -1432,8 +1446,8 @@ namespace mathpresso
 		{
 			std::shared_ptr<AstImm> lNode = std::static_pointer_cast<AstImm>(left);
 			// if the node is real, the imaginary part is set to zero by default.
-			if ((hasFlag(NopIfLZero) && lNode->getValue<std::complex<double>>() == std::complex<double>(0.0, 0.0)) ||
-				(hasFlag(NopIfLOne) && lNode->getValue<std::complex<double>>() == std::complex<double>(1.0, 0.0)))
+			if ((hasFlag(NopIfLZero) && lNode->getValue<cplx_t>() == cplx_t(0.0, 0.0)) ||
+				(hasFlag(NopIfLOne) && lNode->getValue<cplx_t>() == cplx_t(1.0, 0.0)))
 			{
 				node->_children[1]->_parent.reset();
 				node->_children[1] = nullptr;
@@ -1444,8 +1458,8 @@ namespace mathpresso
 		{
 			std::shared_ptr<AstImm> rNode = std::static_pointer_cast<AstImm>(right);
 
-			if ((hasFlag(NopIfRZero) && rNode->getValue<std::complex<double>>() == std::complex<double>(0.0, 0.0)) ||
-				(hasFlag(NopIfROne) && rNode->getValue<std::complex<double>>() == std::complex<double>(1.0, 0.0)))
+			if ((hasFlag(NopIfRZero) && rNode->getValue<cplx_t>() == cplx_t(0.0, 0.0)) ||
+				(hasFlag(NopIfROne) && rNode->getValue<cplx_t>() == cplx_t(1.0, 0.0)))
 			{
 				node->_children[0]->_parent.reset();
 				node->_children[0] = nullptr;
@@ -1469,9 +1483,9 @@ namespace mathpresso
 	}
 
 	template<>
-	std::complex<double> MpOperationBinary<std::complex<double>>::calculate(std::complex<double> vl, std::complex<double> vr)  const
+	cplx_t MpOperationBinary<cplx_t>::calculate(cplx_t vl, cplx_t vr)  const
 	{
-		return std::complex<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
+		return cplx_t(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
 	}
 
 	template<>
@@ -1481,8 +1495,8 @@ namespace mathpresso
 	}
 
 	template<>
-	MpOperationAdd<std::complex<double>>::MpOperationAdd() noexcept
-		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 6)
+	MpOperationAdd<cplx_t>::MpOperationAdd() noexcept
+		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 6)
 	{
 	}
 
@@ -1503,7 +1517,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationAdd<std::complex<double>>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
+	JitVar MpOperationAdd<cplx_t>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1530,8 +1544,8 @@ namespace mathpresso
 	{
 	}
 	template<>
-	MpOperationSub<std::complex<double>>::MpOperationSub() noexcept
-		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfRZero, 6)
+	MpOperationSub<cplx_t>::MpOperationSub() noexcept
+		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfRZero, 6)
 	{
 	}
 
@@ -1551,7 +1565,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationSub<std::complex<double>>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
+	JitVar MpOperationSub<cplx_t>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1578,8 +1592,8 @@ namespace mathpresso
 	{
 	}
 	template<>
-	MpOperationMul<std::complex<double>>::MpOperationMul() noexcept
-		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 5)
+	MpOperationMul<cplx_t>::MpOperationMul() noexcept
+		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfZero | MpOperationBinary::IsCommutativ, 5)
 	{
 	}
 
@@ -1598,7 +1612,7 @@ namespace mathpresso
 
 	}
 	template<>
-	JitVar MpOperationMul<std::complex<double>>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
+	JitVar MpOperationMul<cplx_t>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1635,8 +1649,8 @@ namespace mathpresso
 	{
 	}
 	template<>
-	MpOperationDiv<std::complex<double>>::MpOperationDiv() noexcept
-		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfLOne, 5)
+	MpOperationDiv<cplx_t>::MpOperationDiv() noexcept
+		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::NopIfLOne, 5)
 	{
 	}
 	template<>
@@ -1654,7 +1668,7 @@ namespace mathpresso
 
 	}
 	template<>
-	JitVar MpOperationDiv<std::complex<double>>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
+	JitVar MpOperationDiv<cplx_t>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1733,8 +1747,8 @@ namespace mathpresso
 	{
 	}
 	template<>
-	MpOperationEq<std::complex<double>>::MpOperationEq() noexcept
-		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
+	MpOperationEq<cplx_t>::MpOperationEq() noexcept
+		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 
@@ -1755,7 +1769,7 @@ namespace mathpresso
 	}
 
 	template<>
-	JitVar MpOperationEq<std::complex<double>>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
+	JitVar MpOperationEq<cplx_t>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1783,8 +1797,8 @@ namespace mathpresso
 	{
 	}
 	template<>
-	MpOperationNe<std::complex<double>>::MpOperationNe() noexcept
-		: MpOperationBinary<std::complex<double>>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
+	MpOperationNe<cplx_t>::MpOperationNe() noexcept
+		: MpOperationBinary<cplx_t>(Signature(2, Signature::type::complex), MpOperationBinary::IsCommutativ, 9)
 	{
 	}
 
@@ -1804,7 +1818,7 @@ namespace mathpresso
 
 	}
 	template<>
-	JitVar MpOperationNe<std::complex<double>>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
+	JitVar MpOperationNe<cplx_t>::generateAsm(JitCompiler * jc, JitVar vl, JitVar vr) const
 	{
 		if (vr.isMem())
 		{
@@ -1982,7 +1996,7 @@ namespace mathpresso
 	{
 	}
 	template<>
-	MpOperationTernary<std::complex<double>>::MpOperationTernary() noexcept
+	MpOperationTernary<cplx_t>::MpOperationTernary() noexcept
 		: MpOperation(Signature(3, Signature::type::complex), MpOperation::RighttoLeft, 15)
 	{
 	}
@@ -2056,7 +2070,7 @@ namespace mathpresso
 		if (branchCond->isImm())
 		{
 			// optimize an immediate condition
-			bool conditionIsTrue = std::static_pointer_cast<AstImm>(branchCond)->getValue<std::complex<double>>() != std::complex<double>({ 0, 0 });
+			bool conditionIsTrue = std::static_pointer_cast<AstImm>(branchCond)->getValue<cplx_t>() != cplx_t({ 0, 0 });
 
 			std::shared_ptr<AstNode> nodeOptimized;
 
@@ -2086,7 +2100,7 @@ namespace mathpresso
 	{
 	}
 	template<>
-	MpOperationVarDeclaration<std::complex<double>>::MpOperationVarDeclaration() noexcept
+	MpOperationVarDeclaration<cplx_t>::MpOperationVarDeclaration() noexcept
 		: MpOperation(Signature(1, Signature::type::complex), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
 	{
 	}
@@ -2150,7 +2164,7 @@ namespace mathpresso
 	{
 	}
 	template<>
-	MpOperationAssignment<std::complex<double>>::MpOperationAssignment()  noexcept
+	MpOperationAssignment<cplx_t>::MpOperationAssignment()  noexcept
 		: MpOperation(Signature(2, Signature::type::complex), MpOperation::RighttoLeft | MpOperation::IsAssignment, 15)
 	{
 	}
