@@ -12,6 +12,7 @@
 #include <mathpresso/mathpresso.h>
 #include <complex>
 #include <limits>
+#include <type_traits>
 
 namespace mathpresso
 {
@@ -44,18 +45,6 @@ namespace mathpresso
 		template<typename T>
 		struct TypeId;
 
-		template<>
-		struct TypeId<std::complex<double>>
-		{
-			static const type id_ = type::complex;
-		};
-
-		template<>
-		struct TypeId<double>
-		{
-			static const type id_ = type::real;
-		};
-
 		Signature() noexcept
 		{
 		}
@@ -83,6 +72,18 @@ namespace mathpresso
 		TypedSignature() : Signature(sizeof(ARGS), std::common_type_t<ARGS...>)
 		{
 		}
+	};
+
+	template<>
+	struct Signature::TypeId<std::complex<double>>
+	{
+		static const type id_ = type::complex;
+	};
+
+	template<>
+	struct Signature::TypeId<double>
+	{
+		static const type id_ = type::real;
 	};
 
 	class MATHPRESSO_API MpOperation : public MpObject
@@ -159,7 +160,7 @@ namespace mathpresso
 	{
 	public:
 		MpOperationFunc(void * fnPtr, size_t numargs, uint32_t flags = MpOperation::None, uint32_t priority = 0) noexcept :
-			MpOperationEval(numargs, flags, priority),
+			MpOperationEval<RET, ARGS>(numargs, flags, priority),
 			fnPtr_(fnPtr)
 		{
 		}
@@ -191,7 +192,7 @@ namespace mathpresso
 		};
 
 		MpOperationBinary(uint32_t flags = MpOperation::None, uint32_t priority = 0) noexcept
-			: MpOperationEval(2, flags, priority)
+			: MpOperationEval<T, T>(2, flags, priority)
 		{
 		}
 
@@ -203,7 +204,7 @@ namespace mathpresso
 
 		virtual T evaluate(const T * v) const override
 		{
-			throw std::exception("Coding error!");
+			throw std::runtime_error("Coding error!");
 		}
 	protected:
 		// These are called by compile() and should only contain the asm-statements. vl will always
