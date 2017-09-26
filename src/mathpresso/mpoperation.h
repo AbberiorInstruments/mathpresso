@@ -63,17 +63,6 @@ namespace mathpresso
 		void init(type retType, std::vector<param> params);
 	};
 
-	template<typename S>
-	class TypedSignature;
-
-	template<typename RET, typename ...ARGS>
-	class TypedSignature<RET(ARGS...)>
-	{
-		TypedSignature() : Signature(sizeof(ARGS), std::common_type_t<ARGS...>)
-		{
-		}
-	};
-
 	template<>
 	struct Signature::TypeId<std::complex<double>>
 	{
@@ -237,7 +226,7 @@ namespace fobj
 	{
 		static R call(A * args)
 		{
-			return SIGNATURE(FPTR)(args[0]);
+			return Signature(FPTR)(args[0]);
 		}
 	};
 
@@ -246,7 +235,7 @@ namespace fobj
 	{
 		static R call(A * args)
 		{
-			return SIGNATURE(FPTR)(args[0], args[1]);
+			return Signature(FPTR)(args[0], args[1]);
 		}
 	};
 
@@ -255,7 +244,7 @@ namespace fobj
 	{
 		static R call(A * args)
 		{
-			return SIGNATURE(FPTR)(args[0], args[1], args[2]);
+			return Signature(FPTR)(args[0], args[1], args[2]);
 		}
 	};
 
@@ -263,7 +252,7 @@ namespace fobj
 	struct Caller_;
 
 	template<void * FPTR, typename R, typename ...ARGS>
-	struct Caller_<R(*)(ARGS...), FPTR> : Caller<R(*)(ARGS...), R, std::common_type_t<ARGS...>, (void *)FPTR, sizeof...(ARGS)>
+	struct Caller_<R(*)(ARGS...), FPTR> : Caller<R(*)(ARGS...), R, std::common_type_t<ARGS...>, FPTR, sizeof...(ARGS)>
 	{
 	};
 
@@ -276,7 +265,7 @@ namespace fobj
 
 using cplx_t = std::complex<double>;
 
-#define _OBJ(expr) fobj::_mpObject(fobj::Caller_<decltype(expr), expr>())
 #define VPTR(function) reinterpret_cast<void*>(function)
+#define _OBJ(expr) fobj::_mpObject(fobj::Caller_<decltype(expr), VPTR(expr)>())
 
 #endif //_MP_OPERATION_P_H

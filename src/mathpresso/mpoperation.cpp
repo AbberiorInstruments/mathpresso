@@ -47,103 +47,6 @@ namespace mathpresso
 		return std::sqrt(std::complex<double>(x, 0));
 	}
 
-	// Mixed functions
-	// std::complex<double> sqrtRC(double  * x) { return std::sqrt(std::complex<double>(x[0], 0)); }
-	// double absCR(std::complex<double>* args) { return std::abs(args[0]); }
-
-	// Complex functions
-	//std::complex<double> sinCC(std::complex<double>* arg) { return std::sin(arg[0]); }
-	//std::complex<double> cosCC(std::complex<double>* arg) { return std::cos(arg[0]); }
-	//std::complex<double> tanCC(std::complex<double>* arg) { return std::tan(arg[0]); }
-	//std::complex<double> asinCC(std::complex<double>* arg) { return std::asin(arg[0]); }
-	//std::complex<double> acosCC(std::complex<double>* arg) { return std::acos(arg[0]); }
-	//std::complex<double> atanCC(std::complex<double>* arg) { return std::atan(arg[0]); }
-	//std::complex<double> sinhCC(std::complex<double>* arg) { return std::sinh(arg[0]); }
-	//std::complex<double> coshCC(std::complex<double>* arg) { return std::cosh(arg[0]); }
-	//std::complex<double> tanhCC(std::complex<double>* arg) { return std::tanh(arg[0]); }
-	//std::complex<double> logCC(std::complex<double> *  x) { return std::log(x[0]); }
-	//std::complex<double> log2CC(std::complex<double> *  x) { return std::log(x[0]) / log(2); }
-	//std::complex<double> log10CC(std::complex<double> *  x) { return std::log10(x[0]); }
-
-	// std::complex<double> powCC(std::complex<double> *  x) { return std::pow(x[0], x[1]); }
-	//std::complex<double> expCC(std::complex<double> *  x) { return std::exp(x[0]); }
-	//std::complex<double> sqrtCC(std::complex<double> *  x) { return std::sqrt(x[0]); }
-
-	std::complex<double> recipCC(std::complex<double>* args) { return 1.0 / args[0]; }
-
-	// Real functions
-#ifndef MATHPRESSO_ORIGINAL_DOUBLE_FUNCTION_CALLS
-	//double sinRR(double * arg) { return std::sin(arg[0]); }
-	//double cosRR(double * arg) { return std::cos(arg[0]); }
-	//double tanRR(double * arg) { return std::tan(arg[0]); }
-	//double asinRR(double * arg) { return std::asin(arg[0]); }
-	//double acosRR(double * arg) { return std::acos(arg[0]); }
-	//double atanRR(double * arg) { return std::atan(arg[0]); }
-	//double sinhRR(double * arg) { return std::sinh(arg[0]); }
-	//double coshRR(double * arg) { return std::cosh(arg[0]); }
-	//double tanhRR(double * arg) { return std::tanh(arg[0]); }
-
-	//double logRR(double* x) { return std::log(x[0]); }
-	//double log2RR(double * x) { return std::log2(x[0]); }
-	//double log10RR(double * x) { return std::log10(x[0]); }
-	//double expRR(double * x) { return std::exp(x[0]); }
-
-	// double atan2RR(double * x) { return std::atan2(x[0], x[1]); }
-	// double powRR(double * x) { return std::pow(x[0], x[1]); }
-	// double hypotRR(double * x) { return std::hypot(x[0], x[1]); }
-
-	double recipRR(double * args) { return 1.0 / args[0]; }
-	double isinfRR(double * args) { return std::isinf(args[0]) ? 1.0 : 0.0; }
-	double isnanRR(double *  args) { return std::isnan(args[0]) ? 1.0 : 0.0; }
-	double sqrtRR(double * args) { return std::sqrt(args[0]); }
-	double negRR(double * args) { return -args[0]; }
-	double notRR(double * args) { return args[0] == 0 ? 1.0 : 0.0; }
-	double signbitRR(double * args) { return std::signbit(args[0]) ? 1.0 : 0.0; }
-	double copysignRR(double * args) { return std::copysign(args[0], args[1]); }
-	double avgRR(double * args) { return (args[0] + args[1]) * 0.5; }
-	double roundRR(double * args) { return std::floor(args[0] + .5); }
-	double roundevenRR(double * args) { return std::rint(args[0]); }
-	double truncRR(double * args) { return std::trunc(args[0]); }
-	double fracRR(double * args) { return args[0] - std::floor(args[0]); }
-	double floorRR(double * args) { return std::floor(args[0]); }
-	double ceilRR(double * args) { return std::ceil(args[0]); }
-#else
-	double sinRR(double arg) { return std::sin(arg); }
-	double cosRR(double arg) { return std::cos(arg); }
-	double tanRR(double arg) { return std::tan(arg); }
-	double asinRR(double arg) { return std::asin(arg); }
-	double acosRR(double arg) { return std::acos(arg); }
-	double atanRR(double arg) { return std::atan(arg); }
-	double sinhRR(double arg) { return std::sinh(arg); }
-	double coshRR(double arg) { return std::cosh(arg); }
-	double tanhRR(double arg) { return std::tanh(arg); }
-
-	double logRR(double x) { return std::log(x); }
-	double log2RR(double x) { return std::log2(x); }
-	double log10RR(double x) { return std::log10(x); }
-	double expRR(double x) { return std::exp(x); }
-	double powRR(double x, double y) { return std::pow(x, y); }
-	double atan2RR(double x, double y) { return std::atan2(x, y); }
-	double hypotRR(double x, double y) { return std::hypot(x, y); }
-	double isfiniteRR(double args) { return std::isfinite(args) ? 1.0 : 0.0; }
-	double isinfRR(double args) { return std::isinf(args) ? 1.0 : 0.0; }
-	double isnanRR(double args) { return std::isnan(args) ? 1.0 : 0.0; }
-	double sqrtRR(double args) { return std::sqrt(args); }
-	double negRR(double args) { return -args; }
-	double notRR(double args) { return args == 0 ? 1.0 : 0.0; }
-	double recipRR(double args) { return 1.0 / args; }
-	double signbitRR(double args) { return std::signbit(args) ? 1.0 : 0.0; }
-	double copysignRR(double args0, double args1) { return std::copysign(args0, args1); }
-	double avgRR(double args0, double args1) { return (args0 + args1) * 0.5; }
-	double absRR(double args) { return std::abs(args); }
-	double roundRR(double args) { return std::floor(args + .5); }
-	double roundevenRR(double args) { return std::rint(args); }
-	double truncRR(double args) { return std::trunc(args); }
-	double fracRR(double args) { return args - std::floor(args); }
-	double floorRR(double args) { return std::floor(args); }
-	double ceilRR(double args) { return std::ceil(args); }
-#endif
-
 	Signature::Signature(size_t nargs, type cmnType) noexcept
 	{
 		init(cmnType, { nargs, { cmnType, "" } });
@@ -230,7 +133,7 @@ namespace mathpresso
 
 
 	template<>
-	inline JitVar MpOperationFunc<double, double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationFunc<double, double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmSd();
 		asmjit::X86Xmm args[8];
@@ -249,7 +152,7 @@ namespace mathpresso
 		return JitVar(result, false);
 	}
 	template<>
-	inline JitVar MpOperationFunc<double, cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationFunc<double, cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmSd();
 		asmjit::X86Xmm args[8];
@@ -269,7 +172,7 @@ namespace mathpresso
 		return JitVar(result, false);
 	}
 	template<>
-	inline JitVar MpOperationFunc<cplx_t, double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationFunc<cplx_t, double>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmPd();
 		asmjit::X86Xmm args[8];
@@ -288,7 +191,7 @@ namespace mathpresso
 		return JitVar(result, false);
 	}
 	template<>
-	inline JitVar MpOperationFunc<cplx_t, cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+	JitVar MpOperationFunc<cplx_t, cplx_t>::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
 	{
 		asmjit::X86Xmm result = jc->cc->newXmmPd();
 		asmjit::X86Xmm args[8];
