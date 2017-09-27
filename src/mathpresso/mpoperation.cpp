@@ -296,20 +296,20 @@ namespace mathpresso
 	}
 
 	template<typename T>
-	class MpOperationIsFinite : public MpOperationEval<T, T>
+	class MpOperationIsFinite : public MpOperationEval<double, T>
 	{
 	public:
-		MpOperationIsFinite() : MpOperationEval<T, T>(1)
+		MpOperationIsFinite() : MpOperationEval<double, T>(1)
 		{
 		}
-		virtual T evaluate(const T * args) const override;
+		virtual double evaluate(const T * args) const override;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
 	template<>
-	cplx_t MpOperationIsFinite<cplx_t>::evaluate(const cplx_t * args) const
+	double MpOperationIsFinite<cplx_t>::evaluate(const cplx_t * args) const
 	{
-		return cplx_t(std::isfinite(args[0].real()) ? 1.0 : 0.0, std::isfinite(args[0].imag()) ? 1.0 : 0.0);
+		return std::isfinite(args[0].real()) ? 1.0 : 0.0 && std::isfinite(args[0].imag()) ? 1.0 : 0.0;
 	}
 
 	template<>
@@ -324,7 +324,7 @@ namespace mathpresso
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVar(var);
 		jc->cc->orpd(var.getXmm(), jc->getConstantU64AsPD(MATHPRESSO_UINT64_C(0x8000000000000000)).getMem());
-		jc->cc->cmpsd(var.getXmm(), jc->getConstantU64(0).getMem(), int(asmjit::x86::kCmpLE));
+		jc->cc->cmpsd(var.getXmm(), jc->getConstantD64(0.0).getMem(), asmjit::x86::kCmpLE);
 		jc->cc->andpd(var.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
 		return var;
 	}
@@ -335,21 +335,26 @@ namespace mathpresso
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
 		jc->cc->orpd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0x8000000000000000), MATHPRESSO_UINT64_C(0x8000000000000000)).getMem());
-		jc->cc->cmppd(var.getXmm(), jc->getConstantD64(cplx_t(0.0, 0.0)).getMem(), int(asmjit::x86::kCmpLE));
+		jc->cc->cmppd(var.getXmm(), jc->getConstantD64(cplx_t(0.0, 0.0)).getMem(), asmjit::x86::kCmpLE);
 		jc->cc->andpd(var.getXmm(), jc->getConstantD64(cplx_t(1.0, 1.0)).getMem());
-		return var;
+
+		JitVar tmp(jc->cc->newXmmSd(), false);
+		jc->cc->movhlps(tmp.getXmm(), var.getXmm());
+		jc->cc->maxsd(tmp.getXmm(), var.getXmm());
+
+		return tmp;
 	}
 
 
 	// MpOperationIsInFinite
 	template<typename T>
-	class MpOperationIsInfinite : public MpOperationEval<T, T>
+	class MpOperationIsInfinite : public MpOperationEval<double, T>
 	{
 	public:
-		MpOperationIsInfinite() noexcept : MpOperationEval<T, T>(1)
+		MpOperationIsInfinite() noexcept : MpOperationEval<double, T>(1)
 		{
 		}
-		virtual T evaluate(const T * args) const override;
+		virtual double evaluate(const T * args) const override;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -361,9 +366,9 @@ namespace mathpresso
 	}
 
 	template<>
-	cplx_t MpOperationIsInfinite<cplx_t>::evaluate(const cplx_t * args) const
+	double MpOperationIsInfinite<cplx_t>::evaluate(const cplx_t * args) const
 	{
-		return cplx_t(std::isinf(args[0].real()) ? 1.0 : 0.0, std::isinf(args[0].imag()) ? 1.0 : 0.0);
+		return std::isinf(args[0].real()) ? 1.0 : 0.0 && std::isinf(args[0].imag()) ? 1.0 : 0.0;
 	}
 
 	template<>
@@ -372,7 +377,7 @@ namespace mathpresso
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVar(var);
 		jc->cc->orpd(var.getXmm(), jc->getConstantU64AsPD(MATHPRESSO_UINT64_C(0x8000000000000000)).getMem());
-		jc->cc->cmpsd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0xFFF0000000000000)).getMem(), int(asmjit::x86::kCmpEQ));
+		jc->cc->cmpsd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0xFFF0000000000000)).getMem(), asmjit::x86::kCmpEQ);
 		jc->cc->andpd(var.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
 		return var;
 	}
@@ -383,21 +388,26 @@ namespace mathpresso
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
 		jc->cc->orpd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0x8000000000000000), MATHPRESSO_UINT64_C(0x8000000000000000)).getMem());
-		jc->cc->cmppd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0xFFF0000000000000), MATHPRESSO_UINT64_C(0xFFF0000000000000)).getMem(), int(asmjit::x86::kCmpEQ));
+		jc->cc->cmppd(var.getXmm(), jc->getConstantU64(MATHPRESSO_UINT64_C(0xFFF0000000000000), MATHPRESSO_UINT64_C(0xFFF0000000000000)).getMem(), asmjit::x86::kCmpEQ);
 		jc->cc->andpd(var.getXmm(), jc->getConstantD64(cplx_t(1.0, 1.0)).getMem());
-		return var;
+
+		JitVar tmp(jc->cc->newXmmSd(), false);
+		jc->cc->movhlps(tmp.getXmm(), var.getXmm());
+		jc->cc->maxsd(tmp.getXmm(), var.getXmm());
+
+		return tmp;
 	}
 
 
 	// MpOperationIsNan	
 	template<typename T>
-	class MpOperationIsNan : public MpOperationEval<T, T>
+	class MpOperationIsNan : public MpOperationEval<double, T>
 	{
 	public:
-		MpOperationIsNan() noexcept : MpOperationEval<T, T>(1)
+		MpOperationIsNan() noexcept : MpOperationEval<double, T>(1)
 		{
 		}
-		virtual T evaluate(const T * args) const override;
+		virtual double evaluate(const T * args) const override;
 		virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
 	};
 
@@ -408,9 +418,9 @@ namespace mathpresso
 	}
 
 	template<>
-	cplx_t MpOperationIsNan<cplx_t>::evaluate(const cplx_t * args) const
+	double MpOperationIsNan<cplx_t>::evaluate(const cplx_t * args) const
 	{
-		return cplx_t(std::isnan(args[0].real()) ? 1.0 : 0.0, std::isnan(args[0].imag()) ? 1.0 : 0.0);
+		return std::isnan(args[0].real()) ? 1.0 : 0.0 && std::isnan(args[0].imag()) ? 1.0 : 0.0;
 	}
 
 	template<>
@@ -418,7 +428,7 @@ namespace mathpresso
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVar(var);
-		jc->cc->cmpsd(var.getXmm(), var.getXmm(), int(asmjit::x86::kCmpEQ));
+		jc->cc->cmpsd(var.getXmm(), var.getXmm(), asmjit::x86::kCmpEQ); // compare of NaN with NaN is false
 		jc->cc->andnpd(var.getXmm(), jc->getConstantD64AsPD(1.0).getMem());
 		return var;
 	}
@@ -428,9 +438,14 @@ namespace mathpresso
 	{
 		JitVar var = jc->onNode(node->getAt(0));
 		var = jc->writableVarComplex(var);
-		jc->cc->cmppd(var.getXmm(), var.getXmm(), int(asmjit::x86::kCmpEQ));
+		jc->cc->cmppd(var.getXmm(), var.getXmm(), asmjit::x86::kCmpEQ);
 		jc->cc->andnpd(var.getXmm(), jc->getConstantD64(cplx_t(1.0, 1.0)).getMem());
-		return var;
+
+		JitVar tmp(jc->cc->newXmmSd(), false);
+		jc->cc->movhlps(tmp.getXmm(), var.getXmm());
+		jc->cc->maxsd(tmp.getXmm(), var.getXmm());
+
+		return tmp;
 	}
 
 	// MpOperationGetReal
@@ -1528,7 +1543,7 @@ namespace mathpresso
 		jc->cc->divpd(ret.getXmm(), vr.getXmm());
 		return ret;
 	}
-	
+
 	// Minimum
 	class MpOperationMin : public MpOperationBinary<double>
 	{
