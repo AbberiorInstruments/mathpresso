@@ -208,51 +208,59 @@ namespace fobj
 {
 	using obj_ptr = std::shared_ptr<mathpresso::MpOperation>;
 
-	template<typename Signature, typename R, typename A, size_t N>
+	template<uint64_t ID, typename FPTR_T, typename R, typename A, size_t N>
 	struct CallerBase
 	{
 		static const size_t num_args_ = N;
 		using arg_t = A;
 		using ret_t = R;
+		static FPTR_T fptr_;
 	};
+
+	template<uint64_t ID, typename FPTR_T, typename R, typename A, size_t N>
+	FPTR_T CallerBase<ID, FPTR_T, R, A, N>::fptr_ = nullptr;
 
 	// Create a function with argument array pointer that calls a multi-parameter function
-	template<typename Signature, typename R, typename A, void * FPTR, size_t N>
+	template<uint64_t ID, typename FPTR_T, typename R, typename A, size_t N>
 	struct Caller;
 
-	template<typename Signature, typename R, typename A, void * FPTR>
-	struct Caller<Signature, R, A, FPTR, 1> : CallerBase<Signature, R, A, 1>
+	template<uint64_t ID, typename FPTR_T, typename R, typename A>
+	struct Caller<ID, FPTR_T, R, A, 1> : CallerBase<ID, FPTR_T, R, A, 1>
 	{
 		static R call(A * args)
 		{
-			return Signature(FPTR)(args[0]);
+			return fptr_(args[0]);
 		}
 	};
 
-	template<typename Signature, typename R, typename A, void * FPTR>
-	struct Caller<Signature, R, A, FPTR, 2> : CallerBase<Signature, R, A, 2>
+	template<uint64_t ID, typename FPTR_T, typename R, typename A>
+	struct Caller<ID, FPTR_T, R, A, 2> : CallerBase<ID, FPTR_T, R, A, 2>
 	{
 		static R call(A * args)
 		{
-			return Signature(FPTR)(args[0], args[1]);
+			return fptr_(args[0], args[1]);
 		}
 	};
 
-	template<typename Signature, typename R, typename A, void * FPTR>
-	struct Caller<Signature, R, A, FPTR, 3> : CallerBase<Signature, R, A, 3>
+	template<uint64_t ID, typename FPTR_T, typename R, typename A>
+	struct Caller<ID, FPTR_T, R, A, 3> : CallerBase<ID, FPTR_T, R, A, 3>
 	{
 		static R call(A * args)
 		{
-			return Signature(FPTR)(args[0], args[1], args[2]);
+			return fptr_(args[0], args[1], args[2]);
 		}
 	};
 
-	template<typename FPTR_T, void (*FPTR)()>
+	template<uint64_t ID, typename FPTR_T>
 	struct Caller_;
 
-	template<void(*FPTR)(), typename R, typename ...ARGS>
-	struct Caller_<R(*)(ARGS...), FPTR> : Caller<R(*)(ARGS...), R, std::common_type_t<ARGS...>, FPTR, sizeof...(ARGS)>
+	template<uint64_t ID, typename R, typename ...ARGS>
+	struct Caller_<ID, R(*)(ARGS...)> : Caller<ID, R(*)(ARGS...), R, std::common_type_t<ARGS...>, sizeof...(ARGS)>
 	{
+		Caller_(R(*fptr)(ARGS...))
+		{
+			fptr_ = fptr;
+		}
 	};
 
 	template<typename CALLER>
@@ -264,7 +272,7 @@ namespace fobj
 
 using cplx_t = std::complex<double>;
 
-#define _OBJ(expr) fobj::_mpObject(fobj::Caller_<decltype(expr), reinterpret_cast<void(*)()>(expr)>())
+#define _OBJ(expr) fobj::_mpObject(fobj::Caller_<__COUNTER__, decltype(expr)>(expr))
 #define VPTR(function) reinterpret_cast<void*>(function)
 
 #endif //_MP_OPERATION_P_H

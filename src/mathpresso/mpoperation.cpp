@@ -40,6 +40,7 @@ namespace std
 #define _ADD_FUNC2(name, fptr) _ADD_CPLX2(name, fptr) \
 	ctx ->addObject(name, _OBJ(static_cast<double(*)(double, double)>(fptr)));
 
+
 namespace mathpresso
 {
 	std::complex<double> sqrtc(double x)
