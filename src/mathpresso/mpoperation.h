@@ -221,10 +221,9 @@ namespace fobj
 	template<typename Signature, typename R, typename A, size_t N>
 	struct CallerBase
 	{
-		static const size_t NUM_ARGS = N;
-		using ARG_TYPE = A;
-		using RET_TYPE = R;
-		using SIGNATURE = Signature;
+		static const size_t num_args_ = N;
+		using arg_t = A;
+		using ret_t = R;
 	};
 
 	// Create a function with argument array pointer that calls a multi-parameter function
@@ -236,7 +235,7 @@ namespace fobj
 	{
 		static R call(A * args)
 		{
-			return SIGNATURE(FPTR)(args[0]);
+			return Signature(FPTR)(args[0]);
 		}
 	};
 
@@ -245,7 +244,7 @@ namespace fobj
 	{
 		static R call(A * args)
 		{
-			return SIGNATURE(FPTR)(args[0], args[1]);
+			return Signature(FPTR)(args[0], args[1]);
 		}
 	};
 
@@ -254,28 +253,28 @@ namespace fobj
 	{
 		static R call(A * args)
 		{
-			return SIGNATURE(FPTR)(args[0], args[1], args[2]);
+			return Signature(FPTR)(args[0], args[1], args[2]);
 		}
 	};
 
-	template<typename FPTR_T, void * FPTR>
+	template<typename FPTR_T, void (*FPTR)()>
 	struct Caller_;
 
-	template<void * FPTR, typename R, typename ...ARGS>
-	struct Caller_<R(*)(ARGS...), FPTR> : Caller<R(*)(ARGS...), R, std::common_type_t<ARGS...>, (void *)FPTR, sizeof...(ARGS)>
+	template<void(*FPTR)(), typename R, typename ...ARGS>
+	struct Caller_<R(*)(ARGS...), FPTR> : Caller<R(*)(ARGS...), R, std::common_type_t<ARGS...>, FPTR, sizeof...(ARGS)>
 	{
 	};
 
 	template<typename CALLER>
 	obj_ptr _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
 	{
-		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::RET_TYPE, typename CALLER::ARG_TYPE>>((void *)CALLER::call, CALLER::NUM_ARGS, flags, priority);
+		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>((void *)CALLER::call, CALLER::num_args_, flags, priority);
 	}
 }
 
 using cplx_t = std::complex<double>;
 
-#define _OBJ(expr) fobj::_mpObject(fobj::Caller_<decltype(expr), expr>())
+#define _OBJ(expr) fobj::_mpObject(fobj::Caller_<decltype(expr), reinterpret_cast<void(*)()>(expr)>())
 #define VPTR(function) reinterpret_cast<void*>(function)
 
 #endif //_MP_OPERATION_P_H
