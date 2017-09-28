@@ -214,7 +214,7 @@ namespace mathpresso
 	// [mathpresso::AstSymbol]
 	// ============================================================================
 
-	struct AstSymbol : public std::enable_shared_from_this<AstSymbol>
+	struct AstSymbol :public MpObject, public std::enable_shared_from_this<AstSymbol>
 	{
 		MATHPRESSO_NO_COPY(AstSymbol);
 
