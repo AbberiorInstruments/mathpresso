@@ -83,7 +83,8 @@ namespace mathpresso
 			None = 0,
 			FlagHasState = 0x00000002,
 			RighttoLeft = 0x00000008,
-			IsAssignment = 0x0001000,
+			IsAssignment = 0x00001000,
+			IsMethod = 0x10000000
 		};
 
 		MpOperation(const Signature &s, uint32_t flags, uint32_t precedence = 0)  noexcept
@@ -208,22 +209,30 @@ namespace fobj
 {
 	using obj_ptr = std::shared_ptr<mathpresso::MpOperation>;
 
-	template<typename R, typename A, size_t N>
+	template<typename R, typename A, typename N, typename F = std::integral_constant<int, 0>>
 	struct Caller__
 	{
 		using ret_t = R;
 		using arg_t = A;
-		static const size_t num_args_;
+		using nargs_t = N;
+		using flags_t = F;
 	};
-
-	template<typename R, typename A, size_t N>
-	const size_t Caller__<R, A, N>::num_args_ = N;
 
 	template<typename R, typename A, size_t N, typename FPTR_T, FPTR_T FPTR>
 	class Caller_;
 
 	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
-	class Caller_<R, A, 1, FPTR_T, FPTR> : public Caller__<R, A, 1>
+	class Caller_<R, A, 0, FPTR_T, FPTR> : public Caller__<R, A, std::integral_constant<int, 0>>
+	{
+	public:
+		static R call(const A * args)
+		{
+			return FPTR();
+		}
+	};
+
+	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
+	class Caller_<R, A, 1, FPTR_T, FPTR> : public Caller__<R, A, std::integral_constant<int, 1>>
 	{
 	public:
 		static R call(const A * args)
@@ -233,12 +242,22 @@ namespace fobj
 	};
 
 	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
-	class Caller_<R, A, 2, FPTR_T, FPTR> : public Caller__<R, A, 2>
+	class Caller_<R, A, 2, FPTR_T, FPTR> : public Caller__<R, A, std::integral_constant<int, 2>>
 	{
 	public:
 		static R call(const A * args)
 		{
 			return FPTR(args[0], args[1]);
+		}
+	};
+
+	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
+	class Caller_<R, A, 3, FPTR_T, FPTR> : public Caller__<R, A, std::integral_constant<int, 3>>
+	{
+	public:
+		static R call(const A * args)
+		{
+			return FPTR(args[0], args[1], args[2]);
 		}
 	};
 
@@ -250,11 +269,19 @@ namespace fobj
 	{
 	};
 
+	template<typename R, R(*FPTR)()>
+	class Caller<R(*)(), FPTR> : public Caller_<R, double, 0, R(*)(), FPTR>
+	{
+	};
 	
 	template<typename CALLER>
 	obj_ptr _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
 	{
-		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>(reinterpret_cast<void*>(CALLER::call), CALLER::num_args_, flags, priority);
+		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>(
+			reinterpret_cast<void*>(CALLER::call), 
+			CALLER::nargs_t::value, 
+			flags | CALLER::flags_t::value, 
+			priority);
 	}
 }
 
