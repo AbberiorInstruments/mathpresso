@@ -254,7 +254,7 @@ namespace mathpresso
 	{
 #ifndef MATHPRESSO_ORIGINAL_DOUBLE_FUNCTION_CALLS
 		// Use function builder to build a function prototype.
-		X86Mem stack(cc->newStack(count * sizeof(double), sizeof(double)));
+		X86Mem stack(cc->newStack(uint32_t(count) * sizeof(double), sizeof(double)));
 		X86Gp dataPointerReg(cc->newUIntPtr());
 		cc->lea(dataPointerReg, stack);
 
