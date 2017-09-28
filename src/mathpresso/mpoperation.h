@@ -208,71 +208,56 @@ namespace fobj
 {
 	using obj_ptr = std::shared_ptr<mathpresso::MpOperation>;
 
-	template<uint64_t ID, typename FPTR_T, typename R, typename A, size_t N>
-	struct CallerBase
+	template<typename R, typename A, size_t N>
+	struct Caller__
 	{
-		static const size_t num_args_ = N;
-		using arg_t = A;
 		using ret_t = R;
-		static FPTR_T fptr_;
+		using arg_t = A;
+		static const size_t num_args_ = N;
 	};
 
-	template<uint64_t ID, typename FPTR_T, typename R, typename A, size_t N>
-	FPTR_T CallerBase<ID, FPTR_T, R, A, N>::fptr_ = nullptr;
+	template<typename R, typename A, size_t N, typename FPTR_T, FPTR_T FPTR>
+	class Caller_;
 
-	// Create a function with argument array pointer that calls a multi-parameter function
-	template<uint64_t ID, typename FPTR_T, typename R, typename A, size_t N>
-	struct Caller;
-
-	template<uint64_t ID, typename FPTR_T, typename R, typename A>
-	struct Caller<ID, FPTR_T, R, A, 1> : CallerBase<ID, FPTR_T, R, A, 1>
+	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
+	class Caller_<R, A, 1, FPTR_T, FPTR> : public Caller__<R, A, 1>
 	{
-		static R call(A * args)
+	public:
+		static R call(const A * args)
 		{
-			return fptr_(args[0]);
+			return FPTR(args[0]);
 		}
 	};
 
-	template<uint64_t ID, typename FPTR_T, typename R, typename A>
-	struct Caller<ID, FPTR_T, R, A, 2> : CallerBase<ID, FPTR_T, R, A, 2>
+	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
+	class Caller_<R, A, 2, FPTR_T, FPTR> : public Caller__<R, A, 2>
 	{
-		static R call(A * args)
+	public:
+		static R call(const A * args)
 		{
-			return fptr_(args[0], args[1]);
+			return FPTR(args[0], args[1]);
 		}
 	};
 
-	template<uint64_t ID, typename FPTR_T, typename R, typename A>
-	struct Caller<ID, FPTR_T, R, A, 3> : CallerBase<ID, FPTR_T, R, A, 3>
+	template<typename FPTR_T, FPTR_T FPTR>
+	class Caller;
+
+	template<typename R, typename ...ARGS, R(*FPTR)(ARGS...)>
+	class Caller<R(*)(ARGS...), FPTR> : public Caller_<R, typename std::remove_reference<typename std::common_type<ARGS...>::type>::type, sizeof...(ARGS), R(*)(ARGS...), FPTR>
 	{
-		static R call(A * args)
-		{
-			return fptr_(args[0], args[1], args[2]);
-		}
 	};
 
-	template<uint64_t ID, typename FPTR_T>
-	struct Caller_;
-
-	template<uint64_t ID, typename R, typename ...ARGS>
-	struct Caller_<ID, R(*)(ARGS...)> : Caller<ID, R(*)(ARGS...), R, std::common_type_t<ARGS...>, sizeof...(ARGS)>
-	{
-		Caller_(R(*fptr)(ARGS...))
-		{
-			fptr_ = fptr;
-		}
-	};
-
+	
 	template<typename CALLER>
 	obj_ptr _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
 	{
-		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>((void *)CALLER::call, CALLER::num_args_, flags, priority);
+		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>(CALLER::call, CALLER::num_args_, flags, priority);
 	}
 }
 
 using cplx_t = std::complex<double>;
 
-#define _OBJ(expr) fobj::_mpObject(fobj::Caller_<__COUNTER__, decltype(expr)>(expr))
+#define _OBJ(expr) fobj::_mpObject(fobj::Caller<decltype(expr), expr>())
 #define VPTR(function) reinterpret_cast<void*>(function)
 
 #endif //_MP_OPERATION_P_H
