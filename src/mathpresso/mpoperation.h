@@ -213,8 +213,11 @@ namespace fobj
 	{
 		using ret_t = R;
 		using arg_t = A;
-		static const size_t num_args_ = N;
+		static const size_t num_args_;
 	};
+
+	template<typename R, typename A, size_t N>
+	const size_t Caller__<R, A, N>::num_args_ = N;
 
 	template<typename R, typename A, size_t N, typename FPTR_T, FPTR_T FPTR>
 	class Caller_;
