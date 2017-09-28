@@ -251,7 +251,7 @@ namespace fobj
 	template<typename CALLER>
 	obj_ptr _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
 	{
-		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>(CALLER::call, CALLER::num_args_, flags, priority);
+		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>(reinterpret_cast<void*>(CALLER::call), CALLER::num_args_, flags, priority);
 	}
 }
 

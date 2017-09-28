@@ -24,7 +24,6 @@ namespace mathpresso
 	// ============================================================================
 
 	struct AstBuilder;
-	struct AstScope;
 	struct AstSymbol;
 
 	struct AstNode;

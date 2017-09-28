@@ -48,6 +48,17 @@ namespace mathpresso
 		return std::sqrt(std::complex<double>(x, 0));
 	}
 
+	double isFiniter(const double args)
+	{
+		return std::isfinite(args) ? 1.0 : 0.0;
+	}
+
+	double isfinitec(const cplx_t args)
+	{
+		return std::isfinite(args.real()) && std::isfinite(args.imag()) ? 1.0 : 0.0;
+	}
+
+
 	Signature::Signature(size_t nargs, type cmnType) noexcept
 	{
 		init(cmnType, { nargs, { cmnType, "" } });
@@ -296,6 +307,7 @@ namespace mathpresso
 		return ((mpFuncpCtoC)fnPtr_)(args);
 	}
 
+	//! does not work as of now. exchanged for the function-calls.
 	template<typename T>
 	class MpOperationIsFinite : public MpOperationEval<double, T>
 	{
@@ -310,7 +322,7 @@ namespace mathpresso
 	template<>
 	double MpOperationIsFinite<cplx_t>::evaluate(const cplx_t * args) const
 	{
-		return std::isfinite(args[0].real()) ? 1.0 : 0.0 && std::isfinite(args[0].imag()) ? 1.0 : 0.0;
+		return std::isfinite(args[0].real()) && std::isfinite(args[0].imag()) ? 1.0 : 0.0;
 	}
 
 	template<>
@@ -341,7 +353,7 @@ namespace mathpresso
 
 		JitVar tmp(jc->cc->newXmmSd(), false);
 		jc->cc->movhlps(tmp.getXmm(), var.getXmm());
-		jc->cc->maxsd(tmp.getXmm(), var.getXmm());
+		jc->cc->minsd(tmp.getXmm(), var.getXmm());
 
 		return tmp;
 	}
@@ -361,15 +373,15 @@ namespace mathpresso
 
 
 	template<>
-	double MpOperationIsInfinite<double>::evaluate(const double * args) const
+	double MpOperationIsInfinite<cplx_t>::evaluate(const cplx_t * args) const
 	{
-		return std::isinf(args[0]) ? 1.0 : 0.0;
+		return std::isinf(args[0].real()) && std::isinf(args[0].imag()) ? 1.0 : 0.0;
 	}
 
 	template<>
-	double MpOperationIsInfinite<cplx_t>::evaluate(const cplx_t * args) const
+	double MpOperationIsInfinite<double>::evaluate(const double * args) const
 	{
-		return std::isinf(args[0].real()) ? 1.0 : 0.0 && std::isinf(args[0].imag()) ? 1.0 : 0.0;
+		return std::isinf(args[0]) ? 1.0 : 0.0;
 	}
 
 	template<>
@@ -421,7 +433,7 @@ namespace mathpresso
 	template<>
 	double MpOperationIsNan<cplx_t>::evaluate(const cplx_t * args) const
 	{
-		return std::isnan(args[0].real()) ? 1.0 : 0.0 && std::isnan(args[0].imag()) ? 1.0 : 0.0;
+		return std::isnan(args[0].real()) && std::isnan(args[0].imag()) ? 1.0 : 0.0;
 	}
 
 	template<>
@@ -2152,8 +2164,8 @@ namespace mathpresso
 		ctx->addObject("=", std::make_shared<MpOperationVarDeclaration<cplx_t>>());
 		ctx->addObject("=", std::make_shared<MpOperationAssignment<double>>());
 		ctx->addObject("=", std::make_shared<MpOperationAssignment<cplx_t>>());
-		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite<double>>());
-		ctx->addObject("isfinite", std::make_shared<MpOperationIsFinite<cplx_t>>());
+		ctx->addObject("isfinite", _OBJ(static_cast<double(*)(double)>(isFiniter)));
+		ctx->addObject("isfinite", _OBJ(static_cast<double(*)(cplx_t)>(isfinitec)));
 		ctx->addObject("isinf", std::make_shared<MpOperationIsInfinite<double>>());
 		ctx->addObject("isinf", std::make_shared<MpOperationIsInfinite<cplx_t>>());
 		ctx->addObject("isnan", std::make_shared<MpOperationIsNan<double>>());
