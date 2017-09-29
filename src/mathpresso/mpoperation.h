@@ -207,22 +207,20 @@ namespace mathpresso
 
 namespace fobj
 {
-	using obj_ptr = std::shared_ptr<mathpresso::MpOperation>;
-
-	template<typename R, typename A, typename N, typename F = std::integral_constant<int, 0>>
+	template<typename R, typename A, size_t N, uint32_t F = 0>
 	struct Caller__
 	{
 		using ret_t = R;
 		using arg_t = A;
-		using nargs_t = N;
-		using flags_t = F;
+		using nargs_t = std::integral_constant<int, N>;
+		using flags_t = std::integral_constant<int, F>;
 	};
 
 	template<typename R, typename A, size_t N, typename FPTR_T, FPTR_T FPTR>
 	class Caller_;
 
 	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
-	class Caller_<R, A, 0, FPTR_T, FPTR> : public Caller__<R, A, std::integral_constant<int, 0>>
+	class Caller_<R, A, 0, FPTR_T, FPTR> : public Caller__<R, A, 0>
 	{
 	public:
 		static R call(const A * args)
@@ -232,7 +230,7 @@ namespace fobj
 	};
 
 	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
-	class Caller_<R, A, 1, FPTR_T, FPTR> : public Caller__<R, A, std::integral_constant<int, 1>>
+	class Caller_<R, A, 1, FPTR_T, FPTR> : public Caller__<R, A, 1>
 	{
 	public:
 		static R call(const A * args)
@@ -242,7 +240,7 @@ namespace fobj
 	};
 
 	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
-	class Caller_<R, A, 2, FPTR_T, FPTR> : public Caller__<R, A, std::integral_constant<int, 2>>
+	class Caller_<R, A, 2, FPTR_T, FPTR> : public Caller__<R, A, 2>
 	{
 	public:
 		static R call(const A * args)
@@ -252,7 +250,7 @@ namespace fobj
 	};
 
 	template<typename R, typename A, typename FPTR_T, FPTR_T FPTR>
-	class Caller_<R, A, 3, FPTR_T, FPTR> : public Caller__<R, A, std::integral_constant<int, 3>>
+	class Caller_<R, A, 3, FPTR_T, FPTR> : public Caller__<R, A, 3>
 	{
 	public:
 		static R call(const A * args)
@@ -275,7 +273,7 @@ namespace fobj
 	};
 	
 	template<typename CALLER>
-	obj_ptr _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
+	std::shared_ptr<mathpresso::MpOperation> _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
 	{
 		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>(
 			reinterpret_cast<void*>(CALLER::call), 
