@@ -188,6 +188,7 @@ type& operator=(const type& other) = delete; \
 		kVariableCplx = 0x0000002,
 	};
 
+	//! A virtual class, that is derived from by AstSymbol, MpOperation and Context.
 	class MATHPRESSO_API MpObject
 	{
 	public:

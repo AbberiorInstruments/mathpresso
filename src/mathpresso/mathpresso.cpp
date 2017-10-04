@@ -107,6 +107,10 @@ namespace mathpresso
 
 	Error Context::addConstant(const std::string &name, double value)
 	{
+		if (_symbols->findFunction(name).size() != 0)
+		{
+			return ErrorCode::kErrorSymbolAlreadyExists;
+		}
 		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, true));
 
 		shared_sym->setValue(value);
@@ -119,6 +123,10 @@ namespace mathpresso
 
 	Error Context::addConstant(const std::string &name, std::complex<double> value)
 	{
+		if (_symbols->findFunction(name).size() != 0)
+		{
+			return ErrorCode::kErrorSymbolAlreadyExists;
+		}
 		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, true));
 
 		shared_sym->setValue(value);
@@ -131,6 +139,11 @@ namespace mathpresso
 
 	Error Context::addVariable(const std::string &name, int offset, unsigned int flags)
 	{
+		if (_symbols->findFunction(name).size() != 0)
+		{
+			return ErrorCode::kErrorSymbolAlreadyExists;
+		}
+
 		auto shared_sym(std::make_shared<AstSymbol>(name, AstSymbolType::kAstSymbolVariable, true));
 
 		shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsDeclared);
@@ -153,6 +166,10 @@ namespace mathpresso
 
 	Error Context::addObject(const std::string &name, std::shared_ptr<MpOperation> obj)
 	{
+		if (_symbols->findVariable(name) != nullptr)
+		{
+			return ErrorCode::kErrorSymbolAlreadyExists;
+		}
 		_symbols->add(name, obj);
 		return ErrorCode::kErrorOk;
 	}
