@@ -373,7 +373,7 @@ namespace mathpresso
 					}
 					else
 					{
-						MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %.*s.", static_cast<int>(symbolName.length()), symbolName.c_str());
+						MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %s.", symbolName.c_str());
 					}
 
 					if (lastUnaryNode == nullptr)
