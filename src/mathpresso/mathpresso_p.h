@@ -230,13 +230,11 @@ namespace mathpresso
 	// [Reuse]
 	// ============================================================================
 
+	// TODO: remove those in favor of std::string
+
 	// Reuse these classes - we depend on asmjit anyway and these are internal.
 	using asmjit::StringBuilder;
 	using asmjit::StringBuilderTmp;
-
-	using asmjit::Zone;
-	using asmjit::ZoneHeap;
-	using asmjit::ZoneVector;
 
 	// ============================================================================
 	// [mpsl::InternalConsts]
@@ -342,6 +340,10 @@ namespace mathpresso
 		std::shared_ptr<AstSymbol> resolveVariable(ContextPtr ctx, const std::string & name, ContextPtr * ctxOut = nullptr);
 
 		std::vector<std::string> separateName(std::string name);
+
+
+		//! this is a plain version, we only check the Parents for the operation.
+		std::string getFunctionName(ContextPtr ctx, std::shared_ptr<MpOperation> operation);
 
 	} // resolver namespace
 

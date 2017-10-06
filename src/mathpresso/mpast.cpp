@@ -93,9 +93,9 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Dump]
 	// ============================================================================
 
-	Error AstBuilder::dump(StringBuilder& sb, const std::shared_ptr<Symbols> syms)
+	Error AstBuilder::dump(StringBuilder& sb)
 	{
-		return AstDump(sb, syms).onProgram(programNode());
+		return AstDump(sb).onProgram(programNode());
 	}
 
 	// ============================================================================
@@ -279,11 +279,10 @@ namespace mathpresso
 	// [mathpresso::AstDump - Construction / Destruction]
 	// ============================================================================
 
-	AstDump::AstDump(StringBuilder& sb, const std::shared_ptr<const Symbols> syms) noexcept
+	AstDump::AstDump(StringBuilder& sb) noexcept
 		: AstVisitor(),
 		_sb(sb),
-		_level(0),
-		_symbols(syms)
+		_level(0)
 	{
 	}
 	AstDump::~AstDump() noexcept {}
@@ -320,9 +319,9 @@ namespace mathpresso
 		return sym ? sym->getName() : "(null)";
 	}
 
-	std::string op_name(std::shared_ptr<AstNode> node, const std::shared_ptr<const Symbols> ops)
+	std::string op_name(std::shared_ptr<AstNode> node)
 	{
-		return ops->name(node->_mpOp);
+		return node->_opName.empty() ? "<unknown>" : node->_opName;
 	}
 
 	const char * node_type(std::shared_ptr<AstNode> node)
@@ -353,7 +352,7 @@ namespace mathpresso
 
 	Error AstDump::onUnaryOp(std::shared_ptr<AstUnaryOp> node)
 	{
-		nest("%s [Unary, %s -> %s]", op_name(node, _symbols).c_str(), parm_type(node), node_type(node));
+		nest("%s [Unary, %s -> %s]", op_name(node).c_str(), parm_type(node), node_type(node));
 		if (node->hasChild())
 			MATHPRESSO_PROPAGATE(onNode(node->getChild()));
 		return denest();
@@ -361,7 +360,7 @@ namespace mathpresso
 
 	Error AstDump::onBinaryOp(std::shared_ptr<AstBinaryOp> node)
 	{
-		nest("%s [Binary, %s -> %s]", op_name(node, _symbols).c_str(), parm_type(node), node_type(node));
+		nest("%s [Binary, %s -> %s]", op_name(node).c_str(), parm_type(node), node_type(node));
 		if (node->hasLeft())
 			MATHPRESSO_PROPAGATE(onNode(node->getLeft()));
 		if (node->hasRight())
@@ -371,7 +370,7 @@ namespace mathpresso
 
 	Error AstDump::onTernaryOp(std::shared_ptr<AstTernaryOp> node)
 	{
-		nest("%s [Ternary, %s -> %s]", op_name(node, _symbols).c_str(), parm_type(node), node_type(node));
+		nest("%s [Ternary, %s -> %s]", op_name(node).c_str(), parm_type(node), node_type(node));
 		if (node->hasCondition())
 			MATHPRESSO_PROPAGATE(onNode(node->getCondition()));
 		if (node->hasLeft())

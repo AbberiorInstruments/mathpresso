@@ -286,7 +286,7 @@ namespace mathpresso
 
 		if (options & kOptionDebugAst)
 		{
-			ast->dump(sbTmp, ctx->_symbols);
+			ast->dump(sbTmp);
 			log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
@@ -298,7 +298,7 @@ namespace mathpresso
 
 		if (options & kOptionDebugAst)
 		{
-			ast->dump(sbTmp, ctx->_symbols);
+			ast->dump(sbTmp);
 			log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
 			sbTmp.clear();
 		}
@@ -762,6 +762,25 @@ namespace mathpresso
 			}
 
 			return ret;
+		}
+
+		std::string getFunctionName(ContextPtr ctx,  std::shared_ptr<MpOperation> operation)
+		{
+			ContextPtr tmpCtx(ctx);
+			do
+			{
+
+				for (auto &pn : tmpCtx->_symbols->getFunctions())
+				{
+					for (auto &p : pn.second)
+					{
+						if (p == operation)
+							return pn.first;
+					}
+				}
+			} while (tmpCtx = tmpCtx->getParent());
+
+			return "<unknown>";
 		}
 	}
 

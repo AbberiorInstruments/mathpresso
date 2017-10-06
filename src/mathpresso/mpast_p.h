@@ -194,7 +194,7 @@ namespace mathpresso
 		// [Dump]
 		// --------------------------------------------------------------------------
 
-		Error dump(StringBuilder& sb, const std::shared_ptr<Symbols> ops);
+		Error dump(StringBuilder& sb);
 
 		// --------------------------------------------------------------------------
 		// [Members]
@@ -917,7 +917,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstDump(StringBuilder& sb, const std::shared_ptr<const Symbols> syms) noexcept;
+		AstDump(StringBuilder& sb) noexcept;
 		virtual ~AstDump() noexcept;
 
 		// --------------------------------------------------------------------------
@@ -948,7 +948,6 @@ namespace mathpresso
 	private:
 		StringBuilder& _sb;
 		uint32_t _level;
-		const std::shared_ptr<const Symbols> _symbols;
 	};
 
 } // mathpresso namespace
