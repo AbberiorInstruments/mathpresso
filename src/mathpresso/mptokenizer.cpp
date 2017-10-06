@@ -9,7 +9,6 @@
 
 // [Dependencies]
 #include <mathpresso/mpeval_p.h>
-#include <mathpresso/mathpresso_p.h>
 #include <mathpresso/mptokenizer_p.h>
 #include <iostream>
 
@@ -321,7 +320,6 @@ namespace mathpresso
 			// We always generate the hVal during tokenization to improve performance.
 			while (++p != pEnd)
 			{
-				uint32_t ord = p[0];
 				if (!isSymbol(p[0]))
 					break;
 			}

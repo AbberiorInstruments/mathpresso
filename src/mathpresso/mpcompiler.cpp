@@ -291,6 +291,11 @@ namespace mathpresso
 #endif
 	}
 
+	static void mpWrapDtoC(std::complex<double>(*ptr)(double *), double* data, std::complex<double>* ret)
+	{
+		*ret = ptr(data);
+	}
+
 	template<>
 	void JitCompiler::inlineCall<std::complex<double>, double>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
 	{
@@ -327,7 +332,6 @@ namespace mathpresso
 		cc->movapd(dst, ret);
 	}
 
-	//! Calls a function with complex arguments and non-complex returns.
 	template<>
 	void JitCompiler::inlineCall<double, std::complex<double>>(const asmjit::X86Xmm & dst, const asmjit::X86Xmm * args, size_t count, void * fn)
 	{
@@ -352,6 +356,11 @@ namespace mathpresso
 
 		ctx->setRet(0, dst);
 		ctx->setArg(0, dataPointerReg);
+	}
+
+	static void mpWrapCtoC(std::complex<double>(*ptr)(std::complex<double> *), std::complex<double>* data)
+	{
+		data[0] = ptr(data + 1);
 	}
 
 	template<>

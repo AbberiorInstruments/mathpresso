@@ -163,28 +163,14 @@ namespace mathpresso
 #endif
 	};
 
-	static double mpGetNan()
+	static constexpr double mpGetNan()
 	{
 		return std::numeric_limits<double>::quiet_NaN();
 	}
-	static double mpGetInf()
+
+	static constexpr double mpGetInf()
 	{
 		return std::numeric_limits<double>::infinity();
-	}
-
-
-	//! Used to call a c++-function from within the assembler.
-	//! the result can be read from data at index 0, arguments are at index 1, 2, ...
-	//! Eventually there is a better way, but unless i understand how to pass structs, i cannot provide one.
-	static void mpWrapCtoC(std::complex<double>(*ptr)(std::complex<double> *), std::complex<double>* data)
-	{
-		data[0] = ptr(data + 1);
-	}
-
-	// function from double to complex
-	static void mpWrapDtoC(std::complex<double>(*ptr)(double *), double* data, std::complex<double>* ret)
-	{
-		*ret = ptr(data);
 	}
 
 } // mathpresso namespace

@@ -83,7 +83,6 @@ cxx_add_source(mathpresso MATHPRESSO_SRC mathpresso
   mathpresso_p.h
   mpast.cpp
   mpast_p.h
-  mpatomic_p.h
   mpcompiler.cpp
   mpcompiler_p.h
   mpeval_p.h

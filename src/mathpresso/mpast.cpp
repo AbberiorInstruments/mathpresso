@@ -13,30 +13,6 @@
 
 namespace mathpresso
 {
-
-	// ============================================================================
-	// [mathpresso::mpAstNodeSize]
-	// ============================================================================
-
-
-	static uint32_t getNodeSize(AstNodeType nodeType)
-	{
-		switch (nodeType)
-		{
-			case AstNodeType::kAstNodeNone: return 0;
-			case AstNodeType::kAstNodeProgram: return sizeof(AstProgram);
-			case AstNodeType::kAstNodeBlock: return sizeof(AstBlock);
-			case AstNodeType::kAstNodeVarDecl: return sizeof(AstVarDecl);
-			case AstNodeType::kAstNodeVar: return sizeof(AstVar);
-			case AstNodeType::kAstNodeImm: return sizeof(AstImm);
-			case AstNodeType::kAstNodeUnaryOp: return sizeof(AstUnaryOp);
-			case AstNodeType::kAstNodeBinaryOp: return sizeof(AstBinaryOp);
-			case AstNodeType::kAstNodeTernaryOp: return sizeof(AstTernaryOp);
-			case AstNodeType::kAstNodeCall: return sizeof(AstCall);
-			default: return 0;
-		}
-	}
-
 	// ============================================================================
 	// [mathpresso::AstBuilder - Construction / Destruction]
 	// ============================================================================

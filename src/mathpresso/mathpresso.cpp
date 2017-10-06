@@ -10,12 +10,10 @@
 // [Dependencies]
 #include <mathpresso/mathpresso_p.h>
 #include <mathpresso/mpast_p.h>
-#include <mathpresso/mpatomic_p.h>
 #include <mathpresso/mpcompiler_p.h>
 #include <mathpresso/mpeval_p.h>
 #include <mathpresso/mpoptimizer_p.h>
 #include <mathpresso/mpparser_p.h>
-#include <mathpresso/mptokenizer_p.h>
 #include <mathpresso/mpoperation.h>
 
 #include <stdio.h>

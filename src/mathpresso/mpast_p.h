@@ -227,9 +227,9 @@ namespace mathpresso
 			_node(),
 			_symbolType(symbolType),
 			_symbolFlags(isGlobal ? AstSymbolFlags::kAstSymbolIsGlobal : 0),
-			_valueComp(),
 			_usedCount(0),
-			_writeCount(0)
+			_writeCount(0),
+			_valueComp()
 		{
 		}
 
@@ -379,10 +379,10 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		AstNode(AstNodeType nodeType, uint32_t length = 0) noexcept
-			:_parent(),
-			_children(length, nullptr),
-			_mpOp(nullptr),
+			:_mpOp(nullptr),
 			_opName(),
+			_parent(),
+			_children(length, nullptr),
 			_nodeType(nodeType),
 			_nodeFlags(AstNodeFlags::kAstNone),
 			_position(~uint32_t(0))

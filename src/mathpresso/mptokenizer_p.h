@@ -208,8 +208,8 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 		Tokenizer(const char* s, size_t sLen) noexcept
-			: _p(s),
-			_start(s),
+			: _start(s),
+			_p(s),
 			_end(s + sLen),
 			_strtod()
 		{

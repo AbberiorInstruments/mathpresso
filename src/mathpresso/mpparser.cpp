@@ -304,7 +304,7 @@ namespace mathpresso
 		// just started and there is no binary operator yet. Once the first binary
 		// operator has been parsed `currentBinaryNode` will be set accordingly.
 		std::shared_ptr<AstBinaryOp> currentBinaryNode = nullptr;
-		
+
 		// necessary to not loose 
 		std::shared_ptr<AstBinaryOp> rootBinaryNode = nullptr;
 
@@ -419,8 +419,6 @@ namespace mathpresso
 				// Parse a nested expression.
 				case TokenType::kTokenLParen:
 				{
-					uint32_t position = token.getPosAsUInt();
-
 					std::shared_ptr<AstNode> newNode;
 					MATHPRESSO_PROPAGATE(parseExpression(&newNode, true));
 
@@ -687,7 +685,7 @@ namespace mathpresso
 				std::shared_ptr<AstNode> expression;
 				Error err;
 
-				if (err = parseExpression(&expression, true) != ErrorCode::kErrorOk)
+				if (err = (parseExpression(&expression, true) != ErrorCode::kErrorOk))
 				{
 					return err;
 				}
