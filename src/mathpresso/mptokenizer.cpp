@@ -53,12 +53,12 @@ namespace mathpresso
 
 	bool isSeparator(char c)
 	{
-		return isIn(c, ",()[]{};\n");
+		return isIn(c, ",()[]{};");
 	}
 
 	bool isSpace(char c)
 	{
-		return  (c == ' ' || c == '\t');
+		return  (c == ' ' || c == '\t' || c == '\n');
 	}
 
 	//! \internal

@@ -488,16 +488,9 @@ namespace mathpresso
 					goto _Repeat1;
 				}
 
-
 				case TokenType::kTokenEnd:
 				{
 					MATHPRESSO_PARSER_ERROR(token, "Unexpected end of the program.");
-				}
-
-				// TODO: find a better solution
-				case 63: // dirty hack, as newline-characters throw the parser of track.
-				{
-					goto _Repeat1;
 				}
 
 				default:
