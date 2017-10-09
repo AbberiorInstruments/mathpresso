@@ -53,7 +53,7 @@ namespace mathpresso
 
 	bool isSeparator(char c)
 	{
-		return isIn(c, ",()[]{};");
+		return isIn(c, ",()[]{};\n");
 	}
 
 	bool isSpace(char c)
