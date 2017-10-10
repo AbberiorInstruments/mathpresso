@@ -433,7 +433,7 @@ namespace mathpresso
 		prepareConstPool();
 
 		size_t offset;
-		Data128 vec = Data128::fromI64(value, 0);
+		Data128 vec = Data128::fromU64(value, 0);
 		if (constPool.add(&vec, sizeof(Data128), offset) != ErrorCode::kErrorOk)
 			return JitVar();
 

@@ -190,26 +190,26 @@ namespace mathpresso
 			// Parse fraction.
 			if (p != pEnd && p[0] == '.')
 			{
-				size_t scale = 0;
+				size_t scale_fraction = 0;
 
 				while (++p != pEnd)
 				{
 					c = static_cast<uint32_t>(p[0] - '0');
 					if (c > 9)
 						break;
-					scale++;
+					scale_fraction++;
 
 					if (c != 0)
 					{
-						if (scale < InternalConsts::kSafeDigits)
-							val = val * std::pow(10, scale) + static_cast<double>(c);
-						digits += scale;
-						scale = 0;
+						if (scale_fraction < InternalConsts::kSafeDigits)
+							val = val * std::pow(10, scale_fraction) + static_cast<double>(c);
+						digits += scale_fraction;
+						scale_fraction = 0;
 					}
 				}
 
 				// Token is '.'.
-				if (size_t(p - pToken) == 1)
+				if (p - pToken == 1)
 				{
 					_p = reinterpret_cast<const char*>(p);
 					return token->setData(size_t(pToken - pStart), size_t(p - pToken), TokenType::kTokenDot);
@@ -265,7 +265,7 @@ namespace mathpresso
 
 			// Limit a range of safe values from Xe-15 to Xe15.
 			safe = safe && exponent >= -InternalConsts::kSafeDigits && exponent <= InternalConsts::kSafeDigits;
-			size_t len = (size_t)(p - pToken);
+			size_t len = p - pToken;
 
 			// check whether there is a complex number or not and set the output accordingly.
 			uint32_t tokenType;

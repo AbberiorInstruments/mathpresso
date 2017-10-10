@@ -226,7 +226,7 @@ namespace mathpresso
 			: _name(name),
 			_node(),
 			_symbolType(symbolType),
-			_symbolFlags(isGlobal ? AstSymbolFlags::kAstSymbolIsGlobal : 0),
+			_symbolFlags(isGlobal ? AstSymbolFlags::kAstSymbolIsGlobal : 0u),
 			_usedCount(0),
 			_writeCount(0),
 			_valueComp()

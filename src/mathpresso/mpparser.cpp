@@ -683,9 +683,9 @@ namespace mathpresso
 			{
 				// Parse the argument expression.
 				std::shared_ptr<AstNode> expression;
-				Error err;
+				Error err = parseExpression(&expression, true);
 
-				if (err = (parseExpression(&expression, true) != ErrorCode::kErrorOk))
+				if (err != ErrorCode::kErrorOk)
 				{
 					return err;
 				}
