@@ -548,7 +548,7 @@ namespace mathpresso
 			if (p->nargs() == obj->nargs())
 			{
 				if (p->precedence() != obj->precedence()
-					|| (p->flags() & MpOperation::Flags::RighttoLeft) != (obj->flags() & MpOperation::Flags::RighttoLeft))
+					|| (p->hasFlag(MpOperation::Flags::RighttoLeft) != obj->hasFlag(MpOperation::Flags::RighttoLeft)))
 				{
 					throw std::runtime_error("unable to add function.");
 				}
@@ -586,7 +586,7 @@ namespace mathpresso
 		{
 			names.push_back(p.first + (p.second->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex) ? " (complex)" : " (real)"));
 		}
-		
+
 		return names;
 	}
 
@@ -677,8 +677,7 @@ namespace mathpresso
 				do
 				{
 					function = tmpCtx->_symbols->findFunction(name, numargs);
-				} 
-				while (!function && (tmpCtx = tmpCtx->getParent()));
+				} while (!function && (tmpCtx = tmpCtx->getParent()));
 			}
 
 			return function;
@@ -762,7 +761,7 @@ namespace mathpresso
 			return ret;
 		}
 
-		std::string getFunctionName(ContextPtr ctx,  std::shared_ptr<MpOperation> operation)
+		std::string getFunctionName(ContextPtr ctx, std::shared_ptr<MpOperation> operation)
 		{
 			ContextPtr tmpCtx(ctx);
 			do

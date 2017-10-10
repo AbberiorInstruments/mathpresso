@@ -52,13 +52,13 @@ namespace mathpresso
 		Signature(size_t nargs) noexcept;
 		Signature(size_t nargs, type cmnType) noexcept;
 		Signature(size_t nargs, type argType, type retType) noexcept;
-		
+
 		bool areParams(type _type) const;
 		std::string to_string();
 
 		type return_type_;
 		std::vector<param> parameters_;
-	private :
+	private:
 		std::string typeToString(type _type);
 		void init(type retType, std::vector<param> params);
 	};
@@ -109,15 +109,11 @@ namespace mathpresso
 		}
 		bool isRightToLeft() const
 		{
-			return (flags_ & RighttoLeft) != 0;
+			return hasFlag(RighttoLeft);
 		}
 		uint32_t precedence() const
 		{
 			return precedence_;
-		}
-		uint32_t flags() const
-		{
-			return flags_;
 		}
 		Signature signature() const
 		{
@@ -271,14 +267,14 @@ namespace fobj
 	class Caller<R(*)(), FPTR> : public Caller_<R, double, 0, R(*)(), FPTR>
 	{
 	};
-	
+
 	template<typename CALLER>
 	std::shared_ptr<mathpresso::MpOperation> _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
 	{
 		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>(
-			reinterpret_cast<void*>(CALLER::call), 
-			CALLER::nargs_t::value, 
-			flags | CALLER::flags_t::value, 
+			reinterpret_cast<void*>(CALLER::call),
+			CALLER::nargs_t::value,
+			flags | CALLER::flags_t::value,
 			priority);
 	}
 }

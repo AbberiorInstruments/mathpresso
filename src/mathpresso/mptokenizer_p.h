@@ -272,8 +272,17 @@ namespace mathpresso
 		const char* _start;
 	
 	private:
-		uint32_t endOfInput(mathpresso::Token * token, const char * pToken, const char * p);
-		uint32_t invalid(mathpresso::Token * token, const char * pToken, const char * p);
+		uint32_t endOfInput(mathpresso::Token * token, const char * pToken, const char * p)
+		{
+			_p = _end;
+			return token->setData(pToken - _start, p - pToken, TokenType::kTokenEnd);
+		}
+
+		uint32_t invalid(mathpresso::Token * token, const char * pToken, const char * p)
+		{
+			_p = pToken;
+			return token->setData(pToken - _start, p - pToken, TokenType::kTokenInvalid);
+		}
 
 		const char* _p;
 		const char* _end;

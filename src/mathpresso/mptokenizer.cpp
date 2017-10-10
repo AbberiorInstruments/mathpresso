@@ -374,16 +374,4 @@ namespace mathpresso
 		return invalid(token, pToken, p);
 	}
 
-	uint32_t Tokenizer::invalid(mathpresso::Token * token, const char * pToken, const char * p)
-	{
-		_p = pToken;
-		return token->setData(pToken - _start, p - pToken, TokenType::kTokenInvalid);
-	}
-
-	uint32_t Tokenizer::endOfInput(mathpresso::Token * token, const char * pToken, const char * p)
-	{
-		_p = _end;
-		return token->setData(pToken - _start, p - pToken, TokenType::kTokenEnd);
-	}
-
-} // mathpresso namespace
+	} // mathpresso namespace

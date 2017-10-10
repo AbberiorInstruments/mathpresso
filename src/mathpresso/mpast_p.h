@@ -214,7 +214,7 @@ namespace mathpresso
 	// [mathpresso::AstSymbol]
 	// ============================================================================
 
-	struct AstSymbol :public MpObject, public std::enable_shared_from_this<AstSymbol>
+	struct AstSymbol : public MpObject, public std::enable_shared_from_this<AstSymbol>
 	{
 		MATHPRESSO_NO_COPY(AstSymbol);
 
@@ -805,7 +805,7 @@ namespace mathpresso
 
 		virtual ~AstBinaryOp() noexcept
 		{
-			if (_mpOp && (_mpOp->flags() & MpOperation::IsAssignment) && hasLeft())
+			if (_mpOp && (_mpOp->hasFlag(MpOperation::IsAssignment)) && hasLeft())
 			{
 				std::shared_ptr<AstVar> var = std::static_pointer_cast<AstVar>(getLeft());
 				std::shared_ptr<AstSymbol> sym = var->getSymbol();
