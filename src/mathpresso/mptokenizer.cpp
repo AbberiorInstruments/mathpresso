@@ -86,7 +86,7 @@ namespace mathpresso
 	//! \internal
 	//!
 	//! Converts a given symbol `s` of `sLen` to a keyword token.
-	static uint32_t mpGetKeyword(const uint8_t* s, size_t sLen)
+	static uint32_t mpGetKeyword(const char* s, size_t sLen)
 	{
 		if (sLen == 3 && s[0] == 'v' && s[1] == 'a' && s[2] == 'r')
 			return TokenType::kTokenVar;
@@ -118,11 +118,11 @@ namespace mathpresso
 		}
 
 		// Input string.
-		const uint8_t* p = reinterpret_cast<const uint8_t*>(_p);
-		const uint8_t* pToken = p;
+		const char* p = _p;
+		const char* pToken = p;
 
-		const uint8_t* pStart = reinterpret_cast<const uint8_t*>(_start);
-		const uint8_t* pEnd = reinterpret_cast<const uint8_t*>(_end);
+		const char* pStart = _start;
+		const char* pEnd = _end;
 
 		// --------------------------------------------------------------------------
 		// [Spaces]
@@ -211,8 +211,8 @@ namespace mathpresso
 				// Token is '.'.
 				if (p - pToken == 1)
 				{
-					_p = reinterpret_cast<const char*>(p);
-					return token->setData(size_t(pToken - pStart), size_t(p - pToken), TokenType::kTokenDot);
+					_p = p;
+					return token->setData(pToken - pStart, p - pToken, TokenType::kTokenDot);
 				}
 			}
 
@@ -307,7 +307,7 @@ namespace mathpresso
 			token->value = val;
 			token->setData(pToken - pStart, len, tokenType);
 
-			_p = reinterpret_cast<const char*>(p);
+			_p = p;
 			return tokenType;
 		}
 
@@ -325,7 +325,7 @@ namespace mathpresso
 			}
 
 			size_t len = p - pToken;
-			_p = reinterpret_cast<const char*>(p);
+			_p = p;
 			return token->setData(pToken - pStart, len, mpGetKeyword(pToken, len));
 		}
 
@@ -335,7 +335,7 @@ namespace mathpresso
 
 		else if (isSeparator(p[0]))
 		{
-			_p = reinterpret_cast<const char*>(++p);
+			_p = ++p;
 			return token->setData(pToken - pStart, p - pToken, c);
 		}
 
@@ -355,7 +355,7 @@ namespace mathpresso
 					length = 2;
 			}
 
-			if (std::string(reinterpret_cast<const char*>(pToken), length) == "//")
+			if (std::string(pToken, length) == "//")
 			{
 				for (;;)
 				{
@@ -367,7 +367,7 @@ namespace mathpresso
 				}
 			}
 
-			_p = reinterpret_cast<const char*>(p);
+			_p = p;
 			return token->setData(pToken - pStart, length, TokenType::kTokenOperator);
 
 		}
@@ -377,7 +377,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 	_Invalid:
-		_p = reinterpret_cast<const char*>(pToken);
+		_p = pToken;
 		return token->setData(pToken - pStart, p - pToken, TokenType::kTokenInvalid);
 
 		// --------------------------------------------------------------------------
