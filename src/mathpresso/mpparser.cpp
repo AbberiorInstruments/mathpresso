@@ -331,51 +331,55 @@ namespace mathpresso
 				// Parse a symbol (variable or function name).
 				case TokenType::kTokenSymbol:
 				{
-					// TODO: rework this.
+
 					std::string symbolName(_tokenizer.getTokenName(token));
-
-					resolver::ContextPtr ctxfound;
-
-					std::shared_ptr<AstSymbol> sym = resolver::resolveVariable(_shadowContext, symbolName, &ctxfound);
+					Token token_tmp = token;
 
 					std::shared_ptr<AstNode> newNode;
 
-					if (sym)
-					{
-						if (!sym->isDeclared())
-							MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName());
-
-						// Put symbol to shadow scope if it's global. This is done lazily and
-						// only once per symbol when it's referenced.
-						if (ctxfound->isGlobal())
-						{
-							sym = _ast->shadowSymbol(sym);
-							MATHPRESSO_NULLCHECK(sym);
-
-							sym->setVarSlotId(_ast->newSlotId());
-						}
-
-						newNode = std::make_shared<AstVar>();
-						MATHPRESSO_NULLCHECK(newNode);
-						std::static_pointer_cast<AstVar>(newNode)->setSymbol(sym);
-
-						if (sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex))
-							newNode->addNodeFlags(AstNodeFlags::kAstTakesComplex | AstNodeFlags::kAstReturnsComplex);
-
-						newNode->setPosition(token.getPosAsUInt());
-						sym->incUsedCount();
-					}
-					else if (resolver::existsFunction(_shadowContext, symbolName))
+					if (_tokenizer.next(&token) == TokenType::kTokenLParen)
 					{
 						// Will be parsed by `parseCall()` again.
-						_tokenizer.set(&token);
+						_tokenizer.set(&token_tmp);
 						MATHPRESSO_PROPAGATE(parseCall(&newNode));
 					}
 					else
 					{
-						MATHPRESSO_PARSER_ERROR(token, "Unresolved symbol %s.", symbolName.c_str());
-					}
+						_tokenizer.set(&token);
+						resolver::ContextPtr ctxfound;
 
+						std::shared_ptr<AstSymbol> sym = resolver::resolveVariable(_shadowContext, symbolName, &ctxfound);
+
+						if (sym)
+						{
+							if (!sym->isDeclared())
+								MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName());
+
+							// Put symbol to shadow scope if it's global. This is done lazily and
+							// only once per symbol when it's referenced.
+							if (ctxfound->isGlobal())
+							{
+								sym = _ast->shadowSymbol(sym);
+								MATHPRESSO_NULLCHECK(sym);
+
+								sym->setVarSlotId(_ast->newSlotId());
+							}
+
+							newNode = std::make_shared<AstVar>();
+							MATHPRESSO_NULLCHECK(newNode);
+							std::static_pointer_cast<AstVar>(newNode)->setSymbol(sym);
+
+							if (sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex))
+								newNode->addNodeFlags(AstNodeFlags::kAstTakesComplex | AstNodeFlags::kAstReturnsComplex);
+
+							newNode->setPosition(token.getPosAsUInt());
+							sym->incUsedCount();
+						}
+						else
+						{
+							MATHPRESSO_PARSER_ERROR(token_tmp, "Unresolved symbol %s.", symbolName.c_str());
+						}
+					}
 					if (lastUnaryNode == nullptr)
 						currentNode = newNode;
 					else

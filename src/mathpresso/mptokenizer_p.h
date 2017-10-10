@@ -225,9 +225,6 @@ namespace mathpresso
 		//! Get the current token and advance.
 		uint32_t next(Token* token);
 
-		
-
-
 		//! Set the token that will be returned by `next()` and `peek()` functions.
 		void set(Token* token)
 		{
