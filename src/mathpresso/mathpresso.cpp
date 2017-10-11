@@ -384,25 +384,24 @@ namespace mathpresso
 	{
 		if (reportsWarnings())
 		{
-			StringBuilderTmp<256> sb;
+			char buf[256];
 
 			va_list ap;
 			va_start(ap, fmt);
 
-			sb.appendFormatVA(fmt, ap);
-
+			auto ret = std::vsnprintf(buf, MATHPRESSO_ARRAY_SIZE(buf), fmt, ap);
 			va_end(ap);
-			onWarning(position, sb);
-		}
-	}
 
-	void ErrorReporter::onWarning(uint32_t position, const StringBuilder& msg)
-	{
-		if (reportsWarnings())
-		{
-			uint32_t line, column;
-			getLineAndColumn(position, line, column);
-			_log->log(OutputLog::kMessageWarning, line, column, msg.getData(), msg.getLength());
+			if (ret < 0)
+			{
+				throw std::runtime_error("Error formating string.");
+			}
+			else if (ret > MATHPRESSO_ARRAY_SIZE(buf))
+			{
+				throw std::runtime_error("formated string to long:\n" + std::string(buf));
+			}
+
+			onWarning(position, std::string(buf));
 		}
 	}
 
@@ -420,32 +419,32 @@ namespace mathpresso
 	{
 		if (reportsErrors())
 		{
-			StringBuilderTmp<256> sb;
+			char buf[256];
 
 			va_list ap;
 			va_start(ap, fmt);
 
-			sb.appendFormatVA(fmt, ap);
-
+			auto ret = std::vsnprintf(buf, MATHPRESSO_ARRAY_SIZE(buf), fmt, ap);
 			va_end(ap);
-			return onError(error, position, sb);
+
+			if (ret < 0)
+			{
+				throw std::runtime_error("Error formating string.");
+			}
+			else if (ret > MATHPRESSO_ARRAY_SIZE(buf))
+			{
+				throw std::runtime_error("formated string to long:\n" + std::string(buf));
+			}
+
+
+			onError(error, position, std::string(buf));
+
+			return MATHPRESSO_TRACE_ERROR(error);
 		}
 		else
 		{
 			return MATHPRESSO_TRACE_ERROR(error);
 		}
-	}
-
-	Error ErrorReporter::onError(Error error, uint32_t position, const StringBuilder& msg)
-	{
-		if (reportsErrors())
-		{
-			uint32_t line, column;
-			getLineAndColumn(position, line, column);
-			_log->log(OutputLog::kMessageError, line, column, msg.getData(), msg.getLength());
-		}
-
-		return MATHPRESSO_TRACE_ERROR(error);
 	}
 
 	Error ErrorReporter::onError(Error error, uint32_t position, const std::string & msg)

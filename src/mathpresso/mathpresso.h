@@ -377,7 +377,7 @@ type& operator=(const type& other) = delete; \
 		//! Output type.
 		//!
 		//! Specifies how much information to return after a program is parsed/compiled.
-		enum Message
+		enum Message : unsigned int
 		{
 			//! Error message.
 			kMessageError = 0,

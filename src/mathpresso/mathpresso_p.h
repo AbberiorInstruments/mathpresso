@@ -306,11 +306,11 @@ namespace mathpresso
 		void getLineAndColumn(uint32_t position, uint32_t& line, uint32_t& column);
 
 		void onWarning(uint32_t position, const char* fmt, ...);
-		void onWarning(uint32_t position, const StringBuilder& msg);
+		//void onWarning(uint32_t position, const StringBuilder& msg);
 		void onWarning(uint32_t position, const std::string& msg);
 
 		Error onError(Error error, uint32_t position, const char* fmt, ...);
-		Error onError(Error error, uint32_t position, const StringBuilder& msg);
+		//Error onError(Error error, uint32_t position, const StringBuilder& msg);
 		Error onError(Error error, uint32_t position, const std::string& msg);
 
 		// --------------------------------------------------------------------------
