@@ -292,7 +292,7 @@ namespace mathpresso
 	std::string sym_name(std::shared_ptr<T> node)
 	{
 		auto sym = node->getSymbol();
-		return sym ? sym->getName() : "(null)";
+		return sym ? sym->getName() : "<null>";
 	}
 
 	std::string op_name(std::shared_ptr<AstNode> node)

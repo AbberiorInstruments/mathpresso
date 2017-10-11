@@ -307,10 +307,7 @@ namespace mathpresso
 		void incUsedCount(uint32_t n = 1) { _usedCount += n; }
 		void incWriteCount(uint32_t n = 1) { _writeCount += n; incUsedCount(n); }
 
-		void decUsedCount(uint32_t n = 1)
-		{
-			_usedCount -= n;
-		}
+		void decUsedCount(uint32_t n = 1) { _usedCount -= n; }
 		void decWriteCount(uint32_t n = 1) { _writeCount -= n; decUsedCount(n); }
 
 		// --------------------------------------------------------------------------
@@ -348,7 +345,7 @@ namespace mathpresso
 	// [mathpresso::AstNode]
 	// ============================================================================
 
-#define MATHPRESSO_AST_CHILD(_Index_, _Type_, _Name_, _Memb_) \
+#define MATHPRESSO_AST_CHILD(_Index_, _Type_, _Name_) \
   bool has##_Name_() const { return _children[_Index_] != nullptr; } \
   std::shared_ptr<_Type_> get##_Name_() const { return _children[_Index_]; } \
   \
@@ -564,7 +561,7 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_AST_CHILD(0, AstNode, Child, _child);
+		MATHPRESSO_AST_CHILD(0, AstNode, Child);
 	};
 
 	// ============================================================================
@@ -592,8 +589,8 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_AST_CHILD(0, AstNode, Left, _left);
-		MATHPRESSO_AST_CHILD(1, AstNode, Right, _right);
+		MATHPRESSO_AST_CHILD(0, AstNode, Left);
+		MATHPRESSO_AST_CHILD(1, AstNode, Right);
 	};
 
 
@@ -618,9 +615,9 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
-		MATHPRESSO_AST_CHILD(0, AstNode, Condition, _condition);
-		MATHPRESSO_AST_CHILD(1, AstNode, Left, _left);
-		MATHPRESSO_AST_CHILD(2, AstNode, Right, _right);
+		MATHPRESSO_AST_CHILD(0, AstNode, Condition);
+		MATHPRESSO_AST_CHILD(1, AstNode, Left);
+		MATHPRESSO_AST_CHILD(2, AstNode, Right);
 	};
 
 	// ============================================================================
@@ -924,14 +921,14 @@ namespace mathpresso
 		// [OnNode]
 		// --------------------------------------------------------------------------
 
-		virtual Error onBlock(std::shared_ptr<AstBlock> node) override;
-		virtual Error onVarDecl(std::shared_ptr<AstVarDecl> node) override;
-		virtual Error onVar(std::shared_ptr<AstVar> node) override;
-		virtual Error onImm(std::shared_ptr<AstImm> node) override;
-		virtual Error onUnaryOp(std::shared_ptr<AstUnaryOp> node) override;
-		virtual Error onBinaryOp(std::shared_ptr<AstBinaryOp> node) override;
-		virtual Error onTernaryOp(std::shared_ptr<AstTernaryOp> node) override;
-		virtual Error onCall(std::shared_ptr<AstCall> node) override;
+		Error onBlock(std::shared_ptr<AstBlock> node) override;
+		Error onVarDecl(std::shared_ptr<AstVarDecl> node) override;
+		Error onVar(std::shared_ptr<AstVar> node) override;
+		Error onImm(std::shared_ptr<AstImm> node) override;
+		Error onUnaryOp(std::shared_ptr<AstUnaryOp> node) override;
+		Error onBinaryOp(std::shared_ptr<AstBinaryOp> node) override;
+		Error onTernaryOp(std::shared_ptr<AstTernaryOp> node) override;
+		Error onCall(std::shared_ptr<AstCall> node) override;
 
 		// --------------------------------------------------------------------------
 		// [Helpers]

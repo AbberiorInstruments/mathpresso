@@ -346,8 +346,8 @@ namespace mathpresso
 					else
 					{
 						_tokenizer.set(&token);
-						resolver::ContextPtr ctxfound;
 
+						resolver::ContextPtr ctxfound;
 						std::shared_ptr<AstSymbol> sym = resolver::resolveVariable(_shadowContext, symbolName, &ctxfound);
 
 						if (sym)
@@ -380,6 +380,7 @@ namespace mathpresso
 							MATHPRESSO_PARSER_ERROR(token_tmp, "Unresolved symbol %s.", symbolName.c_str());
 						}
 					}
+
 					if (lastUnaryNode == nullptr)
 						currentNode = newNode;
 					else

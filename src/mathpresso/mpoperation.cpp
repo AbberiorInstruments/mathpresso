@@ -2043,7 +2043,7 @@ namespace mathpresso
 		std::shared_ptr<AstSymbol> sym = varDecl->getSymbol();
 		uint32_t slotId = sym->getVarSlotId();
 
-		result.setRO();
+		result.setRO(true);
 		jc->varSlots[slotId] = result;
 
 		return result;
@@ -2114,7 +2114,7 @@ namespace mathpresso
 		uint32_t slotId = sym->getVarSlotId();
 
 		JitVar result = jc->onNode(node->getAt(1));
-		result.setRO();
+		result.setRO(true);
 
 		sym->setAltered();
 		jc->varSlots[slotId] = result;

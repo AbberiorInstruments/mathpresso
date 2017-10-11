@@ -117,14 +117,9 @@ namespace mathpresso
 			return isReadOnly;
 		}
 
-		void setRO()
+		void setRO(bool isRO)
 		{
-			isReadOnly = true;
-		}
-
-		void clearRO()
-		{
-			isReadOnly = false;
+			isReadOnly = isRO;
 		}
 
 		// Members.

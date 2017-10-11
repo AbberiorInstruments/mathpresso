@@ -11,47 +11,51 @@
 // [Dependencies]
 #include <mathpresso/mpast_p.h>
 
-namespace mathpresso {
+namespace mathpresso
+{
 
-// ============================================================================
-// [mpsl::AstOptimizer]
-// ============================================================================
+	// ============================================================================
+	// [mpsl::AstOptimizer]
+	// ============================================================================
 
-struct AstOptimizer : public AstVisitor {
-  MATHPRESSO_NO_COPY(AstOptimizer)
+	struct AstOptimizer : public AstVisitor
+	{
+		MATHPRESSO_NO_COPY(AstOptimizer);
 
-  // --------------------------------------------------------------------------
-  // [Construction / Destruction]
-  // --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Construction / Destruction]
+		// --------------------------------------------------------------------------
 
-  AstOptimizer(ErrorReporter* errorReporter, std::shared_ptr<Context> ctx) noexcept;
-  virtual ~AstOptimizer() noexcept;
+		AstOptimizer(ErrorReporter* errorReporter, std::shared_ptr<Context> ctx) noexcept;
+		virtual ~AstOptimizer() noexcept;
 
-  // --------------------------------------------------------------------------
-  // [OnNode]
-  // --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [OnNode]
+		// --------------------------------------------------------------------------
 
-  virtual Error onNode(std::shared_ptr<AstNode> node) override;
+		Error onNode(std::shared_ptr<AstNode> node) override;
 
-  virtual Error onBlock(std::shared_ptr<AstBlock> node) override;
-  virtual Error onVarDecl(std::shared_ptr<AstVarDecl> node) override;
-  virtual Error onVar(std::shared_ptr<AstVar> node) override;
-  virtual Error onImm(std::shared_ptr<AstImm> node) override;
-  virtual Error onUnaryOp(std::shared_ptr<AstUnaryOp> node) override;
-  virtual Error onBinaryOp(std::shared_ptr<AstBinaryOp> node) override;
-  virtual Error onTernaryOp(std::shared_ptr<AstTernaryOp> node) override;
-  virtual Error onCall(std::shared_ptr<AstCall> node) override;
+		Error onBlock(std::shared_ptr<AstBlock> node) override;
+		Error onVarDecl(std::shared_ptr<AstVarDecl> node) override;
+		Error onVar(std::shared_ptr<AstVar> node) override;
+		Error onImm(std::shared_ptr<AstImm> node) override;
+		Error onUnaryOp(std::shared_ptr<AstUnaryOp> node) override;
+		Error onBinaryOp(std::shared_ptr<AstBinaryOp> node) override;
+		Error onTernaryOp(std::shared_ptr<AstTernaryOp> node) override;
+		Error onCall(std::shared_ptr<AstCall> node) override;
 
-  virtual Error optimize(std::shared_ptr<AstNode> node);
+		Error optimize(std::shared_ptr<AstNode> node);
 
-  // --------------------------------------------------------------------------
-  // [Members]
-  // --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// [Members]
+		// --------------------------------------------------------------------------
 
-  ErrorReporter* _errorReporter;
-  std::shared_ptr<Context> _shadowContext;
+	private:
 
-};
+		ErrorReporter* _errorReporter;
+		std::shared_ptr<Context> _shadowContext;
+
+	};
 
 } // mathpresso namespace
 
