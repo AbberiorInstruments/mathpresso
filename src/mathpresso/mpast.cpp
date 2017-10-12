@@ -69,7 +69,7 @@ namespace mathpresso
 	// [mathpresso::AstBuilder - Dump]
 	// ============================================================================
 
-	Error AstBuilder::dump(StringBuilder& sb)
+	Error AstBuilder::dump(std::string& sb)
 	{
 		return AstDump(sb).onProgram(programNode());
 	}
@@ -255,7 +255,7 @@ namespace mathpresso
 	// [mathpresso::AstDump - Construction / Destruction]
 	// ============================================================================
 
-	AstDump::AstDump(StringBuilder& sb) noexcept
+	AstDump::AstDump(std::string& sb) noexcept
 		: AstVisitor(),
 		_sb(sb),
 		_level(0)
@@ -371,27 +371,53 @@ namespace mathpresso
 
 	Error AstDump::info(const char* fmt, ...)
 	{
+		char buf[256];
+
 		va_list ap;
 		va_start(ap, fmt);
 
-		_sb.appendChars(' ', static_cast<size_t>(_level) * 2);
-		_sb.appendFormatVA(fmt, ap);
-		_sb.appendChar('\n');
-
+		auto ret = std::vsnprintf(buf, MATHPRESSO_ARRAY_SIZE(buf), fmt, ap);
 		va_end(ap);
+
+		if (ret < 0)
+		{
+			throw std::runtime_error("Error formating string.");
+		}
+		else if (ret > MATHPRESSO_ARRAY_SIZE(buf))
+		{
+			throw std::runtime_error("formated string to long:\n" + std::string(buf));
+		}
+
+		_sb.append(std::string(_level * 2, ' '));
+		_sb.append(buf, ret);
+		_sb.append("\n");
+
 		return ErrorCode::kErrorOk;
 	}
 
 	Error AstDump::nest(const char* fmt, ...)
 	{
+		char buf[256];
+
 		va_list ap;
 		va_start(ap, fmt);
 
-		_sb.appendChars(' ', static_cast<size_t>(_level) * 2);
-		_sb.appendFormatVA(fmt, ap);
-		_sb.appendChar('\n');
-
+		auto ret = std::vsnprintf(buf, MATHPRESSO_ARRAY_SIZE(buf), fmt, ap);
 		va_end(ap);
+
+		if (ret < 0)
+		{
+			throw std::runtime_error("Error formating string.");
+		}
+		else if (ret > MATHPRESSO_ARRAY_SIZE(buf))
+		{
+			throw std::runtime_error("formated string to long:\n" + std::string(buf));
+		}
+
+		_sb.append(std::string(_level * 2, ' '));
+		_sb.append(buf, ret);
+		_sb.append("\n");
+
 		_level++;
 
 		return ErrorCode::kErrorOk;

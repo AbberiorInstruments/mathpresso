@@ -255,7 +255,7 @@ namespace mathpresso
 		else
 			options &= ~(kOptionVerbose | kOptionDebugAst | kOptionDebugAsm);
 
-		StringBuilderTmp<512> sbTmp;
+		std::string sbTmp = "";
 
 		// Initialize AST.
 
@@ -285,7 +285,7 @@ namespace mathpresso
 		if (options & kOptionDebugAst)
 		{
 			ast->dump(sbTmp);
-			log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.getData(), sbTmp.getLength());
+			log->log(OutputLog::kMessageAstInitial, 0, 0, sbTmp.c_str(), sbTmp.length());
 			sbTmp.clear();
 		}
 
@@ -297,7 +297,7 @@ namespace mathpresso
 		if (options & kOptionDebugAst)
 		{
 			ast->dump(sbTmp);
-			log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.getData(), sbTmp.getLength());
+			log->log(OutputLog::kMessageAstFinal, 0, 0, sbTmp.c_str(), sbTmp.length());
 			sbTmp.clear();
 		}
 
@@ -435,8 +435,7 @@ namespace mathpresso
 			{
 				throw std::runtime_error("formated string to long:\n" + std::string(buf));
 			}
-
-
+			
 			onError(error, position, std::string(buf));
 
 			return MATHPRESSO_TRACE_ERROR(error);

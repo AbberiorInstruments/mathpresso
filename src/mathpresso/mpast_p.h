@@ -194,15 +194,12 @@ namespace mathpresso
 		// [Dump]
 		// --------------------------------------------------------------------------
 
-		Error dump(StringBuilder& sb);
+		Error dump(std::string& sb);
 
 		// --------------------------------------------------------------------------
 		// [Members]
 		// --------------------------------------------------------------------------
 	private:
-		//! String builder to build possible output messages.
-		StringBuilder _sb;
-
 		//! Root node.
 		std::shared_ptr<AstProgram> _programNode;
 
@@ -914,7 +911,7 @@ namespace mathpresso
 		// [Construction / Destruction]
 		// --------------------------------------------------------------------------
 
-		AstDump(StringBuilder& sb) noexcept;
+		AstDump(std::string& sb) noexcept;
 		virtual ~AstDump() noexcept;
 
 		// --------------------------------------------------------------------------
@@ -943,7 +940,7 @@ namespace mathpresso
 		// --------------------------------------------------------------------------
 
 	private:
-		StringBuilder& _sb;
+		std::string& _sb;
 		uint32_t _level;
 	};
 
