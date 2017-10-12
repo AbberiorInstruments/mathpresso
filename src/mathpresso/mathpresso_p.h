@@ -225,17 +225,6 @@ namespace mathpresso
 
 	};
 
-
-	// ============================================================================
-	// [Reuse]
-	// ============================================================================
-
-	// TODO: remove those in favor of std::string
-
-	// Reuse these classes - we depend on asmjit anyway and these are internal.
-	/*using asmjit::StringBuilder;
-	using asmjit::StringBuilderTmp;*/
-
 	// ============================================================================
 	// [mpsl::InternalConsts]
 	// ============================================================================
