@@ -286,6 +286,7 @@ type& operator=(const type& other) = delete; \
 
 		bool _isGlobal;
 
+		static constexpr uint32_t kInvalidSlot = 0xFFFFFFFFU;
 	};
 
 	// ============================================================================

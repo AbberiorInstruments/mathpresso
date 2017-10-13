@@ -150,7 +150,7 @@ namespace mathpresso
 			shared_sym->setSymbolFlag(AstSymbolFlags::kAstSymbolIsComplex);
 		}
 
-		shared_sym->setVarSlotId(InternalConsts::kInvalidSlot);
+		shared_sym->setVarSlotId(kInvalidSlot);
 		shared_sym->setVarOffset(offset);
 
 		if (flags & VariableFlags::kVariableRO)
@@ -251,7 +251,7 @@ namespace mathpresso
 		options &= _kOptionsMask;
 
 		if (log != nullptr)
-			options |= InternalOptions::kInternalOptionLog;
+			options |= ErrorReporter::kInternalOptionLog;
 		else
 			options &= ~(kOptionVerbose | kOptionDebugAst | kOptionDebugAsm);
 

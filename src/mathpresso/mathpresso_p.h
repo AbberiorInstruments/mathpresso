@@ -226,27 +226,6 @@ namespace mathpresso
 	};
 
 	// ============================================================================
-	// [mpsl::InternalConsts]
-	// ============================================================================
-	namespace InternalConsts
-	{
-		static constexpr uint32_t kInvalidSlot = 0xFFFFFFFFU;
-	}
-
-	// ============================================================================
-	// [mpsl::InternalOptions]
-	// ============================================================================
-
-	//! \internal
-	//!
-	//! Compilation options MATHPRESSO uses internally.
-	enum InternalOptions
-	{
-		//! Set if `OutputLog` is present. MATHPRESSO then checks only this flag to use it.
-		kInternalOptionLog = 0x00010000
-	};
-
-	// ============================================================================
 	// [mathpresso::mpAssertionFailure]
 	// ============================================================================
 
@@ -261,7 +240,6 @@ namespace mathpresso
 
 	Error mpTraceError(Error error);
 
-
 	// ============================================================================
 	// [mathpresso::addBuiltinObjects]
 	// ============================================================================
@@ -274,6 +252,9 @@ namespace mathpresso
 	//! Error reporter.
 	struct ErrorReporter
 	{
+		//! Set if `OutputLog` is present. MATHPRESSO then checks only this flag to use it.
+		static constexpr uint32_t kInternalOptionLog = 0x00010000;
+
 		ErrorReporter(const std::string & body, uint32_t options, OutputLog* log)
 			: _body(body.c_str()),
 			_len(body.length()),
@@ -281,15 +262,15 @@ namespace mathpresso
 			_log(log)
 		{
 			// These should be handled by MATHPRESSO before the `ErrorReporter` is created.
-			MATHPRESSO_ASSERT((log == nullptr && (_options & InternalOptions::kInternalOptionLog) == 0) ||
-				(log != nullptr && (_options & InternalOptions::kInternalOptionLog) != 0));
+			MATHPRESSO_ASSERT((log == nullptr && (_options & kInternalOptionLog) == 0) ||
+				(log != nullptr && (_options & kInternalOptionLog) != 0));
 		}
 
 		// --------------------------------------------------------------------------
 		// [Error Handling]
 		// --------------------------------------------------------------------------
 
-		bool reportsErrors() const { return (_options & InternalOptions::kInternalOptionLog) != 0; }
+		bool reportsErrors() const { return (_options & kInternalOptionLog) != 0; }
 		bool reportsWarnings() const { return (_options & kOptionVerbose) != 0; }
 
 		void getLineAndColumn(uint32_t position, uint32_t& line, uint32_t& column);
