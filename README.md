@@ -17,6 +17,12 @@ This is an updated version of MathPresso that uses a stripped-off MPSL engine de
 
 This is also a transitional version that is available to users that want to use MathPresso and cannot wait for the new MPSL engine, which is a work in progress.
 
+### Additions by Abberior:
+
+We added support for complex numbers. The compiler can create functions that take and return complex values and calculate them as needed. Every Function in Features, that suports complex numbers is available as a real and a complex version, where the Optimizer chooses the correct one.
+
+We allso added the posibility for named sub-contexts similar to namespaces in c++.
+
 Features
 --------
 
@@ -37,7 +43,7 @@ Features
     * Greater or equal `x >= y`
     * Lesser `x < y`
     * Lesser or equal `x <= y`
-  * Functions defined by `addBuiltIns()`:
+  * Functions:
     * Check for NaN `isnan(x)`
     * Check for infinity `isinf(x)`
     * Check for finite number `isfinite(x)`
@@ -57,6 +63,7 @@ Features
     * Logarithm of base 2 `log2(x)`
     * Logarithm of base 10 `log10(x)`
     * Square root `sqrt(x)`
+    * Square root (complex return) `sqrtc(x)`
     * Fraction `frac(x)`
     * Reciprocal `recip(x)`
     * Power `pow(x, y)`
@@ -70,11 +77,18 @@ Features
     * Arccosine `acos(x)`
     * Arctangent `atan(x)`
     * Arctangent `atan2(x, y)`
+    * Conjugation `conjug(x)`
+    * Get real part of a complex value `real(x)`
+    * Get imaginary part of a complex value `imag(x)`
+  * Other:
+    * Ternary Operator `<bool> ? <expression> : <expression>`
+    * Declaration of variables `var <name> = <val>`
   * Constants defined by `addBuiltIns()`:
     * Infinity `INF`
     * Not a Number `NaN`
     * Euler's constant `E = 2.7182818284590452354`
     * PI `PI = 3.14159265358979323846`
+    * Imaginary number `i = sqrt(-1)`
 
 Usage
 -----
@@ -86,12 +100,12 @@ MathPresso's expression is always created around a `mathpresso::Context`, which 
 #include <stdio.h>
 
 int main(int argc, char* argv[]) {
-  mathpresso::Context ctx;
-  mathpresso::Expression exp;
+  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
+  std::shared_ptr<mathpresso::Expression> exp = std::make_shared<mathpresso::Expression>();
 
   // Initialize the context by adding MathPresso built-ins. Without this line
-  // functions like round(), sin(), etc won't be available.
-  ctx.addBuiltIns();
+  // the context has no Operations it can do.
+  ctx->addBuiltIns();
 
   // Let the context know the name of the variables we will refer to and
   // their positions in the data pointer. We will use an array of 3 doubles,
@@ -99,17 +113,17 @@ int main(int argc, char* argv[]) {
   //
   // The `addVariable()` also contains a third parameter that describes
   // variable flags, use `kVariableRO` to make a certain variable read-only.
-  ctx.addVariable("x", 0 * sizeof(double));
-  ctx.addVariable("y", 1 * sizeof(double));
-  ctx.addVariable("z", 2 * sizeof(double));
+  ctx->addVariable("x", 0 * sizeof(double));
+  ctx->addVariable("y", 1 * sizeof(double));
+  ctx->addVariable("z", 2 * sizeof(double));
 
   // Compile the expression.
   //
   // The create parameters are:
-  //   1. `mathpresso::Context&` - The expression's context / environment.
-  //   2. `const char* body` - The expression body.
+  //   1. `std::shared_ptr<mathpresso::context>` - The expression's context / environment.
+  //   2. `std::string body` - The expression body.
   //   3. `unsigned int` - Options, just pass `mathpresso::kNoOptions`.
-  mathpresso::Error err = exp.compile(ctx, "(x*y) % z", mathpresso::kNoOptions);
+  mathpresso::Error err = exp->compile(ctx, "(x*y) % z", mathpresso::kNoOptions);
 
   // Handle possible syntax or compilation error.
   if (err != mathpresso::kErrorOk) {
@@ -125,7 +139,7 @@ int main(int argc, char* argv[]) {
     3.8, // 'y' - available at data[1]
     1.3  // 'z' - available at data[2]
   };
-  printf("Output: %f\n", exp.evaluate(data));
+  printf("Output: %f\n", exp->evaluate(data));
 
   return 0;
 }
@@ -145,26 +159,134 @@ struct Data {
 };
 
 int main(int argc, char* argv[]) {
-  mathpresso::Context ctx;
-  mathpresso::Expression exp;
+  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
+  std::shared_ptr<mathpresso::Expression> exp = std::make_shared<mathpresso::Expression>();
 
-  ctx.addBuiltIns();
-  ctx.addVariable("x", MATHPRESSO_OFFSET(Data, x));
-  ctx.addVariable("y", MATHPRESSO_OFFSET(Data, y));
-  ctx.addVariable("z", MATHPRESSO_OFFSET(Data, z));
+  ctx->addBuiltIns();
+  ctx->addVariable("x", MATHPRESSO_OFFSET(Data, x));
+  ctx->addVariable("y", MATHPRESSO_OFFSET(Data, y));
+  ctx->addVariable("z", MATHPRESSO_OFFSET(Data, z));
 
-  mathpresso::Error err = exp.compile(ctx, "(x*y) % z", mathpresso::kNoOptions);
+  mathpresso::Error err = exp->compile(ctx, "(x*y) % z", mathpresso::kNoOptions);
   if (err != mathpresso::kErrorOk) {
     printf("Expression Error: %u\n", err);
     return 1;
   }
 
   Data data(1.2, 3.8. 1.3);
-  printf("Output: %f\n", exp.evaluate(&data));
+  printf("Output: %f\n", exp->evaluate(&data));
 
   return 0;
 }
 ```
+
+Creation of custom operations
+-----------------------------
+
+We created a way to add your own functions or operators to mathpresso. You should find the necessary interface to implement in `MpOperatin.h`.
+
+Every operation in mathpresso is implementing this interface.
+
+```c++
+#include <mathpresso/mathpresso.h>
+#include <mathpresso/MpOperation.h>
+#include <stdio.h>
+
+
+// An example of a function computing the absolute value of a real number.
+class MpOperationAbs : public MpOperationEval<double, double>
+{
+public:
+  MpOperationAbs() noexcept : MpOperationEval<double, double>(1)
+  {
+  }
+
+  // The function that is computed, if the parameter is an 
+  // imediate value, that is known at compiletime
+  virtual double evaluate(const double * args) const override;
+
+  // The function used to generate the machine-code for this function.
+  // This is called by the JitCompiler.
+  virtual JitVar compile(JitCompiler *jc, std::shared_ptr<AstNode> node) const override;
+};
+
+double MpOperationAbs::evaluate(const double * args) const
+{
+  return std::abs(args[0]);
+}
+
+JitVar MpOperationAbs::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) const
+{
+  JitVar var(jc->onNode(node->getAt(0)));
+  JitVar result;
+  var = jc->writableVar(var);
+  result = JitVar(jc->cc->newXmmSd(), false);
+  jc->cc->xorpd(result.getXmm(), result.getXmm());
+  jc->cc->subsd(result.getXmm(), var.getXmm());
+  jc->cc->maxsd(result.getXmm(), var.getXmm());
+  return result;
+}
+
+int main(int argc, char* argv[]) {
+  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
+
+  // This way you can add a function from c++ to the context.
+  ctx->addObject("sin",  _OBJ(static_cast<double(*)(double, double)>(std::sin));
+
+  //Adding the Function we declared earlier:
+  ctx->addObject("abs",  std::make_shared<MpOperationAbs>());
+
+  ctx->addVariable("x", 0 * sizeof(double));
+
+  mathpresso::Error err = exp->compile(ctx, "sin(abs(x))", mathpresso::kNoOptions);
+  if (err != mathpresso::kErrorOk) {
+    printf("Expression Error: %u\n", err);
+    return 1;
+  }
+
+  double[] data = { 3.5 };
+  printf("Output: %f\n", exp->evaluate(&data));
+
+  return 0;
+}
+```
+
+
+Hirarchical named context
+-------------------------
+
+Hirarchical contexts allow the separation of functions and variables into structures like namespaces from c++.
+
+```c++
+#include <mathpresso/mathpresso.h>
+#include <stdio.h>
+
+int main(int argc, char* argv[]) {
+  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
+  std::shared_ptr<mathpresso::context> subctx = std::make_shared<mathpresso::Context>();
+
+  // We add subctx as `sub` to our cotext.
+  ctx->addChild("sub", subctx);
+
+  // Add functions to the contexts
+  ctx->addObject("sin",  _OBJ(static_cast<double(*)(double, double)>(std::sin));
+  subctx->addObject("cos",  _OBJ(static_cast<double(*)(double, double)>(std::cos));
+
+  ctx->addVariable("x", 0 * sizeof(double));
+
+  mathpresso::Error err = exp->compile(ctx, "sin(sub.cos(x))", mathpresso::kNoOptions);
+  if (err != mathpresso::kErrorOk) {
+    printf("Expression Error: %u\n", err);
+    return 1;
+  }
+
+  double[] data = { 3.5 };
+  printf("Output: %f\n", exp->evaluate(&data));
+
+  return 0;
+}
+```
+
 
 Error Handling
 --------------
@@ -230,11 +352,11 @@ int main(int argc, char* argv[]) {
   MyOutputLog outputLog;
 
   // Create the context, add builtins and define the `Data` layout.
-  mathpresso::Context ctx;
-  ctx.addBuiltIns();
-  ctx.addVariable("x"  , MATHPRESSO_OFFSET(Data, x));
-  ctx.addVariable("y"  , MATHPRESSO_OFFSET(Data, y));
-  ctx.addVariable("z"  , MATHPRESSO_OFFSET(Data, z));
+  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
+  ctx->addBuiltIns();
+  ctx->addVariable("x" , MATHPRESSO_OFFSET(Data, x));
+  ctx->addVariable("y" , MATHPRESSO_OFFSET(Data, y));
+  ctx->addVariable("z" , MATHPRESSO_OFFSET(Data, z));
 
   // The following options will cause that MathPresso will send everything
   // it does to `OutputLog`.
@@ -243,8 +365,8 @@ int main(int argc, char* argv[]) {
     mathpresso::kOptionDebugAst | // Enable AST dumps.
     mathpresso::kOptionDebugAsm ; // Enable ASM dumps.
 
-  mathpresso::Expression exp;
-  mathpresso::Error err = exp.compile(ctx,
+  std::shared_ptr<mathpresso::Expression> exp = std::make_shared<mathpresso::Expression>();
+  mathpresso::Error err = exp->compile(ctx,
     "-(-(abs(x * y - floor(x)))) * z * (12.9 - 3)", options, &outputLog);
 
   // Handle possible syntax or compilation error. The OutputLog has already
@@ -256,7 +378,7 @@ int main(int argc, char* argv[]) {
 
   // Evaluate the expression, if compiled.
   Data data = { 12.2, 9.2, -1.9 };
-  double result = exp.evaluate(&data);
+  double result = exp->evaluate(&data);
 
   printf("RESULT: %f\n", result);
   return 0;
@@ -267,53 +389,53 @@ When executed the output of the application would be something like:
 
 ```
 [AST-INITIAL]
-* [Binary]
-  * [Binary]
-    - [Unary]
-      - [Unary]
-        abs [Unary]
-          - [Binary]
-            * [Binary]
-              x
-              y
-            floor [Unary]
-              x
-    z
-  - [Binary]
-    12.900000
-    3.000000
+* [Binary, <real> -> <real>]
+  * [Binary, <real> -> <real>]
+    - [Unary, <real> -> <real>]
+      - [Unary, <real> -> <real>]
+       abs(), <real> -> <real>
+         - [Binary, <real> -> <real>]
+           * [Binary, <real> -> <real>]
+             x <real>
+             y <real>
+           floor(), <real> -> <real>
+             x <real>
+    z <real>
+  - [Binary, <real> -> <real>]
+    12.900000, <real>
+    3.000000, <real>
 
 [AST-FINAL]
-* [Binary]
-  * [Binary]
-    abs [Unary]
-      - [Binary]
-        * [Binary]
-          x
-          y
-        floor [Unary]
-          x
-    z
-  9.900000
+* [Binary, <real> -> <real>]
+  * [Binary, <real> -> <real>]
+    abs(), <real> -> <real>
+      - [Binary, <real> -> <real>]
+        * [Binary, <real> -> <real>]
+          x <real>
+          y <real>
+        floor(), <real> -> <real>
+          x <real>
+    z <real>
+  9.900000, <real>
 
 [ASSEMBLY]
-L0:                                 ;                     |                           ..
-lea rax, [L2]                       ; 488D05........      | lea pConst, [L2]          ..w
-movsd xmm0, [rdx]                   ; F20F1002            | movsd v3, [pVariables]    .r.w
-mulsd xmm0, [rdx+8]                 ; F20F594208          | mulsd v3, [pVariables+8]  .r.x
-movsd xmm1, [rdx]                   ; F20F100A            | movsd v4, [pVariables]    .r..w
-roundsd xmm1, xmm1, 9               ; 660F3A0BC909        | roundsd v4, v4, 9         ....x
-subsd xmm0, xmm1                    ; F20F5CC1            | subsd v3, v4              ...xR
-xorpd xmm1, xmm1                    ; 660F57C9            | xorpd v5, v5              .... w
-subsd xmm1, xmm0                    ; F20F5CC8            | subsd v5, v3              ...r x
-maxsd xmm1, xmm0                    ; F20F5FC8            | maxsd v5, v3              ...R x
-mulsd xmm1, [rdx+16]                ; F20F594A10          | mulsd v5, [pVariables+16] .R.  x
-mulsd xmm1, [rax]                   ; F20F5908            | mulsd v5, [pConst]        . R  x
-movsd [rcx], xmm1                   ; F20F1109            | movsd [pResult], v5       R    R
-L1:                                 ;                     |
-ret                                 ; C3                  |
+L0:
+lea rax, [L2]                           ; 488D05........          | lea pConst, [L2]
+movsd xmm0, [rdx]                       ; F20F1002                | movsd v3, [pVariables]
+mulsd xmm0, [rdx+8]                     ; F20F594208              | mulsd v3, [pVariables+8]
+movsd xmm1, [rdx]                       ; F20F100A                | movsd v4, [pVariables]
+roundsd xmm2, xmm1, 9                   ; 660F3A0BD109            | roundsd v5, v4, 9
+subsd xmm0, xmm2                        ; F20F5CC2                | subsd v3, v5
+xorpd xmm1, xmm1                        ; 660F57C9                | xorpd v6, v6
+subsd xmm1, xmm0                        ; F20F5CC8                | subsd v6, v3
+maxsd xmm1, xmm0                        ; F20F5FC8                | maxsd v6, v3
+mulsd xmm1, [rdx+16]                    ; F20F594A10              | mulsd v6, [pVariables+16]
+mulsd xmm1, [rax]                       ; F20F5908                | mulsd v6, [pConst]
+movsd [rcx], xmm1                       ; F20F1109                | movsd [pResult], v6
+L1:
+ret                                     ; C3
 .align 8
-L2:                                 ;                     |
+L2:
 .data CDCCCCCCCCCC2340
 
 RESULT: -1885.514400
@@ -335,3 +457,4 @@ Authors & Maintainers
 ---------------------
 
   * Petr Kobalicek <kobalicek.petr@gmail.com>
+

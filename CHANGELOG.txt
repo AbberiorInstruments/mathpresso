@@ -1,3 +1,13 @@
+2017-10-13
+- Features added:
+  - complex numbers
+  - complex functions
+  - ternary Operator
+  - custom Operations
+  - hirachical named Contexts
+- Breaking changes
+  - Context/Expression require to be shared_ptr
+
 2015-12-15
 - Refactored 90% of the code base to use MPSL's AST, parser, and optimizer.
 

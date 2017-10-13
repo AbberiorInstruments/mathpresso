@@ -79,7 +79,7 @@ namespace mathpresso
 
 	//! An interface for functions or operations with a signature.
 	//! Implementations of this hold information of how to optimize 
-	//! a instruction in the ASTand how to compile it to machine-code.
+	//! a instruction in the AST and how to compile it to machine-code.
 	class MATHPRESSO_API MpOperation : public MpObject
 	{
 	public:
