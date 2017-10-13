@@ -100,7 +100,7 @@ MathPresso's expression is always created around a `mathpresso::Context`, which 
 #include <stdio.h>
 
 int main(int argc, char* argv[]) {
-  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
+  std::shared_ptr<mathpresso::Context> ctx = std::make_shared<mathpresso::Context>();
   std::shared_ptr<mathpresso::Expression> exp = std::make_shared<mathpresso::Expression>();
 
   // Initialize the context by adding MathPresso built-ins. Without this line
@@ -159,7 +159,7 @@ struct Data {
 };
 
 int main(int argc, char* argv[]) {
-  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
+  std::shared_ptr<mathpresso::Context> ctx = std::make_shared<mathpresso::Context>();
   std::shared_ptr<mathpresso::Expression> exp = std::make_shared<mathpresso::Expression>();
 
   ctx->addBuiltIns();
@@ -228,7 +228,7 @@ JitVar MpOperationAbs::compile(JitCompiler * jc, std::shared_ptr<AstNode> node) 
 }
 
 int main(int argc, char* argv[]) {
-  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
+  std::shared_ptr<mathpresso::Context> ctx = std::make_shared<mathpresso::Context>();
 
   // This way you can add a function from c++ to the context.
   ctx->addObject("sin",  _OBJ(static_cast<double(*)(double, double)>(std::sin));
@@ -262,8 +262,8 @@ Hirarchical contexts allow the separation of functions and variables into struct
 #include <stdio.h>
 
 int main(int argc, char* argv[]) {
-  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
-  std::shared_ptr<mathpresso::context> subctx = std::make_shared<mathpresso::Context>();
+  std::shared_ptr<mathpresso::Context> ctx = std::make_shared<mathpresso::Context>();
+  std::shared_ptr<mathpresso::Context> subctx = std::make_shared<mathpresso::Context>();
 
   // We add subctx as `sub` to our cotext.
   ctx->addChild("sub", subctx);
@@ -352,7 +352,7 @@ int main(int argc, char* argv[]) {
   MyOutputLog outputLog;
 
   // Create the context, add builtins and define the `Data` layout.
-  std::shared_ptr<mathpresso::context> ctx = std::make_shared<mathpresso::Context>();
+  std::shared_ptr<mathpresso::Context> ctx = std::make_shared<mathpresso::Context>();
   ctx->addBuiltIns();
   ctx->addVariable("x" , MATHPRESSO_OFFSET(Data, x));
   ctx->addVariable("y" , MATHPRESSO_OFFSET(Data, y));
@@ -446,15 +446,9 @@ Dependencies
 
   * AsmJit - 1.0 or later.
 
-Support
--------
-
-Please consider a donation if you use the project and would like to keep it active in the future.
-
-  * [Donate by PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=QDRM6SRNG7378&lc=EN;&item_name=mathpresso&currency_code=EUR)
-
 Authors & Maintainers
 ---------------------
 
   * Petr Kobalicek <kobalicek.petr@gmail.com>
-
+  * for Abberior Instruments.
+    * Simon Leidenbach
