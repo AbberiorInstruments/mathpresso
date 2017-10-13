@@ -204,10 +204,9 @@ type& operator=(const type& other) = delete; \
 	//! MathPresso context.
 	//!
 	//! Context is an environment where you can add/remove constants, variables and
-	//! functions. Context is a reference-counted class that is using copy-on-write.
-	//! Working with context is reentrant and making weak or deep copy is thread-safe
-	//! (reference counting is atomic). It is possible to create one master context
-	//! and use it from different threads to compile many expressions.
+	//! functions that are saved in its Symbols-database.
+	//! This is a hierarchical structure, where you can add named child-contexts. You
+	//! can also add hidden children, that the parent is not aware of.
 	//!
 	//! reading: thread-safe; writing: not thread-safe!
 	struct MATHPRESSO_API Context : public MpObject, public std::enable_shared_from_this<Context>
@@ -258,7 +257,7 @@ type& operator=(const type& other) = delete; \
 
 		//! returns the sub-context with the given name, nullptr if it does not exist
 		std::shared_ptr<Context> getChild(const std::string & name) const;
-		
+
 		bool isGlobal() const
 		{
 			return _isGlobal;
@@ -268,7 +267,7 @@ type& operator=(const type& other) = delete; \
 		Error setParent(std::shared_ptr<Context> ctx);
 		Error addChild(const std::string & name, std::shared_ptr<Context> ctx);
 		Error delChild(const std::string & name);
-		
+
 		void markShadow()
 		{
 			_isGlobal = false;
@@ -293,7 +292,7 @@ type& operator=(const type& other) = delete; \
 	// [mathpresso::Expression]
 	// ============================================================================
 
-	//! MathPresso expression.
+	//! A class that represents an expression, that was or will be compiled by mathpresso.
 	struct MATHPRESSO_API Expression
 	{
 		MATHPRESSO_NO_COPY(Expression);

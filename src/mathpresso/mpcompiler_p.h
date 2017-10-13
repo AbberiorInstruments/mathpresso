@@ -14,31 +14,37 @@
 
 namespace mathpresso
 {
-
+	//! Creates a JitCompiler, initializes it and compiles the AST provided in ast.
+	//! it then returns the resulting Function. If there was an error while compiling,
+	//! execution of the returned function results in undefined behavior.
 	CompiledFunc mpCompileFunction(std::shared_ptr<AstBuilder> ast, uint32_t options, OutputLog* log, std::shared_ptr<Context> ctx, bool b_complex = false);
+
+	//! Destructor of a Compiled function.
 	void mpFreeFunction(void* fn);
 
 	// ============================================================================
 	// [mathpresso::JitVar]
 	// ============================================================================
 
+	//! Represents a memory-location or a register, so it can be used as a parameter
+	//! of an Operation or to save its return-value.
 	struct JitVar
 	{
 
-		JitVar() noexcept: 
-			op(), 
+		JitVar() noexcept
+			: op(),
 			isReadOnly(false)
 		{
 		}
 
-		JitVar(asmjit::Operand op, bool isROnly) noexcept:
-			op(op),
+		JitVar(asmjit::Operand op, bool isROnly) noexcept
+			: op(op),
 			isReadOnly(isROnly)
 		{
 		}
 
-		JitVar(const JitVar& other) noexcept:
-			op(other.op),
+		JitVar(const JitVar& other) noexcept
+			: op(other.op),
 			isReadOnly(other.isRO())
 		{
 		}
@@ -132,10 +138,12 @@ namespace mathpresso
 	// [mathpresso::JitCompiler]
 	// ============================================================================
 
+	//! This takes a AST and compiles it into machine-code, that can be executed by
+	//! the processor.
 	struct JitCompiler
 	{
-		JitCompiler(asmjit::X86Compiler* cc, std::shared_ptr<Context> ctx) noexcept:
-			cc(cc),
+		JitCompiler(asmjit::X86Compiler* cc, std::shared_ptr<Context> ctx) noexcept
+			: cc(cc),
 			enableSSE4_1(asmjit::CpuInfo::getHost().hasFeature(asmjit::CpuInfo::kX86FeatureSSE4_1)),
 			varSlots({}),
 			functionBody(nullptr),

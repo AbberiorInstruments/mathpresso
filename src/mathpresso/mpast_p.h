@@ -71,17 +71,14 @@ namespace mathpresso
 		//! The symbol (variable) is read-only.
 		kAstSymbolIsReadOnly = 0x0008,
 
-
 		//! The variable has been altered (written), at least once.
 		//!
 		//! Currently only useful for global variables so the JIT compiler can
 		//! perform write operation at the end of the generated function.
 		kAstSymbolIsAltered = 0x0010,
 
-
 		//! The variable is a complex value.
 		kAstSymbolIsComplex = 0x0020,
-
 
 		//! The function returns a complex value
 		kAstSymbolRealFunctionReturnsComplex = 0x00040, // unused
@@ -156,7 +153,7 @@ namespace mathpresso
 	// [mathpresso::AstBuilder]
 	// ============================================================================
 
-	//! \internal
+	//! The AstBuilder is used by the Context to hold the AST and Manage the number of Variables.
 	struct AstBuilder
 	{
 		MATHPRESSO_NO_COPY(AstBuilder);
@@ -211,6 +208,7 @@ namespace mathpresso
 	// [mathpresso::AstSymbol]
 	// ============================================================================
 
+	//! The representation of a variable or constant value, that has a name.
 	struct AstSymbol : public MpObject, public std::enable_shared_from_this<AstSymbol>
 	{
 		MATHPRESSO_NO_COPY(AstSymbol);
@@ -363,7 +361,7 @@ namespace mathpresso
     return node; \
   }
 
-
+	//! The base-class for every node within the AST
 	struct AstNode : public std::enable_shared_from_this<AstNode>
 	{
 		MATHPRESSO_NO_COPY(AstNode);
@@ -399,7 +397,7 @@ namespace mathpresso
 		//! Get whether the node has children.
 		//!
 		//! NOTE: Nodes that always have children (even if they are implicitly set
-		//! to NULL) always return `true`. This function if useful mostly if the
+		//! to NULL) always return `true`. This function is useful mostly if the
 		//! node is of `AstBlock` type.
 		bool hasChildren() const { return getLength() != 0; }
 		//! Get children array.
@@ -461,8 +459,11 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 
+		//! The MpOperation, that is used by this node.
+		//! this is initially set by the Parser, but can be changed by the Optimizer, to correct the Signature.
 		std::shared_ptr<MpOperation> _mpOp;
 
+		//! The name of the Operation, if known.
 		std::string _opName;
 
 		//! Parent node.
@@ -483,6 +484,8 @@ namespace mathpresso
 	// [mathpresso::AstBlock]
 	// ============================================================================
 
+	//! A node holding several nodes, that are within a block '{ <expression>, ...}'.
+	//! Also used for the AstCall-node.
 	struct AstBlock : public AstNode
 	{
 		MATHPRESSO_NO_COPY(AstBlock);
@@ -540,6 +543,8 @@ namespace mathpresso
 	// [mathpresso::AstUnary]
 	// ============================================================================
 
+	//! A unary node, that holds exactly one child object.
+	//! Should not be directly instantiated.
 	struct AstUnary : public AstNode
 	{
 		MATHPRESSO_NO_COPY(AstUnary);
@@ -565,6 +570,8 @@ namespace mathpresso
 	// [mathpresso::AstBinary]
 	// ============================================================================
 
+	//! A unary node, that holds exactly two child objects.
+	//! Should not be directly instantiated.
 	struct AstBinary : public AstNode
 	{
 		MATHPRESSO_NO_COPY(AstBinary);
@@ -595,6 +602,8 @@ namespace mathpresso
 	// [mathpresso::AstTernary]
 	// ============================================================================
 
+	//! A unary node, that holds exactly three child objects.
+	//! Should not be directly instantiated.
 	struct AstTernary : public AstNode
 	{
 		MATHPRESSO_NO_COPY(AstTernary);
@@ -621,6 +630,8 @@ namespace mathpresso
 	// [mathpresso::AstProgram]
 	// ============================================================================
 
+	//! The type of the root-node of an AST.
+	//! Indicates that the children of this form a program.
 	struct AstProgram : public AstBlock
 	{
 		MATHPRESSO_NO_COPY(AstProgram);
@@ -641,6 +652,8 @@ namespace mathpresso
 	// [mathpresso::AstVarDecl]
 	// ============================================================================
 
+	//! A Variable declaration in the form of 'var <name> = <expression>', where 
+	//! <expression> will be computed to be the value of the newly created variable with name <name>
 	struct AstVarDecl : public AstUnary
 	{
 		MATHPRESSO_NO_COPY(AstVarDecl);
@@ -683,6 +696,7 @@ namespace mathpresso
 	// [mathpresso::AstVar]
 	// ============================================================================
 
+	//! A node that holds a AstSymbol, that is used in the computation.
 	struct AstVar : public AstNode
 	{
 		MATHPRESSO_NO_COPY(AstVar);
@@ -716,6 +730,7 @@ namespace mathpresso
 	// [mathpresso::AstImm]
 	// ============================================================================
 
+	//! The representation of an immediate value in the expression.
 	struct AstImm : public AstNode
 	{
 		MATHPRESSO_NO_COPY(AstImm);
@@ -763,12 +778,11 @@ namespace mathpresso
 		std::complex<double> _value;
 	};
 
-
-
 	// ============================================================================
 	// [mathpresso::AstUnaryOp]
 	// ============================================================================
 
+	//! An unary operation like '!<expression>' or a call to a function with one parameter.
 	struct AstUnaryOp : public AstUnary
 	{
 		MATHPRESSO_NO_COPY(AstUnaryOp);
@@ -788,6 +802,7 @@ namespace mathpresso
 	// [mathpresso::AstBinaryOp]
 	// ============================================================================
 
+	//! A binary operation like '<expression> + <expression>' or a call to a function with two parameters.
 	struct AstBinaryOp : public AstBinary
 	{
 		MATHPRESSO_NO_COPY(AstBinaryOp);
@@ -816,6 +831,7 @@ namespace mathpresso
 	// [mathpresso::AstTernaryOp]
 	// ============================================================================
 
+	//! This is a special node for the ternary Operatior '<bool> ? <expression> : <expression>'.
 	struct AstTernaryOp : public AstTernary
 	{
 		MATHPRESSO_NO_COPY(AstTernaryOp);
@@ -835,6 +851,7 @@ namespace mathpresso
 	// [mathpresso::AstCall]
 	// ============================================================================
 
+	//! A node that represents a call to a function. like '<name>(<param1>, ..., <paramN>) 
 	struct AstCall : public AstBlock
 	{
 		MATHPRESSO_NO_COPY(AstCall);
@@ -867,6 +884,8 @@ namespace mathpresso
 	// [mathpresso::AstVisitor]
 	// ============================================================================
 
+	//! A helper-interface to traverse over a AST and do stuff depending on the type
+	//! of the node.
 	struct AstVisitor
 	{
 		MATHPRESSO_NO_COPY(AstVisitor);

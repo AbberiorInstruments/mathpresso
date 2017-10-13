@@ -29,6 +29,7 @@ namespace mathpresso
 	// [mathpresso::Parser]
 	// ============================================================================
 
+	//! Parses an expression to an AST.
 	struct Parser
 	{
 		MATHPRESSO_NO_COPY(Parser);
@@ -67,6 +68,7 @@ namespace mathpresso
 		Error parseExpression(std::shared_ptr<AstNode>* pNodeOut, bool isNested);
 		Error parseCall(std::shared_ptr<AstNode>* pNodeOut);
 
+		//! Transfer the binary parts of a ternary operation to a TernaryOp.
 		Error reparseTernary(std::shared_ptr<AstNode> node);
 
 		// --------------------------------------------------------------------------

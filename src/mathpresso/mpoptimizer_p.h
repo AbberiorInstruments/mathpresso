@@ -18,6 +18,10 @@ namespace mathpresso
 	// [mpsl::AstOptimizer]
 	// ============================================================================
 
+	//! This is a Optimizer for the AST, it uses MpOperation::optimize to optimize
+	//! instructions, when an MpOperation is associated with the node and otherwise
+	//! optimizes them by itself.
+	//! Also it chooses the MpOperation with the correct signature, where possible.
 	struct AstOptimizer : public AstVisitor
 	{
 		MATHPRESSO_NO_COPY(AstOptimizer);

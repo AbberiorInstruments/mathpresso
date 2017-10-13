@@ -143,7 +143,10 @@ namespace mathpresso
 
 	//! \internal
 	//!
-	//! Token.
+	//! Represent a Token of the expression:
+	//! - its position and length in the expression
+	//! - its type
+	//! - its Value, if its an immediate value
 	struct Token
 	{
 		// --------------------------------------------------------------------------
@@ -199,6 +202,7 @@ namespace mathpresso
 	// [mathpresso::Tokenizer]
 	// ============================================================================
 
+	//! Create tokens from an expression.
 	struct Tokenizer
 	{
 		MATHPRESSO_NO_COPY(Tokenizer);
@@ -267,7 +271,7 @@ namespace mathpresso
 		// [Members]
 		// --------------------------------------------------------------------------
 		const char* _start;
-	
+
 	private:
 		uint32_t endOfInput(mathpresso::Token * token, const char * pToken, const char * p)
 		{

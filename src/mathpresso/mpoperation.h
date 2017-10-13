@@ -26,6 +26,8 @@ namespace mathpresso
 
 	typedef JitVar(*mpAsmFunc)(JitCompiler*, JitVar*);
 
+	//! Description of the signature of a Operation: the number and type of parameters
+	//! and type of the return. The type can be real (double) or a complex value (std::complex<double>).
 	struct MATHPRESSO_API Signature
 	{
 		// Types allowed
@@ -75,6 +77,9 @@ namespace mathpresso
 		static const type id_ = type::real;
 	};
 
+	//! An interface for functions or operations with a signature.
+	//! Implementations of this hold information of how to optimize 
+	//! a instruction in the ASTand how to compile it to machine-code.
 	class MATHPRESSO_API MpOperation : public MpObject
 	{
 	public:
@@ -141,6 +146,7 @@ namespace mathpresso
 		virtual uint32_t optimize(AstOptimizer *opt, std::shared_ptr<AstNode> node) const override;
 	};
 
+	//! The implementation of a function, that can be called by the expression.
 	template<typename RET, typename ARGS>
 	class MATHPRESSO_API MpOperationFunc : public MpOperationEval<RET, ARGS>
 	{
@@ -162,6 +168,7 @@ namespace mathpresso
 		void * fnPtr_;
 	};
 
+	//! The implementation of a binary operation like '+' or '-'.
 	template<typename T>
 	class MATHPRESSO_API MpOperationBinary : public MpOperationEval<T, T>
 	{

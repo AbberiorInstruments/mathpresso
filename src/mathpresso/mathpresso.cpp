@@ -435,7 +435,7 @@ namespace mathpresso
 			{
 				throw std::runtime_error("formated string to long:\n" + std::string(buf));
 			}
-			
+
 			onError(error, position, std::string(buf));
 
 			return MATHPRESSO_TRACE_ERROR(error);

@@ -183,6 +183,8 @@ namespace mathpresso
 	// ============================================================================
 
 	//! Holds MpOperation-objects and variables, and gives an easy way to finding them.
+	//! As instances of this class are bound to a context, you should use the functions
+	//! within the resolver-namespace, if you don't know in which context to look for a variable or function.
 	class Symbols
 	{
 		using op_ptr_type = std::shared_ptr<MpOperation>;
@@ -243,10 +245,13 @@ namespace mathpresso
 	// ============================================================================
 	// [mathpresso::addBuiltinObjects]
 	// ============================================================================
+
+	//! Adds default operations (like '+', ' -', 'sin' or 'exp') and default 
+	//! constants (like 'INF', 'PI' or 'i').
 	uint32_t addBuiltinMpObjects(Context * ctx);
 
 	// ============================================================================
-	// [mpsl::ErrorReporter]
+	// [mathpresso::ErrorReporter]
 	// ============================================================================
 
 	//! Error reporter.
@@ -295,7 +300,7 @@ namespace mathpresso
 	namespace resolver
 	{
 		using ContextPtr = std::shared_ptr<Context>;
-		
+
 		//! find the correct function.
 		std::shared_ptr<MpOperation> resolveFunction(ContextPtr ctx, const std::string & name, size_t numargs, bool takesComplex);
 
