@@ -18,7 +18,6 @@
 #else
 # define MATHPRESSO_STRTOD_XLOCALE
 # include <locale.h>
-# include <xlocale.h>
 #endif
 
 namespace mathpresso
