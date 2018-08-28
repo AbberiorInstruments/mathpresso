@@ -741,7 +741,7 @@ namespace mathpresso
 
 		AstImm(double value = 0.0) noexcept
 			: AstNode(AstNodeType::kAstNodeImm),
-			_value({ value, 0 })
+			_value(value, 0)
 		{
 		}
 
