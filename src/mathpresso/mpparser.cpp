@@ -353,7 +353,7 @@ namespace mathpresso
 						if (sym)
 						{
 							if (!sym->isDeclared())
-								MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName().c_str(.c_str()));
+								MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName().c_str());
 
 							// Put symbol to shadow scope if it's global. This is done lazily and
 							// only once per symbol when it's referenced.
