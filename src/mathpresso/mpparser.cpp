@@ -189,17 +189,17 @@ namespace mathpresso
 			if ((vSym = resolver::resolveVariable(_shadowContext, symbolName, &vContext)))
 			{
 				if (vSym->getSymbolType() != AstSymbolType::kAstSymbolVariable || _shadowContext == vContext)
-					MATHPRESSO_PARSER_ERROR(token, "Attempt to redefine '%s'.", vSym->getName());
+					MATHPRESSO_PARSER_ERROR(token, "Attempt to redefine '%s'.", vSym->getName().c_str());
 
 				if (vSym->hasNode())
 				{
 					uint32_t line, column;
 					_errorReporter->getLineAndColumn(vSym->getNode()->getPosition(), line, column);
-					MATHPRESSO_PARSER_WARNING(token, "Variable '%s' shadows a variable declared at [%d:%d].", vSym->getName(), line, column);
+					MATHPRESSO_PARSER_WARNING(token, "Variable '%s' shadows a variable declared at [%d:%d].", vSym->getName().c_str(), line, column);
 				}
 				else
 				{
-					MATHPRESSO_PARSER_WARNING(token, "Variable '%s' shadows a variable of the same name.", vSym->getName());
+					MATHPRESSO_PARSER_WARNING(token, "Variable '%s' shadows a variable of the same name.", vSym->getName().c_str());
 				}
 			}
 
@@ -353,7 +353,7 @@ namespace mathpresso
 						if (sym)
 						{
 							if (!sym->isDeclared())
-								MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName());
+								MATHPRESSO_PARSER_ERROR(token, "Can't use variable '%s' that is being declared.", sym->getName().c_str(.c_str()));
 
 							// Put symbol to shadow scope if it's global. This is done lazily and
 							// only once per symbol when it's referenced.
@@ -540,7 +540,7 @@ namespace mathpresso
 
 						std::shared_ptr<AstSymbol> sym = std::static_pointer_cast<AstVar>(currentNode)->getSymbol();
 						if (sym->hasSymbolFlag(AstSymbolFlags::kAstSymbolIsReadOnly))
-							MATHPRESSO_PARSER_ERROR(token, "Can't assign to a read-only variable '%s'.", sym->getName());
+							MATHPRESSO_PARSER_ERROR(token, "Can't assign to a read-only variable '%s'.", sym->getName().c_str());
 
 						if (isNested)
 							MATHPRESSO_PARSER_ERROR(token, "Invalid assignment inside an expression.");
