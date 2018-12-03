@@ -22,18 +22,17 @@ namespace std
 }
 
 #define _ADD_FUNRC(name, fptr) {\
-	static auto p = static_cast<double(*)(const cplx_t&)>(fptr); \
+	[[maybe_unused]] static auto p = static_cast<double(*)(const cplx_t&)>(fptr); \
 	ctx ->addObject(name, _OBJ(static_cast<double(*)(const cplx_t&)>(fptr))); }
 
 #define _ADD_CPLX1(name, fptr) {\
-	static auto p = static_cast<cplx_t(*)(const cplx_t&)>(fptr); \
+	[[maybe_unused]] static auto p = static_cast<cplx_t(*)(const cplx_t&)>(fptr); \
 	ctx ->addObject(name, _OBJ(static_cast<cplx_t(*)(const cplx_t&)>(fptr))); }
 
 #define _ADD_CPLX2(name, fptr) {\
-	static auto p = static_cast<cplx_t(*)(const cplx_t&, const cplx_t&)>(fptr); \
+	[[maybe_unused]] static auto p = static_cast<cplx_t(*)(const cplx_t&, const cplx_t&)>(fptr); \
 	ctx ->addObject(name, _OBJ(static_cast<cplx_t(*)(const cplx_t&, const cplx_t&)>(fptr))); }
 
-// First line is to ensure the instantiation of the function
 #define _ADD_FUNC1(name, fptr) _ADD_CPLX1(name, fptr) \
 	ctx ->addObject(name, _OBJ(static_cast<double(*)(double)>(fptr))); 
 

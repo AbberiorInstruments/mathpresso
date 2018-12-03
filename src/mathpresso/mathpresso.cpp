@@ -396,7 +396,7 @@ namespace mathpresso
 			{
 				throw std::runtime_error("Error formating string.");
 			}
-			else if (ret > MATHPRESSO_ARRAY_SIZE(buf))
+			else if (ret > int(MATHPRESSO_ARRAY_SIZE(buf)))
 			{
 				throw std::runtime_error("formated string to long:\n" + std::string(buf));
 			}
@@ -431,7 +431,7 @@ namespace mathpresso
 			{
 				throw std::runtime_error("Error formating string.");
 			}
-			else if (ret > MATHPRESSO_ARRAY_SIZE(buf))
+			else if (ret > int(MATHPRESSO_ARRAY_SIZE(buf)))
 			{
 				throw std::runtime_error("formated string to long:\n" + std::string(buf));
 			}
