@@ -4,7 +4,7 @@ include( BpcPackage.cmake )
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT OR NOT CMAKE_INSTALL_PREFIX)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}-install/" CACHE PATH "CMake install Directory" FORCE )
 endif()
-set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo CACHE TYPE INTERNAL FORCE )
+set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo" CACHE STRING "" FORCE )
 
 # Don't create a project if it was already created by another CMakeLists.txt.
 # This allows one library to embed another library without a project collision.
@@ -16,12 +16,12 @@ endif()
 # [MathPresso - Configuration]
 # =============================================================================
 
-set(MATHPRESSO_DIR         "${CMAKE_CURRENT_LIST_DIR}"   CACHE PATH "Location of 'mathpresso'")
-set(ASMJIT_DIR             "${MATHPRESSO_DIR}/../asmjit" CACHE PATH "Location of 'asmjit'")
+set(MATHPRESSO_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "Location of 'mathpresso'")
+set(ASMJIT_DIR "${MATHPRESSO_DIR}/../asmjit" CACHE PATH "Location of 'asmjit'")
 
-set(MATHPRESSO_EMBED       FALSE               CACHE BOOLEAN "Embed 'mathpresso' library (no targets)")
-set(MATHPRESSO_STATIC      ${MATHPRESSO_EMBED} CACHE BOOLEAN "Build 'mathpresso' library as static")
-set(MATHPRESSO_BUILD_TEST  FALSE               CACHE BOOLEAN "Build 'mathpresso_test' applications")
+set(MATHPRESSO_EMBED OFF CACHE BOOL "Embed 'mathpresso' library (no targets)")
+set(MATHPRESSO_STATIC ${MATHPRESSO_EMBED} CACHE BOOL "Build 'mathpresso' library as static")
+set(MATHPRESSO_BUILD_TEST OFF CACHE BOOL "Build 'mathpresso_test' applications")
 
 if(NOT DEFINED ASMJIT_EMBED)
   set(ASMJIT_EMBED TRUE CACHE BOOLEAN "")

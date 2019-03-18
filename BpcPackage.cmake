@@ -5,7 +5,7 @@ include( BpcTargetPaths.cmake )
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT OR NOT CMAKE_INSTALL_PREFIX)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}-install/" CACHE PATH "CMake install Directory" FORCE )
 endif()
-set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo CACHE TYPE INTERNAL FORCE )
+set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo" CACHE INTERNAL "" FORCE )
 
 function( BpcInstallPackage )
 	
