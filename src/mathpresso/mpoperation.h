@@ -266,7 +266,7 @@ namespace fobj
 	class Caller;
 
 	template<typename R, typename ...ARGS, R(*FPTR)(ARGS...)>
-	class Caller<R(*)(ARGS...), FPTR> : public Caller_<R, typename std::remove_reference<typename std::common_type<ARGS...>::type>::type, sizeof...(ARGS), R(*)(ARGS...), FPTR>
+	class Caller<R(*)(ARGS...), FPTR> : public Caller_<R, std::remove_reference_t<std::common_type_t<ARGS...>>, sizeof...(ARGS), R(*)(ARGS...), FPTR>
 	{
 	};
 
@@ -278,11 +278,12 @@ namespace fobj
 	template<typename CALLER>
 	std::shared_ptr<mathpresso::MpOperation> _mpObject(const CALLER &c, uint32_t flags = mathpresso::MpOperation::None, uint32_t priority = 0)
 	{
-		return std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>(
-			reinterpret_cast<void*>(CALLER::call),
-			CALLER::nargs_t::value,
-			flags | CALLER::flags_t::value,
-			priority);
+		return 
+			std::make_shared<mathpresso::MpOperationFunc<typename CALLER::ret_t, typename CALLER::arg_t>>(
+				reinterpret_cast<void*>(CALLER::call),
+				CALLER::nargs_t::value,
+				flags | CALLER::flags_t::value,
+				priority);
 	}
 }
 
