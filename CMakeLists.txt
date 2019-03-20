@@ -24,7 +24,7 @@ set(MATHPRESSO_STATIC ${MATHPRESSO_EMBED} CACHE BOOL "Build 'mathpresso' library
 set(MATHPRESSO_BUILD_TEST OFF CACHE BOOL "Build 'mathpresso_test' applications")
 
 if(NOT DEFINED ASMJIT_EMBED)
-  set(ASMJIT_EMBED TRUE CACHE BOOLEAN "")
+  set(ASMJIT_EMBED TRUE CACHE BOOL "")
 endif()
 
 # =============================================================================
